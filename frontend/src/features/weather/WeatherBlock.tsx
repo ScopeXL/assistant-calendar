@@ -40,7 +40,7 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
       ? "press flex min-h-14 flex-col items-start justify-center gap-1 rounded-chip-d text-left"
       : place === "band"
         ? "press flex min-h-14 items-center gap-4 rounded-chip-d px-2 text-left"
-        : "press flex min-h-11 items-center gap-3 rounded-chip px-1 text-left";
+        : "press flex min-h-11 items-center gap-3 self-start rounded-chip px-1 text-left";
   return (
     <>
       <button

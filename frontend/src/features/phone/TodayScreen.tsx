@@ -69,21 +69,25 @@ export function TodayScreen() {
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-40">
-      <header className="flex items-center justify-between gap-4">
-        <h1 className="text-title font-bold">{shortDate(today)}</h1>
+      <header className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-title font-bold">{shortDate(today)}</h1>
+          <Link
+            to="/who"
+            search={{ from: "more" }}
+            aria-label={
+              session?.member
+                ? `Using this phone: ${session.member.name}`
+                : "Who's using this phone?"
+            }
+            className="press flex size-11 shrink-0 items-center justify-center rounded-full"
+          >
+            <Avatar member={session?.member ?? null} size="sm" />
+          </Link>
+        </div>
         {railBlocks.map((Block, index) => (
           <Block key={index} place="phone" />
         ))}
-        <Link
-          to="/who"
-          search={{ from: "more" }}
-          aria-label={
-            session?.member ? `Using this phone: ${session.member.name}` : "Who's using this phone?"
-          }
-          className="press flex size-11 shrink-0 items-center justify-center rounded-full"
-        >
-          <Avatar member={session?.member ?? null} size="sm" />
-        </Link>
       </header>
       {onNow.length ? (
         <section aria-labelledby="today-now" className="flex flex-col gap-1">
