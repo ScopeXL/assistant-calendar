@@ -83,6 +83,10 @@ SOCCER = "00000000-0000-7000-8000-000000000501"  # weekly, with one moved occurr
 SOCCER_MOVED = "00000000-0000-7000-8000-000000000502"
 PAJAMAS = "00000000-0000-7000-8000-000000000503"  # all-day
 VET = "00000000-0000-7000-8000-000000000504"  # removed, in Recently removed
+SCHOOL = "00000000-0000-7000-8000-000000000402"  # a synced calendar, from a calendar address
+FIELD_TRIP = "00000000-0000-7000-8000-000000000505"  # a synced event in it
+FEED = "00000000-0000-7000-8000-000000000701"  # the calendar address's account
+FEED_CALENDAR = "00000000-0000-7000-8000-000000000702"  # the account's one calendar
 
 
 def _v0_2_0() -> list[Statement]:
@@ -133,10 +137,58 @@ def _v0_2_0() -> list[Statement]:
     ]
 
 
+def _v0_3_0() -> list[Statement]:
+    """0.3.0: 0.2.0's household plus a calendar address mapped to the kid (a synced calendar
+    holding one synced event), the account's last sync run, and a sign-in nobody finished."""
+    return [
+        *_v0_2_0(),
+        "INSERT INTO calendars (id, name, color, kind, owner_member_id, read_only,"
+        " visible_on_display, version, remote_ref, sort, created_at, updated_at, deleted_at)"
+        f" VALUES ('{SCHOOL}', 'School', 'olive', 'sync', '{KID}', 1, 1, 1,"
+        " 'a calendar address', 1000, '2026-10-08 18:00:00', '2026-10-08 18:00:00', NULL)",
+        "INSERT INTO events (id, calendar_id, parent_event_id, recurrence_id, title, description,"
+        " location, all_day, start_utc, end_utc, tzid, start_date, end_date, floating, rrule,"
+        " rdates_json, exdates_json, window_start_utc, window_end_utc, status, color, source,"
+        " remote_uid, remote_id, etag, remote_updated_at, remote_sequence, pending_push,"
+        " pending_delete, raw_ical, version, created_by_member_id, created_at, updated_at,"
+        f" deleted_at) VALUES ('{FIELD_TRIP}', '{SCHOOL}', NULL, NULL, 'Field trip', '',"
+        " 'Sample Farm', 0, '2026-10-15 13:00:00', '2026-10-15 17:00:00', 'America/New_York',"
+        " NULL, NULL, 0, NULL, '[]', '[]', '2026-10-15 13:00:00', '2026-10-15 17:00:00',"
+        " 'confirmed', NULL, 'sync', 'field-trip@school.example.com', NULL, NULL,"
+        " '2026-10-08 17:00:00', 0, 0, 0, NULL, 1, NULL, '2026-10-08 18:00:00',"
+        " '2026-10-08 18:00:00', NULL)",
+        "INSERT INTO sync_accounts (id, provider, auth_mode, label, status, server_url, username,"
+        " credentials_enc, config_json, allow_private, owner_member_id, interval_s, last_sync_at,"
+        " last_success_at, next_sync_at, last_error, last_error_at, consecutive_failures,"
+        " version, created_by_member_id, created_at, deleted_at) VALUES"
+        f" ('{FEED}', 'ics', 'none', 'School', 'connected', 'school.example.com/school.ics',"
+        f" NULL, 'sample-ciphertext', '{{}}', 0, '{KID}', 1800, '2026-10-08 18:30:00',"
+        " '2026-10-08 18:30:00', '2026-10-08 19:00:00', NULL, NULL, 0, 1,"
+        f" '{PARENT}', '2026-10-08 18:00:00', NULL)",
+        "INSERT INTO remote_calendars (id, account_id, remote_id, name, color_hint, read_only,"
+        " mapped, calendar_id, sync_token, ctag, last_synced_at, last_error, created_at) VALUES"
+        f" ('{FEED_CALENDAR}', '{FEED}', 'feed-000000000000000000000001', 'School', NULL, 1, 1,"
+        f" '{SCHOOL}', '{{\"etag\": \"\\\"1\\\"\"}}', NULL, '2026-10-08 18:30:00', NULL,"
+        " '2026-10-08 18:00:00')",
+        "INSERT INTO sync_runs (id, account_id, started_at, finished_at, outcome, fetched,"
+        " created, updated, deleted, pushed, error, duration_ms) VALUES"
+        f" ('00000000-0000-7000-8000-000000000801', '{FEED}', '2026-10-08 18:30:00',"
+        " '2026-10-08 18:30:01', 'ok', 1, 0, 0, 0, 0, NULL, 140)",
+        "INSERT INTO oauth_states (state_hash, provider, code_verifier, device_id, account_id,"
+        f" created_at, expires_at, used_at) VALUES ('{'0' * 63}4', 'google', 'sample-verifier',"
+        f" '{PHONE}', NULL, '2026-10-08 18:40:00', '2026-10-08 18:50:00', NULL)",
+        "INSERT INTO plugin_state (plugin_id, enabled, settings_json, settings_version, "
+        "plugin_version, enabled_at, disabled_at, updated_at) VALUES "
+        "('calendar_sync', 1, '{\"google_client_id\": null, \"google_client_secret\": null}',"
+        " 1, '1.0.0', '2026-10-08 18:00:00', NULL, '2026-10-08 18:00:00')",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
     "202610081454": _v0_2_0,
+    "202610081650": _v0_3_0,
 }
 
 

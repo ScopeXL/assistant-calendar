@@ -883,6 +883,437 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Chores */
+        get: operations["list_chores_api_chores_get"];
+        put?: never;
+        /** Add Chore */
+        post: operations["add_chore_api_chores_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/completions/{completion_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Completion */
+        post: operations["approve_completion_api_chores_completions__completion_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/completions/{completion_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Completion */
+        post: operations["reject_completion_api_chores_completions__completion_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stars */
+        get: operations["stars_api_chores_points_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/points/adjust": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Adjust */
+        post: operations["adjust_api_chores_points_adjust_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/redemptions/{redemption_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Redemption */
+        post: operations["approve_redemption_api_chores_redemptions__redemption_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/redemptions/{redemption_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Redemption */
+        post: operations["cancel_redemption_api_chores_redemptions__redemption_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/redemptions/{redemption_id}/deny": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deny Redemption */
+        post: operations["deny_redemption_api_chores_redemptions__redemption_id__deny_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/removed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Removed */
+        get: operations["removed_api_chores_removed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/rewards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Rewards */
+        get: operations["list_rewards_api_chores_rewards_get"];
+        put?: never;
+        /** Add Reward */
+        post: operations["add_reward_api_chores_rewards_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/rewards/{reward_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Reward */
+        delete: operations["remove_reward_api_chores_rewards__reward_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Reward */
+        patch: operations["change_reward_api_chores_rewards__reward_id__patch"];
+        trace?: never;
+    };
+    "/api/chores/rewards/{reward_id}/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redeem */
+        post: operations["redeem_api_chores_rewards__reward_id__redeem_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/routines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Routines */
+        get: operations["list_routines_api_chores_routines_get"];
+        put?: never;
+        /** Add Routine */
+        post: operations["add_routine_api_chores_routines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/routines/{routine_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Routine */
+        delete: operations["remove_routine_api_chores_routines__routine_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Routine */
+        patch: operations["change_routine_api_chores_routines__routine_id__patch"];
+        trace?: never;
+    };
+    "/api/chores/routines/{routine_id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finish Routine */
+        post: operations["finish_routine_api_chores_routines__routine_id__finish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/routines/{routine_id}/steps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace Steps */
+        put: operations["replace_steps_api_chores_routines__routine_id__steps_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/routines/{routine_id}/steps/{step_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Step */
+        post: operations["check_step_api_chores_routines__routine_id__steps__step_id__check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today */
+        get: operations["today_api_chores_today_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/week": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Week */
+        get: operations["week_api_chores_week_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/{chore_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Chore */
+        delete: operations["remove_chore_api_chores__chore_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Chore */
+        patch: operations["change_chore_api_chores__chore_id__patch"];
+        trace?: never;
+    };
+    "/api/chores/{chore_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete */
+        post: operations["complete_api_chores__chore_id__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/{chore_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Chore */
+        post: operations["restore_chore_api_chores__chore_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/{chore_id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip Day */
+        post: operations["skip_day_api_chores__chore_id__skip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/{chore_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undo */
+        post: operations["undo_api_chores__chore_id__undo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chores/{chore_id}/unskip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unskip Day */
+        post: operations["unskip_day_api_chores__chore_id__unskip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/export": {
         parameters: {
             query?: never;
@@ -949,6 +1380,180 @@ export interface paths {
         /** Set Layout */
         put: operations["set_layout_api_kiosk_layout_put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lists */
+        get: operations["get_lists_api_lists_get"];
+        put?: never;
+        /** Post List */
+        post: operations["post_list_api_lists_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Order */
+        put: operations["put_order_api_lists_order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists/removed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Removed */
+        get: operations["get_removed_api_lists_removed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists/todo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Todo */
+        get: operations["get_todo_api_lists_todo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists/{list_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete List */
+        delete: operations["delete_list_api_lists__list_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch List */
+        patch: operations["patch_list_api_lists__list_id__patch"];
+        trace?: never;
+    };
+    "/api/lists/{list_id}/clear-checked": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear Checked */
+        post: operations["clear_checked_api_lists__list_id__clear_checked_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists/{list_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Items */
+        get: operations["get_items_api_lists__list_id__items_get"];
+        put?: never;
+        /** Post Items */
+        post: operations["post_items_api_lists__list_id__items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists/{list_id}/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Item */
+        delete: operations["delete_item_api_lists__list_id__items__item_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Item */
+        patch: operations["patch_item_api_lists__list_id__items__item_id__patch"];
+        trace?: never;
+    };
+    "/api/lists/{list_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore List */
+        post: operations["restore_list_api_lists__list_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lists/{list_id}/restore-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Items */
+        post: operations["restore_items_api_lists__list_id__restore_items_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1372,6 +1977,18 @@ export interface components {
             /** Paused */
             paused?: boolean | null;
         };
+        /** AdjustIn */
+        AdjustIn: {
+            /** Member Id */
+            member_id: string;
+            /** Points */
+            points: number;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
         /** AllowEntryIn */
         AllowEntryIn: {
             /**
@@ -1433,6 +2050,36 @@ export interface components {
             schedule: string;
             /** Stale */
             stale: boolean;
+        };
+        /**
+         * BoxOut
+         * @description One box to tick on a day.
+         */
+        BoxOut: {
+            /** Chore Id */
+            chore_id: string;
+            completion: components["schemas"]["CompletionOut"] | null;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Due Time */
+            due_time: string | null;
+            /** Icon */
+            icon: string | null;
+            /** Needs Approval */
+            needs_approval: boolean;
+            /** Owner Id */
+            owner_id: string | null;
+            /** Points */
+            points: number;
+            /** Since */
+            since: string | null;
+            /** Title */
+            title: string;
+            /** Turn Id */
+            turn_id: string | null;
         };
         /** CaldavIn */
         CaldavIn: {
@@ -1530,6 +2177,146 @@ export interface components {
             /** Revision Id */
             revision_id: string;
         };
+        /** CheckIn */
+        CheckIn: {
+            /**
+             * Checked
+             * @default true
+             */
+            checked: boolean;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Member Id */
+            member_id?: string | null;
+        };
+        /** ChoreIn */
+        ChoreIn: {
+            /** Assignee Member Ids */
+            assignee_member_ids?: string[];
+            /**
+             * Assignee Mode
+             * @default fixed
+             * @enum {string}
+             */
+            assignee_mode: "fixed" | "rotate" | "any";
+            /** Description */
+            description?: string | null;
+            /** Due Time */
+            due_time?: string | null;
+            /** Icon */
+            icon?: string | null;
+            /**
+             * Points
+             * @default 0
+             */
+            points: number;
+            /** Requires Approval */
+            requires_approval?: boolean | null;
+            /**
+             * Rotation Index
+             * @default 0
+             */
+            rotation_index: number;
+            /** Rrule */
+            rrule?: string | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** ChoreOut */
+        ChoreOut: {
+            /** Active */
+            active: boolean;
+            /** Assignee Member Ids */
+            assignee_member_ids: string[];
+            /**
+             * Assignee Mode
+             * @enum {string}
+             */
+            assignee_mode: "fixed" | "rotate" | "any";
+            /** Description */
+            description: string | null;
+            /** Due Time */
+            due_time: string | null;
+            /** Icon */
+            icon: string | null;
+            /** Id */
+            id: string;
+            /** Points */
+            points: number;
+            /** Repeat Text */
+            repeat_text: string;
+            /** Requires Approval */
+            requires_approval: boolean | null;
+            /** Rotation Index */
+            rotation_index: number;
+            /** Rrule */
+            rrule: string | null;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * ChorePatch
+         * @description Only what's sent changes.
+         */
+        ChorePatch: {
+            /** Active */
+            active?: boolean | null;
+            /** Assignee Member Ids */
+            assignee_member_ids?: string[] | null;
+            /** Assignee Mode */
+            assignee_mode?: ("fixed" | "rotate" | "any") | null;
+            /**
+             * Clear Due Time
+             * @default false
+             */
+            clear_due_time: boolean;
+            /**
+             * Clear Requires Approval
+             * @default false
+             */
+            clear_requires_approval: boolean;
+            /**
+             * Clear Rrule
+             * @default false
+             */
+            clear_rrule: boolean;
+            /** Description */
+            description?: string | null;
+            /** Due Time */
+            due_time?: string | null;
+            /** Icon */
+            icon?: string | null;
+            /** Points */
+            points?: number | null;
+            /** Requires Approval */
+            requires_approval?: boolean | null;
+            /** Rotation Index */
+            rotation_index?: number | null;
+            /** Rrule */
+            rrule?: string | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /**
+         * ClearedOut
+         * @description What Clear done took away, for Undo (POST lists/{id}/restore-items).
+         */
+        ClearedOut: {
+            /** Ids */
+            ids: string[];
+        };
         /** ClientInfo */
         ClientInfo: {
             /** Host */
@@ -1545,6 +2332,62 @@ export interface components {
             /** X Forwarded Proto */
             x_forwarded_proto: string | null;
         };
+        /** ColumnOut */
+        ColumnOut: {
+            /** Boxes */
+            boxes: components["schemas"]["BoxOut"][];
+            /** Done */
+            done: number;
+            /** Member Id */
+            member_id: string | null;
+            /** Routines */
+            routines: components["schemas"]["RoutineRunOut"][];
+            /** Total */
+            total: number;
+        };
+        /** CompleteIn */
+        CompleteIn: {
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Member Id */
+            member_id?: string | null;
+        };
+        /** CompleteOut */
+        CompleteOut: {
+            /** All Done */
+            all_done: boolean;
+            completion: components["schemas"]["CompletionOut"];
+            stars: components["schemas"]["StarsOut"] | null;
+        };
+        /** CompletionOut */
+        CompletionOut: {
+            /** Chore Id */
+            chore_id: string;
+            /**
+             * Completed At
+             * Format: date-time
+             */
+            completed_at: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Id */
+            id: string;
+            /** Member Id */
+            member_id: string;
+            /** Points Awarded */
+            points_awarded: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "done" | "pending" | "rejected";
+        };
         /** ContributesOut */
         ContributesOut: {
             /** Banners */
@@ -1559,6 +2402,39 @@ export interface components {
             phone_tabs: components["schemas"]["TabOut"][];
             /** Settings Sections */
             settings_sections: components["schemas"]["SectionOut"][];
+        };
+        /** DayIn */
+        DayIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
+        /**
+         * DayOut
+         * @description GET chores/today: the Chores room, the Today panel's Chores today, Who's doing what.
+         */
+        DayOut: {
+            /** Asked */
+            asked: components["schemas"]["RedemptionOut"][];
+            /** Columns */
+            columns: components["schemas"]["ColumnOut"][];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Rewards On */
+            rewards_on: boolean;
+            /** Routines On */
+            routines_on: boolean;
+            /** Stars */
+            stars: components["schemas"]["StarsOut"][];
+            /** Stars On */
+            stars_on: boolean;
+            /** Waiting */
+            waiting: components["schemas"]["WaitingOut"][];
         };
         /** DescribeOut */
         DescribeOut: {
@@ -1861,6 +2737,22 @@ export interface components {
             /** Unit */
             unit: string | null;
         };
+        /** FinishIn */
+        FinishIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Member Id */
+            member_id?: string | null;
+        };
+        /** FinishOut */
+        FinishOut: {
+            /** Points Awarded */
+            points_awarded: number;
+            stars: components["schemas"]["StarsOut"] | null;
+        };
         /** GoogleCalendarIn */
         GoogleCalendarIn: {
             /** Calendar Id */
@@ -1930,6 +2822,101 @@ export interface components {
             owner_member_id?: string | null;
             /** Url */
             url: string;
+        };
+        /** IdsIn */
+        IdsIn: {
+            /** Ids */
+            ids: string[];
+        };
+        /** ItemIn */
+        ItemIn: {
+            /** Assigned Member Id */
+            assigned_member_id?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Quantity */
+            quantity?: string | null;
+            /** Text */
+            text: string;
+        };
+        /** ItemOut */
+        ItemOut: {
+            /** Assigned Member Id */
+            assigned_member_id: string | null;
+            /** Checked At */
+            checked_at: string | null;
+            /** Checked By Member Id */
+            checked_by_member_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By Member Id */
+            created_by_member_id: string | null;
+            /** Due Date */
+            due_date: string | null;
+            /** Id */
+            id: string;
+            /** List Id */
+            list_id: string;
+            /** Note */
+            note: string | null;
+            /** Position */
+            position: number;
+            /** Quantity */
+            quantity: string | null;
+            /** Text */
+            text: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * ItemPatch
+         * @description Only what's sent changes. Empty text clears a note or quantity.
+         */
+        ItemPatch: {
+            /** Assigned Member Id */
+            assigned_member_id?: string | null;
+            /** Checked */
+            checked?: boolean | null;
+            /**
+             * Clear Assignee
+             * @default false
+             */
+            clear_assignee: boolean;
+            /**
+             * Clear Due Date
+             * @default false
+             */
+            clear_due_date: boolean;
+            /** Due Date */
+            due_date?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Position */
+            position?: number | null;
+            /** Quantity */
+            quantity?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /** ItemsAdded */
+        ItemsAdded: {
+            /** Already */
+            already: string[];
+            /** Items */
+            items: components["schemas"]["ItemOut"][];
+        };
+        /**
+         * ItemsIn
+         * @description One or several items ("Milk, eggs, bread" is split by the app).
+         */
+        ItemsIn: {
+            /** Items */
+            items: components["schemas"]["ItemIn"][];
         };
         /** JoinCodeOut */
         JoinCodeOut: {
@@ -2041,6 +3028,73 @@ export interface components {
              * @enum {string}
              */
             status: "waiting" | "paired" | "expired";
+        };
+        /**
+         * LastChange
+         * @description A list tile's last line, written out by the app: "Mia added Milk · 2:10 PM".
+         */
+        LastChange: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "added" | "checked";
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Member Id */
+            member_id: string | null;
+            /** Text */
+            text: string;
+        };
+        /** ListDetailOut */
+        ListDetailOut: {
+            /** Done */
+            done: components["schemas"]["ItemOut"][];
+            /** Items */
+            items: components["schemas"]["ItemOut"][];
+            list: components["schemas"]["ListOut"];
+            /** Usuals */
+            usuals: string[];
+        };
+        /** ListIn */
+        ListIn: {
+            /** Kind */
+            kind?: ("grocery" | "todo" | "packing" | "custom") | null;
+            /** Name */
+            name: string;
+        };
+        /** ListOut */
+        ListOut: {
+            /** Created By Member Id */
+            created_by_member_id: string | null;
+            /** Done Count */
+            done_count: number;
+            /** Due Count */
+            due_count: number;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "grocery" | "todo" | "packing" | "custom";
+            last_change: components["schemas"]["LastChange"] | null;
+            /** Name */
+            name: string;
+            /** Open Count */
+            open_count: number;
+            /** Sort */
+            sort: number;
+        };
+        /** ListPatch */
+        ListPatch: {
+            /** Kind */
+            kind?: ("grocery" | "todo" | "packing" | "custom") | null;
+            /** Name */
+            name?: string | null;
         };
         /** LiveUpdatesInfo */
         LiveUpdatesInfo: {
@@ -2222,6 +3276,11 @@ export interface components {
              */
             to_date: string;
         };
+        /** OrderIn */
+        OrderIn: {
+            /** Ids */
+            ids: string[];
+        };
         /** PanelOut */
         PanelOut: {
             /** Default Size */
@@ -2328,6 +3387,11 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** PointsOut */
+        PointsOut: {
+            /** Stars */
+            stars: components["schemas"]["StarsOut"][];
+        };
         /**
          * ReconnectIn
          * @description A new password (CalDAV) or address (a feed) for an account that needs reconnecting.
@@ -2337,6 +3401,38 @@ export interface components {
             app_password?: string | null;
             /** Url */
             url?: string | null;
+        };
+        /** RedeemIn */
+        RedeemIn: {
+            /** Member Id */
+            member_id?: string | null;
+        };
+        /** RedemptionOut */
+        RedemptionOut: {
+            /** Cost Points */
+            cost_points: number;
+            /** Decided At */
+            decided_at: string | null;
+            /** Decided By Member Id */
+            decided_by_member_id: string | null;
+            /** Id */
+            id: string;
+            /** Member Id */
+            member_id: string;
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /** Reward Id */
+            reward_id: string;
+            /** Reward Title */
+            reward_title: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "approved" | "denied" | "cancelled";
         };
         /** RemoteCalendarOut */
         RemoteCalendarOut: {
@@ -2365,6 +3461,103 @@ export interface components {
             /** Visible On Display */
             visible_on_display: boolean;
         };
+        /** RemovedChoreOut */
+        RemovedChoreOut: {
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at: string;
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+        };
+        /** RemovedItemOut */
+        RemovedItemOut: {
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at: string;
+            /** Id */
+            id: string;
+            /** List Id */
+            list_id: string;
+            /** List Name */
+            list_name: string;
+            /** Text */
+            text: string;
+        };
+        /** RemovedListOut */
+        RemovedListOut: {
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at: string;
+            /** Id */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /** Name */
+            name: string;
+        };
+        /**
+         * RemovedOut
+         * @description Recently removed (the last 7 days), newest first. Cleared items aren't here: Clear done
+         *     has its Undo, and the list keeps them as its history.
+         */
+        RemovedOut: {
+            /** Items */
+            items: components["schemas"]["RemovedItemOut"][];
+            /** Lists */
+            lists: components["schemas"]["RemovedListOut"][];
+        };
+        /** RewardIn */
+        RewardIn: {
+            /** Cost Points */
+            cost_points: number;
+            /** Icon */
+            icon?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** RewardOut */
+        RewardOut: {
+            /** Active */
+            active: boolean;
+            /** Cost Points */
+            cost_points: number;
+            /** Icon */
+            icon: string | null;
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+        };
+        /** RewardPatch */
+        RewardPatch: {
+            /** Active */
+            active?: boolean | null;
+            /** Cost Points */
+            cost_points?: number | null;
+            /** Icon */
+            icon?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** RewardsOut */
+        RewardsOut: {
+            /** Asked */
+            asked: components["schemas"]["RedemptionOut"][];
+            /** Recent */
+            recent: components["schemas"]["RedemptionOut"][];
+            /** Rewards */
+            rewards: components["schemas"]["RewardOut"][];
+            /** Stars */
+            stars: components["schemas"]["StarsOut"][];
+        };
         /** RoomOut */
         RoomOut: {
             /** Icon */
@@ -2375,6 +3568,124 @@ export interface components {
             order: number;
             /** Title */
             title: string;
+        };
+        /** RoutineIn */
+        RoutineIn: {
+            /** Days */
+            days?: number[];
+            /** Icon */
+            icon?: string | null;
+            /** Member Id */
+            member_id?: string | null;
+            /**
+             * Points
+             * @default 0
+             */
+            points: number;
+            /** Steps */
+            steps?: components["schemas"]["StepIn"][];
+            /** Title */
+            title: string;
+            /** Window End */
+            window_end: string;
+            /** Window Start */
+            window_start: string;
+        };
+        /** RoutineOut */
+        RoutineOut: {
+            /** Active */
+            active: boolean;
+            /** Days */
+            days: number[];
+            /** Icon */
+            icon: string | null;
+            /** Id */
+            id: string;
+            /** Member Id */
+            member_id: string | null;
+            /** Points */
+            points: number;
+            /** Steps */
+            steps: components["schemas"]["RoutineStepOut"][];
+            /** Title */
+            title: string;
+            /** Window End */
+            window_end: string;
+            /** Window Start */
+            window_start: string;
+        };
+        /** RoutinePatch */
+        RoutinePatch: {
+            /** Active */
+            active?: boolean | null;
+            /** Days */
+            days?: number[] | null;
+            /**
+             * Every Kid
+             * @default false
+             */
+            every_kid: boolean;
+            /** Icon */
+            icon?: string | null;
+            /** Member Id */
+            member_id?: string | null;
+            /** Points */
+            points?: number | null;
+            /** Title */
+            title?: string | null;
+            /** Window End */
+            window_end?: string | null;
+            /** Window Start */
+            window_start?: string | null;
+        };
+        /**
+         * RoutineRunOut
+         * @description A kid's routine on a day: its steps, what's checked, and whether its window is open.
+         */
+        RoutineRunOut: {
+            /** Checked */
+            checked: string[];
+            /** Finished */
+            finished: boolean;
+            /** Icon */
+            icon: string | null;
+            /** Member Id */
+            member_id: string;
+            /** Open Now */
+            open_now: boolean;
+            /** Points */
+            points: number;
+            /** Routine Id */
+            routine_id: string;
+            /** Steps */
+            steps: components["schemas"]["RoutineStepOut"][];
+            /** Title */
+            title: string;
+            /** Window End */
+            window_end: string;
+            /** Window Start */
+            window_start: string;
+        };
+        /** RoutineStepOut */
+        RoutineStepOut: {
+            /** Icon */
+            icon: string | null;
+            /** Id */
+            id: string;
+            /** Position */
+            position: number;
+            /** Title */
+            title: string;
+        };
+        /**
+         * RoutinesOut
+         * @description GET chores/routines: the routines as made in Settings, and each kid's day of them.
+         */
+        RoutinesOut: {
+            /** Routines */
+            routines: components["schemas"]["RoutineOut"][];
+            /** Runs */
+            runs: components["schemas"]["RoutineRunOut"][];
         };
         /** RunOut */
         RunOut: {
@@ -2621,6 +3932,33 @@ export interface components {
              */
             include_kiosks: boolean;
         };
+        /** StarsOut */
+        StarsOut: {
+            /** Balance */
+            balance: number;
+            /** Held */
+            held: number;
+            /** Member Id */
+            member_id: string;
+            /** Streak */
+            streak: number;
+            /** Week */
+            week: number;
+        };
+        /** StepIn */
+        StepIn: {
+            /** Icon */
+            icon?: string | null;
+            /** Id */
+            id?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** StepsIn */
+        StepsIn: {
+            /** Steps */
+            steps: components["schemas"]["StepIn"][];
+        };
         /** StorageInfo */
         StorageInfo: {
             /** Free Bytes */
@@ -2640,6 +3978,59 @@ export interface components {
             path: string;
             /** Title */
             title: string;
+        };
+        /** TodoItemOut */
+        TodoItemOut: {
+            /** Assigned Member Id */
+            assigned_member_id: string | null;
+            /** Checked At */
+            checked_at: string | null;
+            /** Checked By Member Id */
+            checked_by_member_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By Member Id */
+            created_by_member_id: string | null;
+            /** Due Date */
+            due_date: string | null;
+            /** Id */
+            id: string;
+            /** List Id */
+            list_id: string;
+            /**
+             * List Kind
+             * @enum {string}
+             */
+            list_kind: "grocery" | "todo" | "packing" | "custom";
+            /** List Name */
+            list_name: string;
+            /** Note */
+            note: string | null;
+            /** Position */
+            position: number;
+            /** Quantity */
+            quantity: string | null;
+            /** Text */
+            text: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * TodoOut
+         * @description The Today panel's To do: items still open that are due on the day or before, the oldest
+         *     first.
+         */
+        TodoOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Items */
+            items: components["schemas"]["TodoItemOut"][];
         };
         /** UndoIn */
         UndoIn: {
@@ -2667,6 +4058,47 @@ export interface components {
             revision: string;
             /** Version */
             version: string;
+        };
+        /**
+         * WaitingOut
+         * @description A completion waiting for a parent's OK.
+         */
+        WaitingOut: {
+            completion: components["schemas"]["CompletionOut"];
+            /** Title */
+            title: string;
+        };
+        /** WeekCellOut */
+        WeekCellOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Done */
+            done: number;
+            /** Total */
+            total: number;
+        };
+        /** WeekColumnOut */
+        WeekColumnOut: {
+            /** Days */
+            days: components["schemas"]["WeekCellOut"][];
+            /** Member Id */
+            member_id: string | null;
+        };
+        /**
+         * WeekOut
+         * @description GET chores/week: seven compact rows per column, the fridge-chart view.
+         */
+        WeekOut: {
+            /** Columns */
+            columns: components["schemas"]["WeekColumnOut"][];
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
         };
     };
     responses: never;
@@ -4371,6 +5803,992 @@ export interface operations {
             };
         };
     };
+    list_chores_api_chores_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChoreOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_chore_api_chores_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChoreIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChoreOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_completion_api_chores_completions__completion_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                completion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompletionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_completion_api_chores_completions__completion_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                completion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompletionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stars_api_chores_points_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PointsOut"];
+                };
+            };
+        };
+    };
+    adjust_api_chores_points_adjust_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StarsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_redemption_api_chores_redemptions__redemption_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redemption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RedemptionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_redemption_api_chores_redemptions__redemption_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redemption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RedemptionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deny_redemption_api_chores_redemptions__redemption_id__deny_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redemption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RedemptionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    removed_api_chores_removed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemovedChoreOut"][];
+                };
+            };
+        };
+    };
+    list_rewards_api_chores_rewards_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RewardsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_reward_api_chores_rewards_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RewardIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RewardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_reward_api_chores_rewards__reward_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reward_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_reward_api_chores_rewards__reward_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reward_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RewardPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RewardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    redeem_api_chores_rewards__reward_id__redeem_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reward_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedeemIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RedemptionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_routines_api_chores_routines_get: {
+        parameters: {
+            query?: {
+                member_id?: string | null;
+                date?: string | null;
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutinesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_routine_api_chores_routines_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_routine_api_chores_routines__routine_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_routine_api_chores_routines__routine_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutinePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finish_routine_api_chores_routines__routine_id__finish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinishIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinishOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_steps_api_chores_routines__routine_id__steps_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StepsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_step_api_chores_routines__routine_id__steps__step_id__check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routine_id: string;
+                step_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    today_api_chores_today_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    week_api_chores_week_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_chore_api_chores__chore_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chore_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_chore_api_chores__chore_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chore_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChorePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChoreOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_api_chores__chore_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chore_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompleteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_chore_api_chores__chore_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chore_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChoreOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skip_day_api_chores__chore_id__skip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chore_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChoreOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_api_chores__chore_id__undo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chore_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unskip_day_api_chores__chore_id__unskip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chore_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChoreOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     export_api_export_get: {
         parameters: {
             query?: never;
@@ -4493,6 +6911,434 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KioskPanelOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lists_api_lists_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListOut"][];
+                };
+            };
+        };
+    };
+    post_list_api_lists_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_order_api_lists_order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_removed_api_lists_removed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemovedOut"];
+                };
+            };
+        };
+    };
+    get_todo_api_lists_todo_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_list_api_lists__list_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_list_api_lists__list_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_checked_api_lists__list_id__clear_checked_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClearedOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_items_api_lists__list_id__items_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_items_api_lists__list_id__items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemsAdded"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_item_api_lists__list_id__items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_item_api_lists__list_id__items__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_list_api_lists__list_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_items_api_lists__list_id__restore_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                list_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemOut"][];
                 };
             };
             /** @description Validation Error */

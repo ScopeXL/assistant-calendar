@@ -229,6 +229,32 @@
         "title": "AccountPatch",
         "type": "object"
       },
+      "AdjustIn": {
+        "properties": {
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "points": {
+            "maximum": 1000.0,
+            "minimum": -1000.0,
+            "title": "Points",
+            "type": "integer"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "member_id",
+          "points"
+        ],
+        "title": "AdjustIn",
+        "type": "object"
+      },
       "AllowEntryIn": {
         "properties": {
           "label": {
@@ -391,6 +417,113 @@
           "files"
         ],
         "title": "BackupStatusOut",
+        "type": "object"
+      },
+      "BoxOut": {
+        "description": "One box to tick on a day.",
+        "properties": {
+          "chore_id": {
+            "title": "Chore Id",
+            "type": "string"
+          },
+          "completion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompletionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "due_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Time"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "needs_approval": {
+            "title": "Needs Approval",
+            "type": "boolean"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "points": {
+            "title": "Points",
+            "type": "integer"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "turn_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turn Id"
+          }
+        },
+        "required": [
+          "chore_id",
+          "title",
+          "icon",
+          "points",
+          "due_time",
+          "due_date",
+          "since",
+          "owner_id",
+          "turn_id",
+          "needs_approval",
+          "completion"
+        ],
+        "title": "BoxOut",
         "type": "object"
       },
       "CaldavIn": {
@@ -679,6 +812,465 @@
         "title": "ChangeOut",
         "type": "object"
       },
+      "CheckIn": {
+        "properties": {
+          "checked": {
+            "default": true,
+            "title": "Checked",
+            "type": "boolean"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "CheckIn",
+        "type": "object"
+      },
+      "ChoreIn": {
+        "properties": {
+          "assignee_member_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Assignee Member Ids",
+            "type": "array"
+          },
+          "assignee_mode": {
+            "default": "fixed",
+            "enum": [
+              "fixed",
+              "rotate",
+              "any"
+            ],
+            "title": "Assignee Mode",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "due_time": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Time"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "points": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "integer"
+          },
+          "requires_approval": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requires Approval"
+          },
+          "rotation_index": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Rotation Index",
+            "type": "integer"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrule"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ChoreIn",
+        "type": "object"
+      },
+      "ChoreOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "assignee_member_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assignee Member Ids",
+            "type": "array"
+          },
+          "assignee_mode": {
+            "enum": [
+              "fixed",
+              "rotate",
+              "any"
+            ],
+            "title": "Assignee Mode",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "due_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Time"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "integer"
+          },
+          "repeat_text": {
+            "title": "Repeat Text",
+            "type": "string"
+          },
+          "requires_approval": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requires Approval"
+          },
+          "rotation_index": {
+            "title": "Rotation Index",
+            "type": "integer"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrule"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "icon",
+          "points",
+          "rrule",
+          "repeat_text",
+          "start_date",
+          "due_time",
+          "assignee_mode",
+          "assignee_member_ids",
+          "rotation_index",
+          "requires_approval",
+          "active"
+        ],
+        "title": "ChoreOut",
+        "type": "object"
+      },
+      "ChorePatch": {
+        "description": "Only what's sent changes.",
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "assignee_member_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Member Ids"
+          },
+          "assignee_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fixed",
+                  "rotate",
+                  "any"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Mode"
+          },
+          "clear_due_time": {
+            "default": false,
+            "title": "Clear Due Time",
+            "type": "boolean"
+          },
+          "clear_requires_approval": {
+            "default": false,
+            "title": "Clear Requires Approval",
+            "type": "boolean"
+          },
+          "clear_rrule": {
+            "default": false,
+            "title": "Clear Rrule",
+            "type": "boolean"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "due_time": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Time"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "requires_approval": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requires Approval"
+          },
+          "rotation_index": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotation Index"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrule"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ChorePatch",
+        "type": "object"
+      },
+      "ClearedOut": {
+        "description": "What Clear done took away, for Undo (POST lists/{id}/restore-items).",
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "ClearedOut",
+        "type": "object"
+      },
       "ClientInfo": {
         "properties": {
           "host": {
@@ -738,6 +1330,155 @@
         "title": "ClientInfo",
         "type": "object"
       },
+      "ColumnOut": {
+        "properties": {
+          "boxes": {
+            "items": {
+              "$ref": "#/components/schemas/BoxOut"
+            },
+            "title": "Boxes",
+            "type": "array"
+          },
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "routines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineRunOut"
+            },
+            "title": "Routines",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "member_id",
+          "done",
+          "total",
+          "boxes",
+          "routines"
+        ],
+        "title": "ColumnOut",
+        "type": "object"
+      },
+      "CompleteIn": {
+        "properties": {
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          }
+        },
+        "required": [
+          "due_date"
+        ],
+        "title": "CompleteIn",
+        "type": "object"
+      },
+      "CompleteOut": {
+        "properties": {
+          "all_done": {
+            "title": "All Done",
+            "type": "boolean"
+          },
+          "completion": {
+            "$ref": "#/components/schemas/CompletionOut"
+          },
+          "stars": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StarsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "completion",
+          "stars",
+          "all_done"
+        ],
+        "title": "CompleteOut",
+        "type": "object"
+      },
+      "CompletionOut": {
+        "properties": {
+          "chore_id": {
+            "title": "Chore Id",
+            "type": "string"
+          },
+          "completed_at": {
+            "format": "date-time",
+            "title": "Completed At",
+            "type": "string"
+          },
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "points_awarded": {
+            "title": "Points Awarded",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "done",
+              "pending",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "chore_id",
+          "due_date",
+          "member_id",
+          "completed_at",
+          "points_awarded",
+          "status"
+        ],
+        "title": "CompletionOut",
+        "type": "object"
+      },
       "ContributesOut": {
         "properties": {
           "banners": {
@@ -789,6 +1530,82 @@
           "banners"
         ],
         "title": "ContributesOut",
+        "type": "object"
+      },
+      "DayIn": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "DayIn",
+        "type": "object"
+      },
+      "DayOut": {
+        "description": "GET chores/today: the Chores room, the Today panel's Chores today, Who's doing what.",
+        "properties": {
+          "asked": {
+            "items": {
+              "$ref": "#/components/schemas/RedemptionOut"
+            },
+            "title": "Asked",
+            "type": "array"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnOut"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "rewards_on": {
+            "title": "Rewards On",
+            "type": "boolean"
+          },
+          "routines_on": {
+            "title": "Routines On",
+            "type": "boolean"
+          },
+          "stars": {
+            "items": {
+              "$ref": "#/components/schemas/StarsOut"
+            },
+            "title": "Stars",
+            "type": "array"
+          },
+          "stars_on": {
+            "title": "Stars On",
+            "type": "boolean"
+          },
+          "waiting": {
+            "items": {
+              "$ref": "#/components/schemas/WaitingOut"
+            },
+            "title": "Waiting",
+            "type": "array"
+          }
+        },
+        "required": [
+          "date",
+          "stars_on",
+          "rewards_on",
+          "routines_on",
+          "columns",
+          "stars",
+          "asked",
+          "waiting"
+        ],
+        "title": "DayOut",
         "type": "object"
       },
       "DescribeOut": {
@@ -1930,6 +2747,55 @@
         "title": "FieldOut",
         "type": "object"
       },
+      "FinishIn": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "FinishIn",
+        "type": "object"
+      },
+      "FinishOut": {
+        "properties": {
+          "points_awarded": {
+            "title": "Points Awarded",
+            "type": "integer"
+          },
+          "stars": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StarsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "points_awarded",
+          "stars"
+        ],
+        "title": "FinishOut",
+        "type": "object"
+      },
       "GoogleCalendarIn": {
         "properties": {
           "calendar_id": {
@@ -2160,6 +3026,354 @@
           "url"
         ],
         "title": "IcsIn",
+        "type": "object"
+      },
+      "IdsIn": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "IdsIn",
+        "type": "object"
+      },
+      "ItemIn": {
+        "properties": {
+          "assigned_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Member Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "text": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ItemIn",
+        "type": "object"
+      },
+      "ItemOut": {
+        "properties": {
+          "assigned_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Member Id"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "checked_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked By Member Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Member Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "list_id": {
+            "title": "List Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "list_id",
+          "text",
+          "note",
+          "quantity",
+          "due_date",
+          "assigned_member_id",
+          "checked_at",
+          "checked_by_member_id",
+          "created_by_member_id",
+          "created_at",
+          "position",
+          "version"
+        ],
+        "title": "ItemOut",
+        "type": "object"
+      },
+      "ItemPatch": {
+        "description": "Only what's sent changes. Empty text clears a note or quantity.",
+        "properties": {
+          "assigned_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Member Id"
+          },
+          "checked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked"
+          },
+          "clear_assignee": {
+            "default": false,
+            "title": "Clear Assignee",
+            "type": "boolean"
+          },
+          "clear_due_date": {
+            "default": false,
+            "title": "Clear Due Date",
+            "type": "boolean"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "ItemPatch",
+        "type": "object"
+      },
+      "ItemsAdded": {
+        "properties": {
+          "already": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Already",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "already"
+        ],
+        "title": "ItemsAdded",
+        "type": "object"
+      },
+      "ItemsIn": {
+        "description": "One or several items (\"Milk, eggs, bread\" is split by the app).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ItemsIn",
         "type": "object"
       },
       "JoinCodeOut": {
@@ -2422,6 +3636,223 @@
           "status"
         ],
         "title": "KioskPollOut",
+        "type": "object"
+      },
+      "LastChange": {
+        "description": "A list tile's last line, written out by the app: \"Mia added Milk \u00b7 2:10 PM\".",
+        "properties": {
+          "action": {
+            "enum": [
+              "added",
+              "checked"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "text",
+          "member_id",
+          "at"
+        ],
+        "title": "LastChange",
+        "type": "object"
+      },
+      "ListDetailOut": {
+        "properties": {
+          "done": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "title": "Done",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "list": {
+            "$ref": "#/components/schemas/ListOut"
+          },
+          "usuals": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Usuals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "list",
+          "items",
+          "done",
+          "usuals"
+        ],
+        "title": "ListDetailOut",
+        "type": "object"
+      },
+      "ListIn": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "grocery",
+                  "todo",
+                  "packing",
+                  "custom"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ListIn",
+        "type": "object"
+      },
+      "ListOut": {
+        "properties": {
+          "created_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Member Id"
+          },
+          "done_count": {
+            "title": "Done Count",
+            "type": "integer"
+          },
+          "due_count": {
+            "title": "Due Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "grocery",
+              "todo",
+              "packing",
+              "custom"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_count": {
+            "title": "Open Count",
+            "type": "integer"
+          },
+          "sort": {
+            "title": "Sort",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "sort",
+          "open_count",
+          "done_count",
+          "due_count",
+          "last_change",
+          "created_by_member_id"
+        ],
+        "title": "ListOut",
+        "type": "object"
+      },
+      "ListPatch": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "grocery",
+                  "todo",
+                  "packing",
+                  "custom"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "ListPatch",
         "type": "object"
       },
       "LiveUpdatesInfo": {
@@ -3068,6 +4499,24 @@
         "title": "OccurrencesOut",
         "type": "object"
       },
+      "OrderIn": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "OrderIn",
+        "type": "object"
+      },
       "PanelOut": {
         "properties": {
           "default_size": {
@@ -3374,6 +4823,22 @@
         "title": "PluginOut",
         "type": "object"
       },
+      "PointsOut": {
+        "properties": {
+          "stars": {
+            "items": {
+              "$ref": "#/components/schemas/StarsOut"
+            },
+            "title": "Stars",
+            "type": "array"
+          }
+        },
+        "required": [
+          "stars"
+        ],
+        "title": "PointsOut",
+        "type": "object"
+      },
       "ReconnectIn": {
         "description": "A new password (CalDAV) or address (a feed) for an account that needs reconnecting.",
         "properties": {
@@ -3404,6 +4869,98 @@
           }
         },
         "title": "ReconnectIn",
+        "type": "object"
+      },
+      "RedeemIn": {
+        "properties": {
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          }
+        },
+        "title": "RedeemIn",
+        "type": "object"
+      },
+      "RedemptionOut": {
+        "properties": {
+          "cost_points": {
+            "title": "Cost Points",
+            "type": "integer"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By Member Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "reward_id": {
+            "title": "Reward Id",
+            "type": "string"
+          },
+          "reward_title": {
+            "title": "Reward Title",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "requested",
+              "approved",
+              "denied",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reward_id",
+          "reward_title",
+          "member_id",
+          "cost_points",
+          "status",
+          "requested_at",
+          "decided_at",
+          "decided_by_member_id"
+        ],
+        "title": "RedemptionOut",
         "type": "object"
       },
       "RemoteCalendarOut": {
@@ -3534,6 +5091,289 @@
         "title": "RemoteCalendarOut",
         "type": "object"
       },
+      "RemovedChoreOut": {
+        "properties": {
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "deleted_at"
+        ],
+        "title": "RemovedChoreOut",
+        "type": "object"
+      },
+      "RemovedItemOut": {
+        "properties": {
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "list_id": {
+            "title": "List Id",
+            "type": "string"
+          },
+          "list_name": {
+            "title": "List Name",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "list_id",
+          "list_name",
+          "text",
+          "deleted_at"
+        ],
+        "title": "RemovedItemOut",
+        "type": "object"
+      },
+      "RemovedListOut": {
+        "properties": {
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "item_count",
+          "deleted_at"
+        ],
+        "title": "RemovedListOut",
+        "type": "object"
+      },
+      "RemovedOut": {
+        "description": "Recently removed (the last 7 days), newest first. Cleared items aren't here: Clear done\nhas its Undo, and the list keeps them as its history.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RemovedItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "lists": {
+            "items": {
+              "$ref": "#/components/schemas/RemovedListOut"
+            },
+            "title": "Lists",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lists",
+          "items"
+        ],
+        "title": "RemovedOut",
+        "type": "object"
+      },
+      "RewardIn": {
+        "properties": {
+          "cost_points": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Cost Points",
+            "type": "integer"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "cost_points"
+        ],
+        "title": "RewardIn",
+        "type": "object"
+      },
+      "RewardOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "cost_points": {
+            "title": "Cost Points",
+            "type": "integer"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "cost_points",
+          "icon",
+          "active"
+        ],
+        "title": "RewardOut",
+        "type": "object"
+      },
+      "RewardPatch": {
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "cost_points": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Points"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "RewardPatch",
+        "type": "object"
+      },
+      "RewardsOut": {
+        "properties": {
+          "asked": {
+            "items": {
+              "$ref": "#/components/schemas/RedemptionOut"
+            },
+            "title": "Asked",
+            "type": "array"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/RedemptionOut"
+            },
+            "title": "Recent",
+            "type": "array"
+          },
+          "rewards": {
+            "items": {
+              "$ref": "#/components/schemas/RewardOut"
+            },
+            "title": "Rewards",
+            "type": "array"
+          },
+          "stars": {
+            "items": {
+              "$ref": "#/components/schemas/StarsOut"
+            },
+            "title": "Stars",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rewards",
+          "stars",
+          "asked",
+          "recent"
+        ],
+        "title": "RewardsOut",
+        "type": "object"
+      },
       "RoomOut": {
         "properties": {
           "icon": {
@@ -3560,6 +5400,410 @@
           "order"
         ],
         "title": "RoomOut",
+        "type": "object"
+      },
+      "RoutineIn": {
+        "properties": {
+          "days": {
+            "items": {
+              "maximum": 6.0,
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "maxItems": 7,
+            "title": "Days",
+            "type": "array"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "points": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepIn"
+            },
+            "maxItems": 20,
+            "title": "Steps",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "window_end": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Window End",
+            "type": "string"
+          },
+          "window_start": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Window Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "window_start",
+          "window_end"
+        ],
+        "title": "RoutineIn",
+        "type": "object"
+      },
+      "RoutineOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "points": {
+            "title": "Points",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineStepOut"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "window_end": {
+            "title": "Window End",
+            "type": "string"
+          },
+          "window_start": {
+            "title": "Window Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "member_id",
+          "days",
+          "window_start",
+          "window_end",
+          "icon",
+          "points",
+          "active",
+          "steps"
+        ],
+        "title": "RoutineOut",
+        "type": "object"
+      },
+      "RoutinePatch": {
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "days": {
+            "anyOf": [
+              {
+                "items": {
+                  "maximum": 6.0,
+                  "minimum": 0.0,
+                  "type": "integer"
+                },
+                "maxItems": 7,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days"
+          },
+          "every_kid": {
+            "default": false,
+            "title": "Every Kid",
+            "type": "boolean"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "window_end": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window End"
+          },
+          "window_start": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Start"
+          }
+        },
+        "title": "RoutinePatch",
+        "type": "object"
+      },
+      "RoutineRunOut": {
+        "description": "A kid's routine on a day: its steps, what's checked, and whether its window is open.",
+        "properties": {
+          "checked": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Checked",
+            "type": "array"
+          },
+          "finished": {
+            "title": "Finished",
+            "type": "boolean"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "open_now": {
+            "title": "Open Now",
+            "type": "boolean"
+          },
+          "points": {
+            "title": "Points",
+            "type": "integer"
+          },
+          "routine_id": {
+            "title": "Routine Id",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineStepOut"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "window_end": {
+            "title": "Window End",
+            "type": "string"
+          },
+          "window_start": {
+            "title": "Window Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "routine_id",
+          "member_id",
+          "title",
+          "icon",
+          "points",
+          "window_start",
+          "window_end",
+          "open_now",
+          "steps",
+          "checked",
+          "finished"
+        ],
+        "title": "RoutineRunOut",
+        "type": "object"
+      },
+      "RoutineStepOut": {
+        "properties": {
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "icon",
+          "position"
+        ],
+        "title": "RoutineStepOut",
+        "type": "object"
+      },
+      "RoutinesOut": {
+        "description": "GET chores/routines: the routines as made in Settings, and each kid's day of them.",
+        "properties": {
+          "routines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineOut"
+            },
+            "title": "Routines",
+            "type": "array"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineRunOut"
+            },
+            "title": "Runs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "routines",
+          "runs"
+        ],
+        "title": "RoutinesOut",
         "type": "object"
       },
       "RunOut": {
@@ -4430,6 +6674,95 @@
         "title": "SignOutOthersIn",
         "type": "object"
       },
+      "StarsOut": {
+        "properties": {
+          "balance": {
+            "title": "Balance",
+            "type": "integer"
+          },
+          "held": {
+            "title": "Held",
+            "type": "integer"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "streak": {
+            "title": "Streak",
+            "type": "integer"
+          },
+          "week": {
+            "title": "Week",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "member_id",
+          "balance",
+          "held",
+          "week",
+          "streak"
+        ],
+        "title": "StarsOut",
+        "type": "object"
+      },
+      "StepIn": {
+        "properties": {
+          "icon": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "StepIn",
+        "type": "object"
+      },
+      "StepsIn": {
+        "properties": {
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepIn"
+            },
+            "maxItems": 20,
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "title": "StepsIn",
+        "type": "object"
+      },
       "StorageInfo": {
         "properties": {
           "free_bytes": {
@@ -4479,6 +6812,170 @@
           "order"
         ],
         "title": "TabOut",
+        "type": "object"
+      },
+      "TodoItemOut": {
+        "properties": {
+          "assigned_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Member Id"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "checked_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked By Member Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Member Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "list_id": {
+            "title": "List Id",
+            "type": "string"
+          },
+          "list_kind": {
+            "enum": [
+              "grocery",
+              "todo",
+              "packing",
+              "custom"
+            ],
+            "title": "List Kind",
+            "type": "string"
+          },
+          "list_name": {
+            "title": "List Name",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "list_id",
+          "text",
+          "note",
+          "quantity",
+          "due_date",
+          "assigned_member_id",
+          "checked_at",
+          "checked_by_member_id",
+          "created_by_member_id",
+          "created_at",
+          "position",
+          "version",
+          "list_name",
+          "list_kind"
+        ],
+        "title": "TodoItemOut",
+        "type": "object"
+      },
+      "TodoOut": {
+        "description": "The Today panel's To do: items still open that are due on the day or before, the oldest\nfirst.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TodoItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "date",
+          "items"
+        ],
+        "title": "TodoOut",
         "type": "object"
       },
       "UndoIn": {
@@ -4566,6 +7063,99 @@
           "created"
         ],
         "title": "VersionOut",
+        "type": "object"
+      },
+      "WaitingOut": {
+        "description": "A completion waiting for a parent's OK.",
+        "properties": {
+          "completion": {
+            "$ref": "#/components/schemas/CompletionOut"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "completion",
+          "title"
+        ],
+        "title": "WaitingOut",
+        "type": "object"
+      },
+      "WeekCellOut": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "done",
+          "total"
+        ],
+        "title": "WeekCellOut",
+        "type": "object"
+      },
+      "WeekColumnOut": {
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/WeekCellOut"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          }
+        },
+        "required": [
+          "member_id",
+          "days"
+        ],
+        "title": "WeekColumnOut",
+        "type": "object"
+      },
+      "WeekOut": {
+        "description": "GET chores/week: seven compact rows per column, the fridge-chart view.",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/WeekColumnOut"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "columns"
+        ],
+        "title": "WeekOut",
         "type": "object"
       }
     }
@@ -6942,6 +9532,1401 @@
         ]
       }
     },
+    "/api/chores": {
+      "get": {
+        "operationId": "list_chores_api_chores_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_inactive",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Inactive",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChoreOut"
+                  },
+                  "title": "Response List Chores Api Chores Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Chores",
+        "tags": [
+          "chores"
+        ]
+      },
+      "post": {
+        "operationId": "add_chore_api_chores_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChoreIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChoreOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Chore",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/completions/{completion_id}/approve": {
+      "post": {
+        "operationId": "approve_completion_api_chores_completions__completion_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "completion_id",
+            "required": true,
+            "schema": {
+              "title": "Completion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Completion",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/completions/{completion_id}/reject": {
+      "post": {
+        "operationId": "reject_completion_api_chores_completions__completion_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "completion_id",
+            "required": true,
+            "schema": {
+              "title": "Completion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Completion",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/points": {
+      "get": {
+        "operationId": "stars_api_chores_points_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PointsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Stars",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/points/adjust": {
+      "post": {
+        "operationId": "adjust_api_chores_points_adjust_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Adjust",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/redemptions/{redemption_id}/approve": {
+      "post": {
+        "operationId": "approve_redemption_api_chores_redemptions__redemption_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "redemption_id",
+            "required": true,
+            "schema": {
+              "title": "Redemption Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedemptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Redemption",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/redemptions/{redemption_id}/cancel": {
+      "post": {
+        "operationId": "cancel_redemption_api_chores_redemptions__redemption_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "redemption_id",
+            "required": true,
+            "schema": {
+              "title": "Redemption Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedemptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Redemption",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/redemptions/{redemption_id}/deny": {
+      "post": {
+        "operationId": "deny_redemption_api_chores_redemptions__redemption_id__deny_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "redemption_id",
+            "required": true,
+            "schema": {
+              "title": "Redemption Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedemptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deny Redemption",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/removed": {
+      "get": {
+        "operationId": "removed_api_chores_removed_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RemovedChoreOut"
+                  },
+                  "title": "Response Removed Api Chores Removed Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Removed",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/rewards": {
+      "get": {
+        "operationId": "list_rewards_api_chores_rewards_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_inactive",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Inactive",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Rewards",
+        "tags": [
+          "chores"
+        ]
+      },
+      "post": {
+        "operationId": "add_reward_api_chores_rewards_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RewardIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Reward",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/rewards/{reward_id}": {
+      "delete": {
+        "operationId": "remove_reward_api_chores_rewards__reward_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "reward_id",
+            "required": true,
+            "schema": {
+              "title": "Reward Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Reward",
+        "tags": [
+          "chores"
+        ]
+      },
+      "patch": {
+        "operationId": "change_reward_api_chores_rewards__reward_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "reward_id",
+            "required": true,
+            "schema": {
+              "title": "Reward Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RewardPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Reward",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/rewards/{reward_id}/redeem": {
+      "post": {
+        "operationId": "redeem_api_chores_rewards__reward_id__redeem_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "reward_id",
+            "required": true,
+            "schema": {
+              "title": "Reward Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedemptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Redeem",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/routines": {
+      "get": {
+        "operationId": "list_routines_api_chores_routines_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "member_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Member Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_inactive",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Inactive",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutinesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Routines",
+        "tags": [
+          "chores"
+        ]
+      },
+      "post": {
+        "operationId": "add_routine_api_chores_routines_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Routine",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/routines/{routine_id}": {
+      "delete": {
+        "operationId": "remove_routine_api_chores_routines__routine_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Routine",
+        "tags": [
+          "chores"
+        ]
+      },
+      "patch": {
+        "operationId": "change_routine_api_chores_routines__routine_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutinePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Routine",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/routines/{routine_id}/finish": {
+      "post": {
+        "operationId": "finish_routine_api_chores_routines__routine_id__finish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinishIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinishOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Finish Routine",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/routines/{routine_id}/steps": {
+      "put": {
+        "operationId": "replace_steps_api_chores_routines__routine_id__steps_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace Steps",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/routines/{routine_id}/steps/{step_id}/check": {
+      "post": {
+        "operationId": "check_step_api_chores_routines__routine_id__steps__step_id__check_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "title": "Step Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Step",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/today": {
+      "get": {
+        "operationId": "today_api_chores_today_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Today",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/week": {
+      "get": {
+        "operationId": "week_api_chores_week_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeekOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Week",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/{chore_id}": {
+      "delete": {
+        "operationId": "remove_chore_api_chores__chore_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chore_id",
+            "required": true,
+            "schema": {
+              "title": "Chore Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Chore",
+        "tags": [
+          "chores"
+        ]
+      },
+      "patch": {
+        "operationId": "change_chore_api_chores__chore_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chore_id",
+            "required": true,
+            "schema": {
+              "title": "Chore Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChorePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChoreOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Chore",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/{chore_id}/complete": {
+      "post": {
+        "operationId": "complete_api_chores__chore_id__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chore_id",
+            "required": true,
+            "schema": {
+              "title": "Chore Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/{chore_id}/restore": {
+      "post": {
+        "operationId": "restore_chore_api_chores__chore_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chore_id",
+            "required": true,
+            "schema": {
+              "title": "Chore Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChoreOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Chore",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/{chore_id}/skip": {
+      "post": {
+        "operationId": "skip_day_api_chores__chore_id__skip_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chore_id",
+            "required": true,
+            "schema": {
+              "title": "Chore Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChoreOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Skip Day",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/{chore_id}/undo": {
+      "post": {
+        "operationId": "undo_api_chores__chore_id__undo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chore_id",
+            "required": true,
+            "schema": {
+              "title": "Chore Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
+    "/api/chores/{chore_id}/unskip": {
+      "post": {
+        "operationId": "unskip_day_api_chores__chore_id__unskip_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chore_id",
+            "required": true,
+            "schema": {
+              "title": "Chore Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChoreOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unskip Day",
+        "tags": [
+          "chores"
+        ]
+      }
+    },
     "/api/export": {
       "get": {
         "operationId": "export_api_export_get",
@@ -7096,6 +11081,595 @@
         "summary": "Set Layout",
         "tags": [
           "household"
+        ]
+      }
+    },
+    "/api/lists": {
+      "get": {
+        "operationId": "get_lists_api_lists_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ListOut"
+                  },
+                  "title": "Response Get Lists Api Lists Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Lists",
+        "tags": [
+          "lists"
+        ]
+      },
+      "post": {
+        "operationId": "post_list_api_lists_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post List",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/order": {
+      "put": {
+        "operationId": "put_order_api_lists_order_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Order",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/removed": {
+      "get": {
+        "operationId": "get_removed_api_lists_removed_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemovedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Removed",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/todo": {
+      "get": {
+        "operationId": "get_todo_api_lists_todo_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Todo",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/{list_id}": {
+      "delete": {
+        "operationId": "delete_list_api_lists__list_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete List",
+        "tags": [
+          "lists"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_list_api_lists__list_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch List",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/{list_id}/clear-checked": {
+      "post": {
+        "operationId": "clear_checked_api_lists__list_id__clear_checked_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClearedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Checked",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/{list_id}/items": {
+      "get": {
+        "operationId": "get_items_api_lists__list_id__items_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Items",
+        "tags": [
+          "lists"
+        ]
+      },
+      "post": {
+        "operationId": "post_items_api_lists__list_id__items_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemsAdded"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Items",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/{list_id}/items/{item_id}": {
+      "delete": {
+        "operationId": "delete_item_api_lists__list_id__items__item_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Item",
+        "tags": [
+          "lists"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_item_api_lists__list_id__items__item_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Item",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/{list_id}/restore": {
+      "post": {
+        "operationId": "restore_list_api_lists__list_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore List",
+        "tags": [
+          "lists"
+        ]
+      }
+    },
+    "/api/lists/{list_id}/restore-items": {
+      "post": {
+        "operationId": "restore_items_api_lists__list_id__restore_items_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ItemOut"
+                  },
+                  "title": "Response Restore Items Api Lists  List Id  Restore Items Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Items",
+        "tags": [
+          "lists"
         ]
       }
     },

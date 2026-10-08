@@ -5,6 +5,7 @@ from __future__ import annotations
 import httpx
 
 from sunroom.db.export import CORE_EXPORT_TABLES
+from sunroom.plugins.chores.models import TABLES as CHORES_TABLES
 from tests.support import CSRF, PASSWORD, add_member, set_pin
 
 
@@ -16,8 +17,16 @@ async def test_the_export_lists_every_exported_table(parent: httpx.AsyncClient) 
     assert response.headers["cache-control"] == "no-store"
     body = response.json()
     assert body["format"] == "sunroom-export"
-    # Core's tables, then each enabled plugin's (synced calendars' accounts, minus their secrets).
-    assert list(body["data"]) == [*CORE_EXPORT_TABLES, "sync_accounts", "remote_calendars"]
+    # Core's tables, then each enabled plugin's (synced calendars' accounts minus their secrets,
+    # lists, chores).
+    assert list(body["data"]) == [
+        *CORE_EXPORT_TABLES,
+        "sync_accounts",
+        "remote_calendars",
+        "lists",
+        "list_items",
+        *CHORES_TABLES,
+    ]
     assert [m["name"] for m in body["data"]["members"]] == ["Mia"]
     household = body["data"]["household"][0]
     assert household["name"] == "Sample Family"
