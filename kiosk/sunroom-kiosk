@@ -1,0 +1,242 @@
+#!/usr/bin/env bash
+# sunroom-kiosk: starts the Sunroom kitchen screen (Chromium, full screen, touch-first).
+#
+# Installed to ~/.local/bin/sunroom-kiosk by kiosk/install.sh and run by the systemd user
+# unit sunroom-kiosk.service, which starts it again 3 s after it exits for any reason.
+# Settings come from ~/.config/sunroom-kiosk/config (shell KEY=value lines written by the
+# installer). Messages go to the journal: journalctl --user -u sunroom-kiosk
+#
+# Order of events: wait for the desktop, wait up to 60 s for the clock (a Pi has no
+# battery-backed clock), wait as long as it takes for Sunroom to answer /api/health (the
+# desktop wallpaper shows meanwhile), mark the last browser exit as clean so a power cut
+# never shows "Restore pages?", apply the X11-only screen settings, then exec Chromium.
+# See docs/PLAN.md §13.2.
+
+set -euo pipefail
+
+CONFIG_DIR="$HOME/.config/sunroom-kiosk"
+CONFIG_FILE="$CONFIG_DIR/config"
+PROFILE_DIR="$CONFIG_DIR/profile"
+
+log() {
+	printf 'sunroom-kiosk: %s\n' "$*" >&2
+}
+
+load_config() {
+	if [[ ! -r $CONFIG_FILE ]]; then
+		log "No settings at $CONFIG_FILE. Run kiosk/install.sh again to set up the kitchen screen."
+		sleep 30 # keeps systemd's restarts slow until someone fixes it
+		exit 1
+	fi
+	# shellcheck source=/dev/null
+	. "$CONFIG_FILE"
+	SUNROOM_URL="${SUNROOM_URL:-http://localhost:8080}"
+	SUNROOM_URL="${SUNROOM_URL%/}"
+	SUNROOM_SESSION="${SUNROOM_SESSION:-wayland}"
+	SUNROOM_OUTPUT="${SUNROOM_OUTPUT:-}"
+	SUNROOM_ROTATE="${SUNROOM_ROTATE:-0}"
+}
+
+# Wait for the compositor: on a fresh boot the unit can start a moment before the screen
+# is ready, and starting Chromium without one only makes it crash and restart.
+wait_for_desktop() {
+	local waited=0 socket
+	while true; do
+		if [[ $SUNROOM_SESSION == x11 ]]; then
+			if [[ -n ${DISPLAY:-} ]] && xset q >/dev/null 2>&1; then
+				return 0
+			fi
+		elif [[ -n ${WAYLAND_DISPLAY:-} ]]; then
+			socket="$WAYLAND_DISPLAY"
+			[[ $socket == /* ]] || socket="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/$socket"
+			if [[ -S $socket ]]; then
+				return 0
+			fi
+		fi
+		if ((waited % 60 == 0)); then
+			log "Waiting for the desktop to start (no display yet)."
+		fi
+		sleep 2
+		waited=$((waited + 2))
+	done
+}
+
+wait_for_clock() {
+	local i
+	for ((i = 0; i < 30; i++)); do
+		if [[ $(timedatectl show -p NTPSynchronized --value 2>/dev/null || true) == yes ]]; then
+			return 0
+		fi
+		sleep 2
+	done
+	log "The clock has not synced after 60 s; starting anyway."
+}
+
+# No time limit: on a first boot the container may still be downloading or migrating.
+wait_for_server() {
+	local url="$SUNROOM_URL/api/health" code waited=0
+	while true; do
+		code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 2 "$url" 2>/dev/null || true)
+		if [[ $code == 200 ]]; then
+			return 0
+		fi
+		if ((waited % 30 == 0)); then
+			log "Waiting for Sunroom at $SUNROOM_URL (answer so far: ${code:-none})."
+		fi
+		sleep 2
+		waited=$((waited + 2))
+	done
+}
+
+# Chromium shows "Restore pages?" when its last exit was not clean, which is every power
+# cut and every restart by systemd. Rewriting the two flags before launch prevents it.
+mark_clean_exit() {
+	local prefs="$PROFILE_DIR/Default/Preferences" tmp
+	[[ -f $prefs ]] || return 0
+	tmp="$prefs.sunroom-tmp"
+	if command -v jq >/dev/null 2>&1; then
+		if jq -c '.profile.exited_cleanly = true | .profile.exit_type = "Normal"' "$prefs" >"$tmp" 2>/dev/null; then
+			mv -f "$tmp" "$prefs"
+			return 0
+		fi
+		rm -f "$tmp"
+	fi
+	python3 - "$prefs" <<'PY' || log "Could not mark the last browser exit as clean; carrying on."
+import json
+import os
+import sys
+
+path = sys.argv[1]
+with open(path, encoding="utf-8") as f:
+    data = json.load(f)
+profile = data.setdefault("profile", {})
+profile["exited_cleanly"] = True
+profile["exit_type"] = "Normal"
+tmp = path + ".sunroom-tmp"
+with open(tmp, "w", encoding="utf-8") as f:
+    json.dump(data, f, separators=(",", ":"))
+os.replace(tmp, path)
+PY
+}
+
+# X11 output names differ from the kernel's (HDMI-A-1 there is usually HDMI-1 here).
+x11_output() {
+	local want="$SUNROOM_OUTPUT" outputs
+	outputs=$(xrandr --query 2>/dev/null | awk '$2 == "connected" {print $1}')
+	[[ -n $outputs ]] || return 1
+	if [[ -n $want ]]; then
+		if grep -qx -- "$want" <<<"$outputs"; then
+			printf '%s\n' "$want"
+			return 0
+		fi
+		want="${want/HDMI-A-/HDMI-}"
+		if grep -qx -- "$want" <<<"$outputs"; then
+			printf '%s\n' "$want"
+			return 0
+		fi
+	fi
+	head -n 1 <<<"$outputs"
+}
+
+setup_x11() {
+	local turn output
+	xset s off || true
+	xset -dpms || true
+	xset s noblank || true
+	# Unverified: Debian's unclutter may already be started by its own X session script;
+	# a second copy is only started when none is running.
+	if command -v unclutter >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x unclutter >/dev/null 2>&1; then
+		unclutter -idle 1 -root &
+	fi
+	# Same names as Raspberry Pi's screen settings: 90 = Left, 180 = Inverted, 270 = Right.
+	case $SUNROOM_ROTATE in
+	90) turn=left ;;
+	180) turn=inverted ;;
+	270) turn=right ;;
+	*) return 0 ;;
+	esac
+	if output=$(x11_output); then
+		xrandr --output "$output" --rotate "$turn" || log "Could not turn screen $output to $turn."
+	else
+		log "No connected screen found to turn."
+	fi
+}
+
+# Plain http:// to another machine is not a secure context, so the service worker and
+# Wake Lock would be off. This flag makes Chromium treat that one origin as secure.
+insecure_origin() {
+	local hostport
+	[[ $SUNROOM_URL == http://* ]] || return 1
+	hostport="${SUNROOM_URL#http://}"
+	hostport="${hostport%%/*}"
+	case $hostport in
+	localhost | localhost:* | 127.0.0.1 | 127.0.0.1:* | '[::1]' | '[::1]:'*) return 1 ;;
+	esac
+	printf 'http://%s\n' "$hostport"
+}
+
+find_chromium() {
+	local name
+	for name in chromium chromium-browser; do
+		if command -v "$name" >/dev/null 2>&1; then
+			printf '%s\n' "$name"
+			return 0
+		fi
+	done
+	return 1
+}
+
+main() {
+	local chromium origin
+	local -a flags
+
+	load_config
+	if ! chromium=$(find_chromium); then
+		log "Chromium is not installed. Run kiosk/install.sh again."
+		sleep 30
+		exit 1
+	fi
+
+	wait_for_desktop
+	wait_for_clock
+	wait_for_server
+	mkdir -p "$PROFILE_DIR"
+	chmod 700 "$PROFILE_DIR"
+	mark_clean_exit
+	if [[ $SUNROOM_SESSION == x11 ]]; then
+		setup_x11
+	fi
+
+	# The dedicated profile keeps the display's pairing cookie across reboots,
+	# so never --incognito; and never --disable-gpu, which makes the board crawl.
+	# shellcheck disable=SC2054 # the comma belongs to Chromium's feature list
+	flags=(
+		"--user-data-dir=$PROFILE_DIR"
+		--kiosk
+		--start-maximized
+		--no-first-run
+		--noerrdialogs
+		--disable-infobars
+		--hide-crash-restore-bubble
+		--touch-events=enabled
+		--disable-pinch
+		--overscroll-history-navigation=0
+		--enable-features=OverlayScrollbar
+		--disable-features=Translate,TranslateUI
+		--password-store=basic
+		--disable-component-update
+		--check-for-update-interval=31536000
+		--autoplay-policy=no-user-gesture-required
+	)
+	if [[ $SUNROOM_SESSION != x11 ]]; then
+		flags+=(--ozone-platform=wayland --enable-wayland-ime --wayland-text-input-version=3)
+	fi
+	if origin=$(insecure_origin); then
+		flags+=("--unsafely-treat-insecure-origin-as-secure=$origin")
+	fi
+
+	log "Opening $SUNROOM_URL/display with $chromium."
+	exec "$chromium" "${flags[@]}" "$SUNROOM_URL/display"
+}
+
+main "$@"

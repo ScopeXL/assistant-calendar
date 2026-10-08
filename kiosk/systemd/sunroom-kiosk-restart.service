@@ -1,0 +1,9 @@
+# Sunroom kitchen screen: restarts the browser once, to give back the memory Chromium
+# slowly gathers over days on a 4 GB Pi. Run by sunroom-kiosk-restart.timer (a user unit).
+
+[Unit]
+Description=Restart the Sunroom kitchen screen browser
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl --user restart sunroom-kiosk.service

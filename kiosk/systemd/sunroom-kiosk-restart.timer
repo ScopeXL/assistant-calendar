@@ -1,0 +1,16 @@
+# Sunroom kitchen screen: restarts the browser every night between 03:55 and 04:05
+# (03:55 plus up to 10 minutes of randomness, so about 04:00 give or take 5 minutes).
+# A missed night is skipped rather than caught up later (Persistent=false).
+
+[Unit]
+Description=Nightly restart of the Sunroom kitchen screen browser, around 04:00
+
+[Timer]
+OnCalendar=*-*-* 03:55:00
+RandomizedDelaySec=10min
+AccuracySec=1min
+Persistent=false
+Unit=sunroom-kiosk-restart.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,17 @@
+# Sunroom kitchen screen: keeps the full-screen browser running (a systemd user unit).
+# kiosk/install.sh copies it to ~/.config/systemd/user/. It is not enabled at boot: the
+# desktop session starts it (the labwc autostart block, or an XDG autostart entry on X11)
+# after importing WAYLAND_DISPLAY or DISPLAY, so the browser always has a screen to draw on.
+
+[Unit]
+Description=Sunroom kitchen screen (full-screen browser)
+After=graphical-session.target
+# Never stop retrying: a wall screen has nobody to press "try again".
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/sunroom-kiosk
+Restart=always
+RestartSec=3
+TimeoutStopSec=15

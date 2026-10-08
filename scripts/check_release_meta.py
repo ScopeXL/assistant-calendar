@@ -26,6 +26,11 @@ package = json.loads((REPO / "frontend" / "package.json").read_text())
 if package.get("version") != "0.0.0":
     problems.append("frontend/package.json version must stay 0.0.0 (VERSION is the source)")
 
+# The Pi installer is fetched from main, so it carries the released version too.
+kiosk = re.search(r'^KIOSK_VERSION="([^"]*)"', (REPO / "kiosk" / "install.sh").read_text(), re.M)
+if not kiosk or kiosk.group(1) != version:
+    problems.append(f"kiosk/install.sh KIOSK_VERSION must equal VERSION ({version}); `just bump` sets both")
+
 if "## [Unreleased]" not in (REPO / "CHANGELOG.md").read_text():
     problems.append("CHANGELOG.md needs an ## [Unreleased] section")
 
