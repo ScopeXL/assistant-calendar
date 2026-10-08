@@ -4,7 +4,7 @@
 >
 > **Where this file lives.** This is `docs/PLAN.md`, the single source for what is being built and how. UX lives in [`docs/UX.md`](UX.md) (split from §16 at the start of M0) and the decisions in [`docs/adr/`](adr/README.md) (seeded from §3). The owner cleared `docs` from `.gitignore` on 2026-10-07 (decision 0016), so this file is committable; private notes belong in a gitignored `.private/` instead.
 
-**Status:** approved by the owner on 2026-10-07; M0 in progress. Written to be executed by an AI engineer (Opus 5.5) milestone by milestone, with the owner reviewing at the end of each.
+**Status:** approved by the owner on 2026-10-07; M0 built on 2026-10-08, its release (0.1.0) waiting for the owner's word. Written to be executed by an AI engineer (Opus 5.5) milestone by milestone, with the owner reviewing at the end of each.
 
 **Maintenance rule** (copied from Dinner Bell): when a milestone ships, shrink its section to a one-line summary pointing at the CHANGELOG and mark it with the date and version. Keep this file about what is true now and what is left to do. Decisions that change get a new ADR; never edit history.
 
@@ -78,7 +78,7 @@ The app uses these words consistently in the UI, code and docs.
 
 ## 3. Decisions
 
-Each decision is an ADR in [`docs/adr/`](adr/README.md) (same format as Dinner Bell: Status, Date, Context, Decision, Consequences), seeded at the start of M0 with these numbers. 0018 to 0020 record the owner's answers in §20.
+Each decision is an ADR in [`docs/adr/`](adr/README.md) (same format as Dinner Bell: Status, Date, Context, Decision, Consequences), seeded at the start of M0 with these numbers. 0018 to 0020 record the owner's answers in §20; 0021 onwards were decided while building.
 
 | # | Decision | Why |
 |---|---|---|
@@ -102,6 +102,8 @@ Each decision is an ADR in [`docs/adr/`](adr/README.md) (same format as Dinner B
 | 0018 | **Landscape first, portrait supported; the owner's container runs on the existing Portainer host behind the HTTPS reverse proxy, and the Pi is the display only** (`kiosk/install.sh --display-only`); the all-on-one-Pi path stays first-class for other households | The owner's answer to Q3 |
 | 0019 | **Chores ship the full kids layer**: assignment and rotation, stars, rewards with parent approval, streaks, routines; each part switchable, all on by default | The owner's answer to Q4 |
 | 0020 | **Calendar providers in this order**: ICS and holidays, then iCloud CalDAV, then Google by service account, then Google OAuth | Q6's default (not asked) |
+| 0021 | **Changing numbers sit in fixed-width digit boxes** (`ui/Digits`), sized per weight, and Lexend stays | M0's `tnum` check: Lexend has no tabular figures |
+| 0022 | **The wall screen's on-screen keyboard is Sunroom's own**, not `react-simple-keyboard` | Keys must never take focus from the field, typed text must reach React inputs as real input, and sizes and styling follow UX §1 and the tokens |
 
 ## 4. What this borrows from the owner's other apps
 
@@ -145,7 +147,7 @@ Pin at M0 to what Dinner Bell pinned on 2026-10-06 (its `docs/PLAN.md` §4.2), r
 | Side | Additions |
 |---|---|
 | Python | `icalendar` 7 (zoneinfo-native), `x-wr-timezone` (Google's non-standard feed header), `python-dateutil` (the expansion engine), `recurring-ical-events` (dev only: the test oracle), `caldav` 3 (`caldav.aio`; iCloud and generic CalDAV), `google-api-python-client` + `google-auth` (service-account and OAuth tiers), `holidays` (offline public-holiday calendars), `httpx` (ICS, Open-Meteo, Immich; always through the SSRF guard), `Pillow` (thumbnails, EXIF orientation), `pillow-heif` (iPhone HEIC uploads), `zoneinfo` + `tzdata` |
-| Frontend | `motion` 13 (animations and gestures), `@dnd-kit/core` + `@dnd-kit/sortable` (long-press drag with a delay constraint), `chrono-node` (quick-add parsing), `react-simple-keyboard` (on-screen keyboard on the display), `canvas-confetti` or a 60-line in-house particle burst (celebrations; decide at M3 by bundle size), `date-fns` + `date-fns-tz` (formatting only; never recurrence math), `@fontsource-variable/lexend` (one family; M0 checks that it ships tabular figures (`tnum`) for the clock and day numbers, and if not, the clock renders each digit in a fixed-width box, or the family becomes Albert Sans, recorded in an ADR), `lucide-react` |
+| Frontend | `motion` 14 (animations and gestures; 13 when planned, 14 current at M0 with the same API and `nonce`), `@dnd-kit/core` + `@dnd-kit/sortable` (long-press drag with a delay constraint), `chrono-node` (quick-add parsing), the display's on-screen keyboard is Sunroom's own (ADR 0022; `react-simple-keyboard` was the plan), `canvas-confetti` or a 60-line in-house particle burst (celebrations; decide at M3 by bundle size), `date-fns` + `date-fns-tz` (formatting only; never recurrence math), `@fontsource-variable/lexend` (one family; M0 found no tabular figures (`tnum`), so changing numbers render each digit in a fixed-width box: ADR 0021), `lucide-react` |
 | Not used | FullCalendar, Schedule-X, react-big-calendar (the grid is custom so the design is ours and touch targets are right), rrule.js (0003), shadcn/Radix/vaul/sonner (inject styles; Dinner Bell ADR 0023), zustand (Dinner Bell's 25-line store suffices) |
 
 ### 5.3 Backend layout
@@ -547,7 +549,7 @@ The facts below were checked against primary sources on 2026-10-07 (Raspberry Pi
 
 **The owner's deployment is path b** (Q3): the container on the Portainer host behind the existing HTTPS reverse proxy with `APP_ALLOWED_HOSTS=<public name>` and `TRUSTED_PROXIES=<proxy>` (Dinner Bell's `docs/DEPLOY.md` steps apply unchanged), and a Pi installed with `--display-only --url https://<public name>` driving a landscape touchscreen. Paths a and b are both first-class in the README, which presents them side by side after a one-question chooser ("Do you already run Docker somewhere at home?"); M0 is verified on the owner's path b, and path a on a spare card when one is available (M5 at the latest).
 
-The README's "All on the Pi" section walks a non-technical person through Raspberry Pi Imager (Raspberry Pi OS 64-bit with desktop; the customisation tab: hostname `sunroom`, a user, Wi-Fi, locale, SSH on), then the one-line installer, then "Set up the household on your phone" (scan the printed QR or open `http://sunroom.local:8080`, finish the wizard, add to the home screen), then "Pair the wall screen" (type the wall's six-letter code under Settings → Phones & screens). It ends with "If sunroom.local doesn't open: use the IP the installer printed; phones on a VPN or mobile data can't see .local names." Path b adds the server-side one-liners per platform (Portainer stack, Unraid with `--user 99:100`, CasaOS custom install, Compose) and installs the Pi with `--display-only`. Path c is one `docker run` or the compose file, and `just dev` for contributors.
+The README's "All on the Pi" section walks a non-technical person through Raspberry Pi Imager (Raspberry Pi OS 64-bit with desktop; the customisation tab: hostname `sunroom`, a user, Wi-Fi, locale, SSH on), then the one-line installer, then "Set up the household on your phone" (scan the printed QR or open `http://sunroom.local:8080`, finish the wizard, add to the home screen), then "Pair the wall screen" (type the wall's six-character code under More → Pair a display, also linked from Settings → Phones & screens). It ends with "If sunroom.local doesn't open: use the IP the installer printed; phones on a VPN or mobile data can't see .local names." Path b adds the server-side one-liners per platform (Portainer stack, Unraid with `--user 99:100`, CasaOS custom install, Compose) and installs the Pi with `--display-only`. Path c is one `docker run` or the compose file, and `just dev` for contributors.
 
 ### 13.2 The `kiosk/` folder
 
@@ -740,7 +742,7 @@ The `meals` plugin (week grid, saved meals, copy last week, the calendar overlay
 
 ### M5 The wall, polished → 0.6.0
 
-`kiosk/sunroom-screen` with the display state long-poll, sleep and brightness on the owner's monitor, `update.sh`, the update check and pill, Download everything and `sunroom restore`, `docs/KIOSK.md`, `HARDWARE.md`, `REMOTE-ACCESS.md`, `RESTORE.md`, the hardware test matrix results, the portrait pass on a real panel if one is available, the SSRF audit test, the secret-key reconcile over every `credentials_enc` table, `docs/PLUGINS.md` (how to add an in-repo plugin in seven steps), Tailscale verified end to end with Google OAuth over `ts.net`.
+`kiosk/sunroom-screen` with the display state long-poll, sleep and brightness on the owner's monitor, `update.sh`, the update check and pill, Download everything and `sunroom restore`, `docs/KIOSK.md` and `RESTORE.md` completed (M0 wrote their first versions), `HARDWARE.md`, `REMOTE-ACCESS.md`, the hardware test matrix results, the portrait pass on a real panel if one is available, the SSRF audit test, the secret-key reconcile over every `credentials_enc` table, `docs/PLUGINS.md` (how to add an in-repo plugin in seven steps), Tailscale verified end to end with Google OAuth over `ts.net`.
 
 *Verify:* `just preflight` green; `shellcheck kiosk/*.sh` clean; the helper turns the owner's monitor off at the scheduled time and a tap brings it back; `update.sh` upgrades 0.5.0 → 0.6.0 on the Pi with the display paired throughout; a restore from "Download everything" on a fresh volume brings back events, photos and lists and shows the pairing code; `grep -rn "httpx.AsyncClient(" backend/src | grep -v core/http.py` is empty.
 

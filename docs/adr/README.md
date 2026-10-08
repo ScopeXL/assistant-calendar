@@ -1,6 +1,6 @@
 # Architecture decision records
 
-Each record covers one decision: the context, what was decided, and the consequences. All of them are short. Records 0001 to 0017 were seeded from the decisions table in PLAN §3; 0018 to 0020 record the answers to the open questions in PLAN §20 that the table didn't cover.
+Each record covers one decision: the context, what was decided, and the consequences. All of them are short. Records 0001 to 0017 were seeded from the decisions table in PLAN §3; 0018 to 0020 record the answers to the open questions in PLAN §20 that the table didn't cover; 0021 onwards were decided while building.
 
 **Rules for adding and changing records**
 - New decisions get the next number. To change a decision, add a new ADR that supersedes the old one, and change the old one's status to "Superseded by 00NN". Never rewrite an accepted record's decision.
@@ -30,3 +30,5 @@ Each record covers one decision: the context, what was decided, and the conseque
 | [0018](0018-owners-deployment-and-orientation.md) | Landscape first; the owner's server runs behind the HTTPS proxy and the Pi is the display only | Q3: the screen's orientation and where the server runs |
 | [0019](0019-chores-full-kids-layer.md) | Chores ship the full kids layer, each part switchable | Q4: how far chores go for kids |
 | [0020](0020-sync-provider-order.md) | Calendar providers in order: ICS and holidays, iCloud, Google by service account, Google OAuth | Q6: which calendar service to wire first (default) |
+| [0021](0021-digit-boxes-for-lexend.md) | Changing numbers sit in fixed-width digit boxes, because Lexend has no tabular figures | — |
+| [0022](0022-the-display-keyboard-is-our-own.md) | The wall screen's on-screen keyboard is Sunroom's own, not react-simple-keyboard | — |
