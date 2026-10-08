@@ -184,11 +184,98 @@ def _v0_3_0() -> list[Statement]:
     ]
 
 
+GROCERIES = "00000000-0000-7000-8000-000000000901"
+CAMPING = "00000000-0000-7000-8000-000000000902"  # removed, in Recently removed
+DISHES = "00000000-0000-7000-8000-000000000a01"  # a daily chore that takes turns
+FEED_FISH = "00000000-0000-7000-8000-000000000a02"  # the kid's own, needs a parent's yes
+MOVIE = "00000000-0000-7000-8000-000000000a11"  # a reward
+BEDTIME = "00000000-0000-7000-8000-000000000a21"  # the kid's routine
+BRUSH = "00000000-0000-7000-8000-000000000a22"  # its first step
+
+
+def _v0_4_0() -> list[Statement]:
+    """0.4.0: 0.3.0's household plus Groceries (open, checked and cleared items), a removed
+    packing list and a to-do with a day; a chore that takes turns (done) and the kid's own
+    (waiting for a parent); stars given by hand, a reward asked for, and a bedtime routine
+    with a step checked and the routine finished."""
+    item = (
+        "INSERT INTO list_items (id, list_id, text, note, quantity, due_date, assigned_member_id,"
+        " checked_at, checked_by_member_id, position, version, created_by_member_id, created_at,"
+        " updated_at, cleared_at, deleted_at) VALUES "
+    )
+    return [
+        *_v0_3_0(),
+        "INSERT INTO lists (id, name, kind, icon, sort, created_by_member_id, created_at,"
+        " updated_at, deleted_at) VALUES"
+        f" ('{GROCERIES}', 'Groceries', 'grocery', NULL, 0, '{PARENT}', '2026-10-08 19:00:00',"
+        " '2026-10-08 19:00:00', NULL),"
+        f" ('{CAMPING}', 'Packing: camping', 'packing', NULL, 1, '{KID}', '2026-10-08 19:00:00',"
+        " '2026-10-08 19:30:00', '2026-10-08 19:30:00')",
+        item + f"('00000000-0000-7000-8000-000000000911', '{GROCERIES}', 'Milk', NULL, '2',"
+        f" NULL, NULL, NULL, NULL, 0, 1, '{PARENT}', '2026-10-08 19:01:00',"
+        " '2026-10-08 19:01:00', NULL, NULL),"
+        f" ('00000000-0000-7000-8000-000000000912', '{GROCERIES}', 'Bread', 'Whole wheat', NULL,"
+        f" NULL, NULL, '2026-10-08 19:10:00', '{KID}', 1, 2, '{PARENT}', '2026-10-08 19:01:00',"
+        " '2026-10-08 19:10:00', NULL, NULL),"
+        f" ('00000000-0000-7000-8000-000000000913', '{GROCERIES}', 'Apples', NULL, NULL, NULL,"
+        f" NULL, '2026-10-01 19:10:00', '{PARENT}', 2, 2, '{PARENT}', '2026-10-01 19:01:00',"
+        " '2026-10-01 19:10:00', '2026-10-02 08:00:00', NULL),"
+        f" ('00000000-0000-7000-8000-000000000914', '{GROCERIES}', 'Call the plumber', NULL,"
+        f" NULL, '2026-10-09', '{PARENT}', NULL, NULL, 3, 1, '{PARENT}', '2026-10-08 19:02:00',"
+        " '2026-10-08 19:02:00', NULL, NULL),"
+        f" ('00000000-0000-7000-8000-000000000915', '{CAMPING}', 'Tent', NULL, NULL, NULL,"
+        f" '{KID}', NULL, NULL, 0, 1, '{KID}', '2026-10-08 19:00:00', '2026-10-08 19:00:00',"
+        " NULL, NULL)",
+        "INSERT INTO chores (id, title, description, icon, points, rrule, start_date, due_time,"
+        " assignee_mode, assignee_member_ids_json, rotation_index, requires_approval,"
+        " skipped_dates_json, active, created_by_member_id, created_at, updated_at, deleted_at)"
+        f" VALUES ('{DISHES}', 'Empty the dishwasher', NULL, 'plate', 1, 'FREQ=DAILY',"
+        f" '2026-10-01', '19:00', 'rotate', '[\"{PARENT}\", \"{KID}\"]', 0, NULL,"
+        f" '[\"2026-10-05\"]', 1, '{PARENT}', '2026-10-01 12:00:00', '2026-10-05 12:00:00',"
+        f" NULL), ('{FEED_FISH}', 'Feed the fish', 'A pinch, not the whole jar.', NULL, 2,"
+        f" 'FREQ=WEEKLY;BYDAY=MO,WE,FR', '2026-10-01', NULL, 'fixed', '[\"{KID}\"]', 0, 1,"
+        f" '[]', 1, '{PARENT}', '2026-10-01 12:00:00', '2026-10-01 12:00:00', NULL)",
+        "INSERT INTO chore_completions (id, chore_id, due_date, member_id, completed_at,"
+        " completed_by_device_id, points_awarded, status, approved_by_member_id, approved_at)"
+        f" VALUES ('00000000-0000-7000-8000-000000000a31', '{DISHES}', '2026-10-08', '{KID}',"
+        f" '2026-10-08 23:10:00', '{SCREEN}', 1, 'done', NULL, NULL),"
+        f" ('00000000-0000-7000-8000-000000000a32', '{FEED_FISH}', '2026-10-07', '{KID}',"
+        f" '2026-10-07 21:00:00', '{SCREEN}', 2, 'pending', NULL, NULL)",
+        "INSERT INTO point_adjustments (id, member_id, points, reason, by_member_id, created_at)"
+        f" VALUES ('00000000-0000-7000-8000-000000000a41', '{KID}', 10, 'Helped with the"
+        f" groceries', '{PARENT}', '2026-10-06 18:00:00')",
+        "INSERT INTO rewards (id, title, cost_points, icon, active, sort, created_at, deleted_at)"
+        f" VALUES ('{MOVIE}', 'Movie night', 30, 'film', 1, 0, '2026-10-01 12:00:00', NULL)",
+        "INSERT INTO redemptions (id, reward_id, member_id, cost_points, status, requested_at,"
+        f" decided_by_member_id, decided_at) VALUES ('00000000-0000-7000-8000-000000000a51',"
+        f" '{MOVIE}', '{KID}', 30, 'requested', '2026-10-08 20:00:00', NULL, NULL)",
+        "INSERT INTO routines (id, title, member_id, days_json, window_start, window_end, icon,"
+        f" points, sort, active, created_at, deleted_at) VALUES ('{BEDTIME}', 'Bedtime routine',"
+        f" '{KID}', '[0, 1, 2, 3, 4, 5, 6]', '19:30', '20:30', 'moon', 3, 0, 1,"
+        " '2026-10-01 12:00:00', NULL)",
+        "INSERT INTO routine_steps (id, routine_id, title, icon, position) VALUES"
+        f" ('{BRUSH}', '{BEDTIME}', 'Brush teeth', 'toothbrush', 0),"
+        f" ('00000000-0000-7000-8000-000000000a23', '{BEDTIME}', 'Into bed', 'bed', 1)",
+        "INSERT INTO routine_checks (routine_step_id, member_id, day, checked_at) VALUES"
+        f" ('{BRUSH}', '{KID}', '2026-10-08', '2026-10-08 23:35:00')",
+        "INSERT INTO routine_finishes (routine_id, member_id, day, finished_at, points_awarded)"
+        f" VALUES ('{BEDTIME}', '{KID}', '2026-10-07', '2026-10-07 23:50:00', 3)",
+        "INSERT INTO plugin_state (plugin_id, enabled, settings_json, settings_version, "
+        "plugin_version, enabled_at, disabled_at, updated_at) VALUES "
+        "('lists', 1, '{\"auto_clear_days\": \"never\"}', 1, '1.0.0', '2026-10-08 19:00:00',"
+        " NULL, '2026-10-08 19:00:00'),"
+        ' (\'chores\', 1, \'{"stars": true, "rewards": true, "routines": true,'
+        " \"approval\": false}', 2, '1.0.0', '2026-10-08 19:00:00', NULL,"
+        " '2026-10-08 19:05:00')",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
     "202610081454": _v0_2_0,
     "202610081650": _v0_3_0,
+    "202610081921": _v0_4_0,
 }
 
 
