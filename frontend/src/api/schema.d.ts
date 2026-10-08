@@ -1314,6 +1314,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/countdowns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Countdowns */
+        get: operations["get_countdowns_api_countdowns_get"];
+        put?: never;
+        /** Post Countdown */
+        post: operations["post_countdown_api_countdowns_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/countdowns/removed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Removed */
+        get: operations["get_removed_api_countdowns_removed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/countdowns/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Upcoming */
+        get: operations["get_upcoming_api_countdowns_upcoming_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/countdowns/{countdown_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Countdown */
+        delete: operations["delete_countdown_api_countdowns__countdown_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Countdown */
+        patch: operations["patch_countdown_api_countdowns__countdown_id__patch"];
+        trace?: never;
+    };
+    "/api/countdowns/{countdown_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Countdown */
+        post: operations["restore_countdown_api_countdowns__countdown_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/export": {
         parameters: {
             query?: never;
@@ -1554,6 +1641,178 @@ export interface paths {
         put?: never;
         /** Restore Items */
         post: operations["restore_items_api_lists__list_id__restore_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/copy-week": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Copy Week */
+        post: operations["copy_week_api_meals_copy_week_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Entry */
+        put: operations["put_entry_api_meals_entries_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Entry */
+        delete: operations["delete_entry_api_meals_entries__entry_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/entries/{entry_id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move Entry */
+        post: operations["move_entry_api_meals_entries__entry_id__move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/entries/{entry_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Entry */
+        post: operations["restore_entry_api_meals_entries__entry_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/removed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Removed */
+        get: operations["get_removed_api_meals_removed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/saved": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Saved */
+        get: operations["get_saved_api_meals_saved_get"];
+        put?: never;
+        /** Post Saved */
+        post: operations["post_saved_api_meals_saved_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/saved/{saved_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Saved */
+        delete: operations["delete_saved_api_meals_saved__saved_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Saved */
+        patch: operations["patch_saved_api_meals_saved__saved_id__patch"];
+        trace?: never;
+    };
+    "/api/meals/saved/{saved_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Saved */
+        post: operations["restore_saved_api_meals_saved__saved_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meals/week": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Week */
+        get: operations["get_week_api_meals_week_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1850,6 +2109,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/screensaver/manifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Manifest */
+        get: operations["get_manifest_api_screensaver_manifest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sources */
+        get: operations["get_sources_api_screensaver_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/sources/{source_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Source */
+        patch: operations["patch_source_api_screensaver_sources__source_id__patch"];
+        trace?: never;
+    };
+    "/api/screensaver/sources/{source_id}/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scan Source */
+        post: operations["scan_source_api_screensaver_sources__source_id__scan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -1913,6 +2240,57 @@ export interface paths {
         get: operations["version_api_version_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weather": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Weather */
+        get: operations["get_weather_api_weather_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weather/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Geocode */
+        get: operations["get_geocode_api_weather_geocode_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weather/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Refresh */
+        post: operations["post_refresh_api_weather_refresh_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2403,6 +2781,126 @@ export interface components {
             /** Settings Sections */
             settings_sections: components["schemas"]["SectionOut"][];
         };
+        /**
+         * CopyWeekIn
+         * @description Copy a week's meals into another week (both the first day of a week). Spots already
+         *     filled in the target week are kept.
+         */
+        CopyWeekIn: {
+            /**
+             * From Start
+             * Format: date
+             */
+            from_start: string;
+            /**
+             * To Start
+             * Format: date
+             */
+            to_start: string;
+        };
+        /** CopyWeekOut */
+        CopyWeekOut: {
+            /** Ids */
+            ids: string[];
+            /** Skipped */
+            skipped: number;
+        };
+        /** CountdownIn */
+        CountdownIn: {
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Emoji */
+            emoji?: string | null;
+            /** Member Id */
+            member_id?: string | null;
+            /**
+             * Repeat Yearly
+             * @default false
+             */
+            repeat_yearly: boolean;
+            /**
+             * Show On Display
+             * @default true
+             */
+            show_on_display: boolean;
+            /** Time */
+            time?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** CountdownOut */
+        CountdownOut: {
+            /** Color */
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By Member Id */
+            created_by_member_id: string | null;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Emoji */
+            emoji: string | null;
+            /** Id */
+            id: string;
+            /** Member Id */
+            member_id: string | null;
+            /** Repeat Yearly */
+            repeat_yearly: boolean;
+            /** Show On Display */
+            show_on_display: boolean;
+            /** Time */
+            time: string | null;
+            /** Title */
+            title: string;
+        };
+        /**
+         * CountdownPatch
+         * @description Only what's sent changes; an empty emoji clears it.
+         */
+        CountdownPatch: {
+            /**
+             * Clear Color
+             * @default false
+             */
+            clear_color: boolean;
+            /**
+             * Clear Member
+             * @default false
+             */
+            clear_member: boolean;
+            /**
+             * Clear Time
+             * @default false
+             */
+            clear_time: boolean;
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Date */
+            date?: string | null;
+            /** Emoji */
+            emoji?: string | null;
+            /** Member Id */
+            member_id?: string | null;
+            /** Repeat Yearly */
+            repeat_yearly?: boolean | null;
+            /** Show On Display */
+            show_on_display?: boolean | null;
+            /** Time */
+            time?: string | null;
+            /** Title */
+            title?: string | null;
+        };
         /** DayIn */
         DayIn: {
             /**
@@ -2503,6 +3001,91 @@ export interface components {
             timezone: string;
             /** Version */
             version: string;
+        };
+        /**
+         * EntryIn
+         * @description PUT meals/entries: with an id, that entry changes (its day and slot too); without one, it
+         *     goes into the spot (day, slot, position) and replaces what's there, if anything. A new text
+         *     is kept as a saved meal (or counts one more use of the saved meal with that name).
+         */
+        EntryIn: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Emoji */
+            emoji?: string | null;
+            /** Id */
+            id?: string | null;
+            /** Member Id */
+            member_id?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Position
+             * @default 0
+             */
+            position: number;
+            /** Recipe Url */
+            recipe_url?: string | null;
+            /** Saved Meal Id */
+            saved_meal_id?: string | null;
+            /**
+             * Slot
+             * @default dinner
+             * @enum {string}
+             */
+            slot: "breakfast" | "lunch" | "dinner" | "snack";
+            /** Text */
+            text: string;
+        };
+        /** EntryOut */
+        EntryOut: {
+            /** Created By Member Id */
+            created_by_member_id: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Emoji */
+            emoji: string | null;
+            /** Id */
+            id: string;
+            /** Ingredients */
+            ingredients: string[];
+            /** Member Id */
+            member_id: string | null;
+            /** Note */
+            note: string | null;
+            /** Position */
+            position: number;
+            /** Recipe Url */
+            recipe_url: string | null;
+            /** Saved Meal Id */
+            saved_meal_id: string | null;
+            /**
+             * Slot
+             * @enum {string}
+             */
+            slot: "breakfast" | "lunch" | "dinner" | "snack";
+            /** Text */
+            text: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * EntrySaved
+         * @description What PUT meals/entries did: the entry now, and what it replaced in that spot (for Undo:
+         *     put the replaced one back).
+         */
+        EntrySaved: {
+            entry: components["schemas"]["EntryOut"];
+            replaced: components["schemas"]["EntryOut"] | null;
         };
         /** EventCreate */
         EventCreate: {
@@ -2752,6 +3335,40 @@ export interface components {
             /** Points Awarded */
             points_awarded: number;
             stars: components["schemas"]["StarsOut"] | null;
+        };
+        /** ForecastDayOut */
+        ForecastDayOut: {
+            /** Code */
+            code: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** High */
+            high: number;
+            /** Low */
+            low: number;
+            /** Precipitation */
+            precipitation: number | null;
+            /** Sunrise */
+            sunrise: string | null;
+            /** Sunset */
+            sunset: string | null;
+        };
+        /** ForecastHourOut */
+        ForecastHourOut: {
+            /** Code */
+            code: number;
+            /** Precipitation */
+            precipitation: number | null;
+            /** Temperature */
+            temperature: number;
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
         };
         /** GoogleCalendarIn */
         GoogleCalendarIn: {
@@ -3108,6 +3725,30 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * ManifestOut
+         * @description What the screensaver shows: every library photo not hidden or removed, newest first.
+         */
+        ManifestOut: {
+            /** Photos */
+            photos: components["schemas"]["ManifestPhoto"][];
+            settings: components["schemas"]["SaverSettings"];
+        };
+        /** ManifestPhoto */
+        ManifestPhoto: {
+            /** Height */
+            height: number;
+            /** Id */
+            id: string;
+            /** Taken At */
+            taken_at: string | null;
+            /** Thumb Url */
+            thumb_url: string;
+            /** Url */
+            url: string;
+            /** Width */
+            width: number;
+        };
         /** MappingIn */
         MappingIn: {
             /**
@@ -3123,6 +3764,49 @@ export interface components {
             owner_member_id?: string | null;
             /** Visible On Display */
             visible_on_display?: boolean | null;
+        };
+        /**
+         * MealMoveIn
+         * @description Move an entry to another day (and slot); one already there takes this one's place
+         *     ("Swap days").
+         */
+        MealMoveIn: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Slot */
+            slot?: ("breakfast" | "lunch" | "dinner" | "snack") | null;
+        };
+        /** MealMoveOut */
+        MealMoveOut: {
+            moved: components["schemas"]["EntryOut"];
+            swapped: components["schemas"]["EntryOut"] | null;
+        };
+        /** MealWeekOut */
+        MealWeekOut: {
+            /** Days */
+            days: number;
+            /** Entries */
+            entries: components["schemas"]["EntryOut"][];
+            /** Slots */
+            slots: ("breakfast" | "lunch" | "dinner" | "snack")[];
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
+        /**
+         * MealsRemovedOut
+         * @description Recently removed (7 days): entries taken off a day, and saved meals archived.
+         */
+        MealsRemovedOut: {
+            /** Entries */
+            entries: components["schemas"]["RemovedEntryOut"][];
+            /** Saved */
+            saved: components["schemas"]["RemovedSavedOut"][];
         };
         /** MemberChoice */
         MemberChoice: {
@@ -3347,6 +4031,20 @@ export interface components {
             /** Subdivisions */
             subdivisions: string[];
         };
+        /**
+         * PlaceOut
+         * @description A town the location search found.
+         */
+        PlaceOut: {
+            /** Label */
+            label: string;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+            /** Timezone */
+            timezone: string | null;
+        };
         /** PluginInfo */
         PluginInfo: {
             /** Error */
@@ -3473,6 +4171,45 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** RemovedCountdownOut */
+        RemovedCountdownOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at: string;
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+        };
+        /** RemovedEntryOut */
+        RemovedEntryOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at: string;
+            /** Id */
+            id: string;
+            /**
+             * Slot
+             * @enum {string}
+             */
+            slot: "breakfast" | "lunch" | "dinner" | "snack";
+            /** Text */
+            text: string;
+        };
         /** RemovedItemOut */
         RemovedItemOut: {
             /**
@@ -3513,6 +4250,18 @@ export interface components {
             items: components["schemas"]["RemovedItemOut"][];
             /** Lists */
             lists: components["schemas"]["RemovedListOut"][];
+        };
+        /** RemovedSavedOut */
+        RemovedSavedOut: {
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at: string;
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
         };
         /** RewardIn */
         RewardIn: {
@@ -3712,6 +4461,70 @@ export interface components {
             started_at: string;
             /** Updated */
             updated: number;
+        };
+        /** SavedMealIn */
+        SavedMealIn: {
+            /** Emoji */
+            emoji?: string | null;
+            /** Ingredients */
+            ingredients?: string[];
+            /** Recipe Url */
+            recipe_url?: string | null;
+            /** Text */
+            text: string;
+        };
+        /** SavedMealOut */
+        SavedMealOut: {
+            /** Emoji */
+            emoji: string | null;
+            /** Id */
+            id: string;
+            /** Ingredients */
+            ingredients: string[];
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Recipe Url */
+            recipe_url: string | null;
+            /** Text */
+            text: string;
+            /** Use Count */
+            use_count: number;
+        };
+        /**
+         * SavedMealPatch
+         * @description Only what's sent changes; an empty emoji or link clears it.
+         */
+        SavedMealPatch: {
+            /** Emoji */
+            emoji?: string | null;
+            /** Ingredients */
+            ingredients?: string[] | null;
+            /** Recipe Url */
+            recipe_url?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /**
+         * SaverSettings
+         * @description The plugin's settings as the wall uses them.
+         */
+        SaverSettings: {
+            /** Every Seconds */
+            every_seconds: number;
+            /** Show Clock */
+            show_clock: boolean;
+            /** Shuffle */
+            shuffle: boolean;
+            /** Start After Minutes */
+            start_after_minutes: number | null;
+        };
+        /** ScanOut */
+        ScanOut: {
+            /** Imported */
+            imported: number;
+            source: components["schemas"]["SourceOut"];
+            /** Unreadable */
+            unreadable: number;
         };
         /** SearchHit */
         SearchHit: {
@@ -3932,6 +4745,35 @@ export interface components {
              */
             include_kiosks: boolean;
         };
+        /** SourceOut */
+        SourceOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Id */
+            id: string;
+            /** Items Seen */
+            items_seen: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "inbox" | "immich" | "nextcloud";
+            /** Label */
+            label: string;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Scan At */
+            last_scan_at: string | null;
+            /** Photo Count */
+            photo_count: number;
+        };
+        /** SourcePatch */
+        SourcePatch: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Label */
+            label?: string | null;
+        };
         /** StarsOut */
         StarsOut: {
             /** Balance */
@@ -4037,6 +4879,52 @@ export interface components {
             /** Revision Id */
             revision_id?: string | null;
         };
+        /** UpcomingListOut */
+        UpcomingListOut: {
+            /** Items */
+            items: components["schemas"]["UpcomingOut"][];
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
+        /**
+         * UpcomingOut
+         * @description One thing coming up: a countdown, or a person's birthday (from their birthday in Family).
+         */
+        UpcomingOut: {
+            /** Color */
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Countdown Id */
+            countdown_id: string | null;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Days */
+            days: number;
+            /** Emoji */
+            emoji: string | null;
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "countdown" | "birthday";
+            /** Member Id */
+            member_id: string | null;
+            /** Show On Display */
+            show_on_display: boolean;
+            /** Time */
+            time: string | null;
+            /** Title */
+            title: string;
+            /** Turning */
+            turning: number | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -4067,6 +4955,51 @@ export interface components {
             completion: components["schemas"]["CompletionOut"];
             /** Title */
             title: string;
+        };
+        /** WeatherNowOut */
+        WeatherNowOut: {
+            /** Code */
+            code: number;
+            /** Is Day */
+            is_day: boolean;
+            /** Temperature */
+            temperature: number;
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
+        };
+        /**
+         * WeatherOut
+         * @description ``status``: ok (a forecast, maybe stale), no_location (Settings → Household → Location
+         *     isn't set), waiting (set, nothing fetched yet), error (nothing to show, ``message`` says
+         *     why). With ok, ``message`` is why the last check failed while the last forecast shows.
+         */
+        WeatherOut: {
+            current: components["schemas"]["WeatherNowOut"] | null;
+            /** Daily */
+            daily: components["schemas"]["ForecastDayOut"][];
+            /** Fetched At */
+            fetched_at: string | null;
+            /** Hourly */
+            hourly: components["schemas"]["ForecastHourOut"][];
+            /** Location Label */
+            location_label: string | null;
+            /** Message */
+            message: string | null;
+            /** Stale */
+            stale: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "no_location" | "waiting" | "error";
+            /**
+             * Units
+             * @enum {string}
+             */
+            units: "fahrenheit" | "celsius";
         };
         /** WeekCellOut */
         WeekCellOut: {
@@ -6789,6 +7722,207 @@ export interface operations {
             };
         };
     };
+    get_countdowns_api_countdowns_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountdownOut"][];
+                };
+            };
+        };
+    };
+    post_countdown_api_countdowns_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CountdownIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountdownOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_removed_api_countdowns_removed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemovedCountdownOut"][];
+                };
+            };
+        };
+    };
+    get_upcoming_api_countdowns_upcoming_get: {
+        parameters: {
+            query?: {
+                limit?: number | null;
+                include_birthdays?: boolean;
+                date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpcomingListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_countdown_api_countdowns__countdown_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                countdown_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_countdown_api_countdowns__countdown_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                countdown_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CountdownPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountdownOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_countdown_api_countdowns__countdown_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                countdown_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountdownOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     export_api_export_get: {
         parameters: {
             query?: never;
@@ -7339,6 +8473,378 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    copy_week_api_meals_copy_week_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyWeekIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyWeekOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entry_api_meals_entries_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntrySaved"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_entry_api_meals_entries__entry_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_entry_api_meals_entries__entry_id__move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MealMoveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealMoveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_entry_api_meals_entries__entry_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_removed_api_meals_removed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealsRemovedOut"];
+                };
+            };
+        };
+    };
+    get_saved_api_meals_saved_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedMealOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_saved_api_meals_saved_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedMealIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedMealOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_saved_api_meals_saved__saved_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                saved_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_saved_api_meals_saved__saved_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                saved_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedMealPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedMealOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_saved_api_meals_saved__saved_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                saved_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedMealOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_week_api_meals_week_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealWeekOut"];
                 };
             };
             /** @description Validation Error */
@@ -8017,6 +9523,112 @@ export interface operations {
             };
         };
     };
+    get_manifest_api_screensaver_manifest_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManifestOut"];
+                };
+            };
+        };
+    };
+    get_sources_api_screensaver_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceOut"][];
+                };
+            };
+        };
+    };
+    patch_source_api_screensaver_sources__source_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourcePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_source_api_screensaver_sources__source_id__scan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_settings_api_settings_get: {
         parameters: {
             query?: never;
@@ -8139,6 +9751,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VersionOut"];
+                };
+            };
+        };
+    };
+    get_weather_api_weather_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeatherOut"];
+                };
+            };
+        };
+    };
+    get_geocode_api_weather_geocode_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_refresh_api_weather_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeatherOut"];
                 };
             };
         };

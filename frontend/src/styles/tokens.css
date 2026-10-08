@@ -34,6 +34,9 @@
   /* Night (UX §4): true black, and the dim clock's grey, whatever the theme. */
   --night: #000000;
   --night-ink: #a6b1bd;
+  /* The screensaver's band (UX §4): white words on a dark wash over any photo, in both themes. */
+  --saver-ink: #ffffff;
+  --saver-shade: #000000;
   /* A QR code is dark on white in both themes: not every camera reads light on dark. */
   --qr-tile: #ffffff;
   --qr-ink: #1c2430;
@@ -164,6 +167,8 @@
   --color-p-text: var(--p-text);
   --color-night: var(--night);
   --color-night-ink: var(--night-ink);
+  --color-saver-ink: var(--saver-ink);
+  --color-saver-shade: var(--saver-shade);
   --color-qr-tile: var(--qr-tile);
   --color-qr-ink: var(--qr-ink);
 

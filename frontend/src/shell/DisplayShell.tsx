@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { api } from "../api/client";
 import { qk } from "../api/keys";
 import { AddPanel } from "../features/calendar/AddPanel";
 import { useReminders } from "../features/calendar/reminders";
 import { TodayPanel } from "../features/calendar/TodayPanel";
-import { usePluginRooms } from "../features/usePluginModules";
+import { usePluginRooms, useRailBlocks, useScreenOverlays } from "../features/usePluginModules";
 import { zonedParts } from "../lib/dates";
 import {
   displayState,
@@ -23,9 +23,11 @@ import { MotionProvider } from "../lib/motion";
 import { useLiveUpdates } from "../lib/live";
 import { isNight } from "../lib/night";
 import { askForPin } from "../lib/parent";
+import { useQuietTheme } from "../lib/quietTheme";
 import { fetchSession } from "../lib/session";
 import { useStore } from "../lib/store";
-import { allowAppearanceMotion, applyAppearance } from "../lib/theme";
+import { sunDay } from "../lib/sun";
+import { allowAppearanceMotion, applyAppearance, resolveTheme } from "../lib/theme";
 import { useMinute } from "../lib/time";
 import { setToastProfile } from "../lib/toast";
 import { useKeepAwake } from "../lib/wakeLock";
@@ -59,6 +61,8 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const rooms = usePluginRooms();
+  const railBlocks = useRailBlocks();
+  const screenOverlays = useScreenOverlays();
   const segment = pathname.split("/")[1] ?? "";
   const room = pathname.startsWith("/settings")
     ? "settings"
@@ -87,25 +91,33 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     },
   });
 
-  const hour = zonedParts(now).hour;
-  const minute = zonedParts(now).minute;
+  const { day, hour, minute } = zonedParts(now);
+  const minuteOfDay = hour * 60 + minute;
   const nightTime = isNight(settings?.sleep_from, settings?.sleep_to, hour, minute);
   const sleeping = nightTime && !awake;
+  const latitude = settings?.latitude;
+  const longitude = settings?.longitude;
+  const sun = useMemo(() => sunDay(day, latitude, longitude), [day, latitude, longitude]);
+  const theme = useQuietTheme(
+    settings?.theme ?? null,
+    settings ? resolveTheme(settings.theme, minuteOfDay, sun) : null,
+  );
 
-  // Theme, wall tint and text size follow the household's settings and the clock.
+  // Theme, wall tint and text size follow the household's settings, the clock and the sun.
   useEffect(() => {
-    if (!settings) return;
+    if (!settings || !theme) return;
     applyAppearance(
       {
-        theme: nightTime ? "dark" : settings.theme,
+        theme: nightTime ? "dark" : theme,
         daylightTint: settings.daylight_tint,
         textSize: settings.text_size,
         reduceMotion: settings.display_reduce_motion,
         display: true,
+        sun,
       },
-      hour,
+      minuteOfDay,
     );
-  }, [settings, hour, nightTime]);
+  }, [settings, theme, minuteOfDay, nightTime, sun]);
 
   useEffect(() => {
     setToastProfile(true);
@@ -229,8 +241,11 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
           </div>
           {showPanel ? (
             <div className="hidden portrait:flex portrait:h-[var(--band-h)] portrait:shrink-0 portrait:flex-col portrait:overflow-hidden portrait:border-b portrait:border-line portrait:bg-surface">
-              <div className="flex items-center justify-between px-6 pt-4">
+              <div className="flex items-center justify-between gap-6 px-6 pt-4">
                 <ClockBlock compact />
+                {railBlocks.map((Block, index) => (
+                  <Block key={index} place="band" />
+                ))}
               </div>
               <TodayPanel home={home} band />
             </div>
@@ -265,6 +280,9 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
         <OfflinePill display />
         {kiosk ? <KeyboardHost railSide={railSide} /> : null}
         <PinDialog />
+        {screenOverlays.map(({ id, Overlay }) => (
+          <Overlay key={id} asleep={sleeping} home={home} />
+        ))}
         {sleeping ? (
           <Night
             mode={settings?.sleep_mode ?? "dim_clock"}

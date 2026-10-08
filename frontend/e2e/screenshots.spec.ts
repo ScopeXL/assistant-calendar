@@ -32,6 +32,8 @@ const PAGES = [
   { key: "features", title: "Features" },
   { key: "calendars", title: "Calendars & accounts" },
   { key: "chores", title: "Chores" },
+  { key: "meals", title: "Meals" },
+  { key: "screensaver", title: "Photos & screensaver" },
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
   { key: "devices", title: "Phones & screens" },
@@ -405,6 +407,77 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
   await shot(page, "routine-finished");
 });
 
+test("the wall's meals, countdowns, photos and screensaver", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
+  test.setTimeout(240_000);
+  await moveClock(page, STOPS[1]?.at ?? "");
+  await seed(page.request);
+  const paired = await page.request.post("/api/auth/kiosk/pair-with-password", {
+    headers: CSRF,
+    data: { password: PASSWORD, label: "Kitchen screen" },
+  });
+  expect(paired.status()).toBe(200);
+  for (const theme of ["light", "dark"]) {
+    await change(page, { theme });
+    await page.goto("/meals");
+    await expect(page.getByRole("heading", { name: /^Meals · /, level: 1 })).toBeVisible();
+    await shot(page, `meals-${theme}`);
+    await page.getByRole("table").getByRole("button", { name: /Tacos/ }).click();
+    await shot(page, `meals-a-meal-${theme}`);
+    await page
+      .getByRole("dialog", { name: /Tacos/ })
+      .getByRole("button", { name: "Close" })
+      .click();
+    await page.getByRole("link", { name: "Saved meals" }).click();
+    await expect(page.getByRole("heading", { name: "Saved meals", level: 1 })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Grilled cheese and soup/ })).toBeVisible();
+    await shot(page, `meals-saved-${theme}`);
+    await page.goto("/countdowns");
+    await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
+    await shot(page, `countdowns-${theme}`);
+    await page.goto("/photos");
+    await expect(page.getByRole("heading", { name: /^Photos/, level: 1 })).toBeVisible();
+    await shot(page, `photos-${theme}`);
+    await page.getByRole("list", { name: "Photos" }).getByRole("button").first().click();
+    await expect(page.getByRole("dialog", { name: "Photo" }).locator("img")).toHaveJSProperty(
+      "complete",
+      true,
+    );
+    await shot(page, `photos-one-${theme}`);
+    await page.getByRole("button", { name: "Close" }).click();
+    await page.getByRole("button", { name: "Start screensaver" }).click();
+    const saver = page.getByRole("button", { name: "Photos are showing. Tap to go back." });
+    await expect(saver).toBeVisible();
+    await shot(page, `screensaver-${theme}`);
+    await saver.click();
+    await expect(saver).toHaveCount(0);
+    await page.goto("/display");
+    await page
+      .getByRole("button", { name: /^The weather:/ })
+      .first()
+      .click();
+    await shot(page, `weather-${theme}`);
+    await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    const add = page.getByRole("dialog", { name: "Add" });
+    await add.getByRole("button", { name: "Meal", exact: true }).click();
+    await shot(page, `add-meal-${theme}`);
+    await add.getByRole("button", { name: "Countdown", exact: true }).click();
+    await shot(page, `add-countdown-${theme}`);
+    await add.getByRole("button", { name: "Close" }).click();
+  }
+  // Dinner on the board, and Night with tomorrow's first event under the clock.
+  await change(page, { theme: "auto" });
+  const shown = await page.request.put("/api/plugins/meals/settings", {
+    headers: CSRF,
+    data: { values: { slots: ["dinner"], show_on_calendar: true } },
+  });
+  expect(shown.ok()).toBe(true);
+  await page.goto("/display");
+  await expect(page.locator("[data-overlay=meals]").first()).toBeVisible();
+  await shot(page, "board-dinners");
+});
+
 test("a phone's lists and chores", async ({ page, isMobile }) => {
   test.skip(!isMobile, "phones");
   test.setTimeout(240_000);
@@ -428,6 +501,18 @@ test("a phone's lists and chores", async ({ page, isMobile }) => {
     await page.getByRole("link", { name: "Stars & rewards" }).click();
     await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
     await shot(page, `chores-rewards-${scheme}`);
+    await page.goto("/more");
+    await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
+    await shot(page, `more-${scheme}`);
+    await page.getByRole("link", { name: "Meals" }).click();
+    await expect(page.getByRole("heading", { name: "Meals", level: 1 })).toBeVisible();
+    await shot(page, `meals-${scheme}`);
+    await page.goto("/countdowns");
+    await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
+    await shot(page, `countdowns-${scheme}`);
+    await page.goto("/photos");
+    await expect(page.getByRole("heading", { name: "Photos", level: 1 })).toBeVisible();
+    await shot(page, `photos-${scheme}`);
   }
 });
 

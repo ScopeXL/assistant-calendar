@@ -13,6 +13,7 @@ import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { SidePanel } from "../../ui/SidePanel";
 import { useShell } from "../../ui/shell";
+import { useEventActions } from "../usePluginModules";
 import { useCalendars, useEvent, useEventChanges } from "./data";
 import { ScopeChooser } from "./ScopeChooser";
 import type { CalendarInfo, Occurrence, Scope } from "./types";
@@ -84,6 +85,7 @@ export function EventSheet({
   const { data: settings } = useSettings();
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
   const changes = useEventChanges();
+  const eventActions = useEventActions();
   const [moving, setMoving] = useState(false);
   const [asking, setAsking] = useState<null | { verb: "Remove" | "Move"; toDay?: string }>(null);
   const today = zonedParts(useMinute()).day;
@@ -121,8 +123,18 @@ export function EventSheet({
   const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
   const source = calendar ? sourceLine(calendar, readOnly) : null;
   const pending = occurrence?.pending ?? event?.pending ?? false;
+  // What the plugins add ("Add a countdown"): they don't change the event, so a read-only one
+  // gets them too.
+  const extras = occurrence
+    ? eventActions.map((Action, index) => (
+        <Action key={index} occurrence={occurrence} onDone={close} />
+      ))
+    : [];
   const actions = readOnly ? (
-    <p className={soft}>{source ?? "This calendar comes from an account. Change it there."}</p>
+    <div className="flex flex-col gap-3">
+      <p className={soft}>{source ?? "This calendar comes from an account. Change it there."}</p>
+      {extras.length ? <div className="flex flex-wrap gap-3">{extras}</div> : null}
+    </div>
   ) : moving ? null : (
     <div className="flex flex-wrap gap-3">
       <Button
@@ -155,6 +167,7 @@ export function EventSheet({
       >
         Remove
       </Button>
+      {extras}
     </div>
   );
 

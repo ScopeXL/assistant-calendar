@@ -20,6 +20,7 @@ import { useEventChanges, useOccurrences } from "./data";
 import { DayView } from "./DayView";
 import { EventSheet } from "./EventSheet";
 import { MonthView, monthGrid } from "./MonthView";
+import { useOpenOverlay } from "./overlays";
 import { PeopleView } from "./PeopleView";
 import { ScopeChooser } from "./ScopeChooser";
 import { TodayView } from "./TodayView";
@@ -71,11 +72,12 @@ export function CalendarRoom() {
           : view === "people"
             ? { from: today, to: addDays(today, 1) }
             : { from: week[0] ?? today, to: addDays(week[6] ?? today, 1) };
-  const { data } = useOccurrences(range.from, range.to);
+  const { data } = useOccurrences(range.from, range.to, { overlays: true });
   const occurrences = data?.occurrences ?? [];
+  const openOverlay = useOpenOverlay();
 
   const open = (occurrence: Occurrence) => {
-    if (!occurrence.event_id) return;
+    if (openOverlay(occurrence) || !occurrence.event_id) return;
     updateDisplay({
       panel: {
         kind: "event",

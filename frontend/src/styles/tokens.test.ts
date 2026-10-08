@@ -214,3 +214,12 @@ describe("the token file", () => {
     expect(block(":root")).toContain("--focus-ring: var(--ink);");
   });
 });
+
+describe("the screensaver's band", () => {
+  it("keeps its words readable over the brightest photo (the wash is 60% at the words)", () => {
+    const white = token("saver-ink", "light");
+    expect(
+      contrast(white, mix(token("saver-shade", "light"), 0.6, "#ffffff")),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+});

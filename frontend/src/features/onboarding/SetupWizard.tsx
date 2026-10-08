@@ -18,8 +18,8 @@ import { TextField } from "../../ui/TextField";
 import { usePluginModules } from "../usePluginModules";
 
 export type SetupStep =
-  "welcome" | "password" | "household" | "people" | "pin" | "pair" | "calendars" | "done";
-export const SIGNED_IN_STEPS: SetupStep[] = ["people", "pin", "pair", "calendars", "done"];
+  "welcome" | "password" | "household" | "place" | "people" | "pin" | "pair" | "calendars" | "done";
+export const SIGNED_IN_STEPS: SetupStep[] = ["place", "people", "pin", "pair", "calendars", "done"];
 
 function phoneZone(): string {
   try {
@@ -109,6 +109,14 @@ export function SetupWizard({ step }: { step: SetupStep }) {
             go("password");
           }}
           onDone={() => {
+            go("place");
+          }}
+        />
+      );
+    case "place":
+      return (
+        <PlaceStep
+          onNext={() => {
             go("people");
           }}
         />
@@ -184,7 +192,7 @@ function PasswordStep({
   return (
     <Page
       title={fromServer ? "Type the household password" : "Set a household password"}
-      step="1 of 6"
+      step="1 of 7"
     >
       <p className="text-body text-ink-soft">
         {fromServer
@@ -264,7 +272,7 @@ function HouseholdStep({
   });
   if (!password) {
     return (
-      <Page title="Name your household" step="2 of 6">
+      <Page title="Name your household" step="2 of 7">
         <p className="text-body">Choose the household password first.</p>
         <Button block onClick={onBack}>
           Back
@@ -273,7 +281,7 @@ function HouseholdStep({
     );
   }
   return (
-    <Page title="Name your household" step="2 of 6">
+    <Page title="Name your household" step="2 of 7">
       <form
         className="flex flex-col gap-5"
         onSubmit={(event) => {
@@ -386,7 +394,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
     },
   });
   return (
-    <Page title="Who lives here?" step="3 of 6">
+    <Page title="Who lives here?" step="4 of 7">
       <p className="text-body text-ink-soft">
         {first
           ? "Start with you. Each person gets a color, used everywhere they appear."
@@ -463,7 +471,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
     onSuccess: onNext,
   });
   return (
-    <Page title="Set a parent PIN?" step="4 of 6">
+    <Page title="Set a parent PIN?" step="5 of 7">
       <p className="text-body text-ink-soft">
         It keeps kids out of Settings on the kitchen screen. Adding events and checking off chores
         never ask for it.
@@ -498,12 +506,29 @@ function PinStep({ onNext }: { onNext: () => void }) {
   );
 }
 
-/** Step 6 (UX first run): bring in calendars, through the calendar_sync plugin's own flows.
+/** Step 3: where home is, for the weather and the sunset, through the weather plugin's search.
+ * With the plugin off, the step skips itself. */
+function PlaceStep({ onNext }: { onNext: () => void }) {
+  const Setup = usePluginModules().find((m) => m.id === "weather")?.onboarding;
+  return (
+    <Page title="Where’s home?" step="3 of 7">
+      {Setup ? (
+        <Setup onDone={onNext} />
+      ) : (
+        <Button block onClick={onNext}>
+          Next
+        </Button>
+      )}
+    </Page>
+  );
+}
+
+/** Step 7 (UX first run): bring in calendars, through the calendar_sync plugin's own flows.
  * With the plugin off, the step skips itself. */
 function CalendarsStep({ onNext }: { onNext: () => void }) {
   const Setup = usePluginModules().find((m) => m.id === "calendar_sync")?.onboarding;
   return (
-    <Page title="Bring in your calendars" step="6 of 6">
+    <Page title="Bring in your calendars" step="7 of 7">
       {Setup ? (
         <Setup onDone={onNext} />
       ) : (
@@ -526,7 +551,7 @@ function PairStep({ onNext }: { onNext: () => void }) {
   });
   const valid = normalizeCode(code);
   return (
-    <Page title="Pair the kitchen screen" step="5 of 6">
+    <Page title="Pair the kitchen screen" step="6 of 7">
       <p className="text-body text-ink-soft">
         On the screen, Sunroom now shows a code. Type it here.
       </p>

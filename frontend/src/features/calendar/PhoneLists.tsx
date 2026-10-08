@@ -11,6 +11,7 @@ import {
 import type { Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { occurrenceLabel, peopleOf } from "./EventChip";
+import { useOverlayOf } from "./overlays";
 import { byDay, isPast, shownFor } from "./layout";
 import type { MonthGrid } from "./MonthView";
 import type { Occurrence } from "./types";
@@ -42,6 +43,8 @@ export function PhoneRow({
   onOpen: () => void;
 }) {
   const people = peopleOf(occurrence, members);
+  const overlay = useOverlayOf(occurrence);
+  const Mark = overlay?.icon;
   const color = occurrence.color ?? (people.length === 1 ? people[0]?.color : null) ?? "everyone";
   const time =
     when ??
@@ -59,7 +62,11 @@ export function PhoneRow({
       }`}
     >
       <span className="w-[4.75rem] shrink-0 pt-0.5 text-secondary font-semibold">{time}</span>
-      <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-p" />
+      {Mark ? (
+        <Mark aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ink-soft" />
+      ) : (
+        <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-p" />
+      )}
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="text-body font-semibold break-words">
           {occurrence.title}

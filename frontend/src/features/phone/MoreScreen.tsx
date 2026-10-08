@@ -12,14 +12,31 @@ import {
 import { qk } from "../../api/keys";
 import { isStandalone } from "../../lib/platform";
 import { fetchSession } from "../../lib/session";
+import { PLUGIN_TABS } from "../../shell/PhoneShell";
 import { Screen } from "../../ui/Screen";
+import { usePluginRooms } from "../usePluginModules";
 
-/** More (UX §5): the rooms not in the tab bar (with plugins, M2+), then everything else. */
+/** More (UX §5): the rooms not in the tab bar (Meals, Countdowns, Photos), then everything
+ * else. */
 export function MoreScreen() {
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
+  const rooms = usePluginRooms().slice(PLUGIN_TABS);
   const rowClass = "press-row flex min-h-14 items-center gap-3 px-4 text-row font-semibold";
   return (
     <Screen title="More">
+      {rooms.length ? (
+        <ul className="mb-6 divide-y divide-line rounded-chip border border-line bg-surface">
+          {rooms.map(({ key, label, icon: Icon }) => (
+            <li key={key}>
+              <Link to="/$room" params={{ room: key }} className={rowClass}>
+                <Icon aria-hidden="true" />
+                <span className="flex-1">{label}</span>
+                <ChevronRight aria-hidden="true" className="text-ink-soft" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <ul className="divide-y divide-line rounded-chip border border-line bg-surface">
         <li>
           <Link to="/settings" className={rowClass}>

@@ -1,6 +1,7 @@
 import { addDays, dayNumber, formatWallTime, shortWeekday, weekOf } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { byDay, shownFor } from "./layout";
+import { useOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
 
 export interface MonthGrid {
@@ -114,6 +115,20 @@ export function MonthView({
 }
 
 function MonthEntry({ occurrence, members }: { occurrence: Occurrence; members: Member[] }) {
+  const overlay = useOverlayOf(occurrence);
+  if (overlay) {
+    const Icon = overlay.icon;
+    return (
+      <span
+        aria-hidden="true"
+        data-overlay={occurrence.overlay ?? undefined}
+        className="flex min-w-0 items-center gap-1.5 px-1.5 text-d-caption text-ink-soft"
+      >
+        <Icon className="size-4 shrink-0" strokeWidth={2.25} />
+        <span className="min-w-0 truncate">{occurrence.title}</span>
+      </span>
+    );
+  }
   const people = members.filter((m) => occurrence.member_ids.includes(m.id));
   const color = occurrence.color ?? (people.length === 1 ? people[0]?.color : null) ?? "everyone";
   const time =

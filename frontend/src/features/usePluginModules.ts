@@ -7,11 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import type { ComponentType } from "react";
 
 import { usePlugins } from "../lib/household";
+import type { Occurrence } from "./calendar/types";
 import {
   plugins as registry,
   type AddType,
+  type CalendarOverlay,
   type PluginModule,
   type PluginRoom,
+  type RailPlace,
   type SettingsPage,
   type TodayBlock,
 } from "./registry";
@@ -73,5 +76,46 @@ export function useRemovedGroups(): {
 }[] {
   return usePluginModules().flatMap((module) =>
     module.removed ? [{ id: module.id, Rows: module.removed }] : [],
+  );
+}
+
+/** What the plugins add to the board's days (meals, countdowns). */
+export function useCalendarOverlays(): CalendarOverlay[] {
+  return usePluginModules().flatMap((module) => module.calendarOverlays ?? []);
+}
+
+function parts<K extends keyof PluginModule>(
+  modules: PluginModule[],
+  key: K,
+): NonNullable<PluginModule[K]>[] {
+  return modules.flatMap((module) => {
+    const part = module[key];
+    return part ? [part as NonNullable<PluginModule[K]>] : [];
+  });
+}
+
+export function useRailBlocks(): ComponentType<{ place: RailPlace }>[] {
+  return parts(usePluginModules(), "railBlock");
+}
+
+export function useDayHeaders(): ComponentType<{ day: string }>[] {
+  return parts(usePluginModules(), "dayHeader");
+}
+
+export function useSaverCorners(): ComponentType[] {
+  return parts(usePluginModules(), "saverCorner");
+}
+
+export function useEventActions(): ComponentType<{ occurrence: Occurrence; onDone: () => void }>[] {
+  return parts(usePluginModules(), "eventAction");
+}
+
+/** Drawn over the whole wall (the screensaver). */
+export function useScreenOverlays(): {
+  id: string;
+  Overlay: ComponentType<{ asleep: boolean; home: "/display" | "/" }>;
+}[] {
+  return usePluginModules().flatMap((module) =>
+    module.overlay ? [{ id: module.id, Overlay: module.overlay }] : [],
   );
 }

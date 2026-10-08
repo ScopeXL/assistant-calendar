@@ -31,6 +31,12 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.getByRole("button", { name: "Monday" }).click();
   await phonePage.getByRole("button", { name: "Next" }).click();
 
+  // Where's home? The test server's place search knows Sample Town.
+  await expect(phonePage.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
+  await phonePage.getByLabel("Your town").fill("Sample");
+  await phonePage.getByRole("button", { name: "Search" }).click();
+  await phonePage.getByRole("button", { name: /^Sample Town/ }).click();
+
   // Who lives here? Start with you, then a kid.
   await expect(phonePage.getByRole("heading", { name: "Who lives here?" })).toBeVisible();
   await phonePage.getByLabel("Your name").fill("Ana");

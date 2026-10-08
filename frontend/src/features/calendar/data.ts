@@ -11,13 +11,26 @@ import { qk } from "../../api/keys";
 import { shortWeekday } from "../../lib/dates";
 import { asParent } from "../../lib/parent";
 import { showToast } from "../../lib/toast";
+import { useCalendarOverlays } from "../usePluginModules";
 import type { CalendarEvent, Change, EventFields, Scope } from "./types";
 
-export function useOccurrences(from: string, to: string, { enabled = true } = {}) {
+/** Occurrences in [from, to). The board asks for `overlays` too: what the plugins that are on
+ * add to its days (meals, countdowns). */
+export function useOccurrences(
+  from: string,
+  to: string,
+  { enabled = true, overlays = false }: { enabled?: boolean; overlays?: boolean } = {},
+) {
+  const added = useCalendarOverlays();
+  const keys = overlays ? added.map((overlay) => overlay.key) : [];
   return useQuery({
-    queryKey: qk.occurrences(from, to),
+    queryKey: qk.occurrences(from, to, keys),
     queryFn: async () =>
-      unwrap(await api.GET("/api/calendar/occurrences", { params: { query: { from, to } } })),
+      unwrap(
+        await api.GET("/api/calendar/occurrences", {
+          params: { query: { from, to, ...(keys.length ? { overlays: keys } : {}) } },
+        }),
+      ),
     placeholderData: keepPreviousData,
     enabled,
   });

@@ -1,21 +1,29 @@
 /**
  * Picture uploads: the one place the app calls the API without the generated client, because the
  * body is the image itself (the server reads raw bytes, so OpenAPI describes no body). Shrunk on
- * the phone first; the server re-encodes them as WebP without metadata (ADR 0009).
+ * the phone first when asked (an avatar); the server re-encodes everything as WebP without
+ * metadata (ADR 0009), after reading when a photo was taken.
  */
 import { ApiError } from "../api/client";
 
+const SERVER_LIMIT = 15 * 1024 * 1024;
+const LIBRARY_SIDE = 2560;
+
+/** `maxSide`: shrink to this first; null sends the photo as it is (so the server can read when
+ * it was taken), unless it's over the server's 15 MB. */
 export async function uploadPicture<T>(
   path: string,
   method: "POST" | "PUT",
   file: File,
-  maxSide: number,
+  maxSide: number | null,
 ): Promise<T> {
   let body: Blob = file;
-  try {
-    body = await shrink(file, maxSide);
-  } catch {
-    // The browser couldn't decode it (HEIC on some phones): the server reads the original.
+  if (maxSide !== null || file.size > SERVER_LIMIT) {
+    try {
+      body = await shrink(file, maxSide ?? LIBRARY_SIDE);
+    } catch {
+      // The browser couldn't decode it (HEIC on some phones): the server reads the original.
+    }
   }
   let response: Response;
   try {

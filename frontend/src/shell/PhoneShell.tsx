@@ -6,6 +6,7 @@ import { usePluginRooms } from "../features/usePluginModules";
 import { useSettings } from "../lib/household";
 import { useLiveUpdates } from "../lib/live";
 import { MotionProvider } from "../lib/motion";
+import { sunDay } from "../lib/sun";
 import { applyAppearance } from "../lib/theme";
 import { useMinute } from "../lib/time";
 import { zonedParts } from "../lib/dates";
@@ -20,7 +21,7 @@ interface Tab {
 }
 
 // Today and Calendar, then the plugins' rooms until four tabs are used, then More (UX §3).
-const PLUGIN_TABS = 2;
+export const PLUGIN_TABS = 2;
 
 // Screens opened from More keep More lit (Settings, Pair a display, Who's using this).
 const UNDER_MORE = /^\/(more|settings|pair|who|install)(\/|$)/;
@@ -46,7 +47,12 @@ function TabFace({ tab }: { tab: Tab }) {
 /** Bottom tabs on phones (UX §3 "The phone shell"). */
 export function TabBar() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const rooms = usePluginRooms().slice(0, PLUGIN_TABS);
+  const all = usePluginRooms();
+  const rooms = all.slice(0, PLUGIN_TABS);
+  // The rooms that don't fit in the tabs open from More, and keep it lit.
+  const inMore = all
+    .slice(PLUGIN_TABS)
+    .some(({ key }) => pathname === `/${key}` || pathname.startsWith(`/${key}/`));
   return (
     <nav
       aria-label="Main"
@@ -74,7 +80,7 @@ export function TabBar() {
         <li className="flex-1">
           <Link
             to="/more"
-            data-lit={UNDER_MORE.test(pathname) ? "" : undefined}
+            data-lit={UNDER_MORE.test(pathname) || inMore ? "" : undefined}
             className={TAB_LINK}
           >
             <TabFace tab={{ key: "more", label: "More", icon: Menu }} />
@@ -91,7 +97,8 @@ export function PhoneShell({ children, tabs = true }: { children: ReactNode; tab
   useLiveUpdates(tabs);
   const { data: settings } = useSettings({ enabled: tabs });
   const now = useMinute();
-  const hour = zonedParts(now).hour;
+  const { day, hour, minute } = zonedParts(now);
+  const minuteOfDay = hour * 60 + minute;
   useEffect(() => {
     if (!settings) return;
     applyAppearance(
@@ -101,10 +108,11 @@ export function PhoneShell({ children, tabs = true }: { children: ReactNode; tab
         textSize: "standard",
         reduceMotion: false,
         display: false,
+        sun: sunDay(day, settings.latitude, settings.longitude),
       },
-      hour,
+      minuteOfDay,
     );
-  }, [settings, hour]);
+  }, [settings, day, minuteOfDay]);
   return (
     <ShellContext.Provider value="phone">
       <MotionProvider reduceMotion={false}>

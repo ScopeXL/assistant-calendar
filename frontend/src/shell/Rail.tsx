@@ -9,6 +9,7 @@ import {
   shortWeekday,
   zonedParts,
 } from "../lib/dates";
+import { useRailBlocks } from "../features/usePluginModules";
 import { useMinute } from "../lib/time";
 import { Digits } from "../ui/Digits";
 
@@ -80,6 +81,7 @@ export function Rail({
   onAdd: () => void;
   onLock: () => void;
 }) {
+  const blocks = useRailBlocks();
   return (
     <nav
       aria-label="Rooms"
@@ -87,11 +89,14 @@ export function Rail({
       data-segmented=""
       className="flex flex-col bg-surface landscape:h-full landscape:w-[var(--rail-w)] landscape:border-r landscape:border-line portrait:h-28 portrait:flex-row portrait:items-center portrait:border-t portrait:border-line"
     >
-      <div className="px-5 pt-6 pb-5 portrait:hidden">
+      <div className="flex flex-col gap-4 px-5 pt-6 pb-5 portrait:hidden">
         <ClockBlock />
+        {blocks.map((Block, index) => (
+          <Block key={index} place="rail" />
+        ))}
       </div>
       <ul className="flex flex-col landscape:border-t landscape:border-line portrait:flex-1 portrait:flex-row">
-        <li className="portrait:w-40">
+        <li className="portrait:max-w-40 portrait:min-w-0 portrait:flex-1">
           <Link
             to={home}
             aria-current={room === "calendar" ? "page" : undefined}
@@ -102,7 +107,7 @@ export function Rail({
           </Link>
         </li>
         {rooms.map(({ key, label, icon: Icon }) => (
-          <li key={key} className="portrait:w-40">
+          <li key={key} className="portrait:max-w-40 portrait:min-w-0 portrait:flex-1">
             <Link
               to="/$room"
               params={{ room: key }}

@@ -8,6 +8,7 @@ import { Segmented } from "../../ui/Segmented";
 import { Select } from "../../ui/Select";
 import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
+import { usePluginModules } from "../usePluginModules";
 import { Group, Row } from "./parts";
 import { RecentlyRemoved } from "./RecentlyRemoved";
 
@@ -32,6 +33,10 @@ export function HouseholdPage() {
 function HouseholdForm({ settings }: { settings: Settings }) {
   const display = useShell() === "display";
   const update = useUpdateSettings();
+  // What plugins add to this page (the weather: Location).
+  const sections = usePluginModules().flatMap((module) =>
+    module.settings?.household ? [module.settings.household] : [],
+  );
   const [name, setName] = useState(settings.household_name);
   const [zone, setZone] = useState(settings.timezone);
   const allZones = zones();
@@ -119,6 +124,9 @@ function HouseholdForm({ settings }: { settings: Settings }) {
           />
         </Row>
       </Group>
+      {sections.map((Section, index) => (
+        <Section key={index} />
+      ))}
       <RecentlyRemoved />
       {update.isError ? (
         <p role="alert" className="font-semibold text-alert">

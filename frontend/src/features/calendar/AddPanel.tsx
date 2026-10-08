@@ -130,7 +130,12 @@ export function AddPanel({
           </div>
         ) : null}
         {plugin && adding ? (
-          <plugin.Editor key={plugin.key} day={adding.day} onDone={onClose} />
+          <plugin.Editor
+            key={plugin.key}
+            day={adding.day}
+            initialTitle={adding.title ?? null}
+            onDone={onClose}
+          />
         ) : panel && ready ? (
           <EventEditor
             key={editing ? `${editing.eventId}|${editing.recurrenceId ?? ""}` : "new"}

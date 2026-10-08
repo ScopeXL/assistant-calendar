@@ -9,10 +9,11 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ComponentType, type ReactNode } from "react";
 
 import { dayNumber, formatWallTime, shortWeekday } from "../../lib/dates";
 import type { Member } from "../../lib/household";
+import { useDayHeaders } from "../usePluginModules";
 import { EventChip } from "./EventChip";
 import { FitList } from "./FitList";
 import { byDay, nowSlot, shownFor, type DayEntry } from "./layout";
@@ -50,6 +51,7 @@ export interface WeekViewProps {
 export function WeekView(props: WeekViewProps) {
   const { days, occurrences, onMove, onDragging, onSwipe } = props;
   const columns = byDay(occurrences, days);
+  const marks = useDayHeaders();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { delay: LONG_PRESS_MS, tolerance: 8 } }),
   );
@@ -97,7 +99,14 @@ export function WeekView(props: WeekViewProps) {
         }}
       >
         {days.map((day) => (
-          <DayColumn key={day} {...props} day={day} column={columns.get(day)} lifted={lifted} />
+          <DayColumn
+            key={day}
+            {...props}
+            day={day}
+            column={columns.get(day)}
+            lifted={lifted}
+            marks={marks}
+          />
         ))}
       </div>
       <DragOverlay dropAnimation={null}>
@@ -127,6 +136,7 @@ function DayColumn({
   people,
   lifted,
   lit = null,
+  marks,
   onOpen,
   onAdd,
   onMore,
@@ -134,6 +144,8 @@ function DayColumn({
   day: string;
   column: { allDay: DayEntry<Occurrence>[]; timed: DayEntry<Occurrence>[] } | undefined;
   lifted: Occurrence | null;
+  /** The plugins' marks for the day's header (its weather). */
+  marks: ComponentType<{ day: string }>[];
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: day });
   const isToday = day === today;
@@ -194,6 +206,9 @@ function DayColumn({
           <span>{dayNumber(day)}</span>
         )}
         {isToday ? <span className="sr-only">today</span> : null}
+        {marks.map((Mark, index) => (
+          <Mark key={index} day={day} />
+        ))}
       </h2>
       {/* A tap on empty space adds an event on this day: a shortcut for Add in the rail. */}
       <div

@@ -101,6 +101,7 @@ const STEPS: SetupStep[] = [
   "welcome",
   "password",
   "household",
+  "place",
   "people",
   "pin",
   "pair",

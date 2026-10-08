@@ -26,6 +26,7 @@ import { DayView } from "../calendar/DayView";
 import { EventSheet } from "../calendar/EventSheet";
 import { monthGrid } from "../calendar/MonthView";
 import { Agenda, DayGroups, PhoneMonth, WeekStrip } from "../calendar/PhoneLists";
+import { useOpenOverlay } from "../calendar/overlays";
 import type { Occurrence } from "../calendar/types";
 
 type Mode = "week" | "day" | "agenda" | "month";
@@ -119,11 +120,12 @@ export function CalendarScreen() {
         : mode === "month"
           ? { from: grid.days[0] ?? selected, to: addDays(grid.days.at(-1) ?? selected, 1) }
           : { from: week[0] ?? selected, to: addDays(selected, LIST_DAYS) };
-  const { data } = useOccurrences(range.from, range.to);
+  const { data } = useOccurrences(range.from, range.to, { overlays: true });
   const occurrences = data?.occurrences ?? [];
+  const openOverlay = useOpenOverlay();
 
   const open = (occurrence: Occurrence) => {
-    if (!occurrence.event_id) return;
+    if (openOverlay(occurrence) || !occurrence.event_id) return;
     setPanel({
       kind: "event",
       eventId: occurrence.event_id,

@@ -17,6 +17,7 @@
   --motion-daylight: 2000ms;
   --motion-saver-in: 800ms;
   --motion-saver-out: 220ms;
+  --motion-photo: 1500ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-arrive: cubic-bezier(0.05, 0.7, 0.1, 1);
   --ease-leave: cubic-bezier(0.3, 0, 0.8, 0.15);
@@ -286,6 +287,22 @@ dialog.sheet[data-closing]::backdrop {
 /* Night: the black layer fades in; the clock follows. */
 .night-in {
   animation: fade-in var(--motion-crossfade) linear;
+}
+
+/* The screensaver (UX §6 "Screensaver in and out", §9): the first photo fades in over the board,
+   the clock band follows, photos crossfade with no pan or zoom, and a tap fades it all out. */
+.saver-in {
+  animation: fade-in var(--motion-saver-in) linear both;
+}
+.saver-band-in {
+  animation: fade-in var(--motion-enter) var(--ease-standard) both;
+  animation-delay: calc(var(--motion-saver-in) + 220ms);
+}
+.saver-out {
+  animation: fade-out var(--motion-saver-out) var(--ease-leave) forwards;
+}
+.saver-photo-in {
+  animation: fade-in var(--motion-photo) linear both;
 }
 
 /* Reduce Motion: everything instant. 0.01 ms rather than 0, so every animation still runs to its

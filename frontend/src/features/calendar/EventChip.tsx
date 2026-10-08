@@ -5,6 +5,7 @@ import type { Member } from "../../lib/household";
 import { Avatar } from "../../ui/Avatar";
 import { useShell } from "../../ui/shell";
 import { isOn, isPast } from "./layout";
+import { useOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
 
 /** "Soccer practice, 4:00 to 5:00 PM, Mia, Thursday October 9" (UX §10). */
@@ -55,6 +56,33 @@ export function EventChip({
 }) {
   const display = useShell() === "display";
   const people = peopleOf(occurrence, members);
+  const overlay = useOverlayOf(occurrence);
+  if (overlay) {
+    // A plugin's (a day's dinner, a countdown): quiet, with its mark; a tap opens its room.
+    const Icon = overlay.icon;
+    return (
+      <button
+        type="button"
+        data-chip=""
+        data-overlay={occurrence.overlay ?? undefined}
+        data-key={occurrence.key}
+        aria-label={occurrenceLabel(occurrence, people, day)}
+        tabIndex={measuring ? -1 : undefined}
+        onClick={onOpen}
+        className={`press flex w-full min-w-0 items-center gap-2 border border-line bg-surface/50 px-3 py-1.5 text-left text-ink ${
+          display ? "min-h-14 rounded-chip-d" : "min-h-11 rounded-chip"
+        }`}
+      >
+        <Icon aria-hidden="true" className="size-5 shrink-0 text-ink-soft" strokeWidth={2.25} />
+        <span
+          className={`line-clamp-2 min-w-0 flex-1 break-words ${display ? "text-d-secondary" : "text-secondary"} font-semibold`}
+        >
+          {occurrence.title}
+        </span>
+        <PeopleMarks people={people} />
+      </button>
+    );
+  }
   const one = people.length === 1 ? people[0] : undefined;
   const on = isOn(occurrence, now);
   const past = dimPast && !on && isPast(occurrence, now);

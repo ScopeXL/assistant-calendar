@@ -79,7 +79,8 @@ export function DisplayEntry() {
 
 /** The display's look and keyboard, for the screens shown before it's paired. */
 function Frame({ children }: { children: ReactNode }) {
-  const hour = zonedParts(useMinute()).hour;
+  const { hour, minute } = zonedParts(useMinute());
+  const minuteOfDay = hour * 60 + minute;
   useEffect(() => {
     applyAppearance(
       {
@@ -89,9 +90,9 @@ function Frame({ children }: { children: ReactNode }) {
         reduceMotion: false,
         display: true,
       },
-      hour,
+      minuteOfDay,
     );
-  }, [hour]);
+  }, [minuteOfDay]);
   useEffect(() => {
     const stopActivity = watchActivity();
     const stopKeyboard = watchKeyboardFields();

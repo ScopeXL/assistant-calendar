@@ -70,8 +70,11 @@ export function TodayView({
       </div>
       <ul aria-label="The coming days" className="grid grid-cols-6 border-t border-line">
         {days.slice(1).map((day) => {
-          const count =
-            (columns.get(day)?.allDay.length ?? 0) + (columns.get(day)?.timed.length ?? 0);
+          // Events only: a day's dinner or countdown isn't one.
+          const count = [
+            ...(columns.get(day)?.allDay ?? []),
+            ...(columns.get(day)?.timed ?? []),
+          ].filter((entry) => entry.occurrence.overlay === null).length;
           return (
             <li key={day} className="flex flex-col gap-1 border-r border-line px-4 py-3">
               <span className="text-d-body font-semibold">{shortWeekday(day)}</span>

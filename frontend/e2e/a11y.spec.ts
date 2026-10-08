@@ -25,6 +25,8 @@ const SETTINGS = [
   "Features",
   "Calendars & accounts",
   "Chores",
+  "Meals",
+  "Photos & screensaver",
   "Display",
   "Household",
   "Phones & screens",
@@ -85,13 +87,15 @@ async function tapTargets(page: Page, where: string): Promise<void> {
       const text = (control.getAttribute("aria-label") ?? control.textContent).trim().slice(0, 40);
       return `${control.tagName.toLowerCase()} "${text}" ${String(Math.round(box.width))}x${String(Math.round(box.height))}`;
     };
+    // Covered at its middle, or along its top or bottom edge (a row half under the tab bar).
     const covered = (control: Element) => {
       const box = control.getBoundingClientRect();
       const x = box.left + box.width / 2;
-      const y = box.top + box.height / 2;
-      if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return false;
-      const hit = document.elementFromPoint(x, y);
-      return hit !== null && !control.contains(hit) && !hit.contains(control);
+      return [box.top + 2, box.top + box.height / 2, box.bottom - 2].some((y) => {
+        if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return false;
+        const hit = document.elementFromPoint(x, y);
+        return hit !== null && !control.contains(hit) && !hit.contains(control);
+      });
     };
     const found: string[] = [];
     for (const control of controls) {
@@ -177,6 +181,13 @@ for (const scheme of ["light", "dark"] as const) {
       await check(page, "setup: household");
       await page.getByLabel("Household name").fill("Sample Family");
       await page.getByRole("button", { name: "Next" }).click();
+      await expect(page.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
+      await check(page, "setup: where's home");
+      await page.getByLabel("Your town").fill("Sample");
+      await page.getByRole("button", { name: "Search" }).click();
+      await expect(page.getByRole("list", { name: "Places" })).toBeVisible();
+      await check(page, "setup: where's home, the places");
+      await page.getByRole("button", { name: "Later" }).click();
       await expect(page.getByRole("heading", { name: "Who lives here?" })).toBeVisible();
       await check(page, "setup: people");
       await page.getByLabel("Your name").fill("Ana");
@@ -255,6 +266,28 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("link", { name: "More" }).click();
       await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
       await check(page, "more");
+      await page.getByRole("link", { name: "Meals" }).click();
+      await expect(page.getByRole("heading", { name: "Meals", level: 1 })).toBeVisible();
+      await check(page, "meals");
+      await page.getByRole("button", { name: /Tacos/ }).click();
+      await expect(page.getByRole("dialog", { name: /Tacos/ })).toBeVisible();
+      await check(page, "meals: a meal");
+      await page
+        .getByRole("dialog", { name: /Tacos/ })
+        .getByRole("button", { name: "Close" })
+        .click();
+      await page.getByRole("link", { name: "Saved meals" }).click();
+      await expect(page.getByRole("heading", { name: "Saved meals", level: 1 })).toBeVisible();
+      await check(page, "meals: saved meals");
+      await page.goto("/countdowns");
+      await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
+      await check(page, "countdowns");
+      await sheet(page, "Add countdown", "countdowns: add");
+      await page.goto("/photos");
+      await expect(page.getByRole("heading", { name: "Photos", level: 1 })).toBeVisible();
+      await check(page, "photos");
+      await page.goto("/more");
+      await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
       await page.getByRole("link", { name: "Pair a display" }).click();
       await expect(page.getByRole("heading", { name: "Pair a display", level: 1 })).toBeVisible();
       await check(page, "pair a display");
@@ -340,6 +373,40 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("link", { name: "Stars & rewards" }).click();
       await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
       await check(page, "display: stars and rewards");
+      await page.getByRole("link", { name: "Meals" }).click();
+      await expect(page.getByRole("heading", { name: /^Meals · /, level: 1 })).toBeVisible();
+      await check(page, "display: meals");
+      await page.getByRole("table").getByRole("button", { name: /Tacos/ }).click();
+      await check(page, "display: a meal");
+      await page
+        .getByRole("dialog", { name: /Tacos/ })
+        .getByRole("button", { name: "Close" })
+        .click();
+      await page.getByRole("link", { name: "Saved meals" }).click();
+      await expect(page.getByRole("heading", { name: "Saved meals", level: 1 })).toBeVisible();
+      await check(page, "display: saved meals");
+      await page.getByRole("link", { name: "Countdowns" }).click();
+      await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
+      await check(page, "display: countdowns");
+      await page.getByRole("link", { name: "Photos" }).click();
+      await expect(page.getByRole("heading", { name: /^Photos/, level: 1 })).toBeVisible();
+      await check(page, "display: photos");
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      await page
+        .getByRole("dialog", { name: "Add" })
+        .getByRole("button", { name: "Meal", exact: true })
+        .click();
+      await check(page, "display: add a meal");
+      await page
+        .getByRole("dialog", { name: "Add" })
+        .getByRole("button", { name: "Countdown", exact: true })
+        .click();
+      await check(page, "display: add a countdown");
+      await page
+        .getByRole("dialog", { name: "Add" })
+        .getByRole("button", { name: "Close" })
+        .click();
+      await page.getByRole("link", { name: "Chores" }).click();
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await page
         .getByRole("dialog", { name: "Add" })

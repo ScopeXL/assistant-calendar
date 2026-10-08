@@ -49,12 +49,16 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
       case "members.changed":
         invalidate(["members"]);
         invalidate(qk.session());
+        // Birthdays count down from people's birthdays.
+        invalidate(["countdowns"]);
+        invalidate(["occurrences"]);
         break;
       case "settings.changed":
         invalidate(qk.settings());
         invalidate(qk.session());
         invalidate(qk.kioskLayout());
         invalidate(qk.allowlist());
+        invalidate(["weather"]);
         break;
       case "devices.changed":
         invalidate(qk.devices());
@@ -62,9 +66,12 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         break;
       case "plugins.changed":
         invalidate(qk.plugins());
+        // A plugin's settings may change what it adds to the board (dinner on the calendar).
+        invalidate(["occurrences"]);
         break;
       case "photos.changed":
         invalidate(["photos"]);
+        invalidate(["screensaver"]);
         break;
       case "events.changed":
         invalidate(["occurrences"]);
@@ -87,6 +94,20 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
       case "points.changed":
       case "routines.changed":
         invalidate(["chores"]);
+        break;
+      case "meals.changed":
+        invalidate(["meals"]);
+        invalidate(["occurrences"]);
+        break;
+      case "countdowns.changed":
+        invalidate(["countdowns"]);
+        invalidate(["occurrences"]);
+        break;
+      case "screensaver.changed":
+        invalidate(["screensaver"]);
+        break;
+      case "weather.changed":
+        invalidate(["weather"]);
         break;
       case "kiosk.command":
         if (typeof event.command === "string") handlers.onKioskCommand?.(event.command, event);

@@ -1532,6 +1532,370 @@
         "title": "ContributesOut",
         "type": "object"
       },
+      "CopyWeekIn": {
+        "description": "Copy a week's meals into another week (both the first day of a week). Spots already\nfilled in the target week are kept.",
+        "properties": {
+          "from_start": {
+            "format": "date",
+            "title": "From Start",
+            "type": "string"
+          },
+          "to_start": {
+            "format": "date",
+            "title": "To Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_start",
+          "to_start"
+        ],
+        "title": "CopyWeekIn",
+        "type": "object"
+      },
+      "CopyWeekOut": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ids",
+            "type": "array"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ids",
+          "skipped"
+        ],
+        "title": "CopyWeekOut",
+        "type": "object"
+      },
+      "CountdownIn": {
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "repeat_yearly": {
+            "default": false,
+            "title": "Repeat Yearly",
+            "type": "boolean"
+          },
+          "show_on_display": {
+            "default": true,
+            "title": "Show On Display",
+            "type": "boolean"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "date"
+        ],
+        "title": "CountdownIn",
+        "type": "object"
+      },
+      "CountdownOut": {
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Member Id"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "repeat_yearly": {
+            "title": "Repeat Yearly",
+            "type": "boolean"
+          },
+          "show_on_display": {
+            "title": "Show On Display",
+            "type": "boolean"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "emoji",
+          "color",
+          "date",
+          "time",
+          "repeat_yearly",
+          "member_id",
+          "show_on_display",
+          "created_by_member_id",
+          "created_at"
+        ],
+        "title": "CountdownOut",
+        "type": "object"
+      },
+      "CountdownPatch": {
+        "description": "Only what's sent changes; an empty emoji clears it.",
+        "properties": {
+          "clear_color": {
+            "default": false,
+            "title": "Clear Color",
+            "type": "boolean"
+          },
+          "clear_member": {
+            "default": false,
+            "title": "Clear Member",
+            "type": "boolean"
+          },
+          "clear_time": {
+            "default": false,
+            "title": "Clear Time",
+            "type": "boolean"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "repeat_yearly": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat Yearly"
+          },
+          "show_on_display": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show On Display"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "CountdownPatch",
+        "type": "object"
+      },
       "DayIn": {
         "properties": {
           "date": {
@@ -1802,6 +2166,265 @@
           "storage"
         ],
         "title": "DiagnosticsOut",
+        "type": "object"
+      },
+      "EntryIn": {
+        "description": "PUT meals/entries: with an id, that entry changes (its day and slot too); without one, it\ngoes into the spot (day, slot, position) and replaces what's there, if anything. A new text\nis kept as a saved meal (or counts one more use of the saved meal with that name).",
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "position": {
+            "default": 0,
+            "maximum": 9.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "recipe_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Url"
+          },
+          "saved_meal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved Meal Id"
+          },
+          "slot": {
+            "default": "dinner",
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "snack"
+            ],
+            "title": "Slot",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "text"
+        ],
+        "title": "EntryIn",
+        "type": "object"
+      },
+      "EntryOut": {
+        "properties": {
+          "created_by_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Member Id"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "ingredients": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ingredients",
+            "type": "array"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "recipe_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Url"
+          },
+          "saved_meal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved Meal Id"
+          },
+          "slot": {
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "snack"
+            ],
+            "title": "Slot",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "day",
+          "slot",
+          "position",
+          "text",
+          "emoji",
+          "recipe_url",
+          "note",
+          "member_id",
+          "saved_meal_id",
+          "ingredients",
+          "created_by_member_id",
+          "updated_at"
+        ],
+        "title": "EntryOut",
+        "type": "object"
+      },
+      "EntrySaved": {
+        "description": "What PUT meals/entries did: the entry now, and what it replaced in that spot (for Undo:\nput the replaced one back).",
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/EntryOut"
+          },
+          "replaced": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "entry",
+          "replaced"
+        ],
+        "title": "EntrySaved",
         "type": "object"
       },
       "EventCreate": {
@@ -2794,6 +3417,109 @@
           "stars"
         ],
         "title": "FinishOut",
+        "type": "object"
+      },
+      "ForecastDayOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "integer"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "high": {
+            "title": "High",
+            "type": "integer"
+          },
+          "low": {
+            "title": "Low",
+            "type": "integer"
+          },
+          "precipitation": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precipitation"
+          },
+          "sunrise": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sunrise"
+          },
+          "sunset": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sunset"
+          }
+        },
+        "required": [
+          "date",
+          "code",
+          "high",
+          "low",
+          "precipitation",
+          "sunrise",
+          "sunset"
+        ],
+        "title": "ForecastDayOut",
+        "type": "object"
+      },
+      "ForecastHourOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "integer"
+          },
+          "precipitation": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precipitation"
+          },
+          "temperature": {
+            "title": "Temperature",
+            "type": "integer"
+          },
+          "time": {
+            "format": "date-time",
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "time",
+          "temperature",
+          "code",
+          "precipitation"
+        ],
+        "title": "ForecastHourOut",
         "type": "object"
       },
       "GoogleCalendarIn": {
@@ -3887,6 +4613,73 @@
         "title": "LoginIn",
         "type": "object"
       },
+      "ManifestOut": {
+        "description": "What the screensaver shows: every library photo not hidden or removed, newest first.",
+        "properties": {
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestPhoto"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/SaverSettings"
+          }
+        },
+        "required": [
+          "photos",
+          "settings"
+        ],
+        "title": "ManifestOut",
+        "type": "object"
+      },
+      "ManifestPhoto": {
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "taken_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken At"
+          },
+          "thumb_url": {
+            "title": "Thumb Url",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "thumb_url",
+          "width",
+          "height",
+          "taken_at"
+        ],
+        "title": "ManifestPhoto",
+        "type": "object"
+      },
       "MappingIn": {
         "properties": {
           "clear_owner": {
@@ -3950,6 +4743,127 @@
           }
         },
         "title": "MappingIn",
+        "type": "object"
+      },
+      "MealMoveIn": {
+        "description": "Move an entry to another day (and slot); one already there takes this one's place\n(\"Swap days\").",
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "slot": {
+            "anyOf": [
+              {
+                "enum": [
+                  "breakfast",
+                  "lunch",
+                  "dinner",
+                  "snack"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot"
+          }
+        },
+        "required": [
+          "day"
+        ],
+        "title": "MealMoveIn",
+        "type": "object"
+      },
+      "MealMoveOut": {
+        "properties": {
+          "moved": {
+            "$ref": "#/components/schemas/EntryOut"
+          },
+          "swapped": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "moved",
+          "swapped"
+        ],
+        "title": "MealMoveOut",
+        "type": "object"
+      },
+      "MealWeekOut": {
+        "properties": {
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/EntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "slots": {
+            "items": {
+              "enum": [
+                "breakfast",
+                "lunch",
+                "dinner",
+                "snack"
+              ],
+              "type": "string"
+            },
+            "title": "Slots",
+            "type": "array"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "days",
+          "slots",
+          "entries"
+        ],
+        "title": "MealWeekOut",
+        "type": "object"
+      },
+      "MealsRemovedOut": {
+        "description": "Recently removed (7 days): entries taken off a day, and saved meals archived.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/RemovedEntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "saved": {
+            "items": {
+              "$ref": "#/components/schemas/RemovedSavedOut"
+            },
+            "title": "Saved",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries",
+          "saved"
+        ],
+        "title": "MealsRemovedOut",
         "type": "object"
       },
       "MemberChoice": {
@@ -4708,6 +5622,42 @@
         "title": "Place",
         "type": "object"
       },
+      "PlaceOut": {
+        "description": "A town the location search found.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          }
+        },
+        "required": [
+          "label",
+          "latitude",
+          "longitude",
+          "timezone"
+        ],
+        "title": "PlaceOut",
+        "type": "object"
+      },
       "PluginInfo": {
         "properties": {
           "error": {
@@ -5115,6 +6065,77 @@
         "title": "RemovedChoreOut",
         "type": "object"
       },
+      "RemovedCountdownOut": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "date",
+          "deleted_at"
+        ],
+        "title": "RemovedCountdownOut",
+        "type": "object"
+      },
+      "RemovedEntryOut": {
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "slot": {
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "snack"
+            ],
+            "title": "Slot",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "day",
+          "slot",
+          "text",
+          "deleted_at"
+        ],
+        "title": "RemovedEntryOut",
+        "type": "object"
+      },
       "RemovedItemOut": {
         "properties": {
           "deleted_at": {
@@ -5201,6 +6222,30 @@
           "items"
         ],
         "title": "RemovedOut",
+        "type": "object"
+      },
+      "RemovedSavedOut": {
+        "properties": {
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "deleted_at"
+        ],
+        "title": "RemovedSavedOut",
         "type": "object"
       },
       "RewardIn": {
@@ -5885,6 +6930,242 @@
           "duration_ms"
         ],
         "title": "RunOut",
+        "type": "object"
+      },
+      "SavedMealIn": {
+        "properties": {
+          "emoji": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "ingredients": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Ingredients",
+            "type": "array"
+          },
+          "recipe_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Url"
+          },
+          "text": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "SavedMealIn",
+        "type": "object"
+      },
+      "SavedMealOut": {
+        "properties": {
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "ingredients": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ingredients",
+            "type": "array"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "recipe_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Url"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "use_count": {
+            "title": "Use Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "emoji",
+          "recipe_url",
+          "ingredients",
+          "use_count",
+          "last_used_at"
+        ],
+        "title": "SavedMealOut",
+        "type": "object"
+      },
+      "SavedMealPatch": {
+        "description": "Only what's sent changes; an empty emoji or link clears it.",
+        "properties": {
+          "emoji": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "ingredients": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingredients"
+          },
+          "recipe_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Url"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "SavedMealPatch",
+        "type": "object"
+      },
+      "SaverSettings": {
+        "description": "The plugin's settings as the wall uses them.",
+        "properties": {
+          "every_seconds": {
+            "title": "Every Seconds",
+            "type": "integer"
+          },
+          "show_clock": {
+            "title": "Show Clock",
+            "type": "boolean"
+          },
+          "shuffle": {
+            "title": "Shuffle",
+            "type": "boolean"
+          },
+          "start_after_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start After Minutes"
+          }
+        },
+        "required": [
+          "start_after_minutes",
+          "every_seconds",
+          "show_clock",
+          "shuffle"
+        ],
+        "title": "SaverSettings",
+        "type": "object"
+      },
+      "ScanOut": {
+        "properties": {
+          "imported": {
+            "title": "Imported",
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceOut"
+          },
+          "unreadable": {
+            "title": "Unreadable",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "imported",
+          "unreadable"
+        ],
+        "title": "ScanOut",
         "type": "object"
       },
       "SearchHit": {
@@ -6674,6 +7955,104 @@
         "title": "SignOutOthersIn",
         "type": "object"
       },
+      "SourceOut": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "items_seen": {
+            "title": "Items Seen",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "inbox",
+              "immich",
+              "nextcloud"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_scan_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Scan At"
+          },
+          "photo_count": {
+            "title": "Photo Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "enabled",
+          "last_scan_at",
+          "last_error",
+          "items_seen",
+          "photo_count"
+        ],
+        "title": "SourceOut",
+        "type": "object"
+      },
+      "SourcePatch": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "title": "SourcePatch",
+        "type": "object"
+      },
       "StarsOut": {
         "properties": {
           "balance": {
@@ -6995,6 +8374,154 @@
         "title": "UndoIn",
         "type": "object"
       },
+      "UpcomingListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UpcomingOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "today",
+          "items"
+        ],
+        "title": "UpcomingListOut",
+        "type": "object"
+      },
+      "UpcomingOut": {
+        "description": "One thing coming up: a countdown, or a person's birthday (from their birthday in Family).",
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "countdown_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countdown Id"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "countdown",
+              "birthday"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          },
+          "show_on_display": {
+            "title": "Show On Display",
+            "type": "boolean"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "turning": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turning"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "countdown_id",
+          "title",
+          "emoji",
+          "color",
+          "member_id",
+          "date",
+          "time",
+          "days",
+          "turning",
+          "show_on_display"
+        ],
+        "title": "UpcomingOut",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -7081,6 +8608,133 @@
           "title"
         ],
         "title": "WaitingOut",
+        "type": "object"
+      },
+      "WeatherNowOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "integer"
+          },
+          "is_day": {
+            "title": "Is Day",
+            "type": "boolean"
+          },
+          "temperature": {
+            "title": "Temperature",
+            "type": "integer"
+          },
+          "time": {
+            "format": "date-time",
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "time",
+          "temperature",
+          "code",
+          "is_day"
+        ],
+        "title": "WeatherNowOut",
+        "type": "object"
+      },
+      "WeatherOut": {
+        "description": "``status``: ok (a forecast, maybe stale), no_location (Settings \u2192 Household \u2192 Location\nisn't set), waiting (set, nothing fetched yet), error (nothing to show, ``message`` says\nwhy). With ok, ``message`` is why the last check failed while the last forecast shows.",
+        "properties": {
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeatherNowOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastDayOut"
+            },
+            "title": "Daily",
+            "type": "array"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "hourly": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastHourOut"
+            },
+            "title": "Hourly",
+            "type": "array"
+          },
+          "location_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Label"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "no_location",
+              "waiting",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "units": {
+            "enum": [
+              "fahrenheit",
+              "celsius"
+            ],
+            "title": "Units",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "location_label",
+          "units",
+          "current",
+          "hourly",
+          "daily",
+          "fetched_at",
+          "stale",
+          "message"
+        ],
+        "title": "WeatherOut",
         "type": "object"
       },
       "WeekCellOut": {
@@ -10927,6 +12581,300 @@
         ]
       }
     },
+    "/api/countdowns": {
+      "get": {
+        "operationId": "get_countdowns_api_countdowns_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CountdownOut"
+                  },
+                  "title": "Response Get Countdowns Api Countdowns Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Countdowns",
+        "tags": [
+          "countdowns"
+        ]
+      },
+      "post": {
+        "operationId": "post_countdown_api_countdowns_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountdownIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountdownOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Countdown",
+        "tags": [
+          "countdowns"
+        ]
+      }
+    },
+    "/api/countdowns/removed": {
+      "get": {
+        "operationId": "get_removed_api_countdowns_removed_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RemovedCountdownOut"
+                  },
+                  "title": "Response Get Removed Api Countdowns Removed Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Removed",
+        "tags": [
+          "countdowns"
+        ]
+      }
+    },
+    "/api/countdowns/upcoming": {
+      "get": {
+        "operationId": "get_upcoming_api_countdowns_upcoming_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 50,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_birthdays",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Include Birthdays",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpcomingListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Upcoming",
+        "tags": [
+          "countdowns"
+        ]
+      }
+    },
+    "/api/countdowns/{countdown_id}": {
+      "delete": {
+        "operationId": "delete_countdown_api_countdowns__countdown_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "countdown_id",
+            "required": true,
+            "schema": {
+              "title": "Countdown Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Countdown",
+        "tags": [
+          "countdowns"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_countdown_api_countdowns__countdown_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "countdown_id",
+            "required": true,
+            "schema": {
+              "title": "Countdown Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountdownPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountdownOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Countdown",
+        "tags": [
+          "countdowns"
+        ]
+      }
+    },
+    "/api/countdowns/{countdown_id}/restore": {
+      "post": {
+        "operationId": "restore_countdown_api_countdowns__countdown_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "countdown_id",
+            "required": true,
+            "schema": {
+              "title": "Countdown Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountdownOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Countdown",
+        "tags": [
+          "countdowns"
+        ]
+      }
+    },
     "/api/export": {
       "get": {
         "operationId": "export_api_export_get",
@@ -11670,6 +13618,520 @@
         "summary": "Restore Items",
         "tags": [
           "lists"
+        ]
+      }
+    },
+    "/api/meals/copy-week": {
+      "post": {
+        "operationId": "copy_week_api_meals_copy_week_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyWeekIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopyWeekOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Copy Week",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/entries": {
+      "put": {
+        "operationId": "put_entry_api_meals_entries_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntrySaved"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Entry",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/entries/{entry_id}": {
+      "delete": {
+        "operationId": "delete_entry_api_meals_entries__entry_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Entry",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/entries/{entry_id}/move": {
+      "post": {
+        "operationId": "move_entry_api_meals_entries__entry_id__move_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MealMoveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealMoveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Move Entry",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/entries/{entry_id}/restore": {
+      "post": {
+        "operationId": "restore_entry_api_meals_entries__entry_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Entry",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/removed": {
+      "get": {
+        "operationId": "get_removed_api_meals_removed_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealsRemovedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Removed",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/saved": {
+      "get": {
+        "operationId": "get_saved_api_meals_saved_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SavedMealOut"
+                  },
+                  "title": "Response Get Saved Api Meals Saved Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Saved",
+        "tags": [
+          "meals"
+        ]
+      },
+      "post": {
+        "operationId": "post_saved_api_meals_saved_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedMealIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedMealOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Saved",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/saved/{saved_id}": {
+      "delete": {
+        "operationId": "delete_saved_api_meals_saved__saved_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "saved_id",
+            "required": true,
+            "schema": {
+              "title": "Saved Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Saved",
+        "tags": [
+          "meals"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_saved_api_meals_saved__saved_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "saved_id",
+            "required": true,
+            "schema": {
+              "title": "Saved Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedMealPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedMealOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Saved",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/saved/{saved_id}/restore": {
+      "post": {
+        "operationId": "restore_saved_api_meals_saved__saved_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "saved_id",
+            "required": true,
+            "schema": {
+              "title": "Saved Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedMealOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Saved",
+        "tags": [
+          "meals"
+        ]
+      }
+    },
+    "/api/meals/week": {
+      "get": {
+        "operationId": "get_week_api_meals_week_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 14,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealWeekOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Week",
+        "tags": [
+          "meals"
         ]
       }
     },
@@ -12595,6 +15057,146 @@
         ]
       }
     },
+    "/api/screensaver/manifest": {
+      "get": {
+        "operationId": "get_manifest_api_screensaver_manifest_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManifestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Manifest",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/sources": {
+      "get": {
+        "operationId": "get_sources_api_screensaver_sources_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SourceOut"
+                  },
+                  "title": "Response Get Sources Api Screensaver Sources Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Sources",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/sources/{source_id}": {
+      "patch": {
+        "operationId": "patch_source_api_screensaver_sources__source_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Source",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/sources/{source_id}/scan": {
+      "post": {
+        "operationId": "scan_source_api_screensaver_sources__source_id__scan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scan Source",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
     "/api/settings": {
       "get": {
         "operationId": "get_settings_api_settings_get",
@@ -12735,6 +15337,96 @@
         "summary": "Version",
         "tags": [
           "meta"
+        ]
+      }
+    },
+    "/api/weather": {
+      "get": {
+        "operationId": "get_weather_api_weather_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Weather",
+        "tags": [
+          "weather"
+        ]
+      }
+    },
+    "/api/weather/geocode": {
+      "get": {
+        "operationId": "get_geocode_api_weather_geocode_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceOut"
+                  },
+                  "title": "Response Get Geocode Api Weather Geocode Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Geocode",
+        "tags": [
+          "weather"
+        ]
+      }
+    },
+    "/api/weather/refresh": {
+      "post": {
+        "operationId": "post_refresh_api_weather_refresh_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Refresh",
+        "tags": [
+          "weather"
         ]
       }
     }

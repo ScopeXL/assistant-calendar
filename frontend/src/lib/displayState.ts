@@ -11,7 +11,7 @@ export type BoardView = "week" | "day" | "month" | "people" | "today";
 export type BoardPanel =
   | { kind: "event"; eventId: string; recurrenceId: string | null; key: string }
   /** `type`: what Add makes (an event, or a plugin's "item", "chore"); none: the room's. */
-  | { kind: "add"; day: string | null; hour: number | null; type?: string }
+  | { kind: "add"; day: string | null; hour: number | null; type?: string; title?: string }
   | { kind: "edit"; eventId: string; recurrenceId: string | null }
   | null;
 

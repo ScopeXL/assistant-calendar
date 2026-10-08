@@ -16,7 +16,7 @@ import { AddPanel } from "../calendar/AddPanel";
 import { useOccurrences } from "../calendar/data";
 import { peopleOf } from "../calendar/EventChip";
 import { EventSheet } from "../calendar/EventSheet";
-import { useTodayBlocks } from "../usePluginModules";
+import { useRailBlocks, useTodayBlocks } from "../usePluginModules";
 import { byDay, isPast, todayParts } from "../calendar/layout";
 import { PhoneRow } from "../calendar/PhoneLists";
 import type { Occurrence } from "../calendar/types";
@@ -36,6 +36,7 @@ export function TodayScreen() {
   const { data } = useOccurrences(today, addDays(today, 2));
   const [panel, setPanel] = useState<BoardPanel>(null);
   const blocks = useTodayBlocks();
+  const railBlocks = useRailBlocks();
   const occurrences = data?.occurrences ?? [];
   const parts = todayParts(occurrences, now);
   const columns = byDay(occurrences, [today, tomorrow]);
@@ -70,13 +71,16 @@ export function TodayScreen() {
     <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-40">
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-title font-bold">{shortDate(today)}</h1>
+        {railBlocks.map((Block, index) => (
+          <Block key={index} place="phone" />
+        ))}
         <Link
           to="/who"
           search={{ from: "more" }}
           aria-label={
             session?.member ? `Using this phone: ${session.member.name}` : "Who's using this phone?"
           }
-          className="press flex size-11 items-center justify-center rounded-full"
+          className="press flex size-11 shrink-0 items-center justify-center rounded-full"
         >
           <Avatar member={session?.member ?? null} size="sm" />
         </Link>
