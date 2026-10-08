@@ -39,6 +39,21 @@ describe("pillText", () => {
     );
   });
 
+  it("asks for a calendar address that stopped working", () => {
+    const school = account({
+      provider: "ics",
+      label: "School",
+      address: "school.example.com/s.ics",
+    });
+    expect(pillText({ ...school, status: "needs_reconnect" })).toBe(
+      "School's calendar address stopped working.",
+    );
+    const secret = account({ provider: "ics", address: "calendar.google.com/…/basic.ics" });
+    expect(pillText({ ...secret, status: "needs_reconnect" })).toBe(
+      "Google's calendar address stopped working.",
+    );
+  });
+
   it("says since when an account hasn't answered, and that its events stay", () => {
     const quiet = account({ status: "error", last_success_at: "2026-10-07T13:10:00Z" });
     expect(pillText(quiet)).toBe("iCloud hasn't answered since 9:10 AM. Showing what we had.");

@@ -64,8 +64,10 @@ class IcsProvider:
         if status == 304:
             return status, b"", cursor
         if status in {401, 403, 404, 410}:
+            # A feed's address is its key: one that stops working (Google's secret address after
+            # a reset, a feed taken down) needs its new address, like a refused password.
             raise SyncError(
-                ErrorKind.NOT_FOUND,
+                ErrorKind.AUTH,
                 "That calendar address doesn't work any more. Paste its new address.",
             )
         if status in {429, 503}:

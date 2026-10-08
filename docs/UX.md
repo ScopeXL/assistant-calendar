@@ -714,6 +714,7 @@ Quiet states, never error walls:
 | Read-only synced event | The sheet's source line instead of buttons |
 | A reward costs more than the balance | "Mia has 18 of 30 stars" under a disabled Ask for it, never hidden |
 | Google signed Sunroom out (OAuth) | A banner in Calendars & accounts and a header pill: "Google signed Sunroom out." with **Sign in again** (phone) |
+| A password or a calendar address stopped working | A header pill: "iCloud needs its password again." or "School's calendar address stopped working." Tapping it opens Calendars & accounts, where **Connect again** (phone) takes the new one; the events stay |
 | Photos folder nearly full | A line in Photos and About: "2 GB free" |
 | Backup older than 7 days | A line in Backup; never a pill on the board |
 | A plugin stopped | A line in Settings → Features: "Weather stopped working. Retry" |

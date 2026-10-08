@@ -1,6 +1,7 @@
 """Accounts through the API (PLAN §11.2): a calendar address added and on the board at once, a
-private address refused until a parent allows it, holidays, mapping to people, disconnecting.
-Feeds come from a scripted server behind the real guarded client; synthetic data only."""
+private address refused until a parent allows it, holidays, mapping to people, disconnecting, an
+address that stops working. Feeds come from a scripted server behind the real guarded client;
+synthetic data only."""
 
 from __future__ import annotations
 
@@ -71,8 +72,14 @@ def feeds() -> FeedServer:
 
 
 @pytest.fixture
-async def sync_app(data_dir: Path, clock: FakeClock, feeds: FeedServer) -> AsyncIterator[FastAPI]:
-    plugin = CalendarSync()
+def plugin() -> CalendarSync:
+    return CalendarSync()
+
+
+@pytest.fixture
+async def sync_app(
+    data_dir: Path, clock: FakeClock, feeds: FeedServer, plugin: CalendarSync
+) -> AsyncIterator[FastAPI]:
     application = create_app(
         make_settings(data_dir),
         clock=clock,
@@ -252,3 +259,43 @@ async def test_a_shared_calendar_takes_a_color_nobody_has(phone: httpx.AsyncClie
     )
     color = added.json()["calendars"][0]["color"]
     assert color not in {"sea", "sky"}  # Ana's, and the Home calendar's
+
+
+async def test_an_address_that_stops_working_asks_for_its_new_one(
+    phone: httpx.AsyncClient, feeds: FeedServer, plugin: CalendarSync
+) -> None:
+    mia = await add_member(phone, "Mia", role="kid")
+    added = await phone.post(
+        "/api/calendar-sync/accounts/ics",
+        json={"url": "https://school.example.com/school.ics", "owner_member_id": mia["id"]},
+        headers=CSRF,
+    )
+    assert added.status_code == 201, added.text
+    account_id = added.json()["id"]
+    # The school moves its feed (or a secret address is reset): the old address answers 404.
+    feeds.feeds["/moved.ics"] = feeds.feeds.pop("/school.ics")
+    assert plugin.engine is not None
+    await plugin.engine.sync_account(account_id)
+    [account] = (await phone.get("/api/calendar-sync/accounts")).json()
+    assert (account["status"], account["last_error"]) == (
+        "needs_reconnect",
+        "That calendar address doesn't work any more. Paste its new address.",
+    )
+    assert [o["title"] for o in await week(phone)] == ["Field trip", "Pajama day"]
+    # The new address is the same calendar: still Mia's, listed once.
+    back = await phone.post(
+        f"/api/calendar-sync/accounts/{account_id}/reconnect",
+        json={"url": "https://school.example.com/moved.ics"},
+        headers=CSRF,
+    )
+    assert back.status_code == 200, back.text
+    await plugin.engine.sync_account(account_id)
+    [account] = (await phone.get("/api/calendar-sync/accounts")).json()
+    assert (account["status"], account["address"]) == ("connected", "school.example.com/moved.ics")
+    assert [(c["mapped"], c["owner_member_id"], c["last_error"]) for c in account["calendars"]] == [
+        (True, mia["id"], None)
+    ]
+    assert [(o["title"], o["member_ids"]) for o in await week(phone)] == [
+        ("Field trip", [mia["id"]]),
+        ("Pajama day", [mia["id"]]),
+    ]

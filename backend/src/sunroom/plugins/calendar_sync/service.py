@@ -532,6 +532,18 @@ async def reconnect(
         stored.consecutive_failures = 0
         stored.last_error = None
         stored.next_sync_at = ctx.now()
+        if provider_name == Provider.ICS:
+            # A feed is one calendar, named after its address: the row follows a new address,
+            # so its person and color stay and it isn't listed twice.
+            rows = (
+                await tx.session.scalars(
+                    select(RemoteCalendarRow).where(RemoteCalendarRow.account_id == account_id)
+                )
+            ).all()
+            if len(rows) == 1:
+                rows[0].remote_id = addresses.feed_id(secrets["url"])
+                rows[0].sync_token = None
+                rows[0].last_error = None
         tx.publish("sync.changed", {"account_id": account_id, "status": stored.status})
     if engine is not None:
         engine.start(account_id)

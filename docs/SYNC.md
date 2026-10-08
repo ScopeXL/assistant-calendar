@@ -83,6 +83,8 @@ Every request is pinned to the address that was checked, and each redirect is ch
   doesn't work, so Sunroom reads by href (`calendar-multiget`).
 - **Reminders** aren't reachable over CalDAV.
 - **Colors** come as `#RRGGBBAA`.
+- **Checked on a real account** with 0.3.0, from the kitchen screen: an event added on the wall
+  reached Apple Calendar within seconds, and Apple Calendar's events came to the board.
 
 ### Google
 
@@ -140,7 +142,8 @@ Every request is pinned to the address that was checked, and each redirect is ch
   - a JWT turned down for clock skew says to fix the server's clock.
 - **Tokens:** they stay on Google's hosts; Sunroom never follows a redirect with one. Tokens are
   kept for their hour and refreshed one request at a time.
-- **Not yet checked against a real Google account** (the owner's M2 check covers them): editing
+- **Not yet checked against a real Google account** (the helper and Sign in with Google are
+  tried live once the app is complete; the owner chose to wait): editing
   an unmodified occurrence by its instance id, listing a series' exceptions by iCalUID, the 409
   for a deleted event's iCalUID and restoring it, and whether changing an exception changes the
   series' etag. If it does, the next push meets one harmless extra 412 and pulls.
@@ -151,6 +154,13 @@ Every request is pinned to the address that was checked, and each redirect is ch
   them to IANA zones.
 - Google's feeds write UTC times plus an `X-WR-TIMEZONE` header; `x-wr-timezone` turns them into
   local times so repeats keep their hour across daylight saving.
+- **An address that stops working** (401, 403, 404 or 410: a feed taken down, or Google's secret
+  address after a reset) asks to be connected again, like a refused password. The pill says so,
+  the events stay, and Connect again takes the new address. The calendar keeps its person and
+  color, because its row follows the new address.
+- **Public or secret:** Google's public address works only once the calendar is made public to
+  everyone; the secret address doesn't need that, so it's the one the steps ask for. A calendar
+  that's public already (a school's, a team's) can use its public address.
 
 ## Measured freshness
 

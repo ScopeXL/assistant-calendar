@@ -6,6 +6,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A calendar address that stops working, say after you reset Google's secret address, now says
+  so on the board, and Connect again takes its new address. Before, it quietly kept showing the
+  last events it had.
+
 ## [0.3.0] - 2026-10-08
 
 ### Added

@@ -9,9 +9,9 @@ import { sourceName, useAccounts, type Account } from "./data";
 export function pillText(account: Account): string {
   const name = sourceName(account);
   if (account.status === "needs_reconnect") {
-    return account.provider === "google"
-      ? "Google signed Sunroom out."
-      : `${name} needs its password again.`;
+    if (account.provider === "google") return "Google signed Sunroom out.";
+    if (account.provider === "ics") return `${name}'s calendar address stopped working.`;
+    return `${name} needs its password again.`;
   }
   const since = account.last_success_at
     ? ` since ${formatTime(new Date(account.last_success_at))}`
