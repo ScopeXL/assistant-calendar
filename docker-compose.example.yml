@@ -1,0 +1,39 @@
+# Sunroom with Docker Compose or as a Portainer stack (docs/DEPLOY.md). For Portainer, paste this
+# into Stacks → Add stack → Web editor, then fill in the stack's environment variables.
+# Placeholders only; never commit real values. Nothing here is required: leave a variable empty
+# and Sunroom does without it.
+services:
+  sunroom:
+    image: scopexl/sunroom:latest # or pin a version, e.g. scopexl/sunroom:0.1.0
+    container_name: sunroom
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-} # the household's time zone, e.g. America/New_York (also settable in the app)
+      # Behind your own HTTPS reverse proxy: the public name and the proxy's address.
+      APP_ALLOWED_HOSTS: ${APP_ALLOWED_HOSTS:-} # e.g. calendar.example.com (or *.example.com)
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-} # e.g. 172.18.0.0/16
+      # Optional: a household password that always wins over the one chosen in setup (12+
+      # characters), and a secret key (generated on the volume when left empty).
+      APP_PASSWORD: ${APP_PASSWORD:-}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-}
+    volumes:
+      # A named volume: correct ownership with no extra steps. The database, nightly backups and
+      # photos all live here, so back up the whole volume.
+      - sunroom_data:/data
+    ports:
+      - "8080:8080" # or remove this and attach the container to your proxy's network
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  sunroom_data:
+    name: sunroom_data
