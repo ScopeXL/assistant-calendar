@@ -81,6 +81,10 @@ class Household(Base):
     sleep_to: Mapped[str | None] = mapped_column(String(5), default=None)
     sleep_mode: Mapped[str] = mapped_column(String(12), default=SleepMode.DIM_CLOCK)
     kid_safe_editing: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Where quick add puts an event when nothing else says (the Home calendar).
+    default_calendar_id: Mapped[str | None] = mapped_column(
+        ForeignKey("calendars.id"), default=None
+    )
     parent_pin_hash: Mapped[str | None] = mapped_column(String(160), default=None)
     # How many digits, so the PIN pad accepts as soon as they're typed (UX §4).
     pin_length: Mapped[int | None] = mapped_column(Integer, default=None)

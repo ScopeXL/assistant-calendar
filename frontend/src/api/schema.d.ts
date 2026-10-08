@@ -394,6 +394,239 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/calendar/calendars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Calendars */
+        get: operations["get_calendars_api_calendar_calendars_get"];
+        put?: never;
+        /** Post Calendar */
+        post: operations["post_calendar_api_calendar_calendars_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/calendars/{calendar_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Calendar */
+        delete: operations["delete_calendar_api_calendar_calendars__calendar_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Calendar */
+        patch: operations["patch_calendar_api_calendar_calendars__calendar_id__patch"];
+        trace?: never;
+    };
+    "/api/calendar/calendars/{calendar_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Calendar */
+        post: operations["restore_calendar_api_calendar_calendars__calendar_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Event */
+        post: operations["post_event_api_calendar_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Event */
+        get: operations["get_event_api_calendar_events__event_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Event */
+        delete: operations["delete_event_api_calendar_events__event_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Event */
+        patch: operations["patch_event_api_calendar_events__event_id__patch"];
+        trace?: never;
+    };
+    "/api/calendar/events/{event_id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move Event */
+        post: operations["move_event_api_calendar_events__event_id__move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/events/{event_id}/occurrences/{recurrence_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Occurrence */
+        delete: operations["delete_occurrence_api_calendar_events__event_id__occurrences__recurrence_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Occurrence */
+        patch: operations["patch_occurrence_api_calendar_events__event_id__occurrences__recurrence_id__patch"];
+        trace?: never;
+    };
+    "/api/calendar/events/{event_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Event */
+        post: operations["restore_event_api_calendar_events__event_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/events/{event_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undo Event */
+        post: operations["undo_event_api_calendar_events__event_id__undo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/occurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Occurrences
+         * @description Every occurrence in [from, to) (household dates, at most 93 days), sorted by start.
+         *     ``member_ids`` keeps events for those people and for Everyone.
+         */
+        get: operations["get_occurrences_api_calendar_occurrences_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/removed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Removed */
+        get: operations["get_removed_api_calendar_removed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/rrule/describe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Describe Rule
+         * @description The sentence the editor shows for a repeat ("Every 2 weeks on Thu, until Dec 31").
+         */
+        get: operations["describe_rule_api_calendar_rrule_describe_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Search */
+        get: operations["get_search_api_calendar_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/export": {
         parameters: {
             query?: never;
@@ -886,6 +1119,81 @@ export interface components {
             /** Stale */
             stale: boolean;
         };
+        /** CalendarCreate */
+        CalendarCreate: {
+            /**
+             * Color
+             * @default sky
+             * @enum {string}
+             */
+            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose";
+            /** Name */
+            name: string;
+            /** Owner Member Id */
+            owner_member_id?: string | null;
+            /**
+             * Visible On Display
+             * @default true
+             */
+            visible_on_display: boolean;
+        };
+        /** CalendarOut */
+        CalendarOut: {
+            /**
+             * Color
+             * @enum {string}
+             */
+            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose";
+            /** Deleted */
+            deleted: boolean;
+            /** Id */
+            id: string;
+            /** Is Default */
+            is_default: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "local" | "sync";
+            /** Name */
+            name: string;
+            /** Owner Member Id */
+            owner_member_id: string | null;
+            /** Read Only */
+            read_only: boolean;
+            /** Version */
+            version: number;
+            /** Visible On Display */
+            visible_on_display: boolean;
+        };
+        /** CalendarUpdate */
+        CalendarUpdate: {
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Is Default */
+            is_default?: boolean | null;
+            /** Name */
+            name?: string | null;
+            /** Owner Member Id */
+            owner_member_id?: string | null;
+            /** Visible On Display */
+            visible_on_display?: boolean | null;
+        };
+        /**
+         * ChangeOut
+         * @description What a change did: the series now (None when it was removed), the revision Undo
+         *     reverses, and how many one-off changes it had to drop.
+         */
+        ChangeOut: {
+            /**
+             * Dropped Overrides
+             * @default 0
+             */
+            dropped_overrides: number;
+            event: components["schemas"]["EventOut"] | null;
+            /** Revision Id */
+            revision_id: string;
+        };
         /** ClientInfo */
         ClientInfo: {
             /** Host */
@@ -915,6 +1223,13 @@ export interface components {
             phone_tabs: components["schemas"]["TabOut"][];
             /** Settings Sections */
             settings_sections: components["schemas"]["SectionOut"][];
+        };
+        /** DescribeOut */
+        DescribeOut: {
+            /** Rrule */
+            rrule: string;
+            /** Text */
+            text: string;
         };
         /** DeviceLabelIn */
         DeviceLabelIn: {
@@ -976,6 +1291,155 @@ export interface components {
             timezone: string;
             /** Version */
             version: string;
+        };
+        /** EventCreate */
+        EventCreate: {
+            /** All Day */
+            all_day?: boolean | null;
+            /** Calendar Id */
+            calendar_id?: string | null;
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Description */
+            description?: string | null;
+            /** End */
+            end?: string | null;
+            /** End Date */
+            end_date?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Member Ids */
+            member_ids?: string[] | null;
+            /** Reminders */
+            reminders?: number[] | null;
+            /** Rrule */
+            rrule?: string | null;
+            /** Start */
+            start?: string | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Title */
+            title: string;
+            /** Tzid */
+            tzid?: string | null;
+        };
+        /** EventOut */
+        EventOut: {
+            /** All Day */
+            all_day: boolean;
+            /** Calendar Id */
+            calendar_id: string;
+            /** Color */
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By Member Id */
+            created_by_member_id: string | null;
+            /** Deleted At */
+            deleted_at: string | null;
+            /** Description */
+            description: string;
+            /** End */
+            end: string | null;
+            /** End Date */
+            end_date: string | null;
+            /** Exdates */
+            exdates: string[];
+            /** Id */
+            id: string;
+            /** Is Override */
+            is_override: boolean;
+            /** Location */
+            location: string;
+            /** Member Ids */
+            member_ids: string[];
+            /** Parent Event Id */
+            parent_event_id: string | null;
+            /** Read Only */
+            read_only: boolean;
+            /** Recurrence Id */
+            recurrence_id: string | null;
+            /** Reminders */
+            reminders: number[];
+            /** Repeat Text */
+            repeat_text: string | null;
+            /** Rrule */
+            rrule: string | null;
+            /** Source */
+            source: string;
+            /** Start */
+            start: string | null;
+            /** Start Date */
+            start_date: string | null;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Tzid */
+            tzid: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * EventUpdate
+         * @description PATCH a whole series (``scope`` all) or, at an occurrence, ``this`` / ``following``.
+         *     ``clear_rrule``/``clear_color`` say "remove it" (None means "leave it").
+         */
+        EventUpdate: {
+            /** All Day */
+            all_day?: boolean | null;
+            /** Calendar Id */
+            calendar_id?: string | null;
+            /**
+             * Clear Color
+             * @default false
+             */
+            clear_color: boolean;
+            /**
+             * Clear Rrule
+             * @default false
+             */
+            clear_rrule: boolean;
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Description */
+            description?: string | null;
+            /** End */
+            end?: string | null;
+            /** End Date */
+            end_date?: string | null;
+            /** Expected Version */
+            expected_version?: number | null;
+            /** Location */
+            location?: string | null;
+            /** Member Ids */
+            member_ids?: string[] | null;
+            /** Reminders */
+            reminders?: number[] | null;
+            /** Rrule */
+            rrule?: string | null;
+            /**
+             * Scope
+             * @default all
+             * @enum {string}
+             */
+            scope: "this" | "following" | "all";
+            /** Start */
+            start?: string | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Tzid */
+            tzid?: string | null;
         };
         /** FieldOut */
         FieldOut: {
@@ -1205,6 +1669,97 @@ export interface components {
             /** Role */
             role?: ("parent" | "kid") | null;
         };
+        /**
+         * MoveIn
+         * @description The drag fast path: to another day, keeping the time of day and the length.
+         */
+        MoveIn: {
+            /** Recurrence Id */
+            recurrence_id?: string | null;
+            /**
+             * Scope
+             * @default all
+             * @enum {string}
+             */
+            scope: "this" | "following" | "all";
+            /**
+             * To Date
+             * Format: date
+             */
+            to_date: string;
+        };
+        /** OccurrenceOut */
+        OccurrenceOut: {
+            /** All Day */
+            all_day: boolean;
+            /** Calendar Color */
+            calendar_color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Calendar Id */
+            calendar_id: string | null;
+            /** Color */
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** End Date */
+            end_date: string | null;
+            /** End Local */
+            end_local: string | null;
+            /** End Utc */
+            end_utc: string | null;
+            /** Event Id */
+            event_id: string | null;
+            /** Is Override */
+            is_override: boolean;
+            /** Is Recurring */
+            is_recurring: boolean;
+            /** Key */
+            key: string;
+            /** Location */
+            location: string;
+            /** Member Ids */
+            member_ids: string[];
+            /** Overlay */
+            overlay: string | null;
+            /** Read Only */
+            read_only: boolean;
+            /** Recurrence Id */
+            recurrence_id: string | null;
+            /** Reminders */
+            reminders: number[];
+            /** Source */
+            source: string;
+            /** Start Date */
+            start_date: string | null;
+            /** Start Local */
+            start_local: string | null;
+            /** Start Utc */
+            start_utc: string | null;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Version */
+            version: number;
+        };
+        /** OccurrencesOut */
+        OccurrencesOut: {
+            /** Calendar Versions */
+            calendar_versions: {
+                [key: string]: number;
+            };
+            /**
+             * From Date
+             * Format: date
+             */
+            from_date: string;
+            /** Occurrences */
+            occurrences: components["schemas"]["OccurrenceOut"][];
+            /** Timezone */
+            timezone: string;
+            /**
+             * To Date
+             * Format: date
+             */
+            to_date: string;
+        };
         /** PanelOut */
         PanelOut: {
             /** Default Size */
@@ -1314,6 +1869,14 @@ export interface components {
             order: number;
             /** Title */
             title: string;
+        };
+        /** SearchHit */
+        SearchHit: {
+            event: components["schemas"]["EventOut"];
+            /** Next Start Date */
+            next_start_date: string | null;
+            /** Next Start Local */
+            next_start_local: string | null;
         };
         /** SectionOut */
         SectionOut: {
@@ -1545,6 +2108,11 @@ export interface components {
             path: string;
             /** Title */
             title: string;
+        };
+        /** UndoIn */
+        UndoIn: {
+            /** Revision Id */
+            revision_id?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -2190,6 +2758,589 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+        };
+    };
+    get_calendars_api_calendar_calendars_get: {
+        parameters: {
+            query?: {
+                include_removed?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_calendar_api_calendar_calendars_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_calendar_api_calendar_calendars__calendar_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_calendar_api_calendar_calendars__calendar_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_calendar_api_calendar_calendars__calendar_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_event_api_calendar_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_event_api_calendar_events__event_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_event_api_calendar_events__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_event_api_calendar_events__event_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_event_api_calendar_events__event_id__move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_occurrence_api_calendar_events__event_id__occurrences__recurrence_id__delete: {
+        parameters: {
+            query?: {
+                scope?: "this" | "following" | "all";
+            };
+            header?: never;
+            path: {
+                event_id: string;
+                recurrence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_occurrence_api_calendar_events__event_id__occurrences__recurrence_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                recurrence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_event_api_calendar_events__event_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_event_api_calendar_events__event_id__undo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UndoIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_occurrences_api_calendar_occurrences_get: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                calendar_ids?: string[] | null;
+                member_ids?: string[] | null;
+                overlays?: string[] | null;
+                include_cancelled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccurrencesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_removed_api_calendar_removed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"][];
+                };
+            };
+        };
+    };
+    describe_rule_api_calendar_rrule_describe_get: {
+        parameters: {
+            query: {
+                rrule: string;
+                start?: string | null;
+                start_date?: string | null;
+                tzid?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DescribeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_search_api_calendar_search_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchHit"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

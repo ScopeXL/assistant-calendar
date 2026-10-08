@@ -8,18 +8,23 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import shutil
-from datetime import date, datetime
+from datetime import date, datetime, time, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, update
+from sqlalchemy import delete, select, update
 
+from sunroom.auth.deps import Actor
 from sunroom.auth.models import Device, JoinCode
 from sunroom.auth.password import hash_password, hash_pin
 from sunroom.auth.sessions import pin_epoch_of
+from sunroom.calendar import service as calendar_service
+from sunroom.calendar.models import Calendar, Event, EventMember, EventReminder, EventRevision
+from sunroom.calendar.schemas import CalendarCreate, EventCreate
 from sunroom.core.clock import ShiftableClock
 from sunroom.core.errors import AppError
+from sunroom.domain.timeparts import to_local
 from sunroom.household import service as household_service
 from sunroom.household.models import AppMeta, Household, KioskPanel, Member, NetworkAllowEntry
 from sunroom.photos.models import Photo
@@ -47,13 +52,28 @@ router = APIRouter(
 async def reset(state: StateDep) -> None:
     """Back to a server that has never been set up."""
     async with state.db.write() as tx:
+        for model in (EventMember, EventReminder, EventRevision):
+            await tx.session.execute(delete(model))
+        await tx.session.execute(update(Event).values(parent_event_id=None))
+        await tx.session.execute(delete(Event))
         for model in (JoinCode, Device, NetworkAllowEntry, KioskPanel):
             await tx.session.execute(delete(model))
+        await tx.session.execute(delete(Household))
+        await tx.session.execute(delete(Calendar))
         await tx.session.execute(update(Member).values(avatar_photo_id=None))
         await tx.session.execute(delete(Member))
         await tx.session.execute(delete(Photo))
-        await tx.session.execute(delete(Household))
-        tx.session.add(Household(id=1, name="Our home", updated_at=state.clock.now()))
+        home_calendar = Calendar(name="Home", color="sky", created_at=state.clock.now())
+        tx.session.add(home_calendar)
+        await tx.session.flush()
+        tx.session.add(
+            Household(
+                id=1,
+                name="Our home",
+                default_calendar_id=home_calendar.id,
+                updated_at=state.clock.now(),
+            )
+        )
         tx.session.add(KioskPanel(panel_key="calendar.today", position=0, visible=True, size="m"))
         await tx.session.execute(
             update(AppMeta).values(password_hash=None, auth_epoch=AppMeta.auth_epoch + 1)
@@ -73,6 +93,7 @@ async def reset(state: StateDep) -> None:
     state.login_limiter.reset()
     state.pin_limiter.reset()
     state.uploads.clear()
+    state.calendar.cache.clear()
     state.household.setup_complete = False
     state.household.password_set = state.settings.app_password is not None
     state.household.members.clear()
@@ -120,6 +141,7 @@ class SeedIn(BaseModel):
     password: Annotated[str, Field(min_length=12, max_length=256)] = E2E_PASSWORD
     pin: Annotated[str, Field(pattern=r"^\d{4,6}$")] | None = None
     timezone: str = "America/New_York"
+    events: bool = True  # a week of sample events around today; False for an empty board
 
 
 SAMPLE_FAMILY: tuple[tuple[str, str, str, date | None], ...] = (
@@ -133,7 +155,8 @@ SAMPLE_FAMILY: tuple[tuple[str, str, str, date | None], ...] = (
 @router.post("/seed", status_code=204)
 async def seed(body: SeedIn, state: StateDep) -> None:
     """The synthetic "Sample Family" (`just seed`, screenshots, end-to-end runs): set up, four
-    people, an optional PIN. Later milestones add calendars, chores, lists and photos."""
+    people, an optional PIN, a second calendar and a week of events around today. Later
+    milestones add chores, lists and photos."""
     await _seed(state, body)
 
 
@@ -177,3 +200,106 @@ async def _seed(state: AppState, body: SeedIn) -> None:
     state.auth.pin_epoch = pin_epoch_of(pin_hash)
     async with state.db.read() as db:
         state.household.members = {m.id for m in await household_service.active_members(db)}
+        people = {m.name: m.id for m in await household_service.active_members(db)}
+        has_events = await db.scalar(select(Event.id).limit(1)) is not None
+    if body.events and not has_events:
+        await _seed_events(state, people)
+
+
+async def _seed_events(state: AppState, people: dict[str, str]) -> None:
+    """Synthetic events from last week to next, placed relative to today."""
+    now = state.clock.now()
+    zone = state.zone()
+    today = to_local(now, zone).date()
+    monday = today - timedelta(days=today.weekday())
+    actor = Actor(
+        device_id="seed",
+        epoch=0,
+        kind="phone",
+        member_id=people.get("Ana"),
+        is_kid_device=False,
+        is_parent=True,
+        has_grant=False,
+    )
+    ctx = calendar_service.Context(
+        actor=actor, now=now, zone_key=zone.key, members=frozenset(people.values())
+    )
+
+    def at(day: date, hour: int, minute: int = 0) -> datetime:
+        return datetime.combine(day, time(hour, minute))
+
+    async with state.db.write() as tx:
+        kids = await calendar_service.create_calendar(
+            tx, CalendarCreate(name="Kids' activities", color="iris"), ctx
+        )
+        await tx.session.flush()
+        events = [
+            EventCreate(
+                title="School drop-off",
+                start=at(monday - timedelta(days=7), 8),
+                end=at(monday - timedelta(days=7), 8, 30),
+                rrule="FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+                member_ids=[people["Ana"]],
+            ),
+            EventCreate(
+                calendar_id=kids.id,
+                title="Soccer practice",
+                location="Field 3",
+                start=at(monday - timedelta(days=6), 16),
+                end=at(monday - timedelta(days=6), 17),
+                rrule="FREQ=WEEKLY;BYDAY=TU,TH",
+                member_ids=[people["Mia"]],
+                reminders=[30],
+            ),
+            EventCreate(
+                calendar_id=kids.id,
+                title="Piano lesson",
+                start=at(monday - timedelta(days=5), 15, 30),
+                end=at(monday - timedelta(days=5), 16, 15),
+                rrule="FREQ=WEEKLY;BYDAY=WE",
+                member_ids=[people["Leo"]],
+            ),
+            EventCreate(
+                title="Book club",
+                start=at(monday + timedelta(days=3), 19),
+                end=at(monday + timedelta(days=3), 21),
+                rrule="FREQ=WEEKLY;INTERVAL=2;BYDAY=TH",
+                member_ids=[people["Sam"]],
+            ),
+            EventCreate(
+                title="Garbage night",
+                start_date=monday - timedelta(days=7),
+                rrule="FREQ=WEEKLY;BYDAY=MO",
+            ),
+            EventCreate(
+                title="Pajama day",
+                start_date=monday + timedelta(days=4),
+                member_ids=[people["Leo"]],
+            ),
+            EventCreate(
+                title="Vet",
+                start=at(monday + timedelta(days=2), 9),
+                end=at(monday + timedelta(days=2), 9, 30),
+                member_ids=[people["Ana"]],
+            ),
+            EventCreate(
+                title="Dinner at Grandma's",
+                start=at(monday + timedelta(days=6), 18, 30),
+                end=at(monday + timedelta(days=6), 20),
+            ),
+            EventCreate(
+                title="Movie night",
+                start=at(monday + timedelta(days=5), 19),
+                end=at(monday + timedelta(days=5), 21),
+                member_ids=[people["Mia"], people["Leo"]],
+            ),
+            EventCreate(
+                title="Grandparents visiting",
+                start_date=monday + timedelta(days=10),
+                end_date=monday + timedelta(days=13),
+            ),
+        ]
+        for body in events:
+            await calendar_service.create_event(tx, body, ctx)
+        # Seeding isn't something to undo.
+        await tx.session.execute(delete(EventRevision))

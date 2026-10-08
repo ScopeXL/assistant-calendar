@@ -70,7 +70,7 @@ set_up() {
     || fail "setup didn't stick"
   [ "$(curl -fsS -b "$jar" "$base/api/plugins" | jq -c .)" = "[]" ] || fail "plugins aren't []"
   [ "$(curl -fsS -b "$jar" "$base/api/export" | jq -r '.data | keys | join(",")')" \
-    = "household,kiosk_panels,members,network_allowlist,photos,plugin_state" ] \
+    = "calendars,event_members,event_reminders,events,household,kiosk_panels,members,network_allowlist,photos,plugin_state" ] \
     || fail "the export doesn't list every exported table"
 }
 

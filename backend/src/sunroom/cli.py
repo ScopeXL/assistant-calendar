@@ -7,6 +7,7 @@ In the container: ``sudo docker exec -it sunroom sunroom reset-password``.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import getpass
 import json
 import os
@@ -288,6 +289,18 @@ def cmd_openapi(args: argparse.Namespace) -> None:
         sys.stdout.write(text)
 
 
+def cmd_bench(args: argparse.Namespace) -> None:
+    """Time a week of occurrences on a throwaway database of synthetic events (PLAN §7.3)."""
+    from sunroom.calendar import bench
+
+    result = asyncio.run(bench.run(args.events, args.recurring, args.weeks))
+    print(
+        f"occurrences: {result.events} events ({result.recurring} repeating), "
+        f"{result.weeks} week(s), {result.occurrences} occurrences: "
+        f"cold {result.cold_ms:.1f} ms, warm {result.warm_ms:.1f} ms (median of 5)"
+    )
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="sunroom", description="Sunroom server")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -314,6 +327,12 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("status", help="version, database, devices and backups").set_defaults(
         func=cmd_status
     )
+    bench = sub.add_parser("bench", help="time the calendar on synthetic data")
+    bench.add_argument("what", choices=["occurrences"])
+    bench.add_argument("--events", type=int, default=500)
+    bench.add_argument("--recurring", type=int, default=100)
+    bench.add_argument("--weeks", type=int, default=1)
+    bench.set_defaults(func=cmd_bench)
     openapi = sub.add_parser("openapi", help="print the OpenAPI schema")
     openapi.add_argument("--out")
     openapi.set_defaults(func=cmd_openapi)

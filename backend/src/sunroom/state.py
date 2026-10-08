@@ -16,6 +16,7 @@ from fastapi import Depends, Request
 
 from sunroom.auth.ratelimit import FailureLimiter
 from sunroom.auth.sessions import AuthState, GrantCodec, SessionCodec
+from sunroom.calendar.occurrences import CalendarRuntime
 from sunroom.core.clock import Clock
 from sunroom.core.config import Settings
 from sunroom.core.http import GuardedHttp
@@ -57,6 +58,8 @@ class AppState:
     plugins: PluginManager
     household: HouseholdCache
     jobs: Jobs = field(default_factory=Jobs)
+    # The occurrence cache and the overlays plugins add (calendar/occurrences.py).
+    calendar: CalendarRuntime = field(default_factory=CalendarRuntime)
     # The display's pairing long-polls wait on these, keyed by the poll token's hash.
     pairing_waiters: dict[str, asyncio.Event] = field(default_factory=dict[str, asyncio.Event])
     # Photo uploads per device in the last hour (60 at most; photos/router.py).

@@ -1,8 +1,8 @@
 """PluginContext: the whole world a plugin sees (PLAN §6.2).
 
 Time and zone, its own settings, read and write sessions (the write transaction's ``publish``
-sends live-update events after commit), read-only facades for core data (members, photos; the
-calendar facade arrives with M1), the SSRF-guarded HTTP client, encryption under the
+sends live-update events after commit), read-only facades for core data (members, photos, the
+calendar, which also takes overlays), the SSRF-guarded HTTP client, encryption under the
 ``plugin-secrets-v1`` key, and job registration. Never the engine, never app state.
 """
 
@@ -25,6 +25,8 @@ from sunroom.db.engine import WriteTx
 from sunroom.household.models import Member
 
 if TYPE_CHECKING:
+    from sunroom.calendar.occurrences import CalendarRuntime, OverlayProvider
+    from sunroom.calendar.schemas import OccurrenceOut
     from sunroom.photos.store import PhotoStore
 
 Job = Callable[[], Awaitable[None]]
@@ -70,6 +72,60 @@ class MembersFacade:
         async with self._sessions.read() as session:
             member = await session.get(Member, member_id)
             return _member_view(member) if member else None
+
+
+@dataclass(frozen=True, slots=True)
+class CalendarView:
+    id: str
+    name: str
+    color: str
+    kind: str
+    read_only: bool
+
+
+class CalendarFacade:
+    """Read the calendar, and add computed, read-only occurrences to it (PLAN §7.6)."""
+
+    def __init__(
+        self,
+        plugin_id: str,
+        sessions: Sessions,
+        runtime: CalendarRuntime | None,
+        zone_of: Callable[[], ZoneInfo],
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._sessions = sessions
+        self._runtime = runtime
+        self._zone_of = zone_of
+
+    async def calendars(self) -> list[CalendarView]:
+        from sunroom.calendar.service import list_calendars
+
+        async with self._sessions.read() as session:
+            return [
+                CalendarView(c.id, c.name, c.color, c.kind, c.read_only)
+                for c in await list_calendars(session)
+            ]
+
+    async def occurrences(self, start: date, end: date) -> list[OccurrenceOut]:
+        from sunroom.calendar.occurrences import CalendarRuntime, occurrences
+        from sunroom.calendar.service import list_calendars
+
+        async with self._sessions.read() as session:
+            return await occurrences(
+                session,
+                self._runtime or CalendarRuntime(),
+                await list_calendars(session),
+                start,
+                end,
+                self._zone_of(),
+            )
+
+    def register_overlay(self, provider: OverlayProvider, key: str | None = None) -> None:
+        """Add this plugin's occurrences when a client asks for ``overlays=<key>`` (the plugin's
+        id by default)."""
+        if self._runtime is not None:
+            self._runtime.overlays[key or self._plugin_id] = provider
 
 
 def _member_view(member: Member) -> MemberView:
@@ -120,6 +176,7 @@ class PluginContext:
         runner: Runner,
         enabled_of: Callable[[str], bool],
         photos: PhotoStore | None = None,
+        calendar: CalendarRuntime | None = None,
     ) -> None:
         self.plugin_id = plugin_id
         self._clock = clock
@@ -133,6 +190,7 @@ class PluginContext:
         self._enabled_of = enabled_of
         self.members = MembersFacade(sessions)
         self.photos = photos
+        self.calendar = CalendarFacade(plugin_id, sessions, calendar, zone_of)
 
     def now(self) -> datetime:
         return self._clock.now()

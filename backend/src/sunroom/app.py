@@ -19,6 +19,9 @@ from sunroom.auth.ratelimit import FailureLimiter
 from sunroom.auth.router import router as auth_router
 from sunroom.auth.service import load_devices
 from sunroom.auth.sessions import AuthState, GrantCodec, SessionCodec, pin_epoch_of
+from sunroom.calendar import service as calendar_service
+from sunroom.calendar.occurrences import CalendarRuntime
+from sunroom.calendar.router import router as calendar_router
 from sunroom.core import secretkey
 from sunroom.core.clock import Clock, ShiftableClock, SystemClock
 from sunroom.core.config import Settings
@@ -152,6 +155,7 @@ def create_app(
         cipher = plugin_cipher(secret_key)
         redactor = Redactor([*settings.secret_literals(), secret_key])
         holder: dict[str, AppState] = {}
+        calendar_runtime = CalendarRuntime()
 
         def context_factory(
             plugin_id: str, runner: PluginRunner, settings_of: Callable[[], dict[str, Any]]
@@ -168,6 +172,7 @@ def create_app(
                 runner=runner,
                 enabled_of=lambda other: holder["state"].plugins.is_enabled(other),
                 photos=photos,
+                calendar=calendar_runtime,
             )
 
         manager = PluginManager(
@@ -200,6 +205,7 @@ def create_app(
             photos=photos,
             plugins=manager,
             household=household,
+            calendar=calendar_runtime,
         )
         holder["state"] = state
         async with db.read() as session:
@@ -220,6 +226,7 @@ def create_app(
                     await tx.session.execute(
                         delete(Photo).where(Photo.id.in_([p.id for p in removed]))
                     )
+                await calendar_service.prune(tx.session, now)
 
         async def reconcile_photos() -> None:
             async with db.write() as tx:
@@ -267,6 +274,7 @@ def create_app(
     app.include_router(kiosk_router)
     app.include_router(household_router)
     app.include_router(photos_router)
+    app.include_router(calendar_router)
     app.include_router(plugins_router)
     app.include_router(events_router)
     if settings.sunroom_test_mode:

@@ -26,12 +26,17 @@ CORE_EXPORT_TABLES: tuple[str, ...] = (
     "network_allowlist",
     "photos",
     "plugin_state",
+    "calendars",
+    "events",
+    "event_members",
+    "event_reminders",
 )
 # Not household data: secrets, sessions and the app's own bookkeeping.
 CORE_EXPORT_EXCLUDED: tuple[str, ...] = (
     "app_meta",
     "devices",
     "join_codes",
+    "event_revisions",  # Undo history, 30 days
 )
 # Exported tables' columns that never leave (PLAN §10.4).
 CORE_COLUMN_EXCLUDED: dict[str, frozenset[str]] = {
