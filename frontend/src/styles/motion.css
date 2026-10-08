@@ -1,0 +1,231 @@
+/*
+ * Motion (docs/UX.md §9, ADR 0007). State toggles live here: presses, selections, sheets and
+ * panels, the keyboard, the PIN shake, crossfades, placeholders. Movement between layouts or under
+ * a finger (toasts arriving and leaving, chips moving) uses the `motion` library (lib/motion.tsx),
+ * with the same timings.
+ * Nothing animates on first paint or a room switch. Reduce Motion (the device's setting, or
+ * Settings → Display → Reduce motion, which sets data-reduce-motion) makes all of it instant.
+ */
+:root {
+  --motion-tap: 90ms;
+  --motion-quick: 150ms;
+  --motion-enter: 220ms;
+  --motion-exit: 180ms;
+  --motion-glide: 400ms;
+  --motion-celebrate: 600ms;
+  --motion-crossfade: 600ms;
+  --motion-daylight: 2000ms;
+  --motion-saver-in: 800ms;
+  --motion-saver-out: 220ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-arrive: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-leave: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* The wall's tint and the theme crossfade when they change, never on first paint (lib/theme.ts
+   adds data-motion-ready a moment after the page appears). */
+:root[data-motion-ready] body,
+:root[data-motion-ready] [data-surface] {
+  transition:
+    background-color var(--motion-daylight) linear,
+    color var(--motion-crossfade) linear;
+}
+
+/* A press: controls dip slightly while a finger is on them and their colors ease. */
+.press {
+  transition-property: transform, background-color, border-color, color, opacity;
+  transition-duration: var(--motion-tap);
+  transition-timing-function: var(--ease-standard);
+}
+.press:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* A whole row shades instead: scaling a full row looks odd. */
+.press-row {
+  transition: background-color var(--motion-tap) var(--ease-standard);
+}
+.press-row:active:not(:disabled) {
+  background-color: var(--wall);
+}
+
+/* Selection: a chip or avatar filling and ringing (quick). */
+.select-fill {
+  transition:
+    background-color var(--motion-quick) var(--ease-standard),
+    color var(--motion-quick) var(--ease-standard),
+    box-shadow var(--motion-quick) var(--ease-standard),
+    border-color var(--motion-quick) var(--ease-standard);
+}
+
+/*
+ * Sheets (ui/Sheet): on a phone they slide up from the bottom edge and back down; on a large
+ * screen, where they sit mid-screen, they rise a little and fade. Closing keeps the dialog open
+ * and modal, marked data-closing, until this animation ends (Dinner Bell's pattern: no
+ * `overlay` or `allow-discrete`, which Safari doesn't animate).
+ */
+dialog.sheet[open] {
+  animation: sheet-up var(--motion-enter) var(--ease-arrive);
+}
+dialog.sheet[open]::backdrop {
+  animation: fade-in var(--motion-enter) var(--ease-standard);
+}
+dialog.sheet[data-closing] {
+  animation: sheet-down var(--motion-exit) var(--ease-leave) forwards;
+}
+dialog.sheet[data-closing]::backdrop {
+  animation: fade-out var(--motion-exit) var(--ease-leave) forwards;
+}
+@media (min-width: 1024px) {
+  dialog.sheet[open] {
+    animation-name: sheet-rise;
+  }
+  dialog.sheet[data-closing] {
+    animation-name: sheet-fall;
+  }
+}
+
+/* The display's side panels (event sheet, Add, Settings detail) slide in from the right in
+   landscape and up from the bottom in portrait; the PIN dialog rises 16 px with a fade. */
+[data-panel][data-state="open"] {
+  animation: panel-in var(--motion-enter) var(--ease-arrive);
+}
+[data-panel][data-state="closing"] {
+  animation: panel-out var(--motion-exit) var(--ease-leave) forwards;
+}
+@media (orientation: portrait) {
+  [data-panel][data-state="open"] {
+    animation-name: sheet-up;
+  }
+  [data-panel][data-state="closing"] {
+    animation-name: sheet-down;
+  }
+}
+.rise-in {
+  animation: rise-in var(--motion-enter) var(--ease-arrive);
+}
+
+/* The on-screen keyboard (ui/Keyboard) slides up when a field is focused and away after Done. */
+[data-keyboard][data-state="open"] {
+  animation: sheet-up var(--motion-enter) var(--ease-arrive);
+}
+[data-keyboard][data-state="closing"] {
+  animation: sheet-down var(--motion-exit) var(--ease-leave) forwards;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+@keyframes sheet-fall {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes panel-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes panel-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* A wrong PIN: the dots shake once (±6 px) and clear (UX §9). */
+.shake {
+  animation: shake 300ms var(--ease-standard);
+}
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+/* A count that just changed pops once (re-keyed by lib/motion's useChangeCount). */
+.pop {
+  display: inline-block;
+  animation: pop var(--motion-quick) var(--ease-standard);
+}
+@keyframes pop {
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+/* The now line's soft glow (UX §7): sun, faint, around the sun-ink line. */
+.now-glow {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--sun) 35%, transparent);
+}
+
+/* Night: the black layer fades in; the clock follows. */
+.night-in {
+  animation: fade-in var(--motion-crossfade) linear;
+}
+
+/* Reduce Motion: everything instant. 0.01 ms rather than 0, so every animation still runs to its
+   end (and a sheet's close still sees one finish). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::backdrop {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  .press:active:not(:disabled) {
+    transform: none;
+  }
+}
+:root[data-reduce-motion] *,
+:root[data-reduce-motion] *::before,
+:root[data-reduce-motion] *::after,
+:root[data-reduce-motion] ::backdrop {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+:root[data-reduce-motion] .press:active:not(:disabled) {
+  transform: none;
+}

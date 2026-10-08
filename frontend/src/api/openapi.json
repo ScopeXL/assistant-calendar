@@ -1,0 +1,4284 @@
+{
+  "components": {
+    "schemas": {
+      "AllowEntryIn": {
+        "properties": {
+          "label": {
+            "default": "",
+            "maxLength": 80,
+            "title": "Label",
+            "type": "string"
+          },
+          "target": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "AllowEntryIn",
+        "type": "object"
+      },
+      "AllowEntryOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "target",
+          "label",
+          "created_at"
+        ],
+        "title": "AllowEntryOut",
+        "type": "object"
+      },
+      "BackupFileOut": {
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "bytes"
+        ],
+        "title": "BackupFileOut",
+        "type": "object"
+      },
+      "BackupRunOut": {
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "file": {
+            "title": "File",
+            "type": "string"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "seconds"
+        ],
+        "title": "BackupRunOut",
+        "type": "object"
+      },
+      "BackupStatusOut": {
+        "properties": {
+          "directory": {
+            "title": "Directory",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/BackupFileOut"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "retention": {
+            "title": "Retention",
+            "type": "string"
+          },
+          "schedule": {
+            "title": "Schedule",
+            "type": "string"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "directory",
+          "schedule",
+          "retention",
+          "last_success_at",
+          "last_error",
+          "stale",
+          "files"
+        ],
+        "title": "BackupStatusOut",
+        "type": "object"
+      },
+      "ClientInfo": {
+        "properties": {
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "resolved_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Ip"
+          },
+          "scheme": {
+            "title": "Scheme",
+            "type": "string"
+          },
+          "trusted_proxies_configured": {
+            "title": "Trusted Proxies Configured",
+            "type": "boolean"
+          },
+          "x_forwarded_for": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X Forwarded For"
+          },
+          "x_forwarded_proto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X Forwarded Proto"
+          }
+        },
+        "required": [
+          "resolved_ip",
+          "scheme",
+          "host",
+          "x_forwarded_for",
+          "x_forwarded_proto",
+          "trusted_proxies_configured"
+        ],
+        "title": "ClientInfo",
+        "type": "object"
+      },
+      "ContributesOut": {
+        "properties": {
+          "banners": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Banners",
+            "type": "array"
+          },
+          "display_overlay": {
+            "title": "Display Overlay",
+            "type": "boolean"
+          },
+          "display_panels": {
+            "items": {
+              "$ref": "#/components/schemas/PanelOut"
+            },
+            "title": "Display Panels",
+            "type": "array"
+          },
+          "display_rooms": {
+            "items": {
+              "$ref": "#/components/schemas/RoomOut"
+            },
+            "title": "Display Rooms",
+            "type": "array"
+          },
+          "phone_tabs": {
+            "items": {
+              "$ref": "#/components/schemas/TabOut"
+            },
+            "title": "Phone Tabs",
+            "type": "array"
+          },
+          "settings_sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionOut"
+            },
+            "title": "Settings Sections",
+            "type": "array"
+          }
+        },
+        "required": [
+          "display_panels",
+          "display_rooms",
+          "phone_tabs",
+          "settings_sections",
+          "display_overlay",
+          "banners"
+        ],
+        "title": "ContributesOut",
+        "type": "object"
+      },
+      "DeviceLabelIn": {
+        "properties": {
+          "label": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "DeviceLabelIn",
+        "type": "object"
+      },
+      "DeviceOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_current": {
+            "title": "Is Current",
+            "type": "boolean"
+          },
+          "is_kid_device": {
+            "title": "Is Kid Device",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "phone",
+              "kiosk"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "last_seen_at": {
+            "format": "date-time",
+            "title": "Last Seen At",
+            "type": "string"
+          },
+          "member_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Name"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "kind",
+          "member_name",
+          "is_kid_device",
+          "created_at",
+          "last_seen_at",
+          "is_current"
+        ],
+        "title": "DeviceOut",
+        "type": "object"
+      },
+      "DeviceUpdate": {
+        "properties": {
+          "is_kid_device": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Kid Device"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "title": "DeviceUpdate",
+        "type": "object"
+      },
+      "DiagnosticsOut": {
+        "properties": {
+          "backups": {
+            "$ref": "#/components/schemas/BackupStatusOut"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientInfo"
+          },
+          "install_kind": {
+            "title": "Install Kind",
+            "type": "string"
+          },
+          "live_updates": {
+            "$ref": "#/components/schemas/LiveUpdatesInfo"
+          },
+          "plugins": {
+            "items": {
+              "$ref": "#/components/schemas/PluginInfo"
+            },
+            "title": "Plugins",
+            "type": "array"
+          },
+          "recent_addresses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recent Addresses",
+            "type": "array"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "schema_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Revision"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/StorageInfo"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "revision",
+          "schema_revision",
+          "install_kind",
+          "timezone",
+          "live_updates",
+          "client",
+          "recent_addresses",
+          "backups",
+          "plugins",
+          "storage"
+        ],
+        "title": "DiagnosticsOut",
+        "type": "object"
+      },
+      "FieldOut": {
+        "properties": {
+          "choice_labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Choice Labels"
+          },
+          "choices": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Choices"
+          },
+          "default": {
+            "title": "Default"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "help": {
+            "title": "Help",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "max_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Length"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type",
+          "help",
+          "default",
+          "required",
+          "min",
+          "max",
+          "step",
+          "unit",
+          "group",
+          "choices",
+          "choice_labels",
+          "max_length"
+        ],
+        "title": "FieldOut",
+        "type": "object"
+      },
+      "GrantOut": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expires_at"
+        ],
+        "title": "GrantOut",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "JoinCodeOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "display": {
+            "title": "Display",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "display",
+          "url",
+          "expires_at"
+        ],
+        "title": "JoinCodeOut",
+        "type": "object"
+      },
+      "JoinIn": {
+        "properties": {
+          "code": {
+            "maxLength": 40,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "JoinIn",
+        "type": "object"
+      },
+      "KioskCommandIn": {
+        "properties": {
+          "command": {
+            "enum": [
+              "reload",
+              "wake",
+              "screensaver",
+              "show_event"
+            ],
+            "title": "Command",
+            "type": "string"
+          },
+          "event_key": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Key"
+          }
+        },
+        "required": [
+          "command"
+        ],
+        "title": "KioskCommandIn",
+        "type": "object"
+      },
+      "KioskLayoutIn": {
+        "properties": {
+          "panels": {
+            "items": {
+              "$ref": "#/components/schemas/KioskPanelIn"
+            },
+            "maxItems": 40,
+            "title": "Panels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "panels"
+        ],
+        "title": "KioskLayoutIn",
+        "type": "object"
+      },
+      "KioskPairIn": {
+        "properties": {
+          "code": {
+            "maxLength": 40,
+            "title": "Code",
+            "type": "string"
+          },
+          "label": {
+            "default": "Kitchen screen",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "KioskPairIn",
+        "type": "object"
+      },
+      "KioskPairingOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "display": {
+            "title": "Display",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "pair_url": {
+            "title": "Pair Url",
+            "type": "string"
+          },
+          "poll_token": {
+            "title": "Poll Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "display",
+          "poll_token",
+          "expires_in",
+          "expires_at",
+          "pair_url"
+        ],
+        "title": "KioskPairingOut",
+        "type": "object"
+      },
+      "KioskPanelIn": {
+        "properties": {
+          "key": {
+            "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "size": {
+            "default": "m",
+            "enum": [
+              "s",
+              "m",
+              "l"
+            ],
+            "title": "Size",
+            "type": "string"
+          },
+          "visible": {
+            "default": true,
+            "title": "Visible",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "KioskPanelIn",
+        "type": "object"
+      },
+      "KioskPanelOut": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "size": {
+            "enum": [
+              "s",
+              "m",
+              "l"
+            ],
+            "title": "Size",
+            "type": "string"
+          },
+          "visible": {
+            "title": "Visible",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "position",
+          "visible",
+          "size"
+        ],
+        "title": "KioskPanelOut",
+        "type": "object"
+      },
+      "KioskPasswordPairIn": {
+        "properties": {
+          "label": {
+            "default": "Kitchen screen",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 256,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "KioskPasswordPairIn",
+        "type": "object"
+      },
+      "KioskPollOut": {
+        "properties": {
+          "session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "waiting",
+              "paired",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "KioskPollOut",
+        "type": "object"
+      },
+      "LiveUpdatesInfo": {
+        "properties": {
+          "connections": {
+            "title": "Connections",
+            "type": "integer"
+          },
+          "epoch": {
+            "title": "Epoch",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connections",
+          "epoch"
+        ],
+        "title": "LiveUpdatesInfo",
+        "type": "object"
+      },
+      "LoginIn": {
+        "properties": {
+          "password": {
+            "maxLength": 256,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "LoginIn",
+        "type": "object"
+      },
+      "MemberChoice": {
+        "properties": {
+          "member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member Id"
+          }
+        },
+        "required": [
+          "member_id"
+        ],
+        "title": "MemberChoice",
+        "type": "object"
+      },
+      "MemberCreate": {
+        "properties": {
+          "birthday": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthday"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "name": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "parent",
+            "enum": [
+              "parent",
+              "kid"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "MemberCreate",
+        "type": "object"
+      },
+      "MemberOut": {
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthday"
+          },
+          "color": {
+            "enum": [
+              "clay",
+              "olive",
+              "moss",
+              "sea",
+              "sky",
+              "iris",
+              "berry",
+              "rose"
+            ],
+            "title": "Color",
+            "type": "string"
+          },
+          "color_word": {
+            "title": "Color Word",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "parent",
+              "kid"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "color",
+          "color_word",
+          "birthday",
+          "avatar_url",
+          "archived"
+        ],
+        "title": "MemberOut",
+        "type": "object"
+      },
+      "MemberUpdate": {
+        "properties": {
+          "birthday": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthday"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "parent",
+                  "kid"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "title": "MemberUpdate",
+        "type": "object"
+      },
+      "PanelOut": {
+        "properties": {
+          "default_size": {
+            "title": "Default Size",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "requires_member": {
+            "title": "Requires Member",
+            "type": "boolean"
+          },
+          "sizes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sizes",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "sizes",
+          "default_size",
+          "requires_member"
+        ],
+        "title": "PanelOut",
+        "type": "object"
+      },
+      "PhotoOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "hidden": {
+            "title": "Hidden",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "library",
+              "avatar"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "taken_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taken At"
+          },
+          "thumb_url": {
+            "title": "Thumb Url",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "url",
+          "thumb_url",
+          "width",
+          "height",
+          "taken_at",
+          "created_at",
+          "hidden"
+        ],
+        "title": "PhotoOut",
+        "type": "object"
+      },
+      "PhotoPage": {
+        "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoOut"
+            },
+            "title": "Photos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "photos",
+          "next_cursor"
+        ],
+        "title": "PhotoPage",
+        "type": "object"
+      },
+      "PinSetIn": {
+        "properties": {
+          "current_pin": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{4,6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Pin"
+          },
+          "pin": {
+            "pattern": "^\\d{4,6}$",
+            "title": "Pin",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pin"
+        ],
+        "title": "PinSetIn",
+        "type": "object"
+      },
+      "PinVerifyIn": {
+        "properties": {
+          "pin": {
+            "maxLength": 12,
+            "title": "Pin",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pin"
+        ],
+        "title": "PinVerifyIn",
+        "type": "object"
+      },
+      "PluginInfo": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "error"
+        ],
+        "title": "PluginInfo",
+        "type": "object"
+      },
+      "PluginOut": {
+        "properties": {
+          "contributes": {
+            "$ref": "#/components/schemas/ContributesOut"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "requires_parent_to_manage": {
+            "title": "Requires Parent To Manage",
+            "type": "boolean"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "title": "Settings",
+            "type": "object"
+          },
+          "settings_spec": {
+            "items": {
+              "$ref": "#/components/schemas/FieldOut"
+            },
+            "title": "Settings Spec",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "disabled",
+              "starting",
+              "running",
+              "errored",
+              "stopping"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "url_prefix": {
+            "title": "Url Prefix",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url_prefix",
+          "version",
+          "name",
+          "description",
+          "enabled",
+          "status",
+          "error",
+          "settings_spec",
+          "settings",
+          "contributes",
+          "requires_parent_to_manage"
+        ],
+        "title": "PluginOut",
+        "type": "object"
+      },
+      "RoomOut": {
+        "properties": {
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "order": {
+            "title": "Order",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "icon",
+          "order"
+        ],
+        "title": "RoomOut",
+        "type": "object"
+      },
+      "SectionOut": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "parent_only": {
+            "title": "Parent Only",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "parent_only"
+        ],
+        "title": "SectionOut",
+        "type": "object"
+      },
+      "SessionOut": {
+        "properties": {
+          "device_id": {
+            "title": "Device Id",
+            "type": "string"
+          },
+          "device_kind": {
+            "enum": [
+              "phone",
+              "kiosk"
+            ],
+            "title": "Device Kind",
+            "type": "string"
+          },
+          "device_label": {
+            "title": "Device Label",
+            "type": "string"
+          },
+          "grant_expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Expires At"
+          },
+          "has_pin": {
+            "title": "Has Pin",
+            "type": "boolean"
+          },
+          "household_name": {
+            "title": "Household Name",
+            "type": "string"
+          },
+          "is_kid_device": {
+            "title": "Is Kid Device",
+            "type": "boolean"
+          },
+          "is_parent": {
+            "title": "Is Parent",
+            "type": "boolean"
+          },
+          "member": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MemberOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberOut"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "pin_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pin Length"
+          }
+        },
+        "required": [
+          "device_id",
+          "device_kind",
+          "device_label",
+          "member",
+          "members",
+          "household_name",
+          "is_parent",
+          "is_kid_device",
+          "has_pin",
+          "pin_length",
+          "grant_expires_at"
+        ],
+        "title": "SessionOut",
+        "type": "object"
+      },
+      "SettingsIn": {
+        "properties": {
+          "values": {
+            "additionalProperties": true,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "values"
+        ],
+        "title": "SettingsIn",
+        "type": "object"
+      },
+      "SettingsOut": {
+        "properties": {
+          "daylight_tint": {
+            "title": "Daylight Tint",
+            "type": "boolean"
+          },
+          "display_controls_bottom": {
+            "title": "Display Controls Bottom",
+            "type": "boolean"
+          },
+          "display_dim_past": {
+            "title": "Display Dim Past",
+            "type": "boolean"
+          },
+          "display_home_view": {
+            "enum": [
+              "week",
+              "today",
+              "people"
+            ],
+            "title": "Display Home View",
+            "type": "string"
+          },
+          "display_orientation": {
+            "enum": [
+              "auto",
+              "landscape",
+              "portrait"
+            ],
+            "title": "Display Orientation",
+            "type": "string"
+          },
+          "display_rail_side": {
+            "enum": [
+              "left",
+              "right"
+            ],
+            "title": "Display Rail Side",
+            "type": "string"
+          },
+          "display_reduce_motion": {
+            "title": "Display Reduce Motion",
+            "type": "boolean"
+          },
+          "display_return_minutes": {
+            "title": "Display Return Minutes",
+            "type": "integer"
+          },
+          "display_show_today_panel": {
+            "title": "Display Show Today Panel",
+            "type": "boolean"
+          },
+          "display_sounds": {
+            "title": "Display Sounds",
+            "type": "boolean"
+          },
+          "has_pin": {
+            "title": "Has Pin",
+            "type": "boolean"
+          },
+          "household_name": {
+            "title": "Household Name",
+            "type": "string"
+          },
+          "kid_safe_editing": {
+            "title": "Kid Safe Editing",
+            "type": "boolean"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "location_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Label"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "pin_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pin Length"
+          },
+          "setup_complete": {
+            "title": "Setup Complete",
+            "type": "boolean"
+          },
+          "sleep_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep From"
+          },
+          "sleep_mode": {
+            "enum": [
+              "dim_clock",
+              "screen_off"
+            ],
+            "title": "Sleep Mode",
+            "type": "string"
+          },
+          "sleep_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep To"
+          },
+          "text_size": {
+            "enum": [
+              "standard",
+              "large",
+              "xl"
+            ],
+            "title": "Text Size",
+            "type": "string"
+          },
+          "theme": {
+            "enum": [
+              "auto",
+              "light",
+              "dark"
+            ],
+            "title": "Theme",
+            "type": "string"
+          },
+          "time_format": {
+            "enum": [
+              "12h",
+              "24h"
+            ],
+            "title": "Time Format",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "timezone_chosen": {
+            "title": "Timezone Chosen",
+            "type": "boolean"
+          },
+          "week_starts_on": {
+            "title": "Week Starts On",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "household_name",
+          "timezone",
+          "timezone_chosen",
+          "week_starts_on",
+          "time_format",
+          "theme",
+          "daylight_tint",
+          "text_size",
+          "display_home_view",
+          "display_return_minutes",
+          "display_rail_side",
+          "display_controls_bottom",
+          "display_show_today_panel",
+          "display_orientation",
+          "display_sounds",
+          "display_dim_past",
+          "display_reduce_motion",
+          "sleep_from",
+          "sleep_to",
+          "sleep_mode",
+          "kid_safe_editing",
+          "has_pin",
+          "pin_length",
+          "location_label",
+          "latitude",
+          "longitude",
+          "setup_complete"
+        ],
+        "title": "SettingsOut",
+        "type": "object"
+      },
+      "SettingsUpdate": {
+        "properties": {
+          "daylight_tint": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daylight Tint"
+          },
+          "display_controls_bottom": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Controls Bottom"
+          },
+          "display_dim_past": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Dim Past"
+          },
+          "display_home_view": {
+            "anyOf": [
+              {
+                "enum": [
+                  "week",
+                  "today",
+                  "people"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Home View"
+          },
+          "display_orientation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "auto",
+                  "landscape",
+                  "portrait"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Orientation"
+          },
+          "display_rail_side": {
+            "anyOf": [
+              {
+                "enum": [
+                  "left",
+                  "right"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Rail Side"
+          },
+          "display_reduce_motion": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Reduce Motion"
+          },
+          "display_return_minutes": {
+            "anyOf": [
+              {
+                "enum": [
+                  0,
+                  2,
+                  5,
+                  10
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Return Minutes"
+          },
+          "display_show_today_panel": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Show Today Panel"
+          },
+          "display_sounds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Sounds"
+          },
+          "household_name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Household Name"
+          },
+          "kid_safe_editing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kid Safe Editing"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "location_label": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Label"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "sleep_from": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep From"
+          },
+          "sleep_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "dim_clock",
+                  "screen_off"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep Mode"
+          },
+          "sleep_to": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep To"
+          },
+          "text_size": {
+            "anyOf": [
+              {
+                "enum": [
+                  "standard",
+                  "large",
+                  "xl"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Size"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "enum": [
+                  "auto",
+                  "light",
+                  "dark"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "time_format": {
+            "anyOf": [
+              {
+                "enum": [
+                  "12h",
+                  "24h"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Format"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "week_starts_on": {
+            "anyOf": [
+              {
+                "maximum": 6.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Week Starts On"
+          }
+        },
+        "title": "SettingsUpdate",
+        "type": "object"
+      },
+      "SetupIn": {
+        "properties": {
+          "household_name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Household Name",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 256,
+            "title": "Password",
+            "type": "string"
+          },
+          "time_format": {
+            "default": "12h",
+            "enum": [
+              "12h",
+              "24h"
+            ],
+            "title": "Time Format",
+            "type": "string"
+          },
+          "timezone": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          },
+          "week_starts_on": {
+            "default": 6,
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Week Starts On",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "password",
+          "household_name",
+          "timezone"
+        ],
+        "title": "SetupIn",
+        "type": "object"
+      },
+      "SetupStatusOut": {
+        "properties": {
+          "advertised_url": {
+            "title": "Advertised Url",
+            "type": "string"
+          },
+          "password_from_env": {
+            "title": "Password From Env",
+            "type": "boolean"
+          },
+          "server_timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Timezone"
+          },
+          "setup_complete": {
+            "title": "Setup Complete",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "setup_complete",
+          "password_from_env",
+          "server_timezone",
+          "advertised_url",
+          "version"
+        ],
+        "title": "SetupStatusOut",
+        "type": "object"
+      },
+      "SignOutOthersIn": {
+        "properties": {
+          "include_kiosks": {
+            "default": false,
+            "title": "Include Kiosks",
+            "type": "boolean"
+          }
+        },
+        "title": "SignOutOthersIn",
+        "type": "object"
+      },
+      "StorageInfo": {
+        "properties": {
+          "free_bytes": {
+            "title": "Free Bytes",
+            "type": "integer"
+          },
+          "total_bytes": {
+            "title": "Total Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "free_bytes",
+          "total_bytes"
+        ],
+        "title": "StorageInfo",
+        "type": "object"
+      },
+      "TabOut": {
+        "properties": {
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "order": {
+            "title": "Order",
+            "type": "integer"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "icon",
+          "path",
+          "order"
+        ],
+        "title": "TabOut",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VersionOut": {
+        "properties": {
+          "created": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "revision",
+          "created"
+        ],
+        "title": "VersionOut",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Sunroom",
+    "version": "0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/admin/backups": {
+      "get": {
+        "operationId": "backups_api_admin_backups_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Backups",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/backups/run": {
+      "post": {
+        "operationId": "run_backup_api_admin_backups_run_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run Backup",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/backups/{name}": {
+      "get": {
+        "operationId": "download_backup_api_admin_backups__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Backup",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/diagnostics": {
+      "get": {
+        "operationId": "diagnostics_api_admin_diagnostics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Diagnostics",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/auth/device/label": {
+      "put": {
+        "description": "\"Name this screen\" right after pairing, or a phone's own name.",
+        "operationId": "rename_this_device_api_auth_device_label_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceLabelIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rename This Device",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/devices": {
+      "get": {
+        "operationId": "list_devices_api_auth_devices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceOut"
+                  },
+                  "title": "Response List Devices Api Auth Devices Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Devices",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/devices/sign-out-others": {
+      "post": {
+        "operationId": "sign_out_others_api_auth_devices_sign_out_others_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignOutOthersIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign Out Others",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/devices/{device_id}": {
+      "delete": {
+        "operationId": "sign_out_device_api_auth_devices__device_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "device_id",
+            "required": true,
+            "schema": {
+              "title": "Device Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign Out Device",
+        "tags": [
+          "auth"
+        ]
+      },
+      "patch": {
+        "operationId": "update_device_api_auth_devices__device_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "device_id",
+            "required": true,
+            "schema": {
+              "title": "Device Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Device",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/join": {
+      "post": {
+        "description": "Sign in a new phone with a code from a signed-in device. Wrong codes count as wrong\npasswords do, so codes can't be guessed.",
+        "operationId": "join_with_code_api_auth_join_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Join With Code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/join-codes": {
+      "post": {
+        "description": "Add a phone: a one-time code another phone signs in with. On a wall screen, which anyone\nin the house can reach, only a parent may make one.",
+        "operationId": "make_join_code_api_auth_join_codes_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinCodeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Make Join Code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/kiosk/pair": {
+      "post": {
+        "description": "A parent's phone claims the code the screen shows.",
+        "operationId": "pair_api_auth_kiosk_pair_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KioskPairIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Pair Api Auth Kiosk Pair Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pair",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/kiosk/pair-with-password": {
+      "post": {
+        "description": "Typed on the screen itself, when no phone is at hand.",
+        "operationId": "pair_with_password_api_auth_kiosk_pair_with_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KioskPasswordPairIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pair With Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/kiosk/pairings": {
+      "post": {
+        "operationId": "start_pairing_api_auth_kiosk_pairings_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskPairingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Start Pairing",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/kiosk/pairings/{poll_token}": {
+      "get": {
+        "operationId": "poll_pairing_api_auth_kiosk_pairings__poll_token__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "poll_token",
+            "required": true,
+            "schema": {
+              "title": "Poll Token",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 25,
+              "minimum": 0,
+              "title": "Wait",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskPollOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Poll Pairing",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/member": {
+      "put": {
+        "description": "Who's using this phone? A wall screen is everyone's: it picks a person per action.",
+        "operationId": "choose_member_api_auth_member_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberChoice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Choose Member",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/pin": {
+      "delete": {
+        "operationId": "remove_pin_api_auth_pin_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Remove Pin",
+        "tags": [
+          "auth"
+        ]
+      },
+      "put": {
+        "description": "Set or change the PIN. Where the PIN is what made this device a parent (the wall screen, a\nkid's phone), changing it asks for the current one; a parent's own phone doesn't need it, so\na forgotten PIN can always be reset from there.",
+        "operationId": "set_pin_api_auth_pin_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinSetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Pin",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/pin/lock": {
+      "post": {
+        "description": "End this device's parent grant now (the display's Lock button).",
+        "operationId": "lock_api_auth_pin_lock_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Lock",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/pin/verify": {
+      "post": {
+        "description": "A correct PIN unlocks parent things on this device for 10 minutes (no sliding).",
+        "operationId": "verify_parent_pin_api_auth_pin_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinVerifyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrantOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Parent Pin",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "operationId": "get_session_api_auth_session_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/export": {
+      "get": {
+        "operationId": "export_api_export_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Export Api Export Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Export",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/kiosk/command": {
+      "post": {
+        "description": "Tell every wall screen to do something now (wall screens act; phones ignore it).",
+        "operationId": "kiosk_command_api_kiosk_command_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KioskCommandIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Kiosk Command",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/kiosk/layout": {
+      "get": {
+        "operationId": "get_layout_api_kiosk_layout_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/KioskPanelOut"
+                  },
+                  "title": "Response Get Layout Api Kiosk Layout Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Layout",
+        "tags": [
+          "household"
+        ]
+      },
+      "put": {
+        "operationId": "set_layout_api_kiosk_layout_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KioskLayoutIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/KioskPanelOut"
+                  },
+                  "title": "Response Set Layout Api Kiosk Layout Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Layout",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/members": {
+      "get": {
+        "operationId": "list_members_api_members_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "archived",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Archived",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemberOut"
+                  },
+                  "title": "Response List Members Api Members Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Members",
+        "tags": [
+          "household"
+        ]
+      },
+      "post": {
+        "operationId": "create_member_api_members_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Member",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/members/{member_id}": {
+      "patch": {
+        "operationId": "update_member_api_members__member_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Member",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/members/{member_id}/archive": {
+      "post": {
+        "operationId": "archive_member_api_members__member_id__archive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Archive Member",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/members/{member_id}/avatar": {
+      "delete": {
+        "operationId": "remove_avatar_api_members__member_id__avatar_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Avatar",
+        "tags": [
+          "household"
+        ]
+      },
+      "put": {
+        "description": "The picture is the request body (JPEG, PNG, WebP, HEIC), up to 15 MB.",
+        "operationId": "set_avatar_api_members__member_id__avatar_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Avatar",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/members/{member_id}/restore": {
+      "post": {
+        "operationId": "restore_member_api_members__member_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Member",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/network-allowlist": {
+      "get": {
+        "operationId": "list_allowlist_api_network_allowlist_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AllowEntryOut"
+                  },
+                  "title": "Response List Allowlist Api Network Allowlist Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Allowlist",
+        "tags": [
+          "household"
+        ]
+      },
+      "post": {
+        "operationId": "add_allowlist_api_network_allowlist_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllowEntryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllowEntryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Allowlist",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/network-allowlist/{entry_id}": {
+      "delete": {
+        "operationId": "remove_allowlist_api_network_allowlist__entry_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Allowlist",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/photos": {
+      "get": {
+        "description": "Newest first, a page at a time; ``cursor`` is the last id of the previous page.",
+        "operationId": "list_photos_api_photos_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "default": "library",
+              "enum": [
+                "library",
+                "avatar"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Photos",
+        "tags": [
+          "photos"
+        ]
+      },
+      "post": {
+        "operationId": "upload_photo_api_photos_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Upload Photo",
+        "tags": [
+          "photos"
+        ]
+      }
+    },
+    "/api/photos/{photo_id}": {
+      "delete": {
+        "description": "Removed with Undo: the row and files stay for 7 days (POST \u2026/restore brings it back).",
+        "operationId": "delete_photo_api_photos__photo_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "photo_id",
+            "required": true,
+            "schema": {
+              "title": "Photo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Photo",
+        "tags": [
+          "photos"
+        ]
+      },
+      "get": {
+        "operationId": "get_photo_api_photos__photo_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "photo_id",
+            "required": true,
+            "schema": {
+              "title": "Photo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Photo",
+        "tags": [
+          "photos"
+        ]
+      }
+    },
+    "/api/photos/{photo_id}/hide": {
+      "post": {
+        "description": "Hide from the screensaver (the display can hide photos but never delete them).",
+        "operationId": "hide_photo_api_photos__photo_id__hide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "photo_id",
+            "required": true,
+            "schema": {
+              "title": "Photo Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "hidden",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Hidden",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Hide Photo",
+        "tags": [
+          "photos"
+        ]
+      }
+    },
+    "/api/photos/{photo_id}/restore": {
+      "post": {
+        "operationId": "restore_photo_api_photos__photo_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "photo_id",
+            "required": true,
+            "schema": {
+              "title": "Photo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Photo",
+        "tags": [
+          "photos"
+        ]
+      }
+    },
+    "/api/plugins": {
+      "get": {
+        "operationId": "list_plugins_api_plugins_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PluginOut"
+                  },
+                  "title": "Response List Plugins Api Plugins Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Plugins",
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/plugins/{plugin_id}/disable": {
+      "post": {
+        "operationId": "disable_api_plugins__plugin_id__disable_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plugin_id",
+            "required": true,
+            "schema": {
+              "title": "Plugin Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Disable",
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/plugins/{plugin_id}/enable": {
+      "post": {
+        "operationId": "enable_api_plugins__plugin_id__enable_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plugin_id",
+            "required": true,
+            "schema": {
+              "title": "Plugin Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enable",
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/plugins/{plugin_id}/restart": {
+      "post": {
+        "operationId": "restart_api_plugins__plugin_id__restart_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plugin_id",
+            "required": true,
+            "schema": {
+              "title": "Plugin Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restart",
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/plugins/{plugin_id}/settings": {
+      "get": {
+        "operationId": "get_settings_api_plugins__plugin_id__settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plugin_id",
+            "required": true,
+            "schema": {
+              "title": "Plugin Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Settings Api Plugins  Plugin Id  Settings Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Settings",
+        "tags": [
+          "plugins"
+        ]
+      },
+      "put": {
+        "operationId": "put_settings_api_plugins__plugin_id__settings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plugin_id",
+            "required": true,
+            "schema": {
+              "title": "Plugin Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Settings Api Plugins  Plugin Id  Settings Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Settings",
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "operationId": "get_settings_api_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Settings",
+        "tags": [
+          "household"
+        ]
+      },
+      "patch": {
+        "operationId": "update_settings_api_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Settings",
+        "tags": [
+          "household"
+        ]
+      }
+    },
+    "/api/setup": {
+      "post": {
+        "operationId": "run_setup_api_setup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Setup",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/api/setup/status": {
+      "get": {
+        "operationId": "setup_status_api_setup_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Setup Status",
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/api/version": {
+      "get": {
+        "operationId": "version_api_version_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Version",
+        "tags": [
+          "meta"
+        ]
+      }
+    }
+  }
+}

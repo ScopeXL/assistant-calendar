@@ -1,0 +1,381 @@
+/*
+ * Design tokens: the "Sunroom" direction (docs/UX.md §7, ADR 0013). Components use these tokens
+ * only, never raw hex (styles/designRules.test.ts). styles/tokens.test.ts checks every
+ * text/background pair below meets its contrast target in both themes and at every wall tint.
+ *
+ * Each color is written once as light-dark(light, dark). Which half applies follows
+ * `color-scheme`: the household's theme sets data-theme="light" or "dark" on <html>
+ * (lib/theme.ts); with neither, the device's own setting decides (Auto on a phone).
+ * The wall's tint follows the time of day through data-daypart (dawn, midday, afternoon, dusk;
+ * evening, night in the dark theme).
+ */
+@import "tailwindcss";
+@import "@fontsource-variable/lexend";
+@import "./motion.css";
+
+:root {
+  color-scheme: light dark;
+
+  --wall: light-dark(#f5f5f2, #0f171f);
+  --surface: light-dark(#ffffff, #1a222b);
+  --ink: light-dark(#1c2430, #edf1f4);
+  --on-ink: light-dark(#ffffff, #0f171f);
+  --ink-soft: light-dark(#5b6775, #a6b1bd);
+  --line: light-dark(#d9e0e6, #2a3542);
+  --sun: light-dark(#f5ae39, #fcb442);
+  --sun-ink: light-dark(#8a5a00, #fcb442);
+  --on-sun: light-dark(#1c2430, #0f171f);
+  --alert: light-dark(#c7362c, #ff7b6e);
+  --on-alert: light-dark(#ffffff, #0f171f);
+  --scrim: light-dark(rgb(15 23 31 / 0.45), rgb(0 0 0 / 0.6));
+  --focus-ring: var(--ink);
+  /* Night (UX §4): true black, and the dim clock's grey, whatever the theme. */
+  --night: #000000;
+  --night-ink: #a6b1bd;
+  /* A QR code is dark on white in both themes: not every camera reads light on dark. */
+  --qr-tile: #ffffff;
+  --qr-ink: #1c2430;
+
+  /* The eight person colors (UX §7): solids, light and dark, nudged in M0 so each still reads
+     on the warmest wall tint. A person's tint, edge and text come from [data-person] below. */
+  --clay-l: #b84639;
+  --clay-d: #c5776a;
+  --olive-l: #7a6b00;
+  --olive-d: #9f8d0e;
+  --moss-l: #307945;
+  --moss-d: #3ca059;
+  --sea-l: #00777c;
+  --sea-d: #219ba1;
+  --sky-l: #006ebe;
+  --sky-d: #3f90dd;
+  --iris-l: #705cbf;
+  --iris-d: #8f7ede;
+  --berry-l: #9f4b9a;
+  --berry-d: #af7ba9;
+  --rose-l: #b3436e;
+  --rose-d: #c1758d;
+
+  /* Shell sizes (UX §1): the display's rail and Today panel, the phone's tab bar. */
+  --rail-w: 176px;
+  --panel-w: 400px;
+  --keyboard-w: 960px;
+  --tabbar-h: 3.5rem;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* The wall's light through the day (UX §7). Midday is the base value above. */
+:root[data-daypart="dawn"] {
+  --wall: light-dark(#ecf5fa, #0f171f);
+}
+:root[data-daypart="afternoon"] {
+  --wall: light-dark(#f8f2e7, #0f171f);
+}
+:root[data-daypart="dusk"] {
+  --wall: light-dark(#f9ece1, #0f171f);
+}
+:root[data-daypart="evening"] {
+  --wall: light-dark(#f5f5f2, #171a26);
+}
+
+/* Paper is white: a printed page always uses the light inks. */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+}
+
+/* A person's color on anything inside [data-person="clay"]: the solid (avatar, chip edge,
+   check fill), a tint behind their chips and rows (12% over surface, 24% in the dark), and
+   text in their color (ink in the light theme, where a solid as body text fails AA). */
+[data-person] {
+  --p: light-dark(var(--p-l), var(--p-d));
+  --p-tint: light-dark(
+    color-mix(in oklab, var(--p-l) 12%, #ffffff),
+    color-mix(in oklab, var(--p-d) 24%, #1a222b)
+  );
+  --p-text: light-dark(#1c2430, var(--p-d));
+}
+[data-person="clay"] {
+  --p-l: var(--clay-l);
+  --p-d: var(--clay-d);
+}
+[data-person="olive"] {
+  --p-l: var(--olive-l);
+  --p-d: var(--olive-d);
+}
+[data-person="moss"] {
+  --p-l: var(--moss-l);
+  --p-d: var(--moss-d);
+}
+[data-person="sea"] {
+  --p-l: var(--sea-l);
+  --p-d: var(--sea-d);
+}
+[data-person="sky"] {
+  --p-l: var(--sky-l);
+  --p-d: var(--sky-d);
+}
+[data-person="iris"] {
+  --p-l: var(--iris-l);
+  --p-d: var(--iris-d);
+}
+[data-person="berry"] {
+  --p-l: var(--berry-l);
+  --p-d: var(--berry-d);
+}
+[data-person="rose"] {
+  --p-l: var(--rose-l);
+  --p-d: var(--rose-d);
+}
+/* Everyone, and shared calendars: ink on a line-tinted background. */
+[data-person="everyone"] {
+  --p: var(--ink);
+  --p-tint: var(--line);
+  --p-text: var(--ink);
+}
+
+@theme inline {
+  --color-wall: var(--wall);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-sun: var(--sun);
+  --color-sun-ink: var(--sun-ink);
+  --color-on-sun: var(--on-sun);
+  --color-alert: var(--alert);
+  --color-on-alert: var(--on-alert);
+  --color-scrim: var(--scrim);
+  --color-p: var(--p);
+  --color-p-tint: var(--p-tint);
+  --color-p-text: var(--p-text);
+  --color-night: var(--night);
+  --color-night-ink: var(--night-ink);
+  --color-qr-tile: var(--qr-tile);
+  --color-qr-ink: var(--qr-ink);
+
+  --font-sans: "Lexend Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Phones: Dinner Bell's scale (UX §1). rem, so the phone's own text size applies. */
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.125rem;
+  --text-secondary: 0.875rem;
+  --text-secondary--line-height: 1.25rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-row: 1.125rem;
+  --text-row--line-height: 1.5rem;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.875rem;
+  --text-big: 1.875rem;
+  --text-big--line-height: 2.25rem;
+
+  /* The wall display (UX §1): nothing under 18 px; Large and Extra large scale the root. */
+  --text-d-caption: 1.125rem;
+  --text-d-caption--line-height: 1.5rem;
+  --text-d-secondary: 1.25rem;
+  --text-d-secondary--line-height: 1.75rem;
+  --text-d-body: 1.5rem;
+  --text-d-body--line-height: 2rem;
+  --text-d-title: 2rem;
+  --text-d-title--line-height: 2.5rem;
+  --text-d-glance: 2.5rem;
+  --text-d-glance--line-height: 3rem;
+  --text-d-clock: 3.5rem;
+  --text-d-clock--line-height: 3.5rem;
+  --text-d-step: 4rem;
+  --text-d-step--line-height: 4.5rem;
+  --text-d-big: 4.5rem;
+  --text-d-big--line-height: 4.5rem;
+  --text-d-key: 1.75rem;
+  --text-d-pin: 2.25rem;
+  /* The wall's pair code (UX §4 "Pair this screen"): read from across the kitchen. */
+  --text-d-code: 160px;
+  --text-d-code--line-height: 1;
+  --text-d-month: 1.25rem;
+  --text-d-month--line-height: 1.625rem;
+  /* The screensaver's and Night's clock: a fixed size that doesn't scale. */
+  --text-wall-clock: 200px;
+  --text-wall-clock--line-height: 200px;
+
+  --radius-panel: 24px;
+  --radius-sheet: 20px;
+  --radius-button-d: 16px;
+  --radius-button: 12px;
+  --radius-chip-d: 12px;
+  --radius-chip: 8px;
+}
+
+@layer base {
+  html {
+    background: var(--wall);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    /* The browser's default (16 px): Tailwind's spacing means what it says. On the wall
+       display, Text size scales everything from here (UX §10). */
+    font-size: 100%;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html[data-text-size="large"] {
+    font-size: 115%;
+  }
+  html[data-text-size="xl"] {
+    font-size: 130%;
+  }
+
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--wall);
+  }
+
+  :focus-visible {
+    /* Inverse surfaces (toasts, ink buttons) set --focus-ring to the wall color. */
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  [data-shell="display"] :focus-visible {
+    outline-width: 4px;
+  }
+}
+
+/* Native <dialog> as a bottom sheet on phones and a centred panel on large screens (no style
+   injection, so the strict CSP holds). The display's panels are their own layout (shell/). */
+@layer components {
+  dialog.sheet {
+    margin: auto auto 0;
+    width: 100%;
+    max-width: 560px;
+    border: none;
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    background: var(--surface);
+    color: var(--ink);
+    padding: 0 0 env(safe-area-inset-bottom);
+  }
+
+  dialog.sheet:focus-visible {
+    outline: none;
+  }
+
+  dialog.sheet::backdrop {
+    background: var(--scrim);
+  }
+
+  @media (min-width: 1024px) {
+    dialog.sheet {
+      margin: auto;
+      border-radius: var(--radius-panel);
+    }
+  }
+  [data-shell="display"] dialog.sheet {
+    max-width: 640px;
+  }
+
+  /* An on/off switch (ui/Switch): a native checkbox, so every screen reader knows it. */
+  input.switch {
+    appearance: none;
+    position: relative;
+    width: 3.25rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background: var(--line);
+    cursor: pointer;
+    transition: background-color var(--motion-quick) var(--ease-standard);
+  }
+  input.switch::before {
+    content: "";
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+    transition: transform var(--motion-quick) var(--ease-standard);
+  }
+  input.switch:checked {
+    background: var(--ink);
+  }
+  input.switch:checked::before {
+    transform: translateX(1.25rem);
+  }
+  input.switch-d {
+    width: 4.5rem;
+    height: 2.75rem;
+  }
+  input.switch-d::before {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  input.switch-d:checked::before {
+    transform: translateX(1.75rem);
+  }
+}
+
+/* The on-screen keyboard's keys (ui/Keyboard, UX §1): 80 × 64 in landscape, 88 × 72 in portrait,
+   8 px apart; wider keys span whole keys plus the gaps between them. */
+.osk-key {
+  --key-w: 80px;
+  --key-h: 64px;
+  --span: 1;
+  flex: none;
+  height: var(--key-h);
+  width: calc(var(--key-w) * var(--span) + 8px * (var(--span) - 1));
+}
+.osk-key[data-wide="1.5"] {
+  --span: 1.5;
+}
+.osk-key[data-wide="2"] {
+  --span: 2;
+}
+.osk-key[data-wide="4.5"] {
+  --span: 4.5;
+}
+.osk-key[data-wide="5"] {
+  --span: 5;
+}
+@media (orientation: portrait) {
+  .osk-key {
+    --key-w: 88px;
+    --key-h: 72px;
+  }
+}
+/* A focused field stays 16 px above the keyboard (the shell scrolls it into view). */
+[data-osk] {
+  scroll-margin-bottom: calc(var(--osk-h, 0px) + 16px);
+}
+
+/* Numbers that change where they stand (the clock, counts): Lexend has no tabular figures,
+   so each digit gets a box as wide as its widest digit (ADR 0021; ui/Digits). */
+.digit {
+  display: inline-block;
+  width: 0.62em;
+  text-align: center;
+}
+
+/* Placeholders while something loads (ui/Skeleton, UX §8). They wait 300 ms before showing,
+   so a quick load never flashes them. */
+.skeleton-wait {
+  animation: skeleton-wait 0s 300ms both;
+}
+.skeleton-shape {
+  background: var(--line);
+}
+@keyframes skeleton-wait {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

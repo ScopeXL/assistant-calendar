@@ -45,9 +45,9 @@ seed PORT="8080":
       -H 'X-Sunroom: 1' -H 'Content-Type: application/json' -d '{}' \
       && echo "Seeded the Sample Family. Household password: e2e-household-passphrase"
 
-# Open the built app's wall screen at 1920×1080 in Chromium, paired, with sample data
-display: build
-    cd frontend && node scripts/display.mjs
+# Open the built app's wall screen in Chromium, paired, with sample data (--portrait, --unpaired, --fresh)
+display *ARGS: build
+    cd frontend && node scripts/display.mjs {{ARGS}}
 
 # ---- checks (CI runs `just check`) -----------------------------------------------------------
 
