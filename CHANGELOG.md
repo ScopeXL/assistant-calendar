@@ -25,6 +25,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   columns.
 - When a chore with stars is done, the "+2" flies to the person's picture on the Today panel.
 - A long press on a list's tile opens Change list.
+- Adding an iCloud or Google calendar on a phone: each step now has a drawing of what to tap.
+- The Copy button for Google's helper address works on a plain home address too (it did
+  nothing there before).
 
 ## [0.5.0] - 2026-10-08
 

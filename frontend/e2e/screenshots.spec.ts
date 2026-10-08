@@ -358,6 +358,41 @@ test("a phone's calendar", async ({ page, isMobile }) => {
   }
 });
 
+test("a phone's account steps", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "phones");
+  test.setTimeout(240_000);
+  await seed(page.request);
+  await signInPhone(page);
+  const flows: [string, string[]][] = [
+    ["icloud", ["iCloud"]],
+    ["google-address", ["Google", "Paste the secret address"]],
+    ["google-helper", ["Google", "Share with a Sunroom helper"]],
+  ];
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/settings/calendars");
+    for (const [name, choices] of flows) {
+      await page.getByRole("button", { name: "Add an account" }).click();
+      const sheet = page.getByRole("dialog");
+      for (const choice of choices) {
+        await sheet.getByRole("button", { name: new RegExp(`^${choice}`) }).click();
+      }
+      // One shot per step, with its drawing in the middle of the sheet.
+      const steps = sheet.locator("ol > li");
+      await expect(steps.first().locator("svg").first()).toBeVisible();
+      const count = await steps.count();
+      for (let step = 0; step < count; step += 1) {
+        await steps.nth(step).evaluate((item) => {
+          item.scrollIntoView({ block: "center" });
+        });
+        await shot(page, `add-${name}-step-${String(step + 1)}-${scheme}`);
+      }
+      await sheet.getByRole("button", { name: "Close" }).click();
+      await expect(sheet).toBeHidden();
+    }
+  }
+});
+
 test("the wall's lists and chores", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
   test.setTimeout(240_000);

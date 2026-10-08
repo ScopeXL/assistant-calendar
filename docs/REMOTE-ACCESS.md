@@ -18,7 +18,6 @@ to get one. The commands were checked against each tool's own documentation on 2
 | Opening when the server can't be reached (it says it's offline instead of showing a browser error) | No | Yes |
 | The kitchen screen on a Raspberry Pi | Yes: the installer sets the Pi's browser up for it | Yes |
 | A tablet on the wall keeping its own screen awake | No: set the tablet never to sleep ([HARDWARE.md](HARDWARE.md)) | Yes |
-| The **Copy** button beside the Google helper's address | No: select the address and copy it by hand | Yes |
 | Sign in with Google | No: Google refuses `http://` addresses (its other two ways work, [SYNC.md](SYNC.md)) | Yes |
 | Using Sunroom away from home | No | Yes, with the ways below |
 

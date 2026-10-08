@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
+import { copyText } from "../../lib/copy";
 import { useMembers, type Member } from "../../lib/household";
 import { asParent } from "../../lib/parent";
 import { showToast } from "../../lib/toast";
@@ -13,6 +14,18 @@ import { Sheet } from "../../ui/Sheet";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { sourceName, useHolidayPlaces, useSyncChanges, type Account } from "./data";
+import {
+  GoogleIntegrateArt,
+  GoogleSecretAddressArt,
+  GoogleSettingsArt,
+  HelperCalendarApiArt,
+  HelperKeyArt,
+  HelperProjectArt,
+  HelperServiceAccountArt,
+  ICloudCopyPasswordArt,
+  ICloudNewPasswordArt,
+  ICloudSignInArt,
+} from "./drawings";
 
 type Step =
   | "choose"
@@ -146,8 +159,12 @@ function Choices({
   );
 }
 
+/** Numbered steps. With drawings under them, more room between, so each step's words sit with
+ * its own drawing rather than the one above. */
 function Steps({ children }: { children: ReactNode }) {
-  return <ol className="flex list-decimal flex-col gap-2 pl-5 text-body">{children}</ol>;
+  return (
+    <ol className="flex list-decimal flex-col gap-2 pl-5 text-body has-[svg]:gap-6">{children}</ol>
+  );
 }
 
 function Who({
@@ -225,9 +242,18 @@ function AddressFlow({ google = false, onDone }: { google?: boolean; onDone: () 
     >
       {google ? (
         <Steps>
-          <li>On a computer, open Google Calendar's settings.</li>
-          <li>Under "Settings for my calendars", pick the calendar, then Integrate calendar.</li>
-          <li>Copy "Secret address in iCal format" and paste it here.</li>
+          <li>
+            On a computer, open Google Calendar's settings.
+            <GoogleSettingsArt />
+          </li>
+          <li>
+            Under "Settings for my calendars", pick the calendar, then Integrate calendar.
+            <GoogleIntegrateArt />
+          </li>
+          <li>
+            Copy "Secret address in iCal format" and paste it here.
+            <GoogleSecretAddressArt />
+          </li>
         </Steps>
       ) : (
         <p className="text-body">
@@ -419,12 +445,17 @@ function ServerFlow({
                 appleid.apple.com
               </a>{" "}
               and sign in.
+              <ICloudSignInArt />
             </li>
             <li>
               Under Sign-In and Security, tap App-Specific Passwords, then the plus, and name it
               Sunroom.
+              <ICloudNewPasswordArt />
             </li>
-            <li>Copy the password it shows (xxxx-xxxx-xxxx-xxxx) and paste it below.</li>
+            <li>
+              Copy the password it shows (xxxx-xxxx-xxxx-xxxx) and paste it below.
+              <ICloudCopyPasswordArt />
+            </li>
           </Steps>
           <p className="text-secondary text-ink-soft">
             Two-factor authentication has to be on for your Apple ID. Your Apple ID's own password
@@ -525,10 +556,20 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
               console.cloud.google.com
             </a>{" "}
             and make a project named Sunroom.
+            <HelperProjectArt />
           </li>
-          <li>In APIs & Services, enable the Google Calendar API.</li>
-          <li>In IAM & Admin → Service accounts, create one named sunroom.</li>
-          <li>Open it, then Keys → Add key → JSON. A file downloads.</li>
+          <li>
+            In APIs & Services, enable the Google Calendar API.
+            <HelperCalendarApiArt />
+          </li>
+          <li>
+            In IAM & Admin → Service accounts, create one named sunroom.
+            <HelperServiceAccountArt />
+          </li>
+          <li>
+            Open it, then Keys → Add key → JSON. A file downloads.
+            <HelperKeyArt />
+          </li>
         </Steps>
         <label className="flex flex-col gap-2">
           <span className="text-body font-semibold">Upload the key file</span>
@@ -563,15 +604,19 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
     >
       <div className="flex flex-col gap-2">
         <p className="text-body font-semibold">Your helper's address:</p>
-        <p className="rounded-button bg-wall px-3 py-2 text-secondary break-all">
+        <p className="rounded-button bg-wall px-3 py-2 text-secondary break-all select-all">
           {account.helper_email}
         </p>
         <div>
           <Button
             variant="secondary"
             onClick={() => {
-              void navigator.clipboard.writeText(account.helper_email ?? "").then(() => {
-                showToast("Copied the helper's address");
+              void copyText(account.helper_email ?? "").then((copied) => {
+                showToast(
+                  copied
+                    ? "Copied the helper's address"
+                    : "Couldn't copy here. Hold the address to copy it.",
+                );
               });
             }}
           >
