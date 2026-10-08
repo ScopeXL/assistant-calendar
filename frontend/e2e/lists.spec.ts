@@ -2,7 +2,7 @@
  * Lists end to end (PLAN §15 M3, UX §4 "Lists room", §6 "Groceries from a phone to the
  * display"): items added on the wall (commas make several, a Usual adds with one tap) show on a
  * phone within a second; checking one strikes it and folds it into Done; Clear done comes back
- * with Undo; New list opens the new list. Synthetic data only.
+ * with Undo; New list opens the new list; a long press on a tile opens Change list. Synthetic data only.
  */
 import type { Locator, Page } from "@playwright/test";
 
@@ -83,4 +83,22 @@ test("New list makes it from a chip and opens it", async ({ page }) => {
     .click();
   await expect(page.getByRole("heading", { name: "Pharmacy", level: 1 })).toBeVisible();
   await expect(page.getByText("Nothing on Pharmacy yet. Add the first thing.")).toBeVisible();
+});
+
+test("a long press on a tile opens Change list, and doesn't open the list", async ({ page }) => {
+  await pairWall(page);
+  await page.goto("/lists");
+  const tile = page.getByRole("link", { name: /^Groceries/ });
+  await tile.hover();
+  await page.mouse.down();
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  const panel = page.getByRole("dialog", { name: "Change Groceries" });
+  await expect(panel).toBeVisible();
+  await expect(page).toHaveURL(/\/lists$/);
+  await panel.getByRole("button", { name: "Close" }).click();
+  await expect(panel).toBeHidden();
+  // A tap still opens it.
+  await tile.click();
+  await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
 });

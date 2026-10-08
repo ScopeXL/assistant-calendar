@@ -4,7 +4,8 @@ import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
 import { zonedParts } from "../../lib/dates";
-import { useMembers } from "../../lib/household";
+import { useMembers, type Member } from "../../lib/household";
+import { useLongPress } from "../../lib/longPress";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
@@ -29,6 +30,9 @@ function ListTiles() {
   const { data: members = [] } = useMembers();
   const today = zonedParts(useMinute()).day;
   const [making, setMaking] = useState(false);
+  // A long press on a tile opens its Change list here (UX §4), kept while it slides away.
+  const [held, setHeld] = useState<{ id: string; open: boolean } | null>(null);
+  const heldList = lists?.find((list) => list.id === held?.id);
   return (
     <section aria-labelledby="lists-title" className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center justify-between gap-4 border-b border-line px-6 py-4">
@@ -63,23 +67,14 @@ function ListTiles() {
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(22rem,1fr))] gap-6">
             {(lists ?? []).map((list) => (
               <li key={list.id}>
-                <Link
-                  to="/$room/$"
-                  params={{ room: "lists", _splat: list.id }}
-                  className="press flex min-h-40 flex-col justify-between gap-2 rounded-panel border border-line bg-surface p-6"
-                >
-                  <span className="text-d-title font-bold break-words">{list.name}</span>
-                  <span className="text-d-body font-semibold">{tileCount(list)}</span>
-                  {list.last_change ? (
-                    <span className="text-d-secondary text-ink-soft">
-                      {lastChangeLine(
-                        list.last_change,
-                        (id) => members.find((m) => m.id === id)?.name,
-                        today,
-                      )}
-                    </span>
-                  ) : null}
-                </Link>
+                <ListTile
+                  list={list}
+                  members={members}
+                  today={today}
+                  onHold={() => {
+                    setHeld({ id: list.id, open: true });
+                  }}
+                />
               </li>
             ))}
           </ul>
@@ -91,7 +86,48 @@ function ListTiles() {
           setMaking(false);
         }}
       />
+      {held && heldList ? (
+        <ChangeListPanel
+          key={heldList.id}
+          list={heldList}
+          open={held.open}
+          onClose={() => {
+            setHeld({ ...held, open: false });
+          }}
+        />
+      ) : null}
     </section>
+  );
+}
+
+/** A list's tile (UX §4): a tap opens the list; a long press is a shortcut to Change list. */
+function ListTile({
+  list,
+  members,
+  today,
+  onHold,
+}: {
+  list: ListInfo;
+  members: Member[];
+  today: string;
+  onHold: () => void;
+}) {
+  const hold = useLongPress(onHold);
+  return (
+    <Link
+      to="/$room/$"
+      params={{ room: "lists", _splat: list.id }}
+      {...hold}
+      className="press flex min-h-40 flex-col justify-between gap-2 rounded-panel border border-line bg-surface p-6 select-none [-webkit-touch-callout:none]"
+    >
+      <span className="text-d-title font-bold break-words">{list.name}</span>
+      <span className="text-d-body font-semibold">{tileCount(list)}</span>
+      {list.last_change ? (
+        <span className="text-d-secondary text-ink-soft">
+          {lastChangeLine(list.last_change, (id) => members.find((m) => m.id === id)?.name, today)}
+        </span>
+      ) : null}
+    </Link>
   );
 }
 

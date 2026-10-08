@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { errorMessage } from "../../api/client";
 import { qk } from "../../api/keys";
 import { playDone } from "../../lib/done";
+import { flyPoints } from "../../lib/fly";
 import { useMembers, useSettings, type Member } from "../../lib/household";
 import { useChangeCount } from "../../lib/motion";
 import { fetchSession } from "../../lib/session";
@@ -112,7 +113,9 @@ export function ChoreColumn({
           ref={head}
           className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${display ? "pb-3" : "pb-1"}`}
         >
-          <Avatar member={person ?? null} size={display ? "lg" : "sm"} />
+          <span data-points-to={person?.id} className="inline-flex shrink-0">
+            <Avatar member={person ?? null} size={display ? "lg" : "sm"} />
+          </span>
           <h2 className={display ? "text-d-title font-bold" : "text-row font-bold"}>
             {person ? person.name : "Anyone"}
           </h2>
@@ -248,7 +251,14 @@ export function ChoreRow({
       person: who.color,
       sound: display && (settings?.display_sounds ?? false),
     });
-    if (starsOn && box.points > 0) setFloating((n) => n + 1);
+    // "+2" flies to the person's avatar; with nowhere on screen to land, it rises from the row.
+    if (
+      starsOn &&
+      box.points > 0 &&
+      !flyPoints({ from: tick.current, memberId, points: box.points, display })
+    ) {
+      setFloating((n) => n + 1);
+    }
     changes.complete.mutate(
       { box, member: memberId, name: who.name },
       {
@@ -381,7 +391,8 @@ export function ChoreRow({
   );
 }
 
-/** "+2" rising from a ticked row toward its person (UX §7), then gone. */
+/** "+2" rising from a ticked row toward its person (UX §7), then gone: when their avatar isn't
+ * on screen for it to fly to (lib/fly). */
 function FloatingStars({ points }: { points: number }) {
   const display = useShell() === "display";
   const [shown, setShown] = useState(true);

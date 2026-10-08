@@ -6,6 +6,20 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The kitchen screen can dim in the evening before it sleeps: Settings → Display → Dim in the
+  evening, from the time you choose, a little, half or low.
+- Settings → About → New versions: Sunroom can check once a day whether there's a new version,
+  and says how to update. It's off until you turn it on.
+
+### Changed
+
+- On an upright kitchen screen, the Today band at the top shows everything again, in three
+  columns.
+- When a chore with stars is done, the "+2" flies to the person's picture on the Today panel.
+- A long press on a list's tile opens Change list.
+
 ## [0.5.0] - 2026-10-08
 
 ### Added

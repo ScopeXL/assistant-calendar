@@ -72,7 +72,9 @@ export function ChoresTodayWall() {
             }}
             className="press-row -mx-3 flex min-h-16 items-center gap-3 rounded-chip-d px-3 py-2 text-left"
           >
-            <Avatar member={person} size="sm" />
+            <span data-points-to={person.id} className="inline-flex shrink-0">
+              <Avatar member={person} size="sm" />
+            </span>
             <span className="flex-1 text-d-body font-bold">{person.name}</span>
             <span className="text-d-body font-semibold">{statusOf(column)}</span>
             <Ring done={column.done} total={column.total} />

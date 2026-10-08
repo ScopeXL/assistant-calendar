@@ -249,6 +249,16 @@ dialog.sheet[data-closing]::backdrop {
   }
 }
 
+/* The person's avatar as their "+2" lands on it (lib/fly). */
+.bump {
+  animation: bump 320ms var(--ease-standard);
+}
+@keyframes bump {
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 /* A checked list item: the marker line draws across it in the checker's color (UX §9). */
 .strike {
   background-image: linear-gradient(var(--p), var(--p));

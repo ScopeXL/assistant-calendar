@@ -1,9 +1,9 @@
 /**
- * Chores end to end (PLAN §15 M3, UX §6): the done moment on the wall and its Undo, the moment
- * with Reduce Motion, "Who did it?", a routine run to its finish, and a reward asked for on the
- * wall, seen on a parent's phone and said yes to on the wall behind the PIN. The server's clock
- * reads Wednesday, October 7, 2026 in New York; the Sample Family's chores come from the seed.
- * Synthetic data only.
+ * Chores end to end (PLAN §15 M3, UX §6): the done moment on the wall, its "+2" flying to the
+ * avatar, and its Undo; the moment with Reduce Motion; "Who did it?"; a routine run to its
+ * finish; and a reward asked for on the wall, seen on a parent's phone and said yes to on the
+ * wall behind the PIN. The server's clock reads Wednesday, October 7, 2026 in New York; the
+ * Sample Family's chores come from the seed. Synthetic data only.
  */
 import type { Locator, Page } from "@playwright/test";
 
@@ -58,6 +58,9 @@ test("a chore done on the wall stamps, bursts and pops the count; Undo takes it 
   await expect(box).toHaveAccessibleName(/^Feed the dog, Mia, 2 stars, Done by Mia/);
   await expect.poll(() => bursting(page)).toBe(true);
   await expect(page.locator("li.stamp")).toHaveCount(1);
+  // "+2" flies to Mia's avatar in the Today panel, which bumps as it lands.
+  const today = page.getByRole("complementary", { name: "Today" });
+  await expect(today.locator("[data-points-to].bump")).toHaveCount(1);
   await expect(mia).toContainText("2 of 2");
   await expect(mia.locator(".pop").first()).toBeAttached();
   await expect(mia).toContainText("All done, Mia!");
