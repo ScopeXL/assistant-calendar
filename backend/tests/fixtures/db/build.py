@@ -270,12 +270,70 @@ def _v0_4_0() -> list[Statement]:
     ]
 
 
+TACOS = "00000000-0000-7000-8000-000000000b01"  # a saved meal with ingredients
+TACO_NIGHT = "00000000-0000-7000-8000-000000000b02"  # tonight's dinner, from it
+SOUP = "00000000-0000-7000-8000-000000000b03"  # a dinner taken off its day
+TRIP = "00000000-0000-7000-8000-000000000b11"  # a countdown, the kid's
+INBOX = "00000000-0000-7000-8000-000000000b21"  # the photos folder
+
+
+def _v0_5_0() -> list[Statement]:
+    """0.5.0: 0.4.0's household plus a saved meal with ingredients, tonight's dinner made from
+    it and a dinner removed; a yearly countdown for the kid and a surprise kept off the wall; the
+    photos folder source; and a cached forecast for the household's place."""
+    entry = (
+        "INSERT INTO meal_entries (id, day, slot, position, text, emoji, recipe_url, note,"
+        " member_id, saved_meal_id, source_url, created_by_member_id, created_at, updated_at,"
+        " deleted_at) VALUES "
+    )
+    return [
+        *_v0_4_0(),
+        "UPDATE household SET location_label = 'Sample Town', latitude = 40.71, longitude = -74.01",
+        "INSERT INTO saved_meals (id, text, emoji, recipe_url, ingredients_json, use_count,"
+        " last_used_at, created_by_member_id, created_at, updated_at, deleted_at) VALUES"
+        f" ('{TACOS}', 'Tacos', '🌮', 'https://recipes.example.com/tacos',"
+        f" '[\"Tortillas\", \"Cheese\"]', 3, '2026-10-08 21:00:00', '{PARENT}',"
+        " '2026-10-01 21:00:00', '2026-10-08 21:00:00', NULL)",
+        entry + f"('{TACO_NIGHT}', '2026-10-08', 'dinner', 0, 'Tacos', '🌮',"
+        f" 'https://recipes.example.com/tacos', 'Extra salsa', '{PARENT}', '{TACOS}', NULL,"
+        f" '{PARENT}', '2026-10-08 21:00:00', '2026-10-08 21:00:00', NULL),"
+        f" ('{SOUP}', '2026-10-09', 'dinner', 0, 'Soup', NULL, NULL, NULL, NULL, NULL, NULL,"
+        f" '{KID}', '2026-10-08 21:05:00', '2026-10-08 21:10:00', '2026-10-08 21:10:00')",
+        "INSERT INTO countdowns (id, title, emoji, color, date, time, repeat_yearly, member_id,"
+        " show_on_display, created_by_member_id, created_at, updated_at, deleted_at) VALUES"
+        f" ('{TRIP}', 'Beach day', '🏖️', 'sky', '2027-07-04', '09:00', 1, '{KID}', 1,"
+        f" '{PARENT}', '2026-10-08 21:20:00', '2026-10-08 21:20:00', NULL),"
+        " ('00000000-0000-7000-8000-000000000b12', 'Surprise party', '🎉', NULL, '2026-11-20',"
+        f" NULL, 0, NULL, 0, '{PARENT}', '2026-10-08 21:21:00', '2026-10-08 21:21:00', NULL)",
+        "INSERT INTO photo_sources (id, kind, label, config_json, credentials_enc, allow_private,"
+        " enabled, last_scan_at, last_error, items_seen, created_at, deleted_at) VALUES"
+        f" ('{INBOX}', 'inbox', 'Photos folder', '{{}}', NULL, 0, 1, '2026-10-08 21:30:00',"
+        " NULL, 1, '2026-10-08 21:00:00', NULL)",
+        "INSERT INTO weather_cache (id, latitude, longitude, units, payload_json, fetched_at,"
+        " expires_at, last_error, last_error_at) VALUES (1, 40.71, -74.01, 'fahrenheit',"
+        ' \'{"current": {"time": "2026-10-08T17:00", "temperature_2m": 61.0,'
+        " \"weather_code\": 2, \"is_day\": 1}}', '2026-10-08 21:00:00', '2026-10-08 22:00:00',"
+        " NULL, NULL)",
+        "INSERT INTO plugin_state (plugin_id, enabled, settings_json, settings_version, "
+        "plugin_version, enabled_at, disabled_at, updated_at) VALUES "
+        "('meals', 1, '{\"slots\": [\"dinner\"], \"show_on_calendar\": true}', 2, '1.0.0',"
+        " '2026-10-08 21:00:00', NULL, '2026-10-08 21:00:00'),"
+        " ('countdowns', 1, '{\"birthdays\": true}', 1, '1.0.0', '2026-10-08 21:00:00', NULL,"
+        " '2026-10-08 21:00:00'),"
+        ' (\'screensaver\', 1, \'{"start_after": "10", "every": "30", "show_clock": true,'
+        " \"shuffle\": true}', 1, '1.0.0', '2026-10-08 21:00:00', NULL, '2026-10-08 21:00:00'),"
+        " ('weather', 0, '{\"units\": \"auto\"}', 1, '1.0.0', NULL, '2026-10-08 21:40:00',"
+        " '2026-10-08 21:40:00')",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
     "202610081454": _v0_2_0,
     "202610081650": _v0_3_0,
     "202610081921": _v0_4_0,
+    "202610082056": _v0_5_0,
 }
 
 
