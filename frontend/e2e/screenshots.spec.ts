@@ -31,6 +31,7 @@ const PAGES = [
   { key: "family", title: "Family" },
   { key: "features", title: "Features" },
   { key: "calendars", title: "Calendars & accounts" },
+  { key: "chores", title: "Chores" },
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
   { key: "devices", title: "Phones & screens" },
@@ -343,6 +344,90 @@ test("a phone's calendar", async ({ page, isMobile }) => {
       await sheet.getByRole("button", { name: "Close" }).click();
       await expect(sheet).toBeHidden();
     }
+  }
+});
+
+test("the wall's lists and chores", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
+  test.setTimeout(240_000);
+  await moveClock(page, STOPS[1]?.at ?? "");
+  await seed(page.request);
+  const paired = await page.request.post("/api/auth/kiosk/pair-with-password", {
+    headers: CSRF,
+    data: { password: PASSWORD, label: "Kitchen screen" },
+  });
+  expect(paired.status()).toBe(200);
+  for (const theme of ["light", "dark"]) {
+    await change(page, { theme });
+    await page.goto("/lists");
+    await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await shot(page, `lists-${theme}`);
+    await page.getByRole("link", { name: /^Groceries/ }).click();
+    await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
+    await shot(page, `lists-groceries-${theme}`);
+    await page.goto("/chores");
+    await expect(page.getByRole("heading", { name: "Chores · Today", level: 1 })).toBeVisible();
+    await shot(page, `chores-${theme}`);
+    await page.getByRole("checkbox", { name: /^Water the plants/ }).click();
+    await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
+    await shot(page, `chores-who-did-it-${theme}`);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await page.getByRole("button", { name: "This week", exact: true }).click();
+    await shot(page, `chores-week-${theme}`);
+    await page.getByRole("link", { name: "Stars & rewards" }).click();
+    await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
+    await shot(page, `chores-rewards-${theme}`);
+    await page.goto("/display");
+    await page.getByRole("button", { name: "Who's doing what", exact: true }).click();
+    await shot(page, `chores-people-${theme}`);
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    const add = page.getByRole("dialog", { name: "Add" });
+    await add.getByRole("button", { name: "Chore", exact: true }).click();
+    await shot(page, `add-chore-${theme}`);
+    await add.getByRole("button", { name: "Item", exact: true }).click();
+    await shot(page, `add-item-${theme}`);
+    await add.getByRole("button", { name: "Close" }).click();
+  }
+  // Bedtime: Leo's routine in his column, then the runner and its finish.
+  await change(page, { theme: "auto" });
+  await moveClock(page, "2026-10-07T23:45:00Z");
+  await page.goto("/chores");
+  await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
+  await shot(page, "chores-bedtime");
+  await page.getByRole("button", { name: "Start" }).click();
+  const runner = page.getByRole("dialog", { name: "Leo's bedtime routine" });
+  await expect(runner).toContainText("Pajamas on");
+  await shot(page, "routine-step");
+  for (let step = 0; step < 5; step += 1) {
+    await runner.getByRole("button", { name: "Done", exact: true }).click();
+  }
+  await expect(runner).toContainText("All done, Leo!");
+  await shot(page, "routine-finished");
+});
+
+test("a phone's lists and chores", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "phones");
+  test.setTimeout(240_000);
+  await moveClock(page, STOPS[1]?.at ?? "");
+  await seed(page.request);
+  await signInPhone(page, "Mia");
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Up next" })).toBeVisible();
+    await shot(page, `today-chores-${scheme}`);
+    await page.getByRole("link", { name: "Lists" }).click();
+    await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await shot(page, `lists-${scheme}`);
+    await page.getByRole("link", { name: /^Groceries/ }).click();
+    await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
+    await shot(page, `lists-groceries-${scheme}`);
+    await page.getByRole("link", { name: "Chores" }).click();
+    await expect(page.getByRole("heading", { name: "Chores", level: 1 })).toBeVisible();
+    await shot(page, `chores-${scheme}`);
+    await page.getByRole("link", { name: "Stars & rewards" }).click();
+    await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
+    await shot(page, `chores-rewards-${scheme}`);
   }
 });
 
