@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-08
+
 ### Added
 
 - Set Sunroom up from a phone: a household password, the household's name, time zone and first
@@ -34,9 +36,18 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A Raspberry Pi installer for the kitchen screen, which can also point at a Sunroom running on
   another computer.
 
+### Behind the scenes
+
+- Every change is checked on the kitchen screen's sizes, phones and a laptop, for accessibility
+  in light and dark, and for anything private before it can be published; each release is
+  started from a clean copy and tried out before anyone can download it.
+
 ### Security
 
 - Sunroom answers only to addresses it recognises (local names and addresses, plus the ones in
   `APP_ALLOWED_HOSTS`), refuses changes from other sites, and limits what its pages may load.
 - Outside addresses are checked before every connection, so a setting can't reach into your home
   network unless you allow it.
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/ScopeXL/assistant-calendar/releases/tag/v0.1.0
