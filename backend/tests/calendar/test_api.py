@@ -4,7 +4,9 @@ Synthetic data only."""
 
 from __future__ import annotations
 
+from datetime import date, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
@@ -12,6 +14,7 @@ from fastapi import FastAPI
 from sqlalchemy import update
 
 from sunroom.calendar.models import Calendar, Event
+from sunroom.calendar.schemas import OccurrenceOut
 from tests.support import CSRF, PASSWORD, add_member, set_pin, state_of
 
 WEEK = {"from": "2026-10-04", "to": "2026-10-11"}  # Sun Oct 4 to Sat Oct 10
@@ -356,6 +359,51 @@ async def test_people_filter_keeps_everyone_events(parent: httpx.AsyncClient) ->
     await add(parent, title="Family thing", start="2026-10-07T11:00")
     found = await week(parent, member_ids=[mia["id"]])
     assert [o["title"] for o in found] == ["Mia's thing", "Family thing"]
+
+
+async def test_plugins_add_overlays_on_request(parent: httpx.AsyncClient, app: FastAPI) -> None:
+    async def holidays(start: date, end: date, zone: ZoneInfo) -> list[OccurrenceOut]:
+        day = date(2026, 10, 12)
+        if not start <= day < end:
+            return []
+        return [
+            OccurrenceOut(
+                key=f"holidays|{day.isoformat()}",
+                event_id=None,
+                recurrence_id=None,
+                calendar_id=None,
+                title="Harvest Day",
+                location="",
+                all_day=True,
+                start_utc=None,
+                end_utc=None,
+                start_local=None,
+                end_local=None,
+                start_date=day,
+                end_date=day + timedelta(days=1),
+                member_ids=[],
+                color=None,
+                calendar_color=None,
+                is_recurring=False,
+                is_override=False,
+                read_only=True,
+                source="holidays",
+                status="confirmed",
+                overlay="holidays",
+                reminders=[],
+                version=0,
+            )
+        ]
+
+    state_of(app).calendar.overlays["holidays"] = holidays
+    await add(parent, title="Vet", start="2026-10-13T09:00", end="2026-10-13T09:30")
+    span = {"from": "2026-10-11", "to": "2026-10-18"}
+    assert [o["title"] for o in await week(parent, **span)] == ["Vet"]
+    found = await week(parent, **span, overlays=["holidays", "nobody-registered-this"])
+    assert [(o["title"], o["overlay"], o["read_only"]) for o in found] == [
+        ("Harvest Day", "holidays", True),
+        ("Vet", None, False),
+    ]
 
 
 async def test_search_finds_the_next_one(parent: httpx.AsyncClient) -> None:
