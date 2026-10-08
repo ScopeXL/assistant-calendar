@@ -11,8 +11,10 @@ It is built and maintained entirely by AI sessions, and copied from Dinner Bell'
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
 length from a wall screen.
 
-**Status:** M0 (the foundation) is built: setup, pairing, the empty board, the PIN, Settings,
-the plugin framework with an empty registry, the Pi installer. Next is M1, the calendar
+**Status:** M0 (the foundation) and M1 (the calendar core) are built. M0: setup, pairing, the
+PIN, Settings, the plugin framework with an empty registry, the Pi installer. M1: local calendars,
+repeating events (our own engine, ADR 0023), the board's views, quick add, scoped changes with
+Undo, Recently removed, and the phone's Today and Calendar. Next is M2, synced calendars
 (docs/PLAN.md §15).
 
 **Read first:**
@@ -187,3 +189,5 @@ Add one line each time something surprising costs time: the symptom, the cause, 
   injects a `<style>`. Only the screenshot spec turns `cspGuard` off.
 - `python3` on the build Mac is old and OrbStack's `docker` isn't always on PATH: repo scripts run
   through the justfile's `py` (uv, Python 3.14), and the justfile prepends `~/.orbstack/bin`.
+- A sticky Save bar in the wall's side panel covered the chips above the keyboard: a sticky box
+  stops at its scroller's padding, which already holds `--osk-h`. Stick it at `bottom-0`.
