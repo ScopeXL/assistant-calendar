@@ -96,7 +96,16 @@ const publicRoute = createRoute({
   component: PublicLayout,
 });
 
-const STEPS: SetupStep[] = ["welcome", "password", "household", "people", "pin", "pair", "done"];
+const STEPS: SetupStep[] = [
+  "welcome",
+  "password",
+  "household",
+  "people",
+  "pin",
+  "pair",
+  "calendars",
+  "done",
+];
 
 const setupRoute = createRoute({
   getParentRoute: () => publicRoute,

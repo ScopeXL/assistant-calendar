@@ -75,6 +75,10 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
       case "calendars.changed":
         invalidate(["calendars"]);
         invalidate(["occurrences"]);
+        invalidate(qk.syncAccounts());
+        break;
+      case "sync.changed":
+        invalidate(["calendar-sync"]);
         break;
       case "kiosk.command":
         if (typeof event.command === "string") handlers.onKioskCommand?.(event.command, event);

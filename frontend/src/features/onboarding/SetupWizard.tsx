@@ -15,9 +15,11 @@ import { Segmented } from "../../ui/Segmented";
 import { Select } from "../../ui/Select";
 import { SunMark } from "../../ui/SunMark";
 import { TextField } from "../../ui/TextField";
+import { usePluginModules } from "../usePluginModules";
 
-export type SetupStep = "welcome" | "password" | "household" | "people" | "pin" | "pair" | "done";
-export const SIGNED_IN_STEPS: SetupStep[] = ["people", "pin", "pair", "done"];
+export type SetupStep =
+  "welcome" | "password" | "household" | "people" | "pin" | "pair" | "calendars" | "done";
+export const SIGNED_IN_STEPS: SetupStep[] = ["people", "pin", "pair", "calendars", "done"];
 
 function phoneZone(): string {
   try {
@@ -131,6 +133,14 @@ export function SetupWizard({ step }: { step: SetupStep }) {
       return (
         <PairStep
           onNext={() => {
+            go("calendars");
+          }}
+        />
+      );
+    case "calendars":
+      return (
+        <CalendarsStep
+          onNext={() => {
             go("done");
           }}
         />
@@ -174,7 +184,7 @@ function PasswordStep({
   return (
     <Page
       title={fromServer ? "Type the household password" : "Set a household password"}
-      step="1 of 5"
+      step="1 of 6"
     >
       <p className="text-body text-ink-soft">
         {fromServer
@@ -254,7 +264,7 @@ function HouseholdStep({
   });
   if (!password) {
     return (
-      <Page title="Name your household" step="2 of 5">
+      <Page title="Name your household" step="2 of 6">
         <p className="text-body">Choose the household password first.</p>
         <Button block onClick={onBack}>
           Back
@@ -263,7 +273,7 @@ function HouseholdStep({
     );
   }
   return (
-    <Page title="Name your household" step="2 of 5">
+    <Page title="Name your household" step="2 of 6">
       <form
         className="flex flex-col gap-5"
         onSubmit={(event) => {
@@ -376,7 +386,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
     },
   });
   return (
-    <Page title="Who lives here?" step="3 of 5">
+    <Page title="Who lives here?" step="3 of 6">
       <p className="text-body text-ink-soft">
         {first
           ? "Start with you. Each person gets a color, used everywhere they appear."
@@ -453,7 +463,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
     onSuccess: onNext,
   });
   return (
-    <Page title="Set a parent PIN?" step="4 of 5">
+    <Page title="Set a parent PIN?" step="4 of 6">
       <p className="text-body text-ink-soft">
         It keeps kids out of Settings on the kitchen screen. Adding events and checking off chores
         never ask for it.
@@ -488,6 +498,23 @@ function PinStep({ onNext }: { onNext: () => void }) {
   );
 }
 
+/** Step 6 (UX first run): bring in calendars, through the calendar_sync plugin's own flows.
+ * With the plugin off, the step skips itself. */
+function CalendarsStep({ onNext }: { onNext: () => void }) {
+  const Setup = usePluginModules().find((m) => m.id === "calendar_sync")?.onboarding;
+  return (
+    <Page title="Bring in your calendars" step="6 of 6">
+      {Setup ? (
+        <Setup onDone={onNext} />
+      ) : (
+        <Button block onClick={onNext}>
+          Next
+        </Button>
+      )}
+    </Page>
+  );
+}
+
 function PairStep({ onNext }: { onNext: () => void }) {
   const [code, setCode] = useState("");
   const pair = useMutation({
@@ -499,7 +526,7 @@ function PairStep({ onNext }: { onNext: () => void }) {
   });
   const valid = normalizeCode(code);
   return (
-    <Page title="Pair the kitchen screen" step="5 of 5">
+    <Page title="Pair the kitchen screen" step="5 of 6">
       <p className="text-body text-ink-soft">
         On the screen, Sunroom now shows a code. Type it here.
       </p>

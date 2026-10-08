@@ -12,6 +12,7 @@ import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { useCalendars } from "../calendar/data";
+import { usePluginModules } from "../usePluginModules";
 import type { CalendarInfo, PersonColor } from "../calendar/types";
 import { COLORS } from "./MemberSheet";
 import { Group, Text } from "./parts";
@@ -31,16 +32,19 @@ function useRefreshCalendars() {
 /**
  * Settings → Calendars & accounts (UX §4): the Home calendar and any other local calendars, each
  * with a color, an owner and "Show on this screen"; which one new events go to; removing one
- * (with Put back). Accounts and their synced calendars join this page in M2.
+ * (with Put back). Accounts and their synced calendars follow, from the calendar_sync plugin.
  */
 export function CalendarsPage() {
   const display = useShell() === "display";
-  const { data: calendars = [] } = useCalendars();
+  const { data: everyCalendar = [] } = useCalendars();
   const { data: withRemoved = [] } = useCalendars(true);
+  // Synced calendars show under their accounts (the calendar_sync plugin's section).
+  const calendars = everyCalendar.filter((c) => c.kind === "local");
+  const Accounts = usePluginModules().find((m) => m.id === "calendar_sync")?.settings?.accounts;
   const { data: members = [] } = useMembers();
   const refresh = useRefreshCalendars();
   const [editing, setEditing] = useState<Editing>(null);
-  const removed = withRemoved.filter((c) => c.deleted);
+  const removed = withRemoved.filter((c) => c.deleted && c.kind === "local");
   const restore = useMutation({
     mutationFn: async (calendar: CalendarInfo) =>
       unwrap(
@@ -116,6 +120,7 @@ export function CalendarsPage() {
           </Button>
         </div>
       </Group>
+      {Accounts ? <Accounts /> : null}
       {removed.length ? (
         <Group title="Removed calendars" note="Their events come back with them.">
           {removed.map((calendar) => (

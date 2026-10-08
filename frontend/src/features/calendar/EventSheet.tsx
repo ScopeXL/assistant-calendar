@@ -15,7 +15,7 @@ import { SidePanel } from "../../ui/SidePanel";
 import { useShell } from "../../ui/shell";
 import { useCalendars, useEvent, useEventChanges } from "./data";
 import { ScopeChooser } from "./ScopeChooser";
-import type { Occurrence, Scope } from "./types";
+import type { CalendarInfo, Occurrence, Scope } from "./types";
 
 /** The occurrence a panel was opened from, as the board last loaded it. */
 export function useCachedOccurrence(key: string | null): Occurrence | null {
@@ -47,6 +47,19 @@ export function whenText(occurrence: Occurrence): string {
       : `${shortDate(day)} – ${shortDate(endDay)} · ${range}`;
   }
   return "";
+}
+
+/** Where a synced event comes from, and where to change it (UX §4 "Event sheet"). */
+export function sourceLine(calendar: CalendarInfo, readOnly: boolean): string | null {
+  const source = calendar.source_label;
+  if (calendar.kind !== "sync" || !source) return null;
+  if (!readOnly) return `${source} · ${calendar.name}`;
+  if (source === "Holidays") return "From Holidays.";
+  if (source === "a calendar address")
+    return `From a calendar address · ${calendar.name}. It shows events only.`;
+  const app =
+    source === "iCloud" ? "the Calendar app" : source === "Google" ? "Google Calendar" : source;
+  return `From ${source} · ${calendar.name}. Change it in ${app}.`;
 }
 
 /**
@@ -106,8 +119,10 @@ export function EventSheet({
 
   const text = display ? "text-d-body" : "text-body";
   const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
+  const source = calendar ? sourceLine(calendar, readOnly) : null;
+  const pending = occurrence?.pending ?? event?.pending ?? false;
   const actions = readOnly ? (
-    <p className={soft}>This calendar comes from an account. Change it there.</p>
+    <p className={soft}>{source ?? "This calendar comes from an account. Change it there."}</p>
   ) : moving ? null : (
     <div className="flex flex-wrap gap-3">
       <Button
@@ -168,7 +183,8 @@ export function EventSheet({
           {occurrence?.location || event?.location ? (
             <p className={text}>{occurrence?.location ?? event?.location}</p>
           ) : null}
-          {calendar ? <p className={soft}>{calendar.name}</p> : null}
+          {calendar && !readOnly ? <p className={soft}>{source ?? calendar.name}</p> : null}
+          {pending ? <p className={`${soft} font-semibold`}>Not synced yet</p> : null}
           {event?.description ? (
             <p className={`${text} whitespace-pre-wrap`}>{event.description}</p>
           ) : null}

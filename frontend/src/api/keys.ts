@@ -17,4 +17,7 @@ export const qk = {
   event: (id: string) => ["event", id] as const,
   removedEvents: () => ["events-removed"] as const,
   eventSearch: (query: string) => ["event-search", query] as const,
+  syncAccounts: () => ["calendar-sync", "accounts"] as const,
+  syncRuns: (accountId: string) => ["calendar-sync", "runs", accountId] as const,
+  holidayPlaces: () => ["calendar-sync", "places"] as const,
 };

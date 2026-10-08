@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 import type { BoardView } from "../../lib/displayState";
@@ -33,6 +34,7 @@ export function BoardHeader({
   panelShown,
   onTogglePanel,
   notice,
+  pills,
 }: {
   title: string;
   subtitle?: string | undefined;
@@ -49,6 +51,8 @@ export function BoardHeader({
   onTogglePanel: () => void;
   /** Replaces the title for a moment ("Drop on a day"). */
   notice?: string | null;
+  /** Quiet one-line states from plugins ("Google hasn't answered since 9:10 AM"). */
+  pills?: ReactNode;
 }) {
   const panelIcon = panelShown ? (
     <PanelRightClose aria-hidden="true" className="size-7" />
@@ -100,6 +104,7 @@ export function BoardHeader({
             <ChevronRight aria-hidden="true" className="size-8" />
           </Button>
         </div>
+        {pills}
         <div className="ml-auto flex items-center gap-3">
           {view !== "today" ? (
             <div className="hidden @min-[70rem]:block">

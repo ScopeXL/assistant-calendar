@@ -14,7 +14,7 @@ export function Switch({
   disabled = false,
 }: {
   label: string;
-  hint?: string;
+  hint?: string | undefined;
   checked: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;

@@ -11,6 +11,7 @@ import {
 } from "../../lib/dates";
 import { displayState, updateDisplay, type BoardView } from "../../lib/displayState";
 import { useMembers, useSettings } from "../../lib/household";
+import { usePluginModules } from "../usePluginModules";
 import { useStore } from "../../lib/store";
 import { useMinute } from "../../lib/time";
 import { AddPanel } from "./AddPanel";
@@ -48,6 +49,9 @@ export function CalendarRoom() {
   const panelShown = state.panelShown ?? settings?.display_show_today_panel ?? true;
   const dimPast = settings?.display_dim_past ?? true;
   const changes = useEventChanges();
+  const pills = usePluginModules().flatMap((module) =>
+    module.boardPill ? [{ id: module.id, Pill: module.boardPill }] : [],
+  );
   const [dragging, setDragging] = useState(false);
   const [draftDay, setDraftDay] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<{ occurrence: Occurrence; toDay: string } | null>(
@@ -175,6 +179,9 @@ export function CalendarRoom() {
           updateDisplay({ panelShown: !panelShown });
         }}
         notice={dragging ? "Drop on a day" : null}
+        pills={pills.map(({ id, Pill }) => (
+          <Pill key={id} />
+        ))}
       />
       {view === "week" ? (
         <WeekView
