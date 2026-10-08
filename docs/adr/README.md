@@ -32,3 +32,4 @@ Each record covers one decision: the context, what was decided, and the conseque
 | [0020](0020-sync-provider-order.md) | Calendar providers in order: ICS and holidays, iCloud, Google by service account, Google OAuth | Q6: which calendar service to wire first (default) |
 | [0021](0021-digit-boxes-for-lexend.md) | Changing numbers sit in fixed-width digit boxes, because Lexend has no tabular figures | — |
 | [0022](0022-the-display-keyboard-is-our-own.md) | The wall screen's on-screen keyboard is Sunroom's own, not react-simple-keyboard | — |
+| [0023](0023-recurrence-engine-walks-rules-itself.md) | The recurrence engine walks rules itself; python-dateutil is its test reference (supersedes the engine library in 0003) | — |

@@ -1,6 +1,6 @@
 # ADR 0003: Recurrence is expanded on the backend
 
-- **Status:** Accepted
+- **Status:** Accepted; the engine library (`python-dateutil`) superseded by ADR 0023
 - **Date:** 2026-10-07
 
 ## Context

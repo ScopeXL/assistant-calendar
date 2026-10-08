@@ -1,7 +1,7 @@
 """domain/ must stay pure: no clocks, no randomness, no I/O (CLAUDE.md rule 5, PLAN §7.3).
 
-Only the standard library, plus python-dateutil's rrule and zoneinfo, which are deterministic
-given their inputs (recurrence expansion, M1)."""
+Only the standard library: the recurrence engine walks rules itself (ADR 0023), and
+python-dateutil is a dev-only reference that the image doesn't ship."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ import sunroom.domain
 ALLOWED_IMPORTS = {
     "__future__",
     "zoneinfo",
-    "dateutil.rrule",
     "calendar",
     "dataclasses",
     "enum",
