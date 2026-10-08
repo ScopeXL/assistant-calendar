@@ -1,0 +1,55 @@
+# gitleaks configuration (CLAUDE.md hard rule 1; PLAN §14.5).
+# Household-specific values (names, street, domain, addresses) can't be listed in a public file;
+# the local private-terms scan (scripts/private_scan.py) covers those.
+title = "Sunroom"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "dockerhub-pat"
+description = "Docker Hub personal access token"
+regex = '''dckr_pat_[A-Za-z0-9_-]{20,}'''
+
+[[rules]]
+id = "sunroom-secret-assignment"
+description = "A real value assigned to a Sunroom secret (env-file or shell style)"
+regex = '''(?m)^\s*(?:export\s+)?(APP_SECRET_KEY|APP_PASSWORD)=["']?([^\s"'#$]{8,})'''
+secretGroup = 2
+[[rules.allowlists]]
+regexTarget = "secret"
+regexes = [
+  '''change-me-to-a-long-random-string''',
+  '''change-me-household-passphrase''',
+  '''\$\{[A-Z_]+\}''',
+  '''smoke-password-0000''',
+  '''e2e-household-passphrase''',
+  '''e2e-only-secret-key-0123456789abcdef''',
+]
+
+[[rules]]
+id = "fernet-token"
+description = "Fernet-encrypted token (encrypted account credentials never belong in git)"
+regex = '''gAAAAA[A-Za-z0-9_=-]{60,}'''
+
+[[rules]]
+id = "sunroom-session-cookie"
+description = "A Sunroom session or parent-grant cookie value"
+regex = '''(?:__Host-)?sunroom(?:_parent)?=v1\.[0-9a-f-]{36}\.\d+\.\d+\.[A-Za-z0-9_-]{16,}'''
+
+[[rules]]
+id = "sunroom-password-hash"
+description = "A stored household password or PIN hash"
+regex = '''(?:scrypt\$\d+\$\d+\$\d+|pbkdf2_sha256\$\d+)\$[A-Za-z0-9+/=]{16,}\$[A-Za-z0-9+/=]{32,}'''
+
+[[allowlists]]
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)\.venv/''',
+  '''(^|/)dist/''',
+  '''(^|/)test-results/''',
+  '''(^|/)playwright-report/''',
+  '''(^|/)\.screenshots/''',
+  '''pnpm-lock\.yaml$''',
+  '''uv\.lock$''',
+]
