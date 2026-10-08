@@ -10,10 +10,10 @@ computer at home, with no account anywhere and no subscription.
   kids with their own colors, and nothing that needs a technical grown-up every week.
 - **Your data stays home,** in one Docker container with nightly backups.
 
-**Status:** early. Version 0.1 is the foundation: setup on a phone, pairing the kitchen screen,
-the week board with its clock, the parent PIN and Settings. Calendars and events come next; the
-[plan](docs/PLAN.md#15-milestones) lists what each milestone adds, and
-[CHANGELOG.md](CHANGELOG.md) what each release did.
+**Status:** working, and still growing toward 1.0. It has the calendar (with iCloud, Google and
+other calendars synced in), lists, chores with stars and routines, meals, countdowns, a photo
+screensaver and the weather. The [plan](docs/PLAN.md#15-milestones) lists what each milestone
+adds, and [CHANGELOG.md](CHANGELOG.md) what each release did.
 
 ## Install
 
@@ -26,7 +26,7 @@ the week board with its clock, the parent PIN and Settings. Calendars and events
 ### a. All on a Raspberry Pi
 
 You need a Raspberry Pi 4 or 5, a touch screen (HDMI plus its USB touch cable) and the official
-power supply.
+power supply. [docs/HARDWARE.md](docs/HARDWARE.md) helps you choose them.
 
 1. With [Raspberry Pi Imager](https://www.raspberrypi.com/software/), write **Raspberry Pi OS
    (64-bit)**, the one with the desktop. In Imager's settings, set the hostname to `sunroom`,
@@ -64,7 +64,8 @@ everything in the `sunroom_data` volume.
 
 Open `http://<server>:8080` on your phone and set up the household (step 3 above). If you reach
 it through your own HTTPS proxy, set `APP_ALLOWED_HOSTS` and `TRUSTED_PROXIES` first
-([docs/DEPLOY.md](docs/DEPLOY.md)).
+([docs/DEPLOY.md](docs/DEPLOY.md)). To use Sunroom away from home, see
+[docs/REMOTE-ACCESS.md](docs/REMOTE-ACCESS.md).
 
 Then set up the Pi with the same installer, as the screen only:
 
@@ -82,7 +83,8 @@ docker run -d --name sunroom --restart unless-stopped -p 8080:8080 -v sunroom_da
 ```
 
 Open `http://<computer>:8080` on a phone. Any browser shows the wall screen at `/display`; an old
-tablet works as one (Android: Fully Kiosk Browser; iPad: Safari with Guided Access).
+tablet works as one (Android: Fully Kiosk Browser; iPad: Safari with Guided Access; see
+[docs/HARDWARE.md](docs/HARDWARE.md#an-old-tablet-instead)).
 
 ## Lost the household password?
 
@@ -93,10 +95,12 @@ kitchen screen shows a new code to pair.
 ## Documentation
 
 - [Plan](docs/PLAN.md): architecture, data model, plugins, milestones.
+  [Adding a plugin](docs/PLUGINS.md) gives the steps.
 - [UX](docs/UX.md): screens, flows and visual design.
 - [Decision records](docs/adr/README.md): why things are the way they are.
-- [The kitchen screen](docs/KIOSK.md), [Deploying](docs/DEPLOY.md),
-  [Restoring a backup](docs/RESTORE.md) and [Releasing](docs/RELEASING.md).
+- [The kitchen screen](docs/KIOSK.md), [Hardware](docs/HARDWARE.md), [Deploying](docs/DEPLOY.md),
+  [Remote access and HTTPS](docs/REMOTE-ACCESS.md), [Restoring a backup](docs/RESTORE.md) and
+  [Releasing](docs/RELEASING.md).
 - [CLAUDE.md](CLAUDE.md): working rules for the AI sessions that build and maintain Sunroom.
 
 ## Developing
