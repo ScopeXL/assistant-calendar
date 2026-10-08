@@ -142,6 +142,7 @@ function SleepGroup() {
   const update = useUpdateSettings();
   const [from, setFrom] = useState(settings?.sleep_from ?? "22:00");
   const [to, setTo] = useState(settings?.sleep_to ?? "06:30");
+  const [dimFrom, setDimFrom] = useState(settings?.dim_from ?? "20:00");
   if (!settings) return null;
   const on = settings.sleep_from !== null && settings.sleep_to !== null;
   const valid = /^\d{2}:\d{2}$/.test(from) && /^\d{2}:\d{2}$/.test(to) && from !== to;
@@ -207,6 +208,56 @@ function SleepGroup() {
               ]}
             />
           </Row>
+          <Switch
+            label="Dim in the evening"
+            hint="From this time until it sleeps, the screen is less bright."
+            checked={settings.dim_from !== null}
+            onChange={(value) => {
+              update.mutate({ dim_from: value ? dimFrom : null });
+            }}
+          />
+          {settings.dim_from !== null ? (
+            <>
+              <form
+                className={`flex flex-wrap items-end gap-4 ${display ? "py-5" : "py-4"}`}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (/^\d{2}:\d{2}$/.test(dimFrom)) update.mutate({ dim_from: dimFrom });
+                }}
+              >
+                <TextField
+                  label="Dim from"
+                  type="time"
+                  layout="numeric"
+                  value={dimFrom}
+                  onChange={(event) => {
+                    setDimFrom(event.target.value);
+                  }}
+                />
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={!/^\d{2}:\d{2}$/.test(dimFrom) || dimFrom === settings.dim_from}
+                >
+                  Save time
+                </Button>
+              </form>
+              <Row label="How dim">
+                <Segmented
+                  label="How dim"
+                  value={String(settings.dim_level) as "60" | "40" | "20"}
+                  onChange={(value) => {
+                    update.mutate({ dim_level: Number(value) as 20 | 40 | 60 });
+                  }}
+                  options={[
+                    { value: "60", label: "A little" },
+                    { value: "40", label: "Half" },
+                    { value: "20", label: "Low" },
+                  ]}
+                />
+              </Row>
+            </>
+          ) : null}
         </>
       ) : null}
     </Group>

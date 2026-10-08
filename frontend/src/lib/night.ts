@@ -21,3 +21,20 @@ export function isNight(
   const now = hour * 60 + minute;
   return start < end ? now >= start && now < end : now >= start || now < end;
 }
+
+/**
+ * The evening dim (Settings → Display → Sleep): from `dimFrom` until the sleep starts, the screen
+ * is at `level` percent. Only with a sleep schedule, as on the server (domain/screen.py). Null
+ * when it isn't dimming now.
+ */
+export function dimmedTo(
+  dimFrom: string | null | undefined,
+  sleepFrom: string | null | undefined,
+  sleepTo: string | null | undefined,
+  level: number,
+  hour: number,
+  minute: number,
+): number | null {
+  if (!sleepTo || !dimFrom || !sleepFrom) return null;
+  return isNight(dimFrom, sleepFrom, hour, minute) ? level : null;
+}

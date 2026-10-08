@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isNight } from "./night";
+import { dimmedTo, isNight } from "./night";
 
 describe("the sleep schedule", () => {
   it("is off without both times", () => {
@@ -18,5 +18,16 @@ describe("the sleep schedule", () => {
   it("works within one day too", () => {
     expect(isNight("13:00", "15:00", 14, 0)).toBe(true);
     expect(isNight("13:00", "15:00", 15, 0)).toBe(false);
+  });
+});
+
+describe("the evening dim", () => {
+  it("runs from its time until the sleep, and only with a sleep schedule", () => {
+    expect(dimmedTo("20:00", "22:00", "06:30", 40, 19, 59)).toBeNull();
+    expect(dimmedTo("20:00", "22:00", "06:30", 40, 20, 0)).toBe(40);
+    expect(dimmedTo("20:00", "22:00", "06:30", 40, 21, 59)).toBe(40);
+    expect(dimmedTo("20:00", "22:00", "06:30", 40, 22, 0)).toBeNull();
+    expect(dimmedTo("20:00", null, null, 40, 21, 0)).toBeNull();
+    expect(dimmedTo(null, "22:00", "06:30", 40, 21, 0)).toBeNull();
   });
 });

@@ -59,6 +59,7 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         invalidate(qk.kioskLayout());
         invalidate(qk.allowlist());
         invalidate(["weather"]);
+        invalidate(qk.update());
         break;
       case "devices.changed":
         invalidate(qk.devices());

@@ -21,7 +21,8 @@ import { idleFor, swallowFollowingClick, watchActivity, whenIdle } from "../lib/
 import { watchKeyboardFields } from "../lib/keyboard";
 import { MotionProvider } from "../lib/motion";
 import { useLiveUpdates } from "../lib/live";
-import { isNight } from "../lib/night";
+import { noteDimmer } from "../lib/dimmer";
+import { dimmedTo, isNight } from "../lib/night";
 import { askForPin } from "../lib/parent";
 import { useQuietTheme } from "../lib/quietTheme";
 import { fetchSession } from "../lib/session";
@@ -45,6 +46,13 @@ const EDITOR_IDLE_MS = 10 * 60_000;
 const SETTINGS_LOCK_MS = 2 * 60_000;
 const WAKE_MS = 2 * 60_000;
 const NIGHTLY_UPDATE_HOUR = 3;
+// The page's veil for each evening dim level (percent of full brightness).
+const VEIL: Record<number, string> = { 60: "opacity-30", 40: "opacity-45", 20: "opacity-60" };
+
+/** A tap woke the sleeping wall: tell the server, so the Pi's helper switches the panel on. */
+function tellServerAwake(): void {
+  void api.POST("/api/display/wake").catch(() => undefined);
+}
 const UPDATE_IDLE_MS = 10 * 60_000;
 
 /**
@@ -95,6 +103,18 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const minuteOfDay = hour * 60 + minute;
   const nightTime = isNight(settings?.sleep_from, settings?.sleep_to, hour, minute);
   const sleeping = nightTime && !awake;
+  // The evening dim: the Pi's helper dims the panel itself; anywhere else the page draws a veil.
+  const [dimmer] = useState(() => noteDimmer(window.location.search));
+  const dim = nightTime
+    ? null
+    : dimmedTo(
+        settings?.dim_from,
+        settings?.sleep_from,
+        settings?.sleep_to,
+        settings?.dim_level ?? 40,
+        hour,
+        minute,
+      );
   const latitude = settings?.latitude;
   const longitude = settings?.longitude;
   const sun = useMemo(() => sunDay(day, latitude, longitude), [day, latitude, longitude]);
@@ -179,9 +199,10 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
         if (command === "wake") {
           setAwake(true);
           setWakes((n) => n + 1);
+          if (kiosk) tellServerAwake();
         }
       }),
-    [],
+    [kiosk],
   );
 
   // Back to sleep 2 minutes after the latest wake.
@@ -283,6 +304,12 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
         {screenOverlays.map(({ id, Overlay }) => (
           <Overlay key={id} asleep={sleeping} home={home} />
         ))}
+        {dim !== null && dimmer === "page" ? (
+          <div
+            aria-hidden="true"
+            className={`pointer-events-none fixed inset-0 z-[58] bg-night ${VEIL[dim] ?? "opacity-45"}`}
+          />
+        ) : null}
         {sleeping ? (
           <Night
             mode={settings?.sleep_mode ?? "dim_clock"}
@@ -290,6 +317,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
               swallowFollowingClick();
               setAwake(true);
               setWakes((n) => n + 1);
+              if (kiosk) tellServerAwake();
             }}
           />
         ) : null}

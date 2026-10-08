@@ -6,6 +6,7 @@ export const qk = {
   settings: () => ["settings"] as const,
   devices: () => ["devices"] as const,
   diagnostics: () => ["diagnostics"] as const,
+  update: () => ["update"] as const,
   backups: () => ["backups"] as const,
   kioskLayout: () => ["kiosk-layout"] as const,
   plugins: () => ["plugins"] as const,
