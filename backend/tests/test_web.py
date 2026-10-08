@@ -160,9 +160,10 @@ async def test_addresses_this_server_was_reached_at_are_remembered(
     parent: httpx.AsyncClient,
 ) -> None:
     await parent.get("/api/version", headers={"host": "sunroom.local:8080"})
+    await parent.get("/api/version", headers={"host": "127.0.0.1:8080"})
     diagnostics = (await parent.get("/api/admin/diagnostics")).json()
-    assert diagnostics["recent_addresses"][0] == "localhost:8080"  # the newest: this request
-    assert "sunroom.local:8080" in diagnostics["recent_addresses"]
+    # Loopback names (this request's localhost too) only work on the server itself.
+    assert diagnostics["recent_addresses"] == ["sunroom.local:8080"]
 
 
 # ---- forwarded headers (PLAN §13.4) --------------------------------------------------------

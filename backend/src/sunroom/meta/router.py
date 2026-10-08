@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import shutil
 from typing import Any
 
@@ -17,8 +18,17 @@ from sunroom.db import migrate
 from sunroom.db.backup import NIGHTLY_RE
 from sunroom.db.export import export_data
 from sunroom.state import StateDep
+from sunroom.web.hosts import host_name, is_ip_literal
 
 router = APIRouter(prefix="/api", tags=["meta"])
+
+
+def _phone_can_use(host: str) -> bool:
+    """Loopback names reach the server only from the server itself, never from a phone."""
+    name = host_name(host)
+    if name == "localhost" or name.endswith(".localhost"):
+        return False
+    return not (is_ip_literal(name) and ipaddress.ip_address(name).is_loopback)
 
 
 class VersionOut(BaseModel):
@@ -131,7 +141,7 @@ async def diagnostics(request: Request, state: StateDep, actor: ParentDep) -> Di
             x_forwarded_proto=headers.get("x-forwarded-proto"),
             trusted_proxies_configured=bool(state.settings.trusted_proxies),
         ),
-        recent_addresses=list(reversed(state.recent_hosts)),
+        recent_addresses=[host for host in reversed(state.recent_hosts) if _phone_can_use(host)],
         backups=BackupStatusOut.model_validate(state.backups.status()),
         plugins=[
             PluginInfo(

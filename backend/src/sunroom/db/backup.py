@@ -33,6 +33,7 @@ PRE_MIGRATE_DIR = "pre-migrate"
 KEEP_DAILY = 14
 KEEP_WEEKLY = 8
 KEEP_PRE_MIGRATE = 5
+STALE_AFTER = timedelta(days=7)
 NIGHTLY_AT = (3, 30)  # 03:30 local time avoids the daylight-saving changeover hour
 MIN_FREE_EXTRA = 64 * 1024 * 1024
 
@@ -249,7 +250,9 @@ class BackupService:
 
     def status(self) -> dict[str, object]:
         last = self.last_success_at or self._newest_file_time()
-        stale = last is None or (self.clock.now() - last) > timedelta(hours=36)
+        # UX §8: a line in Backup once the newest copy is a week old. A new install that hasn't
+        # reached its first night yet isn't behind.
+        stale = last is not None and (self.clock.now() - last) > STALE_AFTER
         return {
             "directory": str(self.backup_dir),
             "schedule": f"daily at {NIGHTLY_AT[0]:02d}:{NIGHTLY_AT[1]:02d} ({self.zone_of().key})",

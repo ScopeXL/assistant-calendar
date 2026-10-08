@@ -121,6 +121,22 @@ async def test_service_writes_one_copy_and_reports_status(data_dir: Path) -> Non
     assert isinstance(files, list) and len(files) == 1  # pyright: ignore[reportUnknownArgumentType]
 
 
+async def test_a_backup_is_overdue_only_after_a_week(data_dir: Path) -> None:
+    clock = FakeClock(datetime(2026, 10, 6, 8, 0, tzinfo=UTC))
+    service = backup.BackupService(
+        db_path=data_dir / "sunroom.db",
+        backup_dir=data_dir / "backups",
+        zone_of=lambda: NY,
+        clock=clock,
+    )
+    assert service.status()["stale"] is False  # a new install, before its first night
+    await service.tick()
+    clock.advance(days=6)
+    assert service.status()["stale"] is False
+    clock.advance(days=2)
+    assert service.status()["stale"] is True
+
+
 async def test_failures_alert_once_per_shape_and_retry_hourly(
     data_dir: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
