@@ -224,7 +224,7 @@ The code is six characters from the no-look-alike alphabet, rotates every 10 min
 
 Overlapping events sit side by side, each at least half the width; more than three overlapping become "+2 more". Tapping an hour band opens the editor with that day and hour set. Chores are not on the timeline; they live in the Today panel and the Chores room.
 
-**Month view**: cells with the day number (28 px, today's in a filled circle), up to three one-line entries at 20 px with a 4 px color bar and the person's initial, then "+N more"; a countdown's day shows a small star mark; the current week is lit a step and today two. Tapping a cell opens the Day view; an entry opens its sheet.
+**Month view**: cells with the day number (28 px, today's in a filled circle), up to three one-line entries at 20 px with a 4 px color bar and the person's initial, then "+N more"; a countdown's day shows a small star mark; the current week is lit a step and today two. A cell is one button that opens its Day view, where every event is a full chip: three tappable entries won't fit a cell at the wall's 56 px tap size (decided in M1).
 
 **Who's doing what**: one column per person, Everyone first, in household order; Today or This week (rows per day inside each column, compact one-line chips). Each column: the avatar at 72 px with the name (glance-sized so a kid finds their own column), today's events, that person's chores with working checkboxes (the same celebration as the Chores room), then "Cooks tonight" if set. Up to seven columns fit; an eighth pages horizontally.
 

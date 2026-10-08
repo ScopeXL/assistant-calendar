@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Lock, LockOpen } from "lucide-react";
+import { CalendarDays, Lock, LockOpen, Plus } from "lucide-react";
 
 import {
   clockSuffix,
@@ -52,19 +52,21 @@ export function ClockBlock({ compact = false }: { compact?: boolean }) {
 const ROOMS = [{ key: "calendar", label: "Calendar", icon: CalendarDays }] as const;
 
 /**
- * The display's rail (UX §3): clock and date, the rooms in the household's order, and the lock,
- * which opens Settings (behind the PIN when there is one). In portrait it's the bottom bar.
+ * The display's rail (UX §3): clock and date, the rooms in the household's order, Add, and the
+ * lock, which opens Settings (behind the PIN when there is one). In portrait it's the bottom bar.
  */
 export function Rail({
   home,
   room,
   lock,
+  onAdd,
   onLock,
 }: {
   home: "/display" | "/";
   room: string;
   /** locked: behind the PIN; unlocked: a PIN grant is open; open: no PIN is set. */
   lock: "locked" | "unlocked" | "open";
+  onAdd: () => void;
   onLock: () => void;
 }) {
   return (
@@ -92,6 +94,18 @@ export function Rail({
         ))}
       </ul>
       <div className="flex-1 portrait:hidden" />
+      <div className="flex justify-center py-4 portrait:px-6">
+        <button
+          type="button"
+          onClick={onAdd}
+          className="press flex flex-col items-center gap-1 text-d-caption font-semibold"
+        >
+          <span className="flex size-16 items-center justify-center rounded-full bg-ink text-wall">
+            <Plus aria-hidden="true" className="size-9" strokeWidth={2.5} />
+          </span>
+          Add
+        </button>
+      </div>
       <button
         type="button"
         onClick={onLock}

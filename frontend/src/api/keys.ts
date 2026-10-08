@@ -12,4 +12,9 @@ export const qk = {
   pluginSettings: (id: string) => ["plugins", id, "settings"] as const,
   photos: (kind: string) => ["photos", kind] as const,
   allowlist: () => ["network-allowlist"] as const,
+  calendars: (removed = false) => ["calendars", removed] as const,
+  occurrences: (from: string, to: string) => ["occurrences", from, to] as const,
+  event: (id: string) => ["event", id] as const,
+  removedEvents: () => ["events-removed"] as const,
+  eventSearch: (query: string) => ["event-search", query] as const,
 };

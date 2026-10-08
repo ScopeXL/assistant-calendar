@@ -4,9 +4,10 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { api } from "../api/client";
 import { qk } from "../api/keys";
+import { useReminders } from "../features/calendar/reminders";
 import { TodayPanel } from "../features/calendar/TodayPanel";
 import { zonedParts } from "../lib/dates";
-import { displayState, resetBoard } from "../lib/displayState";
+import { displayState, resetBoard, updateDisplay } from "../lib/displayState";
 import { useSettings } from "../lib/household";
 import { idleFor, swallowFollowingClick, watchActivity, whenIdle } from "../lib/idle";
 import { watchKeyboardFields } from "../lib/keyboard";
@@ -58,6 +59,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const update = useAppUpdate();
   useKeepAwake(kiosk);
   useLiveUpdates();
+  useReminders();
 
   const { mutate: lockNow } = useMutation({
     mutationFn: async () => {
@@ -178,6 +180,10 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
                     ? "open"
                     : "locked"
               }
+              onAdd={() => {
+                if (room === "settings") void navigate({ to: home });
+                updateDisplay({ panel: { kind: "add", day: null, hour: null } });
+              }}
               onLock={() => {
                 void openSettings();
               }}

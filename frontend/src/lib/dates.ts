@@ -100,6 +100,9 @@ export const longWeekday = dayFormat({ weekday: "long" });
 export const dayNumber = (day: string): string => String(Number(day.slice(8, 10)));
 /** "Oct 7" */
 export const monthDay = dayFormat({ month: "short", day: "numeric" });
+
+/** "October 9", for what a screen reader says (UX §10). */
+export const longMonthDay = dayFormat({ month: "long", day: "numeric" });
 /** "Tue, Oct 7" */
 export const shortDate = dayFormat({ weekday: "short", month: "short", day: "numeric" });
 /** "October 2026" */
@@ -139,4 +142,34 @@ export function formatClock(moment: Date): string {
 export function clockSuffix(moment: Date): string {
   if (!hour12) return "";
   return zonedParts(moment).hour < 12 ? "AM" : "PM";
+}
+
+const pad = (value: number): string => String(value).padStart(2, "0");
+
+/** The household's wall time now, as the API writes it ("2026-10-07T09:41:00"). */
+export function wallNow(moment: Date): string {
+  const { day, hour, minute } = zonedParts(moment);
+  return `${day}T${pad(hour)}:${pad(minute)}:00`;
+}
+
+/** A wall time from the API ("2026-10-08T14:30:00") as "2:30 PM" or "14:30"; `compact`
+ * drops ":00" ("4 PM") for month cells and phone week strips (UX §2). */
+export function formatWallTime(local: string, { compact = false } = {}): string {
+  const hour = Number(local.slice(11, 13));
+  const minute = Number(local.slice(14, 16));
+  if (!hour12) return `${pad(hour)}:${pad(minute)}`;
+  const shown = ((hour + 11) % 12) + 1;
+  const suffix = hour < 12 ? "AM" : "PM";
+  return compact && minute === 0
+    ? `${String(shown)} ${suffix}`
+    : `${String(shown)}:${pad(minute)} ${suffix}`;
+}
+
+/** "4:00–5:00 PM", "11:30 AM – 12:30 PM" or "16:00–17:00". */
+export function formatWallRange(start: string, end: string): string {
+  const from = formatWallTime(start);
+  const to = formatWallTime(end);
+  if (!hour12) return `${from}–${to}`;
+  const fromSuffix = from.slice(-2);
+  return fromSuffix === to.slice(-2) ? `${from.slice(0, -3)}–${to}` : `${from} – ${to}`;
 }

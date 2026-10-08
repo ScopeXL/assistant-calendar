@@ -12,7 +12,7 @@ import { qk } from "./api/keys";
 import { JoinScreen } from "./features/auth/JoinScreen";
 import { SignInScreen } from "./features/auth/SignInScreen";
 import { WhoScreen, type WhoFrom } from "./features/auth/WhoScreen";
-import { WeekBoardRoom } from "./features/calendar/WeekBoardRoom";
+import { CalendarRoom } from "./features/calendar/CalendarRoom";
 import { DisplayEntry } from "./features/display/DisplayEntry";
 import { InstallScreen } from "./features/onboarding/InstallScreen";
 import { SIGNED_IN_STEPS, SetupWizard, type SetupStep } from "./features/onboarding/SetupWizard";
@@ -173,13 +173,13 @@ const signedRoute = createRoute({
   component: ShellLayout,
 });
 
-/** "/": the week board in the display shell, Today on a phone. */
+/** "/": the board in the display shell, Today on a phone. */
 function Home() {
-  return useShell() === "display" ? <WeekBoardRoom /> : <TodayScreen />;
+  return useShell() === "display" ? <CalendarRoom /> : <TodayScreen />;
 }
 
 function Calendar() {
-  return useShell() === "display" ? <WeekBoardRoom /> : <CalendarScreen />;
+  return useShell() === "display" ? <CalendarRoom /> : <CalendarScreen />;
 }
 
 const homeRoute = createRoute({ getParentRoute: () => signedRoute, path: "/", component: Home });

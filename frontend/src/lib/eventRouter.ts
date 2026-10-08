@@ -66,6 +66,16 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
       case "photos.changed":
         invalidate(["photos"]);
         break;
+      case "events.changed":
+        invalidate(["occurrences"]);
+        invalidate(["event"]);
+        invalidate(["event-search"]);
+        invalidate(qk.removedEvents());
+        break;
+      case "calendars.changed":
+        invalidate(["calendars"]);
+        invalidate(["occurrences"]);
+        break;
       case "kiosk.command":
         if (typeof event.command === "string") handlers.onKioskCommand?.(event.command, event);
         break;

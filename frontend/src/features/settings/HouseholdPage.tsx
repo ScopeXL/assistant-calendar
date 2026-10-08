@@ -9,6 +9,7 @@ import { Select } from "../../ui/Select";
 import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
 import { Group, Row } from "./parts";
+import { RecentlyRemoved } from "./RecentlyRemoved";
 
 function zones(): string[] {
   try {
@@ -20,7 +21,8 @@ function zones(): string[] {
 
 type Settings = components["schemas"]["SettingsOut"];
 
-/** Settings → Household (UX §4): name, time zone, the week's first day and the clock. */
+/** Settings → Household (UX §4): name, time zone, the week's first day, the clock, and what was
+ * recently removed. */
 export function HouseholdPage() {
   const { data: settings } = useSettings();
   // The form starts from the saved values, so it waits for them.
@@ -117,6 +119,7 @@ function HouseholdForm({ settings }: { settings: Settings }) {
           />
         </Row>
       </Group>
+      <RecentlyRemoved />
       {update.isError ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(update.error)}

@@ -11,6 +11,7 @@ import { Screen } from "../../ui/Screen";
 import { useShell } from "../../ui/shell";
 import { AboutPage } from "./AboutPage";
 import { BackupPage } from "./BackupPage";
+import { CalendarsPage } from "./CalendarsPage";
 import { DevicesPage } from "./DevicesPage";
 import { DisplayPage } from "./DisplayPage";
 import { FamilyPage } from "./FamilyPage";
@@ -21,6 +22,7 @@ import { SETTINGS_PAGES, isSettingsPage, pageTitle, type SettingsPageKey } from 
 const PAGES: Record<SettingsPageKey, () => ReactNode> = {
   family: () => <FamilyPage />,
   features: () => <FeaturesPage />,
+  calendars: () => <CalendarsPage />,
   display: () => <DisplayPage />,
   household: () => <HouseholdPage />,
   devices: () => <DevicesPage />,

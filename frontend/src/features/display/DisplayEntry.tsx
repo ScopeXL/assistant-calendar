@@ -20,7 +20,7 @@ import { QrCode } from "../../ui/QrCode";
 import { ShellContext } from "../../ui/shell";
 import { SunMark } from "../../ui/SunMark";
 import { TextField } from "../../ui/TextField";
-import { WeekBoardRoom } from "../calendar/WeekBoardRoom";
+import { CalendarRoom } from "../calendar/CalendarRoom";
 
 const NAMES = ["Kitchen", "Hallway", "Living room", "Office"] as const;
 const PASSWORD_IDLE_MS = 60_000;
@@ -72,7 +72,7 @@ export function DisplayEntry() {
   }
   return (
     <DisplayShell home="/display">
-      <WeekBoardRoom />
+      <CalendarRoom />
     </DisplayShell>
   );
 }

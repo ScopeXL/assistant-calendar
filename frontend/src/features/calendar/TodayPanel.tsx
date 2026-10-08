@@ -1,19 +1,191 @@
+import type { ReactNode } from "react";
+
+import { addDays, formatWallTime, wallNow, zonedParts } from "../../lib/dates";
+import { updateDisplay } from "../../lib/displayState";
+import { useMembers, type Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
+import { Avatar } from "../../ui/Avatar";
+import { peopleOf } from "./EventChip";
+import { useOccurrences } from "./data";
+import { byDay, todayParts } from "./layout";
+import type { Occurrence } from "./types";
+
+const TOMORROW_FROM_HOUR = 18;
+
+function open(occurrence: Occurrence) {
+  if (!occurrence.event_id) return;
+  updateDisplay({
+    panel: {
+      kind: "event",
+      eventId: occurrence.event_id,
+      recurrenceId: occurrence.recurrence_id ?? null,
+      key: occurrence.key,
+    },
+  });
+}
+
+const startText = (occurrence: Occurrence) =>
+  occurrence.all_day || !occurrence.start_local
+    ? "All day"
+    : formatWallTime(occurrence.start_local);
 
 /**
- * The display's Today panel (UX §3): Now, Up next, Later today, Tomorrow, then each enabled
- * plugin's block. Events arrive in M1; until then it says today is clear (UX §8).
+ * The display's Today panel (UX §3): Now, Up next, Later today and, after 6 PM, Tomorrow, each
+ * only with something in it; each enabled plugin's block joins underneath in later milestones.
+ * Now and Up next are glance-sized. Tapping a line opens its event.
  */
 export function TodayPanel() {
-  useMinute(); // re-render at midnight with the new day
+  const minute = useMinute();
+  const now = wallNow(minute);
+  const { day: today, hour } = zonedParts(minute);
+  const tomorrow = addDays(today, 1);
+  const { data } = useOccurrences(today, addDays(today, 2));
+  const { data: members = [] } = useMembers();
+  const occurrences = data?.occurrences ?? [];
+  const parts = todayParts(occurrences, now);
+  const next = byDay(occurrences, [tomorrow]).get(tomorrow);
+  const tomorrows = [...(next?.allDay ?? []), ...(next?.timed ?? [])].map((e) => e.occurrence);
+  const todays = byDay(occurrences, [today]).get(today);
+  const hadToday = (todays?.allDay.length ?? 0) + (todays?.timed.length ?? 0) > 0;
+  const nothingLeft = !parts.upNext && !parts.later.length;
+  const onNow = parts.now.length > 0 || parts.allDay.length > 0;
+  const showTomorrow = hour >= TOMORROW_FROM_HOUR && tomorrows.length > 0;
+  const firstTomorrow = next?.timed[0]?.occurrence ?? next?.allDay[0]?.occurrence;
+
   return (
     <aside aria-label="Today" className="flex flex-col gap-8 overflow-y-auto px-6 py-6">
-      <section aria-labelledby="up-next">
-        <h2 id="up-next" className="text-d-title font-bold">
-          Up next
-        </h2>
-        <p className="mt-3 text-d-glance font-bold">Nothing on today.</p>
-      </section>
+      {parts.now.length || parts.allDay.length ? (
+        <Section id="today-now" title="Now">
+          {parts.now.map((occurrence) => (
+            <Line
+              key={occurrence.key}
+              occurrence={occurrence}
+              members={members}
+              when={occurrence.end_local ? `until ${formatWallTime(occurrence.end_local)}` : ""}
+              glance
+            />
+          ))}
+          {parts.allDay.map((occurrence) => (
+            <Line key={occurrence.key} occurrence={occurrence} members={members} when="All day" />
+          ))}
+        </Section>
+      ) : null}
+      {parts.upNext ? (
+        <Section id="today-up-next" title="Up next">
+          <Line
+            occurrence={parts.upNext}
+            members={members}
+            when={startText(parts.upNext)}
+            glance
+            detail
+          />
+        </Section>
+      ) : null}
+      {parts.later.length ? (
+        <Section id="today-later" title="Later today">
+          {parts.later.map((occurrence) => (
+            <Line
+              key={occurrence.key}
+              occurrence={occurrence}
+              members={members}
+              when={startText(occurrence)}
+            />
+          ))}
+        </Section>
+      ) : null}
+      {nothingLeft ? (
+        <div className="flex flex-col gap-2">
+          {/* Glance-sized when it's all there is; quieter under what's on now. */}
+          <p
+            className={
+              onNow ? "text-d-body font-semibold text-ink-soft" : "text-d-glance font-bold"
+            }
+          >
+            {hadToday ? "Nothing else on today." : "Nothing on today."}
+          </p>
+          {!showTomorrow && firstTomorrow ? (
+            <p className="text-d-secondary text-ink-soft">
+              Tomorrow · {startText(firstTomorrow)} {firstTomorrow.title}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {showTomorrow ? (
+        <Section id="today-tomorrow" title="Tomorrow">
+          {tomorrows.map((occurrence) => (
+            <Line
+              key={occurrence.key}
+              occurrence={occurrence}
+              members={members}
+              when={startText(occurrence)}
+            />
+          ))}
+        </Section>
+      ) : null}
     </aside>
+  );
+}
+
+function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-2">
+      <h2 id={id} className="text-d-body font-bold text-ink-soft">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * One event in the panel. Glance lines (Now, Up next) put the title at 40 px on its own line,
+ * never truncated (UX §1); the others read time and title on one row.
+ */
+function Line({
+  occurrence,
+  members,
+  when,
+  glance = false,
+  detail = false,
+}: {
+  occurrence: Occurrence;
+  members: Member[];
+  when: string;
+  glance?: boolean;
+  detail?: boolean;
+}) {
+  const people = peopleOf(occurrence, members);
+  const who = people.length ? people.map((p) => p.name).join(", ") : "Everyone";
+  const extra = detail ? [who, occurrence.location].filter(Boolean).join(" · ") : "";
+  return (
+    <button
+      type="button"
+      data-person={occurrence.color ?? (people.length === 1 ? people[0]?.color : "everyone")}
+      onClick={() => {
+        open(occurrence);
+      }}
+      className="press-row -mx-3 flex min-h-16 items-start gap-3 rounded-chip-d px-3 py-2 text-left"
+    >
+      <span aria-hidden="true" className="mt-1.5 h-[1.25em] w-1.5 shrink-0 rounded-full bg-p" />
+      {glance ? (
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-d-body font-semibold">{when}</span>
+          <span className="text-d-glance font-bold break-words">{occurrence.title}</span>
+          {extra ? <span className="text-d-secondary text-ink-soft">{extra}</span> : null}
+        </span>
+      ) : (
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-d-secondary font-semibold text-ink-soft">{when}</span>
+          <span className="text-d-body font-semibold break-words">{occurrence.title}</span>
+        </span>
+      )}
+      {people.length && !detail ? (
+        <span className="flex shrink-0 -space-x-2 pt-1">
+          {people.slice(0, 3).map((member) => (
+            <Avatar key={member.id} member={member} size="sm" />
+          ))}
+        </span>
+      ) : null}
+    </button>
   );
 }

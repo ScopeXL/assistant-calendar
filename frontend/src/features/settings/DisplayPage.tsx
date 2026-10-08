@@ -11,8 +11,8 @@ import { Group, Row } from "./parts";
 
 /**
  * Settings → Display (UX §4): how the wall screen looks and when it sleeps. Settings whose
- * effect arrives with a later milestone (dimming past events, sounds, the screensaver, forcing
- * an orientation) join this page with it.
+ * effect arrives with a later milestone (sounds, the screensaver, forcing an orientation) join
+ * this page with it.
  */
 export function DisplayPage() {
   const { data: settings } = useSettings();
@@ -80,6 +80,28 @@ export function DisplayPage() {
             ]}
           />
         </Row>
+        <Row label="Home view" hint="What the screen shows when nobody is using it.">
+          <Segmented
+            label="Home view"
+            value={settings.display_home_view}
+            onChange={(display_home_view) => {
+              update.mutate({ display_home_view });
+            }}
+            options={[
+              { value: "week", label: "Week" },
+              { value: "today", label: "Today" },
+              { value: "people", label: "Who's doing what" },
+            ]}
+          />
+        </Row>
+        <Switch
+          label="Dim past events"
+          hint="Today's events that are over fade, so what's next stands out."
+          checked={settings.display_dim_past}
+          onChange={(display_dim_past) => {
+            update.mutate({ display_dim_past });
+          }}
+        />
         <Switch
           label="Today panel"
           hint="Up next and the rest of today, beside the week."
