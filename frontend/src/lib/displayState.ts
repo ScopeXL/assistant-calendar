@@ -44,6 +44,12 @@ export function updateDisplay(change: Partial<DisplayState>): void {
   displayState.set((state) => ({ ...state, ...change }));
 }
 
+/** Add or Change is open: what someone was typing outlasts the 2-minute reset (UX §1). */
+export function editorOpen(): boolean {
+  const panel = displayState.get().panel;
+  return panel?.kind === "add" || panel?.kind === "edit";
+}
+
 export function resetBoard(): void {
   displayState.set((state) =>
     state.view === null &&

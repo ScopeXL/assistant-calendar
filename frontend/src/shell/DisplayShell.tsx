@@ -7,7 +7,7 @@ import { qk } from "../api/keys";
 import { useReminders } from "../features/calendar/reminders";
 import { TodayPanel } from "../features/calendar/TodayPanel";
 import { zonedParts } from "../lib/dates";
-import { displayState, resetBoard, updateDisplay } from "../lib/displayState";
+import { displayState, editorOpen, resetBoard, updateDisplay } from "../lib/displayState";
 import { useSettings } from "../lib/household";
 import { idleFor, swallowFollowingClick, watchActivity, whenIdle } from "../lib/idle";
 import { watchKeyboardFields } from "../lib/keyboard";
@@ -30,6 +30,7 @@ import { Night } from "./Night";
 import { ClockBlock, Rail } from "./Rail";
 
 const RESET_BOARD_MS = 2 * 60_000;
+const EDITOR_IDLE_MS = 10 * 60_000;
 const SETTINGS_LOCK_MS = 2 * 60_000;
 const WAKE_MS = 2 * 60_000;
 const NIGHTLY_UPDATE_HOUR = 3;
@@ -102,8 +103,16 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     };
   }, [kiosk]);
 
-  // After 2 minutes idle the board goes back to this week, with the household's panel setting.
-  useEffect(() => whenIdle(RESET_BOARD_MS, resetBoard), []);
+  // After 2 minutes idle the board goes back to this week, with the household's panel setting;
+  // an editor left open gets 10 minutes before it closes too (UX §1 "Undo, drafts").
+  useEffect(
+    () =>
+      whenIdle(RESET_BOARD_MS, () => {
+        if (!editorOpen()) resetBoard();
+      }),
+    [],
+  );
+  useEffect(() => whenIdle(EDITOR_IDLE_MS, resetBoard), []);
 
   // Settings lock themselves after 2 minutes idle; other rooms return home after the household's
   // chosen minutes (0: never).
