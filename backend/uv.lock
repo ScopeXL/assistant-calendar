@@ -235,6 +235,18 @@ wheels = [
 ]
 
 [[package]]
+name = "holidays"
+version = "0.106"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a4/85/30fadb3b2014177299eea883bfd74d7e893d495fb4b37adc3f4968004d87/holidays-0.106.tar.gz", hash = "sha256:2e635a59102acb47e79a751c37fb04eff5ac77069a3b33d58cbfad66d243ffb3", size = 1048446, upload-time = "2026-10-05T19:23:13.417Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/f6/59f817df052a81e39bbc23cb10795cf721d14b36a4cf0d897bfe11648a22/holidays-0.106-py3-none-any.whl", hash = "sha256:4be3fb5be6a88a232e92f96825e4fab9b80710caabde90b7c476e57ba0ed9f5d", size = 1656690, upload-time = "2026-10-05T19:23:11.32Z" },
+]
+
+[[package]]
 name = "httpcore"
 version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
@@ -792,7 +804,9 @@ dependencies = [
     { name = "alembic" },
     { name = "cryptography" },
     { name = "fastapi" },
+    { name = "holidays" },
     { name = "httpx" },
+    { name = "icalendar" },
     { name = "pillow" },
     { name = "pillow-heif" },
     { name = "pydantic" },
@@ -801,12 +815,12 @@ dependencies = [
     { name = "structlog" },
     { name = "tzdata" },
     { name = "uvicorn" },
+    { name = "x-wr-timezone" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "hypothesis" },
-    { name = "icalendar" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -824,7 +838,9 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.20" },
     { name = "cryptography", specifier = ">=50" },
     { name = "fastapi", specifier = ">=0.142" },
+    { name = "holidays", specifier = ">=0.80" },
     { name = "httpx", specifier = ">=0.28" },
+    { name = "icalendar", specifier = ">=7" },
     { name = "pillow", specifier = ">=12.3" },
     { name = "pillow-heif", specifier = ">=1.8" },
     { name = "pydantic", specifier = ">=2.13" },
@@ -833,12 +849,12 @@ requires-dist = [
     { name = "structlog", specifier = ">=26.1" },
     { name = "tzdata", specifier = ">=2026.5" },
     { name = "uvicorn", specifier = ">=0.54" },
+    { name = "x-wr-timezone", specifier = ">=2" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "hypothesis", specifier = ">=6.168" },
-    { name = "icalendar", specifier = ">=7" },
     { name = "pyright", specifier = ">=1.1.414" },
     { name = "pytest", specifier = ">=9.1" },
     { name = "pytest-asyncio", specifier = ">=1.4" },

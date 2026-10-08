@@ -12,11 +12,13 @@ from sunroom.db.base import Base
 from sunroom.household import models as household_models
 from sunroom.photos import models as photos_models
 from sunroom.plugins import models as plugins_models
+from sunroom.plugins.calendar_sync import models as calendar_sync_models
 
 __all__ = [
     "Base",
     "auth_models",
     "calendar_models",
+    "calendar_sync_models",
     "household_models",
     "photos_models",
     "plugins_models",

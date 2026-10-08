@@ -78,9 +78,65 @@ def _v0_1_0() -> list[Statement]:
     ]
 
 
+KIDS = "00000000-0000-7000-8000-000000000401"  # the "Kids' activities" calendar
+SOCCER = "00000000-0000-7000-8000-000000000501"  # weekly, with one moved occurrence
+SOCCER_MOVED = "00000000-0000-7000-8000-000000000502"
+PAJAMAS = "00000000-0000-7000-8000-000000000503"  # all-day
+VET = "00000000-0000-7000-8000-000000000504"  # removed, in Recently removed
+
+
+def _v0_2_0() -> list[Statement]:
+    """0.2.0: 0.1.0's household plus a second calendar, a weekly event with a moved
+    occurrence, people and a reminder, an all-day event, a removed event and its revision."""
+    timed = (
+        "INSERT INTO events (id, calendar_id, parent_event_id, recurrence_id, title, description,"
+        " location, all_day, start_utc, end_utc, tzid, start_date, end_date, floating, rrule,"
+        " rdates_json, exdates_json, window_start_utc, window_end_utc, status, color, source,"
+        " remote_uid, remote_id, etag, remote_updated_at, remote_sequence, pending_push,"
+        " pending_delete, raw_ical, version, created_by_member_id, created_at, updated_at,"
+        " deleted_at) VALUES "
+    )
+    return [
+        *_v0_1_0(),
+        "INSERT INTO calendars (id, name, color, kind, owner_member_id, read_only,"
+        " visible_on_display, version, remote_ref, sort, created_at, updated_at, deleted_at)"
+        f" VALUES ('{KIDS}', 'Kids'' activities', 'iris', 'local', '{KID}', 0, 1, 3, NULL, 1,"
+        " '2026-10-08 12:00:00', '2026-10-08 12:00:00', NULL)",
+        timed + f"('{SOCCER}', '{KIDS}', NULL, NULL, 'Soccer practice', '', 'Field 3', 0,"
+        " '2026-09-29 20:00:00', '2026-09-29 21:00:00', 'America/New_York', NULL, NULL, 0,"
+        " 'FREQ=WEEKLY;BYDAY=TU,TH', '[]', '[\"2026-10-13T16:00:00\"]',"
+        " '2026-09-29 20:00:00', '9999-12-31 00:00:00', 'confirmed', NULL, 'local', NULL, NULL,"
+        f" NULL, NULL, NULL, 0, 0, NULL, 2, '{PARENT}', '2026-10-08 12:01:00',"
+        " '2026-10-08 12:05:00', NULL)",
+        timed
+        + f"('{SOCCER_MOVED}', '{KIDS}', '{SOCCER}', '2026-10-08T16:00:00', 'Soccer practice',"
+        " '', 'Field 3', 0, '2026-10-08 21:00:00', '2026-10-08 22:00:00', 'America/New_York',"
+        " NULL, NULL, 0, NULL, '[]', '[]', '2026-10-08 21:00:00', '2026-10-08 22:00:00',"
+        " 'confirmed', NULL, 'local', NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, 1,"
+        f" '{PARENT}', '2026-10-08 12:05:00', '2026-10-08 12:05:00', NULL)",
+        timed + f"('{PAJAMAS}', '{KIDS}', NULL, NULL, 'Pajama day', '', '', 1, NULL, NULL, NULL,"
+        " '2026-10-09', '2026-10-10', 0, NULL, '[]', '[]', '2026-10-09 00:00:00',"
+        " '2026-10-11 00:00:00', 'confirmed', 'rose', 'local', NULL, NULL, NULL, NULL, NULL, 0,"
+        f" 0, NULL, 1, '{PARENT}', '2026-10-08 12:02:00', '2026-10-08 12:02:00', NULL)",
+        timed + f"('{VET}', '{KIDS}', NULL, NULL, 'Vet', '', '', 0, '2026-10-07 13:00:00',"
+        " '2026-10-07 13:30:00', 'America/New_York', NULL, NULL, 0, NULL, '[]', '[]',"
+        " '2026-10-07 13:00:00', '2026-10-07 13:30:00', 'confirmed', NULL, 'local', NULL, NULL,"
+        f" NULL, NULL, NULL, 0, 0, NULL, 2, '{PARENT}', '2026-10-08 12:03:00',"
+        " '2026-10-08 12:04:00', '2026-10-08 12:04:00')",
+        "INSERT INTO event_members (event_id, member_id) VALUES "
+        f"('{SOCCER}', '{KID}'), ('{SOCCER_MOVED}', '{KID}'), ('{VET}', '{PARENT}')",
+        f"INSERT INTO event_reminders (event_id, minutes_before) VALUES ('{SOCCER}', 30)",
+        "INSERT INTO event_revisions (id, series_id, action, before_json, created_ids_json,"
+        " device_id, member_id, created_at, undone_at) VALUES"
+        f" ('00000000-0000-7000-8000-000000000601', '{VET}', 'delete', '[]', '[]',"
+        f" '{PHONE}', '{PARENT}', '2026-10-08 12:04:00', NULL)",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
+    "202610081454": _v0_2_0,
 }
 
 

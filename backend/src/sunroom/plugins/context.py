@@ -8,7 +8,7 @@ calendar, which also takes overlays), the SSRF-guarded HTTP client, encryption u
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -25,8 +25,10 @@ from sunroom.db.engine import WriteTx
 from sunroom.household.models import Member
 
 if TYPE_CHECKING:
+    from sunroom.calendar.models import Calendar
     from sunroom.calendar.occurrences import CalendarRuntime, OverlayProvider
     from sunroom.calendar.schemas import OccurrenceOut
+    from sunroom.calendar.synced import MergeResult, PendingSeries, SyncedSeries
     from sunroom.photos.store import PhotoStore
 
 Job = Callable[[], Awaitable[None]]
@@ -81,10 +83,14 @@ class CalendarView:
     color: str
     kind: str
     read_only: bool
+    owner_member_id: str | None = None
+    visible_on_display: bool = True
+    deleted: bool = False
 
 
 class CalendarFacade:
-    """Read the calendar, and add computed, read-only occurrences to it (PLAN §7.6)."""
+    """Read the calendar, add computed read-only occurrences to it (PLAN §7.6), and, for the
+    calendar_sync plugin, keep synced calendars and their events (PLAN §7.5)."""
 
     def __init__(
         self,
@@ -92,20 +98,169 @@ class CalendarFacade:
         sessions: Sessions,
         runtime: CalendarRuntime | None,
         zone_of: Callable[[], ZoneInfo],
+        now_of: Callable[[], datetime],
     ) -> None:
         self._plugin_id = plugin_id
         self._sessions = sessions
         self._runtime = runtime
         self._zone_of = zone_of
+        self._now_of = now_of
 
-    async def calendars(self) -> list[CalendarView]:
+    async def calendars(self, *, include_removed: bool = False) -> list[CalendarView]:
         from sunroom.calendar.service import list_calendars
 
         async with self._sessions.read() as session:
             return [
-                CalendarView(c.id, c.name, c.color, c.kind, c.read_only)
-                for c in await list_calendars(session)
+                _calendar_view(c)
+                for c in await list_calendars(session, include_deleted=include_removed)
             ]
+
+    # ---- synced calendars (calendar_sync) -----------------------------------------------------
+
+    async def create_synced_calendar(
+        self,
+        *,
+        name: str,
+        color: str,
+        owner_member_id: str | None,
+        read_only: bool,
+        visible_on_display: bool,
+        source_label: str,
+    ) -> CalendarView:
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.write() as tx:
+            calendar = await sync_merge.create_calendar(
+                tx,
+                name=name,
+                color=color,
+                owner_member_id=owner_member_id,
+                read_only=read_only,
+                visible_on_display=visible_on_display,
+                source_label=source_label,
+                now=self._now_of(),
+            )
+            return _calendar_view(calendar)
+
+    async def update_synced_calendar(
+        self,
+        calendar_id: str,
+        *,
+        name: str | None = None,
+        color: str | None = None,
+        owner_member_id: str | None = None,
+        clear_owner: bool = False,
+        read_only: bool | None = None,
+        visible_on_display: bool | None = None,
+        source_label: str | None = None,
+    ) -> CalendarView:
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.write() as tx:
+            calendar = await sync_merge.update_calendar(
+                tx,
+                calendar_id,
+                now=self._now_of(),
+                name=name,
+                color=color,
+                owner_member_id=owner_member_id,
+                clear_owner=clear_owner,
+                read_only=read_only,
+                visible_on_display=visible_on_display,
+                source_label=source_label,
+            )
+            return _calendar_view(calendar)
+
+    async def remove_synced_calendar(self, calendar_id: str) -> None:
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.write() as tx:
+            await sync_merge.remove_calendar(tx, calendar_id, self._now_of())
+
+    async def restore_synced_calendar(self, calendar_id: str) -> CalendarView:
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.write() as tx:
+            return _calendar_view(
+                await sync_merge.restore_calendar(tx, calendar_id, self._now_of())
+            )
+
+    async def known(self, calendar_id: str) -> dict[str, str | None]:
+        """Remote ids stored for a synced calendar, with their etags."""
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.read() as session:
+            return await sync_merge.known(session, calendar_id)
+
+    async def upsert_synced(
+        self,
+        calendar_id: str,
+        series: Sequence[SyncedSeries],
+        *,
+        removed: Sequence[str] = (),
+        complete: bool = False,
+        on_progress: Callable[[int, int], Awaitable[None]] | None = None,
+    ) -> MergeResult:
+        """Merge what a server sent, CHUNK series per write transaction so the write lock stays
+        short. ``removed``: remote ids gone from the server. ``complete``: ``series`` is the
+        whole calendar, so any other synced series in it is gone."""
+        from sunroom.calendar import sync_merge
+        from sunroom.calendar.synced import MergeResult
+
+        totals = MergeResult()
+        for start in range(0, len(series), sync_merge.CHUNK):
+            chunk = series[start : start + sync_merge.CHUNK]
+            async with self._sessions.write() as tx:
+                result = await sync_merge.merge_chunk(tx, calendar_id, chunk, self._now_of())
+            totals = _add(totals, result)
+            if on_progress is not None:
+                await on_progress(min(start + len(chunk), len(series)), len(series))
+        deleted = 0
+        if removed:
+            async with self._sessions.write() as tx:
+                deleted += await sync_merge.drop_removed(tx, calendar_id, removed, self._now_of())
+        if complete:
+            uids = {item.uid for item in series}
+            async with self._sessions.write() as tx:
+                deleted += await sync_merge.drop_missing(tx, calendar_id, uids, self._now_of())
+        return _add(totals, MergeResult(deleted=deleted))
+
+    async def pending(self, calendar_ids: Sequence[str]) -> list[PendingSeries]:
+        """Synced series with a person's change (or removal) waiting to be pushed."""
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.read() as session:
+            return await sync_merge.pending(session, calendar_ids)
+
+    async def mark_pushed(
+        self,
+        pending: PendingSeries,
+        *,
+        uid: str,
+        remote_id: str,
+        etag: str | None,
+        raw_ical: str | None = None,
+        overrides: dict[str, tuple[str | None, str | None]] | None = None,
+    ) -> None:
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.write() as tx:
+            await sync_merge.mark_pushed(
+                tx,
+                pending.event_id,
+                pending.version,
+                uid=uid,
+                remote_id=remote_id,
+                etag=etag,
+                raw_ical=raw_ical,
+                overrides=overrides,
+            )
+
+    async def mark_removed(self, pending: PendingSeries) -> None:
+        from sunroom.calendar import sync_merge
+
+        async with self._sessions.write() as tx:
+            await sync_merge.mark_removed(tx, pending.event_id)
 
     async def occurrences(self, start: date, end: date) -> list[OccurrenceOut]:
         from sunroom.calendar.occurrences import CalendarRuntime, occurrences
@@ -132,6 +287,32 @@ def _member_view(member: Member) -> MemberView:
     return MemberView(member.id, member.name, member.role, member.color, member.birthday)
 
 
+def _calendar_view(calendar: Calendar) -> CalendarView:
+    return CalendarView(
+        calendar.id,
+        calendar.name,
+        calendar.color,
+        calendar.kind,
+        calendar.read_only,
+        calendar.owner_member_id,
+        calendar.visible_on_display,
+        calendar.deleted_at is not None,
+    )
+
+
+def _add(a: MergeResult, b: MergeResult) -> MergeResult:
+    from sunroom.calendar.synced import MergeResult
+
+    return MergeResult(
+        created=a.created + b.created,
+        updated=a.updated + b.updated,
+        deleted=a.deleted + b.deleted,
+        kept_local=a.kept_local + b.kept_local,
+        unchanged=a.unchanged + b.unchanged,
+        refused=a.refused + b.refused,
+    )
+
+
 class PluginHttp:
     """GuardedHttp with this plugin's ``allow_private`` choice baked in."""
 
@@ -155,9 +336,26 @@ class PluginHttp:
         *,
         headers: Mapping[str, str] | None = None,
         content: bytes | None = None,
+        max_bytes: int | None = None,
+        follow_redirects: bool = True,
     ) -> FetchResult:
+        if max_bytes is None:
+            return await self._http.request(
+                method,
+                url,
+                allow_private=self._allow_private,
+                headers=headers,
+                content=content,
+                follow_redirects=follow_redirects,
+            )
         return await self._http.request(
-            method, url, allow_private=self._allow_private, headers=headers, content=content
+            method,
+            url,
+            allow_private=self._allow_private,
+            headers=headers,
+            content=content,
+            max_bytes=max_bytes,
+            follow_redirects=follow_redirects,
         )
 
 
@@ -177,8 +375,11 @@ class PluginContext:
         enabled_of: Callable[[str], bool],
         photos: PhotoStore | None = None,
         calendar: CalendarRuntime | None = None,
+        test_mode: bool = False,
     ) -> None:
         self.plugin_id = plugin_id
+        # The test server (SUNROOM_TEST_MODE): scripted stand-ins may replace real services.
+        self.test_mode = test_mode
         self._clock = clock
         self._zone_of = zone_of
         self._settings_of = settings_of
@@ -190,7 +391,7 @@ class PluginContext:
         self._enabled_of = enabled_of
         self.members = MembersFacade(sessions)
         self.photos = photos
-        self.calendar = CalendarFacade(plugin_id, sessions, calendar, zone_of)
+        self.calendar = CalendarFacade(plugin_id, sessions, calendar, zone_of, clock.now)
 
     def now(self) -> datetime:
         return self._clock.now()

@@ -1,5 +1,5 @@
 """The ICS fixtures and their goldens (PLAN §14.6, M1): every occurrence in 2026 as a New York
-household sees it, from our engine (through the test-only importer) and from
+household sees it, from our engine (read by the sync plugin's ``parse_calendar``) and from
 recurring-ical-events, the oracle.
 
 Rebuild the goldens from the oracle with
@@ -24,9 +24,10 @@ import pytest
 import recurring_ical_events
 from icalendar import Calendar, Event
 
-from sunroom.domain.recurrence import Occurrence, Window, expand
-from sunroom.domain.timeparts import from_local, to_local
-from tests.calendar import ical_import
+from sunroom.calendar.synced import SyncedSeries
+from sunroom.domain.recurrence import Occurrence, Override, Series, Window, expand
+from sunroom.domain.timeparts import from_local, rid_date, rid_timed, to_local
+from sunroom.plugins.calendar_sync.ical import parse_calendar
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures" / "ics"
 HOUSEHOLD = ZoneInfo("America/New_York")
@@ -66,22 +67,61 @@ def row_of(occurrence: Occurrence) -> Row:
     return Row(rid=occurrence.recurrence_id, all_day=timing.all_day, start=start, end=end)
 
 
+def read(name: str) -> list[SyncedSeries]:
+    parsed = parse_calendar((FIXTURES / f"{name}.ics").read_bytes(), HOUSEHOLD)
+    assert parsed.refused == []
+    return parsed.series
+
+
+def engine_series(item: SyncedSeries) -> tuple[Series, list[Override]]:
+    """A synced series as the recurrence engine's types, as the calendar stores it."""
+    master = item.master
+    assert master is not None
+    series = Series(
+        timing=master.timing,
+        tzid=master.tzid or "UTC",
+        rrule=item.rrule,
+        rdates=item.rdates,
+        exdates=frozenset(item.exdates),
+    )
+    overrides = [
+        Override(o.recurrence_id, None if o.event.cancelled else o.event.timing)
+        for o in item.overrides
+    ]
+    return series, overrides
+
+
 def ours(name: str) -> list[Row]:
     rows: list[Row] = []
-    for item in ical_import.load(FIXTURES / f"{name}.ics", HOUSEHOLD):
-        rows.extend(row_of(found) for found in expand(item.series, item.overrides, WINDOW))
+    for item in read(name):
+        series, overrides = engine_series(item)
+        rows.extend(row_of(found) for found in expand(series, overrides, WINDOW))
     return in_order(rows)
+
+
+def oracle_rid(value: date | datetime, zone: ZoneInfo | None) -> str:
+    """The oracle's RECURRENCE-ID as a recurrence id in the series' zone (None: all-day)."""
+    if not isinstance(value, datetime):
+        return rid_date(value)
+    if zone is None:
+        return rid_date(value.date())
+    if value.tzinfo is None:
+        return rid_timed(value)
+    return rid_timed(to_local(value.astimezone(UTC), zone))
 
 
 def oracle(name: str) -> list[Row]:
     calendar = Calendar.from_ical((FIXTURES / f"{name}.ics").read_bytes())
-    zones: dict[str, ZoneInfo] = {}
+    # Recurrence ids are labels in each series' zone, which the oracle can't name for a TZID
+    # such as "Eastern Standard Time"; the times it gives are its own.
+    zones: dict[str, ZoneInfo | None] = {}
+    for item in read(name):
+        assert item.master is not None
+        zones[item.uid] = ZoneInfo(item.master.tzid) if item.master.tzid else None
     repeating: set[str] = set()
     for event in calendar.events:
-        if event.RECURRENCE_ID is None:
-            zones[event.uid] = ical_import.zone_of(event.start, HOUSEHOLD)
-            if event.rrules or event.rdates:
-                repeating.add(event.uid)
+        if event.RECURRENCE_ID is None and (event.rrules or event.rdates):
+            repeating.add(event.uid)
     rows: list[Row] = []
     for event in recurring_ical_events.of(calendar).between(START, END):
         assert isinstance(event, Event)
@@ -90,7 +130,7 @@ def oracle(name: str) -> list[Row]:
         rid = None
         if event.uid in repeating:  # the oracle gives every occurrence a RECURRENCE-ID
             assert event.RECURRENCE_ID is not None
-            rid = ical_import.rid(event.RECURRENCE_ID, zones[event.uid])
+            rid = oracle_rid(event.RECURRENCE_ID, zones[event.uid])
         all_day = not isinstance(event.start, datetime)
         start, end = moment(event.start), moment(event.end)
         rows.append(Row(rid=rid, all_day=all_day, start=start, end=end))
@@ -106,8 +146,8 @@ def write_golden(name: str, rows: list[Row]) -> None:
     (FIXTURES / f"{name}.golden.json").write_text(f"[\n{lines}\n]\n")
 
 
-def test_there_are_twelve_fixtures() -> None:
-    assert len(NAMES) == 12
+def test_there_are_fourteen_fixtures() -> None:
+    assert len(NAMES) == 14
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -137,6 +177,8 @@ COUNTS = {
     "10-weekly-all-day": 26 + 20 - 1,
     "11-floating": 52 - 1 + 1,
     "12-rdates": 26 - 1 + 2 + 4,
+    "13-outlook-windows-tzid": 9 - 1,  # Tuesdays Oct 6 to Dec 1, Thanksgiving week out
+    "14-google-x-wr-timezone": 7 - 1 + 1,  # Wednesdays Oct 7 to Nov 18, one out; half term
 }
 
 
@@ -184,3 +226,17 @@ def test_the_goldens_agree_with_a_paper_calendar() -> None:
     assert {"rid": None, "all_day": True, "start": "2026-03-06", "end": "2026-03-09"} in spans
 
     assert wall_times(golden("11-floating")) == {"19:30", "09:00"}
+
+    # Outlook names New York "Eastern Standard Time": 3:45 stays 3:45 after Nov 1.
+    band = {row["rid"]: row["start"] for row in golden("13-outlook-windows-tzid")}
+    assert wall_times(golden("13-outlook-windows-tzid")) == {"15:45", "16:00"}
+    assert band["2026-10-20T15:45:00"] == "2026-10-20T19:45:00Z"
+    assert band["2026-11-03T15:45:00"] == "2026-11-03T20:45:00Z"
+    assert "2026-11-24T15:45:00" not in band
+
+    # Google writes UTC times and the calendar's zone: 6 PM in London on both sides of Oct 25.
+    call = {row["rid"]: row["start"] for row in golden("14-google-x-wr-timezone")}
+    assert call["2026-10-14T18:00:00"] == "2026-10-14T17:00:00Z"
+    assert call["2026-10-28T18:00:00"] == "2026-10-28T18:00:00Z"
+    assert call["2026-10-21T18:00:00"] == "2026-10-21T18:00:00Z"  # moved an hour later
+    assert "2026-11-04T18:00:00" not in call

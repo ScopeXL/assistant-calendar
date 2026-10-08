@@ -1,6 +1,234 @@
 {
   "components": {
     "schemas": {
+      "AccountOut": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "calendars": {
+            "items": {
+              "$ref": "#/components/schemas/RemoteCalendarOut"
+            },
+            "title": "Calendars",
+            "type": "array"
+          },
+          "helper_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Helper Email"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interval_min": {
+            "title": "Interval Min",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_error_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error At"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "last_sync_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync At"
+          },
+          "next_sync_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Sync At"
+          },
+          "owner_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Member Id"
+          },
+          "provider": {
+            "enum": [
+              "ics",
+              "caldav",
+              "google",
+              "holidays",
+              "fake"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "connected",
+              "needs_reconnect",
+              "error",
+              "paused"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncing": {
+            "title": "Syncing",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "label",
+          "status",
+          "address",
+          "owner_member_id",
+          "interval_min",
+          "read_only",
+          "syncing",
+          "last_sync_at",
+          "last_success_at",
+          "next_sync_at",
+          "last_error",
+          "last_error_at",
+          "calendars"
+        ],
+        "title": "AccountOut",
+        "type": "object"
+      },
+      "AccountPatch": {
+        "properties": {
+          "allow_private": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allow Private"
+          },
+          "interval_min": {
+            "anyOf": [
+              {
+                "maximum": 360.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Min"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "owner_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Member Id"
+          },
+          "paused": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paused"
+          }
+        },
+        "title": "AccountPatch",
+        "type": "object"
+      },
       "AllowEntryIn": {
         "properties": {
           "label": {
@@ -49,6 +277,19 @@
           "created_at"
         ],
         "title": "AllowEntryOut",
+        "type": "object"
+      },
+      "AuthorizeOut": {
+        "properties": {
+          "authorize_url": {
+            "title": "Authorize Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorize_url"
+        ],
+        "title": "AuthorizeOut",
         "type": "object"
       },
       "BackupFileOut": {
@@ -152,6 +393,53 @@
         "title": "BackupStatusOut",
         "type": "object"
       },
+      "CaldavIn": {
+        "properties": {
+          "allow_private": {
+            "default": false,
+            "title": "Allow Private",
+            "type": "boolean"
+          },
+          "app_password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "App Password",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "server_url": {
+            "default": "https://caldav.icloud.com",
+            "maxLength": 2000,
+            "minLength": 4,
+            "title": "Server Url",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "app_password"
+        ],
+        "title": "CaldavIn",
+        "type": "object"
+      },
       "CalendarCreate": {
         "properties": {
           "color": {
@@ -252,6 +540,17 @@
           "read_only": {
             "title": "Read Only",
             "type": "boolean"
+          },
+          "source_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Label"
           },
           "version": {
             "title": "Version",
@@ -996,6 +1295,11 @@
             ],
             "title": "Parent Event Id"
           },
+          "pending": {
+            "default": false,
+            "title": "Pending",
+            "type": "boolean"
+          },
           "read_only": {
             "title": "Read Only",
             "type": "boolean"
@@ -1350,6 +1654,150 @@
         "title": "EventUpdate",
         "type": "object"
       },
+      "FakeEvent": {
+        "description": "Test server only: an event on a scripted calendar server.",
+        "properties": {
+          "calendar": {
+            "title": "Calendar",
+            "type": "string"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrule"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tzid": {
+            "default": "America/New_York",
+            "title": "Tzid",
+            "type": "string"
+          },
+          "uid": {
+            "title": "Uid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "calendar",
+          "uid",
+          "title"
+        ],
+        "title": "FakeEvent",
+        "type": "object"
+      },
+      "FakeScript": {
+        "description": "Test server only: what a scripted server holds and does next.",
+        "properties": {
+          "calendars": {
+            "items": {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Calendars",
+            "type": "array"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/FakeEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "fail_next": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fail Next",
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Removed",
+            "type": "array"
+          }
+        },
+        "title": "FakeScript",
+        "type": "object"
+      },
       "FieldOut": {
         "properties": {
           "choice_labels": {
@@ -1482,6 +1930,38 @@
         "title": "FieldOut",
         "type": "object"
       },
+      "GoogleCalendarIn": {
+        "properties": {
+          "calendar_id": {
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Calendar Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "calendar_id"
+        ],
+        "title": "GoogleCalendarIn",
+        "type": "object"
+      },
+      "GoogleStartIn": {
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          }
+        },
+        "title": "GoogleStartIn",
+        "type": "object"
+      },
       "GrantOut": {
         "properties": {
           "expires_at": {
@@ -1520,6 +2000,166 @@
           "status"
         ],
         "title": "HealthOut",
+        "type": "object"
+      },
+      "HelperIn": {
+        "description": "Google's helper: the key file's text, uploaded once.",
+        "properties": {
+          "key_json": {
+            "maxLength": 65536,
+            "minLength": 2,
+            "title": "Key Json",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "required": [
+          "key_json"
+        ],
+        "title": "HelperIn",
+        "type": "object"
+      },
+      "HolidaysIn": {
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "country": {
+            "maxLength": 2,
+            "minLength": 2,
+            "title": "Country",
+            "type": "string"
+          },
+          "owner_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Member Id"
+          },
+          "subdivision": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subdivision"
+          }
+        },
+        "required": [
+          "country"
+        ],
+        "title": "HolidaysIn",
+        "type": "object"
+      },
+      "IcsIn": {
+        "properties": {
+          "allow_private": {
+            "default": false,
+            "title": "Allow Private",
+            "type": "boolean"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "interval_min": {
+            "default": 30,
+            "maximum": 360.0,
+            "minimum": 5.0,
+            "title": "Interval Min",
+            "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "owner_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Member Id"
+          },
+          "url": {
+            "maxLength": 2000,
+            "minLength": 4,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "IcsIn",
         "type": "object"
       },
       "JoinCodeOut": {
@@ -1814,6 +2454,71 @@
           "password"
         ],
         "title": "LoginIn",
+        "type": "object"
+      },
+      "MappingIn": {
+        "properties": {
+          "clear_owner": {
+            "default": false,
+            "title": "Clear Owner",
+            "type": "boolean"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "mapped": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapped"
+          },
+          "owner_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Member Id"
+          },
+          "visible_on_display": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visible On Display"
+          }
+        },
+        "title": "MappingIn",
         "type": "object"
       },
       "MemberChoice": {
@@ -2213,6 +2918,11 @@
             ],
             "title": "Overlay"
           },
+          "pending": {
+            "default": false,
+            "title": "Pending",
+            "type": "boolean"
+          },
           "read_only": {
             "title": "Read Only",
             "type": "boolean"
@@ -2528,6 +3238,27 @@
         "title": "PinVerifyIn",
         "type": "object"
       },
+      "Place": {
+        "properties": {
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "subdivisions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subdivisions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "country",
+          "subdivisions"
+        ],
+        "title": "Place",
+        "type": "object"
+      },
       "PluginInfo": {
         "properties": {
           "error": {
@@ -2643,6 +3374,166 @@
         "title": "PluginOut",
         "type": "object"
       },
+      "ReconnectIn": {
+        "description": "A new password (CalDAV) or address (a feed) for an account that needs reconnecting.",
+        "properties": {
+          "app_password": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "App Password"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "minLength": 4,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "title": "ReconnectIn",
+        "type": "object"
+      },
+      "RemoteCalendarOut": {
+        "properties": {
+          "calendar_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Id"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "clay",
+                  "olive",
+                  "moss",
+                  "sea",
+                  "sky",
+                  "iris",
+                  "berry",
+                  "rose"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "color_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color Hint"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
+          },
+          "mapped": {
+            "title": "Mapped",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_member_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Member Id"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "suggested_owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Owner Id"
+          },
+          "visible_on_display": {
+            "title": "Visible On Display",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color_hint",
+          "read_only",
+          "mapped",
+          "calendar_id",
+          "color",
+          "owner_member_id",
+          "visible_on_display",
+          "last_synced_at",
+          "last_error",
+          "suggested_owner_id"
+        ],
+        "title": "RemoteCalendarOut",
+        "type": "object"
+      },
       "RoomOut": {
         "properties": {
           "icon": {
@@ -2669,6 +3560,87 @@
           "order"
         ],
         "title": "RoomOut",
+        "type": "object"
+      },
+      "RunOut": {
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "deleted": {
+            "title": "Deleted",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "fetched": {
+            "title": "Fetched",
+            "type": "integer"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "pushed": {
+            "title": "Pushed",
+            "type": "integer"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "started_at",
+          "finished_at",
+          "outcome",
+          "fetched",
+          "created",
+          "updated",
+          "deleted",
+          "pushed",
+          "error",
+          "duration_ms"
+        ],
+        "title": "RunOut",
         "type": "object"
       },
       "SearchHit": {
@@ -4339,6 +5311,676 @@
         "summary": "Get Session",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/calendar-sync/_test/fake": {
+      "post": {
+        "operationId": "add_fake_api_calendar_sync__test_fake_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Add Fake",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/_test/fake/{account_id}": {
+      "put": {
+        "operationId": "script_fake_api_calendar_sync__test_fake__account_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FakeScript"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Script Fake Api Calendar Sync  Test Fake  Account Id  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Script Fake",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts": {
+      "get": {
+        "operationId": "accounts_api_calendar_sync_accounts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountOut"
+                  },
+                  "title": "Response Accounts Api Calendar Sync Accounts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Accounts",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/caldav": {
+      "post": {
+        "operationId": "add_caldav_api_calendar_sync_accounts_caldav_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaldavIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Caldav",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/google/service-account": {
+      "post": {
+        "operationId": "add_google_helper_api_calendar_sync_accounts_google_service_account_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelperIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Google Helper",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/google/start": {
+      "post": {
+        "operationId": "google_start_api_calendar_sync_accounts_google_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleStartIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Google Start",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/holidays": {
+      "post": {
+        "operationId": "add_holidays_api_calendar_sync_accounts_holidays_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HolidaysIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Holidays",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/ics": {
+      "post": {
+        "operationId": "add_ics_api_calendar_sync_accounts_ics_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IcsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Ics",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/{account_id}": {
+      "delete": {
+        "operationId": "disconnect_api_calendar_sync_accounts__account_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Disconnect",
+        "tags": [
+          "calendar_sync"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_account_api_calendar_sync_accounts__account_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Account",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/{account_id}/calendars/{row_id}": {
+      "put": {
+        "operationId": "map_calendar_api_calendar_sync_accounts__account_id__calendars__row_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "row_id",
+            "required": true,
+            "schema": {
+              "title": "Row Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MappingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Map Calendar",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/{account_id}/google/add-calendar": {
+      "post": {
+        "operationId": "add_google_calendar_api_calendar_sync_accounts__account_id__google_add_calendar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleCalendarIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Google Calendar",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/{account_id}/reconnect": {
+      "post": {
+        "operationId": "reconnect_api_calendar_sync_accounts__account_id__reconnect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconnectIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconnect",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/{account_id}/runs": {
+      "get": {
+        "operationId": "account_runs_api_calendar_sync_accounts__account_id__runs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RunOut"
+                  },
+                  "title": "Response Account Runs Api Calendar Sync Accounts  Account Id  Runs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Account Runs",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/accounts/{account_id}/sync": {
+      "post": {
+        "operationId": "sync_now_api_calendar_sync_accounts__account_id__sync_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sync Now",
+        "tags": [
+          "calendar_sync"
+        ]
+      }
+    },
+    "/api/calendar-sync/holidays/places": {
+      "get": {
+        "operationId": "holiday_places_api_calendar_sync_holidays_places_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Place"
+                  },
+                  "title": "Response Holiday Places Api Calendar Sync Holidays Places Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Holiday Places",
+        "tags": [
+          "calendar_sync"
         ]
       }
     },

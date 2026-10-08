@@ -16,7 +16,8 @@ async def test_the_export_lists_every_exported_table(parent: httpx.AsyncClient) 
     assert response.headers["cache-control"] == "no-store"
     body = response.json()
     assert body["format"] == "sunroom-export"
-    assert list(body["data"]) == list(CORE_EXPORT_TABLES)
+    # Core's tables, then each enabled plugin's (synced calendars' accounts, minus their secrets).
+    assert list(body["data"]) == [*CORE_EXPORT_TABLES, "sync_accounts", "remote_calendars"]
     assert [m["name"] for m in body["data"]["members"]] == ["Mia"]
     household = body["data"]["household"][0]
     assert household["name"] == "Sample Family"

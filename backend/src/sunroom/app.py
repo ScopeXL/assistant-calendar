@@ -173,6 +173,7 @@ def create_app(
                 enabled_of=lambda other: holder["state"].plugins.is_enabled(other),
                 photos=photos,
                 calendar=calendar_runtime,
+                test_mode=settings.sunroom_test_mode,
             )
 
         manager = PluginManager(

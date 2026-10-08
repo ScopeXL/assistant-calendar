@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sunroom.calendar.models import (
     Calendar,
+    CalendarKind,
     Event,
     EventMember,
     EventReminder,
@@ -86,6 +87,14 @@ def _out(
     timing = occurrence.timing
     start_local = to_local(timing.start_utc, zone) if timing.start_utc else None
     end_local = to_local(timing.end_utc, zone) if timing.end_utc else None
+    people = members.get(row.id, [])
+    color = row.color
+    if calendar.kind == CalendarKind.SYNC:
+        # A synced calendar's events are its person's (UX §5), in its color when it has none.
+        if not people and calendar.owner_member_id:
+            people = [calendar.owner_member_id]
+        if color is None and not calendar.owner_member_id:
+            color = calendar.color
     return OccurrenceOut(
         key=f"{master.id}|{occurrence.recurrence_id or ''}",
         event_id=master.id,
@@ -100,13 +109,14 @@ def _out(
         end_local=end_local,
         start_date=timing.start_date,
         end_date=timing.end_date,
-        member_ids=members.get(row.id, []),
-        color=row.color,  # pyright: ignore[reportArgumentType]
+        member_ids=people,
+        color=color,  # pyright: ignore[reportArgumentType]
         calendar_color=calendar.color,  # pyright: ignore[reportArgumentType]
         is_recurring=bool(master.rrule) or master.rdates_json not in ("", "[]"),
         is_override=occurrence.is_override,
         read_only=calendar.read_only,
         source=master.source,
+        pending=master.pending_push or master.pending_delete,
         status=row.status,
         overlay=None,
         reminders=reminders.get(row.id, []),

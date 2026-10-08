@@ -25,6 +25,7 @@ from sunroom.calendar.models import (
     EventMember,
     EventReminder,
     EventRevision,
+    EventSource,
     RevisionAction,
 )
 from sunroom.calendar.schemas import (
@@ -56,6 +57,7 @@ from sunroom.calendar.timing import (
 )
 from sunroom.core.errors import AppError
 from sunroom.db.engine import WriteTx
+from sunroom.db.types import new_id
 from sunroom.domain import recurrence
 from sunroom.domain.recurrence import RecurrenceError, Timing, Window
 from sunroom.domain.timeparts import day_bounds, parse_rid, to_local
@@ -118,6 +120,7 @@ def calendar_out(calendar: Calendar, default_id: str | None) -> CalendarOut:
             "version": calendar.version,
             "is_default": calendar.id == default_id,
             "deleted": calendar.deleted_at is not None,
+            "source_label": calendar.remote_ref if calendar.kind == CalendarKind.SYNC else None,
         }
     )
 
@@ -264,6 +267,7 @@ async def event_out(session: AsyncSession, event: Event) -> EventOut:
             "color": event.color,
             "status": event.status,
             "source": event.source,
+            "pending": event.pending_push or event.pending_delete,
             "read_only": bool(calendar and calendar.read_only),
             "version": event.version,
             "is_override": event.parent_event_id is not None,
@@ -311,10 +315,11 @@ async def _writable_calendar(session: AsyncSession, calendar_id: str) -> Calenda
     if calendar is None or calendar.deleted_at is not None:
         raise invalid("That calendar isn't here any more.", "calendar_id", code="unknown_calendar")
     if calendar.read_only:
+        source = calendar.remote_ref or "an account"
         raise AppError(
             409,
             "calendar_read_only",
-            "This calendar comes from an account and can't be changed here.",
+            f"This calendar comes from {source} and can't be changed here.",
         )
     return calendar
 
@@ -350,7 +355,7 @@ async def _overrides(session: AsyncSession, master_id: str) -> list[Event]:
     )
 
 
-async def _refresh_window(session: AsyncSession, master: Event) -> None:
+async def refresh_window(session: AsyncSession, master: Event) -> None:
     overrides = await _overrides(session, master.id)
     for row in overrides:
         row_start, row_end = recurrence.series_bounds(
@@ -362,7 +367,7 @@ async def _refresh_window(session: AsyncSession, master: Event) -> None:
     )
 
 
-async def _bump(tx: WriteTx, calendar_ids: set[str], event_ids: list[str]) -> None:
+async def bump(tx: WriteTx, calendar_ids: set[str], event_ids: list[str]) -> None:
     for calendar_id in calendar_ids:
         await tx.session.execute(
             update(Calendar).where(Calendar.id == calendar_id).values(version=Calendar.version + 1)
@@ -394,8 +399,32 @@ async def _revision(
         created_at=ctx.now,
     )
     tx.session.add(revision)
+    ids: list[str] = [series_id, *(created or [])]
+    for event_id in dict.fromkeys(ids):
+        await _mark_for_push(tx.session, event_id)
     await tx.session.flush()
     return revision.id
+
+
+def new_uid() -> str:
+    """A UID for a series Sunroom creates on a server."""
+    return f"{new_id()}@sunroom"
+
+
+async def _mark_for_push(session: AsyncSession, event_id: str) -> None:
+    """A synced series a person changed waits to be pushed (PLAN §8.2); one removed waits to be
+    removed from the server, unless it never got there."""
+    master = await session.get(Event, event_id)
+    if master is None or master.source != EventSource.SYNC or master.parent_event_id is not None:
+        return
+    if master.deleted_at is not None:
+        master.pending_push = False
+        master.pending_delete = master.remote_id is not None
+        return
+    master.pending_delete = False
+    master.pending_push = True
+    if not master.remote_uid:
+        master.remote_uid = new_uid()
 
 
 def _first_of_series(series: recurrence.Series, rid: str) -> bool:
@@ -469,6 +498,7 @@ async def create_event(tx: WriteTx, body: EventCreate, ctx: Context) -> ChangeOu
     timing, tzid = resolve_timing(None, None, body, ctx.zone_key)
     rrule = checked_rule(body.rrule, timing, tzid) if body.rrule else None
     members = _check_members(body.member_ids, ctx) or []
+    synced = calendar.kind == CalendarKind.SYNC
     event = Event(
         calendar_id=calendar.id,
         title=body.title,
@@ -476,6 +506,8 @@ async def create_event(tx: WriteTx, body: EventCreate, ctx: Context) -> ChangeOu
         location=body.location or "",
         rrule=rrule,
         color=body.color,
+        source=EventSource.SYNC if synced else EventSource.LOCAL,
+        remote_uid=new_uid() if synced else None,
         created_by_member_id=ctx.actor.member_id,
         created_at=ctx.now,
         updated_at=ctx.now,
@@ -486,9 +518,9 @@ async def create_event(tx: WriteTx, body: EventCreate, ctx: Context) -> ChangeOu
     tx.session.add(event)
     await tx.session.flush()
     await _set_people(tx.session, event.id, members, body.reminders or [])
-    await _refresh_window(tx.session, event)
+    await refresh_window(tx.session, event)
     revision_id = await _revision(tx, ctx, event.id, RevisionAction.CREATE, "[]", [event.id])
-    await _bump(tx, {calendar.id}, [event.id])
+    await bump(tx, {calendar.id}, [event.id])
     return ChangeOut(event=await event_out(tx.session, event), revision_id=revision_id)
 
 
@@ -507,8 +539,16 @@ async def update_series(
         )
     calendar = await _writable_calendar(tx.session, master.calendar_id)
     calendars = {calendar.id}
+    to_calendar: Calendar | None = None
     if body.calendar_id is not None and body.calendar_id != master.calendar_id:
-        calendars.add((await _writable_calendar(tx.session, body.calendar_id)).id)
+        if master.source == EventSource.SYNC:
+            raise AppError(
+                409,
+                "synced_stays",
+                "An event from an account stays in its calendar. Copy it instead.",
+            )
+        to_calendar = await _writable_calendar(tx.session, body.calendar_id)
+        calendars.add(to_calendar.id)
     before = await revisions.snapshot(tx.session, [master.id])
     old_timing, old_tzid = timing_of(master), master.tzid
     timing, tzid = resolve_timing(old_timing, old_tzid, body, ctx.zone_key)
@@ -542,19 +582,22 @@ async def update_series(
         master.rdates_json = "[]"
 
     _apply_text(master, body, clear_color=body.clear_color)
-    if body.calendar_id is not None:
-        master.calendar_id = body.calendar_id
+    if to_calendar is not None:
+        master.calendar_id = to_calendar.id
         for row in overrides:
-            row.calendar_id = body.calendar_id
+            row.calendar_id = to_calendar.id
+        if to_calendar.kind == CalendarKind.SYNC:
+            master.source = EventSource.SYNC
+            master.remote_uid = new_uid()
     set_timing(master, timing, tzid)
     master.rrule = rrule
     master.version += 1
     master.updated_at = ctx.now
     await _set_people(tx.session, master.id, members, body.reminders)
     await tx.session.flush()
-    await _refresh_window(tx.session, master)
+    await refresh_window(tx.session, master)
     revision_id = await _revision(tx, ctx, master.id, action, before)
-    await _bump(tx, calendars, [master.id])
+    await bump(tx, calendars, [master.id])
     return ChangeOut(
         event=await event_out(tx.session, master),
         revision_id=revision_id,
@@ -626,9 +669,9 @@ async def update_occurrence(
         master.version += 1
         master.updated_at = ctx.now
         await tx.session.flush()
-        await _refresh_window(tx.session, master)
+        await refresh_window(tx.session, master)
         revision_id = await _revision(tx, ctx, master.id, action, before)
-        await _bump(tx, {calendar.id}, [master.id])
+        await bump(tx, {calendar.id}, [master.id])
         return ChangeOut(event=await event_out(tx.session, master), revision_id=revision_id)
 
     # "This and the ones after": the series ends before this occurrence; a new one starts here.
@@ -701,10 +744,10 @@ async def update_occurrence(
         body.reminders if body.reminders is not None else master_reminders,
     )
     await tx.session.flush()
-    await _refresh_window(tx.session, master)
-    await _refresh_window(tx.session, sibling)
+    await refresh_window(tx.session, master)
+    await refresh_window(tx.session, sibling)
     revision_id = await _revision(tx, ctx, master.id, action, before, [sibling.id])
-    await _bump(tx, {calendar.id, sibling.calendar_id}, [master.id, sibling.id])
+    await bump(tx, {calendar.id, sibling.calendar_id}, [master.id, sibling.id])
     return ChangeOut(
         event=await event_out(tx.session, sibling),
         revision_id=revision_id,
@@ -725,12 +768,12 @@ async def remove_series(tx: WriteTx, master: Event, ctx: Context) -> ChangeOut:
     await _writable_calendar(tx.session, master.calendar_id)
     before = await revisions.snapshot(tx.session, [master.id])
     master.deleted_at = ctx.now
-    master.pending_delete = master.source != "local"
+    master.updated_at = ctx.now  # a removal is a change, newer than the server's copy
     for row in await _overrides(tx.session, master.id):
         row.deleted_at = ctx.now
     master.version += 1
     revision_id = await _revision(tx, ctx, master.id, RevisionAction.DELETE, before)
-    await _bump(tx, {master.calendar_id}, [master.id])
+    await bump(tx, {master.calendar_id}, [master.id])
     return ChangeOut(event=None, revision_id=revision_id)
 
 
@@ -775,9 +818,9 @@ async def remove_occurrence(
     master.version += 1
     master.updated_at = ctx.now
     await tx.session.flush()
-    await _refresh_window(tx.session, master)
+    await refresh_window(tx.session, master)
     revision_id = await _revision(tx, ctx, master.id, RevisionAction.DELETE, before)
-    await _bump(tx, {master.calendar_id}, [master.id])
+    await bump(tx, {master.calendar_id}, [master.id])
     return ChangeOut(
         event=await event_out(tx.session, master),
         revision_id=revision_id,
@@ -880,8 +923,17 @@ async def undo(tx: WriteTx, series_id: str, revision_id: str | None, ctx: Contex
     created = [str(event_id) for event_id in json.loads(newest.created_ids_json)]
     for event_id in created:
         row = await tx.session.get(Event, event_id)
-        if row is not None:
-            calendars.add(row.calendar_id)
+        if row is None:
+            continue
+        calendars.add(row.calendar_id)
+        if row.source == EventSource.SYNC and row.remote_id is not None:
+            # Already on the server: remove it there too, then it goes for good.
+            row.deleted_at = ctx.now
+            row.updated_at = ctx.now
+            for override in await _overrides(tx.session, event_id):
+                override.deleted_at = ctx.now
+            await _mark_for_push(tx.session, event_id)
+        else:
             await revisions.remove_series(tx.session, event_id)
     calendars.update(await revisions.restore(tx.session, newest.before_json))
     newest.undone_at = ctx.now
@@ -889,7 +941,8 @@ async def undo(tx: WriteTx, series_id: str, revision_id: str | None, ctx: Contex
     if restored is not None:
         restored.version += 1
     await tx.session.flush()
-    await _bump(tx, calendars, [series_id, *created])
+    await _mark_for_push(tx.session, series_id)
+    await bump(tx, calendars, [series_id, *created])
     event = (
         await event_out(tx.session, restored)
         if restored is not None and restored.deleted_at is None
@@ -907,7 +960,11 @@ async def restore_event(tx: WriteTx, event_id: str, ctx: Context) -> ChangeOut:
     before = await revisions.snapshot(tx.session, [master.id])
     removed_at = master.deleted_at
     master.deleted_at = None
-    master.pending_delete = False
+    if master.source == EventSource.SYNC and master.remote_id is None:
+        # Already removed from the server: it goes back as a new series there.
+        master.remote_uid = new_uid()
+        master.etag = None
+        master.raw_ical = None
     for row in (
         await tx.session.scalars(
             select(Event).where(Event.parent_event_id == master.id, Event.deleted_at == removed_at)
@@ -917,9 +974,9 @@ async def restore_event(tx: WriteTx, event_id: str, ctx: Context) -> ChangeOut:
     master.version += 1
     master.updated_at = ctx.now
     await tx.session.flush()
-    await _refresh_window(tx.session, master)
+    await refresh_window(tx.session, master)
     revision_id = await _revision(tx, ctx, master.id, RevisionAction.RESTORE, before)
-    await _bump(tx, {master.calendar_id}, [master.id])
+    await bump(tx, {master.calendar_id}, [master.id])
     return ChangeOut(event=await event_out(tx.session, master), revision_id=revision_id)
 
 

@@ -31,6 +31,7 @@ class CalendarOut(BaseModel):
     version: int
     is_default: bool
     deleted: bool
+    source_label: str | None = None  # a synced calendar's account: "iCloud", "Google", …
 
 
 class CalendarCreate(BaseModel):
@@ -113,6 +114,7 @@ class EventOut(BaseModel):
     color: PersonColor | None
     status: str
     source: str
+    pending: bool = False  # a change waiting to reach its account ("Not synced yet")
     read_only: bool
     version: int
     is_override: bool
@@ -154,6 +156,7 @@ class OccurrenceOut(BaseModel):
     is_override: bool
     read_only: bool
     source: str
+    pending: bool = False  # a change waiting to reach its account ("Not synced yet")
     status: str
     overlay: str | None
     reminders: list[int]

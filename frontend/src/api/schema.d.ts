@@ -394,6 +394,262 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/calendar-sync/_test/fake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Fake */
+        post: operations["add_fake_api_calendar_sync__test_fake_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/_test/fake/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Script Fake */
+        put: operations["script_fake_api_calendar_sync__test_fake__account_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Accounts */
+        get: operations["accounts_api_calendar_sync_accounts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/caldav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Caldav */
+        post: operations["add_caldav_api_calendar_sync_accounts_caldav_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/google/service-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Google Helper */
+        post: operations["add_google_helper_api_calendar_sync_accounts_google_service_account_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/google/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Google Start */
+        post: operations["google_start_api_calendar_sync_accounts_google_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/holidays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Holidays */
+        post: operations["add_holidays_api_calendar_sync_accounts_holidays_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Ics */
+        post: operations["add_ics_api_calendar_sync_accounts_ics_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Disconnect */
+        delete: operations["disconnect_api_calendar_sync_accounts__account_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Account */
+        patch: operations["patch_account_api_calendar_sync_accounts__account_id__patch"];
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/{account_id}/calendars/{row_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Map Calendar */
+        put: operations["map_calendar_api_calendar_sync_accounts__account_id__calendars__row_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/{account_id}/google/add-calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Google Calendar */
+        post: operations["add_google_calendar_api_calendar_sync_accounts__account_id__google_add_calendar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/{account_id}/reconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reconnect */
+        post: operations["reconnect_api_calendar_sync_accounts__account_id__reconnect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/{account_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Account Runs */
+        get: operations["account_runs_api_calendar_sync_accounts__account_id__runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/accounts/{account_id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sync Now */
+        post: operations["sync_now_api_calendar_sync_accounts__account_id__sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar-sync/holidays/places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Holiday Places */
+        get: operations["holiday_places_api_calendar_sync_holidays_places_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/calendar/calendars": {
         parameters: {
             query?: never;
@@ -1062,6 +1318,60 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AccountOut */
+        AccountOut: {
+            /** Address */
+            address: string | null;
+            /** Calendars */
+            calendars: components["schemas"]["RemoteCalendarOut"][];
+            /** Helper Email */
+            helper_email?: string | null;
+            /** Id */
+            id: string;
+            /** Interval Min */
+            interval_min: number;
+            /** Label */
+            label: string;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Error At */
+            last_error_at: string | null;
+            /** Last Success At */
+            last_success_at: string | null;
+            /** Last Sync At */
+            last_sync_at: string | null;
+            /** Next Sync At */
+            next_sync_at: string | null;
+            /** Owner Member Id */
+            owner_member_id: string | null;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "ics" | "caldav" | "google" | "holidays" | "fake";
+            /** Read Only */
+            read_only: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "connected" | "needs_reconnect" | "error" | "paused";
+            /** Syncing */
+            syncing: boolean;
+        };
+        /** AccountPatch */
+        AccountPatch: {
+            /** Allow Private */
+            allow_private?: boolean | null;
+            /** Interval Min */
+            interval_min?: number | null;
+            /** Label */
+            label?: string | null;
+            /** Owner Member Id */
+            owner_member_id?: string | null;
+            /** Paused */
+            paused?: boolean | null;
+        };
         /** AllowEntryIn */
         AllowEntryIn: {
             /**
@@ -1085,6 +1395,11 @@ export interface components {
             label: string;
             /** Target */
             target: string;
+        };
+        /** AuthorizeOut */
+        AuthorizeOut: {
+            /** Authorize Url */
+            authorize_url: string;
         };
         /** BackupFileOut */
         BackupFileOut: {
@@ -1118,6 +1433,25 @@ export interface components {
             schedule: string;
             /** Stale */
             stale: boolean;
+        };
+        /** CaldavIn */
+        CaldavIn: {
+            /**
+             * Allow Private
+             * @default false
+             */
+            allow_private: boolean;
+            /** App Password */
+            app_password: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Server Url
+             * @default https://caldav.icloud.com
+             */
+            server_url: string;
+            /** Username */
+            username: string;
         };
         /** CalendarCreate */
         CalendarCreate: {
@@ -1161,6 +1495,8 @@ export interface components {
             owner_member_id: string | null;
             /** Read Only */
             read_only: boolean;
+            /** Source Label */
+            source_label?: string | null;
             /** Version */
             version: number;
             /** Visible On Display */
@@ -1358,6 +1694,11 @@ export interface components {
             member_ids: string[];
             /** Parent Event Id */
             parent_event_id: string | null;
+            /**
+             * Pending
+             * @default false
+             */
+            pending: boolean;
             /** Read Only */
             read_only: boolean;
             /** Recurrence Id */
@@ -1441,6 +1782,54 @@ export interface components {
             /** Tzid */
             tzid?: string | null;
         };
+        /**
+         * FakeEvent
+         * @description Test server only: an event on a scripted calendar server.
+         */
+        FakeEvent: {
+            /** Calendar */
+            calendar: string;
+            /** End */
+            end?: string | null;
+            /** End Date */
+            end_date?: string | null;
+            /** Rrule */
+            rrule?: string | null;
+            /** Start */
+            start?: string | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Title */
+            title: string;
+            /**
+             * Tzid
+             * @default America/New_York
+             */
+            tzid: string;
+            /** Uid */
+            uid: string;
+        };
+        /**
+         * FakeScript
+         * @description Test server only: what a scripted server holds and does next.
+         */
+        FakeScript: {
+            /** Calendars */
+            calendars?: [
+                string,
+                string,
+                boolean
+            ][];
+            /** Events */
+            events?: components["schemas"]["FakeEvent"][];
+            /** Fail Next */
+            fail_next?: string[];
+            /** Removed */
+            removed?: [
+                string,
+                string
+            ][];
+        };
         /** FieldOut */
         FieldOut: {
             /** Choice Labels */
@@ -1472,6 +1861,16 @@ export interface components {
             /** Unit */
             unit: string | null;
         };
+        /** GoogleCalendarIn */
+        GoogleCalendarIn: {
+            /** Calendar Id */
+            calendar_id: string;
+        };
+        /** GoogleStartIn */
+        GoogleStartIn: {
+            /** Account Id */
+            account_id?: string | null;
+        };
         /** GrantOut */
         GrantOut: {
             /**
@@ -1489,6 +1888,48 @@ export interface components {
         HealthOut: {
             /** Status */
             status: string;
+        };
+        /**
+         * HelperIn
+         * @description Google's helper: the key file's text, uploaded once.
+         */
+        HelperIn: {
+            /** Key Json */
+            key_json: string;
+            /** Label */
+            label?: string | null;
+        };
+        /** HolidaysIn */
+        HolidaysIn: {
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Country */
+            country: string;
+            /** Owner Member Id */
+            owner_member_id?: string | null;
+            /** Subdivision */
+            subdivision?: string | null;
+        };
+        /** IcsIn */
+        IcsIn: {
+            /**
+             * Allow Private
+             * @default false
+             */
+            allow_private: boolean;
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /**
+             * Interval Min
+             * @default 30
+             */
+            interval_min: number;
+            /** Label */
+            label?: string | null;
+            /** Owner Member Id */
+            owner_member_id?: string | null;
+            /** Url */
+            url: string;
         };
         /** JoinCodeOut */
         JoinCodeOut: {
@@ -1613,6 +2054,22 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MappingIn */
+        MappingIn: {
+            /**
+             * Clear Owner
+             * @default false
+             */
+            clear_owner: boolean;
+            /** Color */
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Mapped */
+            mapped?: boolean | null;
+            /** Owner Member Id */
+            owner_member_id?: string | null;
+            /** Visible On Display */
+            visible_on_display?: boolean | null;
+        };
         /** MemberChoice */
         MemberChoice: {
             /** Member Id */
@@ -1718,6 +2175,11 @@ export interface components {
             member_ids: string[];
             /** Overlay */
             overlay: string | null;
+            /**
+             * Pending
+             * @default false
+             */
+            pending: boolean;
             /** Read Only */
             read_only: boolean;
             /** Recurrence Id */
@@ -1819,6 +2281,13 @@ export interface components {
             /** Pin */
             pin: string;
         };
+        /** Place */
+        Place: {
+            /** Country */
+            country: string;
+            /** Subdivisions */
+            subdivisions: string[];
+        };
         /** PluginInfo */
         PluginInfo: {
             /** Error */
@@ -1859,6 +2328,43 @@ export interface components {
             /** Version */
             version: string;
         };
+        /**
+         * ReconnectIn
+         * @description A new password (CalDAV) or address (a feed) for an account that needs reconnecting.
+         */
+        ReconnectIn: {
+            /** App Password */
+            app_password?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /** RemoteCalendarOut */
+        RemoteCalendarOut: {
+            /** Calendar Id */
+            calendar_id: string | null;
+            /** Color */
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            /** Color Hint */
+            color_hint: string | null;
+            /** Id */
+            id: string;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Synced At */
+            last_synced_at: string | null;
+            /** Mapped */
+            mapped: boolean;
+            /** Name */
+            name: string;
+            /** Owner Member Id */
+            owner_member_id: string | null;
+            /** Read Only */
+            read_only: boolean;
+            /** Suggested Owner Id */
+            suggested_owner_id: string | null;
+            /** Visible On Display */
+            visible_on_display: boolean;
+        };
         /** RoomOut */
         RoomOut: {
             /** Icon */
@@ -1869,6 +2375,32 @@ export interface components {
             order: number;
             /** Title */
             title: string;
+        };
+        /** RunOut */
+        RunOut: {
+            /** Created */
+            created: number;
+            /** Deleted */
+            deleted: number;
+            /** Duration Ms */
+            duration_ms: number | null;
+            /** Error */
+            error: string | null;
+            /** Fetched */
+            fetched: number;
+            /** Finished At */
+            finished_at: string | null;
+            /** Outcome */
+            outcome: string;
+            /** Pushed */
+            pushed: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Updated */
+            updated: number;
         };
         /** SearchHit */
         SearchHit: {
@@ -2758,6 +3290,500 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+        };
+    };
+    add_fake_api_calendar_sync__test_fake_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+        };
+    };
+    script_fake_api_calendar_sync__test_fake__account_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FakeScript"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_api_calendar_sync_accounts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"][];
+                };
+            };
+        };
+    };
+    add_caldav_api_calendar_sync_accounts_caldav_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaldavIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_google_helper_api_calendar_sync_accounts_google_service_account_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HelperIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_start_api_calendar_sync_accounts_google_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleStartIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorizeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_holidays_api_calendar_sync_accounts_holidays_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HolidaysIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_ics_api_calendar_sync_accounts_ics_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IcsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disconnect_api_calendar_sync_accounts__account_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_account_api_calendar_sync_accounts__account_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    map_calendar_api_calendar_sync_accounts__account_id__calendars__row_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+                row_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MappingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_google_calendar_api_calendar_sync_accounts__account_id__google_add_calendar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleCalendarIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconnect_api_calendar_sync_accounts__account_id__reconnect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReconnectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    account_runs_api_calendar_sync_accounts__account_id__runs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_now_api_calendar_sync_accounts__account_id__sync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    holiday_places_api_calendar_sync_holidays_places_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Place"][];
                 };
             };
         };

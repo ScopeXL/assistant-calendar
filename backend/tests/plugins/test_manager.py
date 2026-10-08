@@ -48,8 +48,9 @@ async def home(plugin_app: FastAPI) -> AsyncIterator[httpx.AsyncClient]:
         yield client
 
 
-async def test_the_real_registry_is_empty_in_m0(parent: httpx.AsyncClient) -> None:
-    assert (await parent.get("/api/plugins")).json() == []
+async def test_the_real_registry_has_synced_calendars_on(parent: httpx.AsyncClient) -> None:
+    listed = (await parent.get("/api/plugins")).json()
+    assert [(p["id"], p["enabled"]) for p in listed] == [("calendar_sync", True)]
 
 
 async def test_plugins_start_off_and_describe_themselves(home: httpx.AsyncClient) -> None:

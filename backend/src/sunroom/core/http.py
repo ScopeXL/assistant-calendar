@@ -4,8 +4,9 @@ constructs ``httpx.AsyncClient(``.
 Every request goes through core/netguard first. The connection is then pinned to an address the
 guard checked: the URL's host is swapped for that IP, while the ``Host`` header and the TLS
 server name (httpcore's ``sni_hostname``) keep the real name, so certificates still verify.
-Redirects are followed by hand, at most three, and each hop is checked again. Bodies are capped;
-a response bigger than its cap is refused rather than truncated.
+Redirects are followed by hand, at most three, and each hop is checked again; credentials
+(``Authorization``, cookies) never follow a redirect to another server. Bodies are capped; a
+response bigger than its cap is refused rather than truncated.
 
 A fresh client per request, on purpose: connections pinned by IP must never be pooled across
 host names (two sites on one address would share a TLS session with the wrong name).
@@ -16,7 +17,7 @@ from __future__ import annotations
 import ipaddress
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from urllib.parse import urljoin, urlunsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import httpx
 
@@ -30,6 +31,7 @@ DEFAULT_MAX_BYTES = 20 * 1024 * 1024
 REDIRECT_CODES = frozenset({301, 302, 303, 307, 308})
 
 TransportFactory = Callable[[], httpx.AsyncBaseTransport]
+CREDENTIAL_HEADERS = frozenset({"authorization", "proxy-authorization", "cookie"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +65,16 @@ def _pinned_url(target: Target) -> str:
     return urlunsplit((parts.scheme, netloc, parts.path or "/", parts.query, ""))
 
 
+def _origin(url: str) -> tuple[str, str, int]:
+    parts = urlsplit(url)
+    scheme = parts.scheme.lower()
+    try:
+        port = parts.port
+    except ValueError:
+        port = None
+    return scheme, (parts.hostname or "").lower(), port or (443 if scheme == "https" else 80)
+
+
 def _host_header(target: Target) -> str:
     default = 443 if target.url.scheme == "https" else 80
     host = f"[{target.host}]" if ":" in target.host else target.host
@@ -89,12 +101,17 @@ class GuardedHttp:
         follow_redirects: bool = True,
     ) -> FetchResult:
         current = url
+        origin = _origin(url)
+        send: dict[str, str] = dict(headers) if headers else {}
         for _hop in range(MAX_REDIRECTS + 1):
             target = await self._guard.check(current, allow_private=allow_private)
-            response = await self._send(method, target, headers, content, max_bytes)
+            response = await self._send(method, target, send, content, max_bytes)
             location = response.headers.get("location")
             if follow_redirects and response.status in REDIRECT_CODES and location:
                 current = urljoin(current, location)
+                if _origin(current) != origin:
+                    # A password or cookie meant for one server never goes to another.
+                    send = {k: v for k, v in send.items() if k.lower() not in CREDENTIAL_HEADERS}
                 if response.status == 303 or (
                     response.status in {301, 302} and method.upper() == "POST"
                 ):

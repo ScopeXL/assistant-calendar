@@ -1,4 +1,4 @@
-"""Plugins that exist only in tests, to exercise the framework while the registry is empty."""
+"""Plugins that exist only in tests, to exercise the framework apart from the real ones."""
 
 from __future__ import annotations
 

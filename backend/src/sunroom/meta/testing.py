@@ -24,6 +24,7 @@ from sunroom.calendar.models import Calendar, Event, EventMember, EventReminder,
 from sunroom.calendar.schemas import CalendarCreate, EventCreate
 from sunroom.core.clock import ShiftableClock
 from sunroom.core.errors import AppError
+from sunroom.db.models import Base
 from sunroom.domain.timeparts import to_local
 from sunroom.household import service as household_service
 from sunroom.household.models import AppMeta, Household, KioskPanel, Member, NetworkAllowEntry
@@ -52,6 +53,11 @@ router = APIRouter(
 async def reset(state: StateDep) -> None:
     """Back to a server that has never been set up."""
     async with state.db.write() as tx:
+        # Every plugin's tables first, children before parents (they point at core rows).
+        owned = {t for plugin in state.plugins.registry.values() for t in plugin.manifest.tables}
+        for table in reversed(Base.metadata.sorted_tables):
+            if table.name in owned:
+                await tx.session.execute(table.delete())
         for model in (EventMember, EventReminder, EventRevision):
             await tx.session.execute(delete(model))
         await tx.session.execute(update(Event).values(parent_event_id=None))

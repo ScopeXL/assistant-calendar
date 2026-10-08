@@ -16,6 +16,7 @@ from sunroom.core.netguard import NetGuard, OutboundError
 
 DNS = {
     "calendar.example.com": ["93.184.216.34"],
+    "elsewhere.example.org": ["93.184.216.36"],
     "router.lan": ["192.168.1.1"],
     "nas.lan": ["192.168.1.20"],
     "sneaky.example.com": ["93.184.216.35", "10.0.0.5"],  # one public, one private answer
@@ -133,6 +134,30 @@ async def test_each_redirect_is_checked_again() -> None:
     with pytest.raises(OutboundError) as caught:
         await http.get("https://calendar.example.com/feed.ics")
     assert caught.value.code == "private_address"
+
+
+async def test_credentials_never_follow_a_redirect_to_another_server() -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path == "/start":
+            return httpx.Response(301, headers={"location": "/moved"})
+        if path == "/moved":
+            return httpx.Response(302, headers={"location": "https://elsewhere.example.org/x"})
+        return httpx.Response(200, text="ok")
+
+    seen, transport = recording(respond)
+    http = GuardedHttp(guard(), transport_factory=transport)
+    secret = {"Authorization": "Basic c2FtcGxlOnNhbXBsZQ==", "Cookie": "a=b"}
+    result = await http.get("https://calendar.example.com/start", headers=secret)
+    assert result.ok
+    assert [r.headers["host"] for r in seen] == [
+        "calendar.example.com",
+        "calendar.example.com",
+        "elsewhere.example.org",
+    ]
+    # The same server keeps them; another server never sees them.
+    assert "authorization" in seen[1].headers and "cookie" in seen[1].headers
+    assert "authorization" not in seen[2].headers and "cookie" not in seen[2].headers
 
 
 async def test_redirect_loops_stop() -> None:

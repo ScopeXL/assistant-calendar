@@ -124,6 +124,35 @@ screenshots: build
     cd frontend && SCREENSHOTS=1 pnpm exec playwright test screenshots
     @echo "Review every image in .screenshots/ against docs/UX.md §10 before calling UI work done."
 
+# The real CalDAV client against a throwaway Radicale container, with the ICS fixtures (opt-in)
+smoke-caldav:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    NAME="sunroom-caldav-smoke"
+    PORT=15232
+    cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
+    trap cleanup EXIT
+    cleanup
+    # A random password for a container that lives a minute. It travels by environment only.
+    CALDAV_SMOKE_PASSWORD="$(openssl rand -hex 16)"
+    export CALDAV_SMOKE_PASSWORD
+    docker run -d --name "$NAME" -p "127.0.0.1:$PORT:5232" -e CALDAV_SMOKE_PASSWORD \
+      python:3.14-slim sh -c '
+        pip install --quiet --disable-pip-version-check --root-user-action=ignore "radicale>=3,<4" &&
+        printf "ana:%s\n" "$CALDAV_SMOKE_PASSWORD" > /tmp/users &&
+        exec python -m radicale --server-hosts 0.0.0.0:5232 --auth-type htpasswd \
+          --auth-htpasswd-filename /tmp/users --auth-htpasswd-encryption plain \
+          --storage-filesystem-folder /tmp/collections' >/dev/null
+    echo "Starting Radicale…"
+    for _ in $(seq 120); do
+      curl -fs -o /dev/null "http://127.0.0.1:$PORT/.web/" && break
+      sleep 1
+    done
+    curl -fs -o /dev/null "http://127.0.0.1:$PORT/.web/" \
+      || { echo "Radicale didn't start:"; docker logs --tail 20 "$NAME"; exit 1; }
+    cd backend
+    CALDAV_SMOKE_URL="http://127.0.0.1:$PORT/" CALDAV_SMOKE_USER=ana uv run python scripts/caldav_smoke.py
+
 # ---- privacy -----------------------------------------------------------------------------------
 
 # gitleaks (history + working tree) and the private-terms scan (tree + unpushed commits)
