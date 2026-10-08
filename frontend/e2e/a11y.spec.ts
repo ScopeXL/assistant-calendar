@@ -8,7 +8,16 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 
-import { expect, PASSWORD, PIN, seed, settled, signInPhone, test } from "./fixtures";
+import {
+  expect,
+  PASSWORD,
+  PIN,
+  scriptedAccount,
+  seed,
+  settled,
+  signInPhone,
+  test,
+} from "./fixtures";
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const SETTINGS = [
@@ -180,6 +189,13 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Pair the kitchen screen" })).toBeVisible();
       await check(page, "setup: pair");
       await page.getByRole("button", { name: "Do this later" }).click();
+      await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
+      await check(page, "setup: calendars");
+      await page.getByRole("button", { name: "Add a calendar" }).click();
+      await expect(page.getByRole("dialog", { name: "Add an account" })).toBeVisible();
+      await check(page, "setup: add an account");
+      await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+      await page.getByRole("button", { name: "Skip for now" }).click();
       await expect(page.getByRole("heading", { name: "You’re set" })).toBeVisible();
       await check(page, "setup: done");
     });
@@ -221,6 +237,7 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("link", { name: "Pair a display" }).click();
       await expect(page.getByRole("heading", { name: "Pair a display", level: 1 })).toBeVisible();
       await check(page, "pair a display");
+      await scriptedAccount(page.request);
       await page.goto("/settings");
       await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
       await check(page, "settings");
@@ -290,6 +307,7 @@ for (const scheme of ["light", "dark"] as const) {
       const pin = page.getByRole("dialog", { name: "Parent PIN" });
       for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
       await expect(pin).toBeHidden();
+      await scriptedAccount(page.request); // the PIN's grant makes this screen a parent's for now
       for (const title of [...SETTINGS, "About"]) {
         await page
           .getByRole("navigation", { name: "Settings" })

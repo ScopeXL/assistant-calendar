@@ -67,6 +67,8 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   // The household starts its week on Monday now.
   await expect(board.getByRole("heading", { level: 2 }).first()).toContainText("Mon");
 
+  await expect(phonePage.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
+  await phonePage.getByRole("button", { name: "Skip for now" }).click();
   await expect(phonePage.getByRole("heading", { name: "You’re set" })).toBeVisible();
   await phonePage.getByRole("button", { name: "Open Sunroom" }).click();
   await expect(phonePage.getByRole("heading", { name: "Up next" })).toBeVisible();

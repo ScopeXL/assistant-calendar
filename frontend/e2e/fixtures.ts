@@ -140,3 +140,35 @@ export async function settled(page: Page): Promise<void> {
     await Promise.all(finite.map((animation) => animation.finished.catch(() => undefined)));
   });
 }
+
+/**
+ * A scripted calendar account (the test server's stand-in for iCloud or Google) with one
+ * calendar, "School", mapped and synced: Settings → Calendars & accounts then shows a real row.
+ * `request` must be a parent's (a signed-in phone's `page.request`).
+ */
+export async function scriptedAccount(request: APIRequestContext): Promise<string> {
+  const created = await request.post("/api/calendar-sync/_test/fake", { headers: CSRF });
+  expect(created.status()).toBe(201);
+  const { id } = (await created.json()) as { id: string };
+  const scripted = await request.put(`/api/calendar-sync/_test/fake/${id}`, {
+    headers: CSRF,
+    data: { calendars: [["school", "School", false]] },
+  });
+  expect(scripted.status()).toBe(200);
+  await request.post(`/api/calendar-sync/accounts/${id}/sync`, { headers: CSRF });
+  let calendar = "";
+  await expect(async () => {
+    const accounts = (await (await request.get("/api/calendar-sync/accounts")).json()) as {
+      id: string;
+      calendars: { id: string }[];
+    }[];
+    calendar = accounts.find((a) => a.id === id)?.calendars[0]?.id ?? "";
+    expect(calendar).not.toBe("");
+  }).toPass({ timeout: 10_000 });
+  const mapped = await request.put(`/api/calendar-sync/accounts/${id}/calendars/${calendar}`, {
+    headers: CSRF,
+    data: { mapped: true },
+  });
+  expect(mapped.status()).toBe(200);
+  return id;
+}

@@ -6,7 +6,17 @@
  */
 import type { Page } from "@playwright/test";
 
-import { expect, PASSWORD, PIN, resetServer, seed, settled, signInPhone, test } from "./fixtures";
+import {
+  expect,
+  PASSWORD,
+  PIN,
+  resetServer,
+  scriptedAccount,
+  seed,
+  settled,
+  signInPhone,
+  test,
+} from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 // The household's zone in end-to-end runs is America/New_York (UTC−4 in October).
@@ -127,6 +137,40 @@ test("the wall screen", async ({ page }) => {
   await shot(page, "view-today");
   await change(page, { display_home_view: "week" });
 
+  // A synced account that stopped answering: the board's quiet pill.
+  const account = await scriptedAccount(page.request);
+  await page.request.put(`/api/calendar-sync/_test/fake/${account}`, {
+    headers: CSRF,
+    data: { fail_next: ["unreachable", "unreachable", "unreachable"] },
+  });
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    // "Refresh now" waits a minute between syncs, and this clock only moves when told to.
+    await expect(async () => {
+      await page.request.post("/api/_test/clock", {
+        headers: CSRF,
+        data: { advance_minutes: 2 },
+      });
+      const synced = await page.request.post(`/api/calendar-sync/accounts/${account}/sync`, {
+        headers: CSRF,
+      });
+      expect(synced.status()).toBe(200);
+    }).toPass({ timeout: 10_000 });
+    await expect(async () => {
+      const accounts = (await (await page.request.get("/api/calendar-sync/accounts")).json()) as {
+        id: string;
+        syncing: boolean;
+        last_error: string | null;
+      }[];
+      const found = accounts.find((a) => a.id === account);
+      expect(found?.syncing).toBe(false);
+      expect(found?.last_error).not.toBeNull();
+    }).toPass({ timeout: 10_000 });
+  }
+  await moveClock(page, STOPS[1]?.at ?? "");
+  await page.reload();
+  await expect(page.getByRole("button", { name: /hasn't answered/ })).toBeVisible();
+  await shot(page, "board-sync-pill");
+
   // Settings at 16:10 on Auto, while there's no PIN yet (the screen opens them itself).
   await change(page, { theme: "auto", text_size: "standard" });
   await page.reload();
@@ -196,6 +240,9 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByRole("button", { name: "Later" }).click();
     await shot(page, `setup-pair-${scheme}`);
     await page.getByRole("button", { name: "Do this later" }).click();
+    await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
+    await shot(page, `setup-calendars-${scheme}`);
+    await page.getByRole("button", { name: "Skip for now" }).click();
     await shot(page, `setup-done-${scheme}`);
     await page.getByRole("button", { name: "Open Sunroom" }).click();
     await expect(page.getByRole("heading", { name: "Up next" })).toBeVisible();
@@ -269,6 +316,33 @@ test("a phone's calendar", async ({ page, isMobile }) => {
       .getByRole("dialog", { name: "Find a day" })
       .getByRole("button", { name: "Close" })
       .click();
+  }
+  // Synced calendars: an account on Calendars & accounts, and every way to add one.
+  await scriptedAccount(page.request);
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/settings/calendars");
+    await expect(page.getByRole("heading", { name: "Accounts", exact: true })).toBeVisible();
+    await shot(page, `settings-calendars-account-${scheme}`);
+    const flows: [string, string][] = [
+      ["iCloud", "icloud"],
+      ["Another calendar", "address"],
+      ["Holidays", "holidays"],
+      ["Google", "google"],
+    ];
+    for (const [choice, name] of flows) {
+      await page.getByRole("button", { name: "Add an account" }).click();
+      const sheet = page.getByRole("dialog");
+      if (name === "icloud") await shot(page, `add-account-${scheme}`);
+      await sheet.getByRole("button", { name: new RegExp(`^${choice}`) }).click();
+      await shot(page, `add-${name}-${scheme}`);
+      if (name === "google") {
+        await sheet.getByRole("button", { name: /^Share with a Sunroom helper/ }).click();
+        await shot(page, `add-google-helper-${scheme}`);
+      }
+      await sheet.getByRole("button", { name: "Close" }).click();
+      await expect(sheet).toBeHidden();
+    }
   }
 });
 
