@@ -5,14 +5,16 @@
 #   (the same as: bash install.sh --uninstall [--purge] [--yes]; the installer keeps a copy
 #    of this script at ~/.local/share/sunroom-kiosk/uninstall.sh)
 #
-# Removes the kitchen screen's systemd user units and nightly restart timer, the launcher,
-# its settings, the labwc autostart block or the X11 autostart entry, the labwc pointer and
-# touch settings (putting back rc.xml.sunroom-backup when nothing else changed), the Wi-Fi
-# power-saving drop-in, the kernel command line options it added, and systemd-time-wait-sync
-# if the installer turned it on. It asks before deleting the browser profile, which holds
-# the screen's pairing. Docker and Sunroom with its data stay unless you add --purge, which
-# runs "docker compose down -v" in /opt/sunroom and deletes that folder. Desktop autologin
-# and "no screen blanking" are left as they are.
+# Removes the kitchen screen's systemd user units and nightly restart timer, the launcher and
+# the screen helper (which switches the screen back on as it stops), its settings, the labwc
+# autostart block or the X11 autostart entry, the labwc pointer and touch settings (putting
+# back rc.xml.sunroom-backup when nothing else changed), the Wi-Fi power-saving drop-in, the
+# screen helper's backlight udev rule and i2c-dev module file, the kernel command line
+# options it added, and systemd-time-wait-sync if the installer turned it on. It asks before
+# deleting the browser profile, which holds the screen's pairing. Docker and Sunroom with its
+# data stay unless you add --purge, which runs "docker compose down -v" in /opt/sunroom and
+# deletes that folder. Desktop autologin, "no screen blanking", installed packages (ddcutil,
+# wlopm) and group memberships (video, i2c) are left as they are.
 #
 # Like the installer: run it as your normal user (it uses sudo itself), questions are read
 # from the keyboard (/dev/tty), --yes answers yes to all of them, and nothing runs until
@@ -33,9 +35,11 @@ LABWC_DIR="$HOME/.config/labwc"
 XDG_AUTOSTART_FILE="$HOME/.config/autostart/sunroom-kiosk.desktop"
 SERVER_DIR="/opt/sunroom"
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
+BACKLIGHT_RULE="/etc/udev/rules.d/90-sunroom-kiosk-backlight.rules"
+I2C_MODULES_FILE="/etc/modules-load.d/sunroom-kiosk-i2c.conf"
 BLOCK_BEGIN="# >>> sunroom-kiosk"
 BLOCK_END="# <<< sunroom-kiosk <<<"
-UNITS=(sunroom-kiosk.service sunroom-kiosk-restart.service sunroom-kiosk-restart.timer)
+UNITS=(sunroom-kiosk.service sunroom-screen.service sunroom-kiosk-restart.service sunroom-kiosk-restart.timer)
 
 PURGE=0
 YES=0
@@ -174,12 +178,15 @@ load_state() {
 	STATE_CMDLINE_FILE=${STATE_CMDLINE_FILE:-}
 	STATE_CMDLINE_BACKUP=${STATE_CMDLINE_BACKUP:-}
 	STATE_CMDLINE_KEYS=${STATE_CMDLINE_KEYS:-}
+	STATE_BACKLIGHT_RULE=${STATE_BACKLIGHT_RULE:-}
+	STATE_I2C_MODULES=${STATE_I2C_MODULES:-}
 }
 
 remove_units() {
 	local unit removed=0
 	user_systemctl disable --now sunroom-kiosk-restart.timer >/dev/null 2>&1 || true
-	user_systemctl stop sunroom-kiosk.service >/dev/null 2>&1 || true
+	# The screen helper switches the screen back on, at full brightness, as it stops.
+	user_systemctl stop sunroom-screen.service sunroom-kiosk.service >/dev/null 2>&1 || true
 	for unit in "${UNITS[@]}"; do
 		if [[ -e $UNIT_DIR/$unit ]]; then
 			rm -f "$UNIT_DIR/$unit"
@@ -190,11 +197,32 @@ remove_units() {
 	user_systemctl daemon-reload >/dev/null 2>&1 || true
 	user_systemctl reset-failed "${UNITS[@]}" >/dev/null 2>&1 || true
 	if ((removed)); then
-		note "Stopped the kitchen screen and removed its service and nightly restart."
+		note "Stopped the kitchen screen and removed its services and nightly restart."
 	fi
 	if [[ -e $BIN_DIR/sunroom-kiosk ]]; then
 		rm -f "$BIN_DIR/sunroom-kiosk"
 		note "Removed the launcher ($(tidy "$BIN_DIR/sunroom-kiosk"))."
+	fi
+	if [[ -e $BIN_DIR/sunroom-screen ]]; then
+		rm -f "$BIN_DIR/sunroom-screen"
+		note "Removed the screen helper ($(tidy "$BIN_DIR/sunroom-screen")); the screen stays on."
+	fi
+}
+
+# The screen helper's system files: the udev rule that lets the video group switch the
+# backlight off, and the file that loads i2c-dev (for DDC/CI brightness) at every start.
+remove_screen_files() {
+	local rule=${STATE_BACKLIGHT_RULE:-$BACKLIGHT_RULE} modules=${STATE_I2C_MODULES:-$I2C_MODULES_FILE}
+	if [[ -e $rule ]]; then
+		need_sudo
+		sudo rm -f "$rule"
+		sudo udevadm control --reload >/dev/null 2>&1 || true
+		note "Removed the screen helper's backlight rule ($rule)."
+	fi
+	if [[ -e $modules ]]; then
+		need_sudo
+		sudo rm -f "$modules"
+		note "Removed $modules; the i2c-dev module no longer loads at startup for the screen helper."
 	fi
 }
 
@@ -410,6 +438,7 @@ main() {
 	remove_autostart
 	remove_labwc_settings
 	remove_wifi_dropin
+	remove_screen_files
 	undo_time_wait_sync
 	restore_cmdline
 	remove_config

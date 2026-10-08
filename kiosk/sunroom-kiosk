@@ -9,8 +9,10 @@
 # Order of events: wait for the desktop, wait up to 60 s for the clock (a Pi has no
 # battery-backed clock), wait as long as it takes for Sunroom to answer /api/health (the
 # desktop wallpaper shows meanwhile), mark the last browser exit as clean so a power cut
-# never shows "Restore pages?", apply the X11-only screen settings, then exec Chromium.
-# See docs/PLAN.md §13.2.
+# never shows "Restore pages?", apply the X11-only screen settings, then exec Chromium on
+# /display?dimmer=screen when the screen helper (~/.local/bin/sunroom-screen) sets the
+# panel's own brightness, or /display?dimmer=page when the page has to dim itself.
+# See docs/PLAN.md §13.2 and §13.5.
 
 set -euo pipefail
 
@@ -141,7 +143,9 @@ x11_output() {
 setup_x11() {
 	local turn output
 	xset s off || true
-	xset -dpms || true
+	# X never blanks the screen by itself: DPMS on with every timeout off. Not "xset -dpms",
+	# which also switches on a screen the screen helper switched off for the night.
+	xset dpms 0 0 0 || true
 	xset s noblank || true
 	# Unverified: Debian's unclutter may already be started by its own X session script;
 	# a second copy is only started when none is running.
@@ -175,6 +179,20 @@ insecure_origin() {
 	printf 'http://%s\n' "$hostport"
 }
 
+# Who dims the screen in the evening: the screen helper, when it sets the panel's own
+# brightness here (it says ddc or sysfs), or else the page itself, with a dark veil. The
+# helper answers "none" when it's switched off or SUNROOM_BRIGHTNESS is none.
+dimmer() {
+	local helper="$HOME/.local/bin/sunroom-screen" method=""
+	if [[ -x $helper ]]; then
+		method=$("$helper" --method 2>/dev/null || true)
+	fi
+	case $method in
+	ddc | sysfs) printf 'screen\n' ;;
+	*) printf 'page\n' ;;
+	esac
+}
+
 find_chromium() {
 	local name
 	for name in chromium chromium-browser; do
@@ -187,7 +205,7 @@ find_chromium() {
 }
 
 main() {
-	local chromium origin
+	local chromium origin page
 	local -a flags
 
 	load_config
@@ -235,8 +253,9 @@ main() {
 		flags+=("--unsafely-treat-insecure-origin-as-secure=$origin")
 	fi
 
-	log "Opening $SUNROOM_URL/display with $chromium."
-	exec "$chromium" "${flags[@]}" "$SUNROOM_URL/display"
+	page="$SUNROOM_URL/display?dimmer=$(dimmer)"
+	log "Opening $page with $chromium."
+	exec "$chromium" "${flags[@]}" "$page"
 }
 
 main "$@"

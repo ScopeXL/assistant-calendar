@@ -16,9 +16,9 @@
 # take them back. Everything it prints is also logged to
 # ~/.local/state/sunroom-kiosk/install.log.
 #
-# The rest of the kiosk/ folder (launcher, systemd units, labwc-rule.py, update.sh,
-# uninstall.sh) is taken from next to this script when present, otherwise downloaded from
-# GitHub for the requested version.
+# The rest of the kiosk/ folder (launcher, screen helper, systemd units, labwc-rule.py,
+# update.sh, uninstall.sh) is taken from next to this script when present, otherwise
+# downloaded from GitHub for the requested version.
 #
 # Nothing runs until `main "$@"` on the very last line, so a download that stops halfway
 # never runs half a script.
@@ -44,6 +44,10 @@ XDG_AUTOSTART_FILE="$HOME/.config/autostart/sunroom-kiosk.desktop"
 SERVER_DIR="/opt/sunroom"
 # NetworkManager merges conf.d files in byte order and the last one wins, hence "zz-".
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
+# The screen helper's brightness: the backlight's bl_power for the video group (Raspberry Pi
+# OS's own 60-backlight.rules covers brightness only), and i2c-dev at every start for DDC/CI.
+BACKLIGHT_RULE="/etc/udev/rules.d/90-sunroom-kiosk-backlight.rules"
+I2C_MODULES_FILE="/etc/modules-load.d/sunroom-kiosk-i2c.conf"
 BLOCK_BEGIN="# >>> sunroom-kiosk"
 BLOCK_END="# <<< sunroom-kiosk <<<"
 HEALTH_TIMEOUT=300
@@ -75,6 +79,8 @@ TMP_DIR=""
 CODENAME=""
 SESSION="" # wayland | x11
 SWITCH_TO_X11=0
+DDC_BUS=""   # the monitor's I2C bus for DDC/CI brightness, when one answers
+BACKLIGHT="" # the panel's backlight under /sys/class/backlight, when it has one
 IMAGE_TAG=""
 HAVE_TTY=0
 LOGGING=0
@@ -89,6 +95,8 @@ NM_DROPIN_WRITTEN=""
 CMDLINE_FILE=""
 CMDLINE_BACKUP=""
 CMDLINE_KEYS=""
+BACKLIGHT_RULE_WRITTEN=""
+I2C_MODULES_WRITTEN=""
 
 # ---------------------------------------------------------------------------- messages
 
@@ -211,9 +219,13 @@ Options:
   --force-hdmi WIDTHxHEIGHT Always drive the screen at this size, even when it is off
                             at startup, for example 1920x1080
   --brightness auto|ddc|sysfs|none
-                            How to dim the screen at night (saved for the screen-sleep
-                            helper, which comes in a later version)
-  --no-screen-helper        Never switch the screen itself off (also saved for later)
+                            How the screen helper dims the screen in the evening:
+                            ddc for a monitor that takes brightness over HDMI (DDC/CI),
+                            sysfs for a panel with a backlight (Raspberry Pi Touch Display),
+                            none to leave it to the page; auto (the default) picks
+  --no-screen-helper        Never switch the screen itself off or change its brightness;
+                            the page goes black or dim instead (for monitors whose touch
+                            stops working while the screen is off)
   --x11                     Use the older X11 desktop instead of labwc (Wayland)
   --no-reboot               Don't offer to restart at the end
   --uninstall [--purge] [--yes]
@@ -529,6 +541,8 @@ load_previous_state() {
 	CMDLINE_FILE=${STATE_CMDLINE_FILE:-}
 	CMDLINE_BACKUP=${STATE_CMDLINE_BACKUP:-}
 	CMDLINE_KEYS=${STATE_CMDLINE_KEYS:-}
+	BACKLIGHT_RULE_WRITTEN=${STATE_BACKLIGHT_RULE:-}
+	I2C_MODULES_WRITTEN=${STATE_I2C_MODULES:-}
 }
 
 save_state() {
@@ -544,6 +558,8 @@ save_state() {
 		printf 'STATE_CMDLINE_FILE=%q\n' "$CMDLINE_FILE"
 		printf 'STATE_CMDLINE_BACKUP=%q\n' "$CMDLINE_BACKUP"
 		printf 'STATE_CMDLINE_KEYS=%q\n' "$CMDLINE_KEYS"
+		printf 'STATE_BACKLIGHT_RULE=%q\n' "$BACKLIGHT_RULE_WRITTEN"
+		printf 'STATE_I2C_MODULES=%q\n' "$I2C_MODULES_WRITTEN"
 	} >"$tmp"
 	mkdir -p "$STATE_DIR"
 	install -m 0644 "$tmp" "$STATE_FILE"
@@ -904,9 +920,12 @@ install_packages() {
 		wanted+=(python3)
 		if [[ $SESSION == wayland ]]; then
 			wanted+=(wlr-randr)
-			optional+=(wlopm) # used by the screen-sleep helper in a later version
+			optional+=(wlopm) # the screen helper switches the screen off and on with it
 		else
 			wanted+=(x11-xserver-utils unclutter)
+		fi
+		if wants_ddc; then
+			optional+=(ddcutil) # the screen helper sets a monitor's brightness with it
 		fi
 		if ! command -v chromium >/dev/null 2>&1 && ! command -v chromium-browser >/dev/null 2>&1; then
 			need_chromium=1
@@ -934,7 +953,11 @@ install_packages() {
 		local -a install_now=()
 		for pkg in "${missing[@]}"; do
 			if [[ $pkg == wlopm ]] && ! pkg_available wlopm; then
-				note "Skipping wlopm (not offered for this Pi); only the later screen-sleep helper needs it."
+				note "Skipping wlopm (not offered for this Pi); the screen helper uses wlr-randr instead."
+				continue
+			fi
+			if [[ $pkg == ddcutil ]] && ! pkg_available ddcutil; then
+				note "Skipping ddcutil (not offered for this Pi); the page dims itself instead."
 				continue
 			fi
 			install_now+=("$pkg")
@@ -1167,14 +1190,19 @@ write_kiosk_config() {
 	if [[ $MODE == display ]]; then url=$URL; else url="http://localhost:$PORT"; fi
 	{
 		header_comment
-		printf '# Read by ~/.local/bin/sunroom-kiosk at every start. After a change: systemctl --user restart sunroom-kiosk\n'
+		printf '# Read by ~/.local/bin/sunroom-kiosk and ~/.local/bin/sunroom-screen at every start.\n'
+		printf '# After a change: systemctl --user restart sunroom-kiosk sunroom-screen\n'
 		printf 'SUNROOM_URL=%q\n' "$url"
 		printf 'SUNROOM_SESSION=%q\n' "$SESSION"
 		printf 'SUNROOM_OUTPUT=%q\n' "$OUTPUT"
 		printf 'SUNROOM_ROTATE=%q\n' "$ROTATE"
-		printf '# Saved for the screen-sleep helper (a later version): auto, ddc, sysfs or none; yes or no.\n'
-		printf 'SUNROOM_BRIGHTNESS=%q\n' "$BRIGHTNESS"
+		printf '# The screen helper (yes or no) switches the screen off at night. How it dims it:\n'
+		printf '# auto, ddc (DDC/CI on I2C bus SUNROOM_DDC_BUS), sysfs (the backlight SUNROOM_BACKLIGHT\n'
+		printf '# under /sys/class/backlight) or none (the page dims itself). See docs/KIOSK.md.\n'
 		printf 'SUNROOM_SCREEN_HELPER=%q\n' "$SCREEN_HELPER"
+		printf 'SUNROOM_BRIGHTNESS=%q\n' "$BRIGHTNESS"
+		printf 'SUNROOM_DDC_BUS=%q\n' "$DDC_BUS"
+		printf 'SUNROOM_BACKLIGHT=%q\n' "$BACKLIGHT"
 		printf 'SUNROOM_MODE=%q\n' "$MODE"
 	} >"$tmp"
 	mkdir -p "$CONFIG_DIR"
@@ -1188,6 +1216,12 @@ install_units() {
 	for unit in sunroom-kiosk.service sunroom-kiosk-restart.service sunroom-kiosk-restart.timer; do
 		install_stamped "$SRC_DIR/systemd/$unit" "$UNIT_DIR/$unit" 0644
 	done
+	if [[ $SCREEN_HELPER == yes ]]; then
+		install_stamped "$SRC_DIR/sunroom-screen" "$BIN_DIR/sunroom-screen" 0755
+		install_stamped "$SRC_DIR/systemd/sunroom-screen.service" "$UNIT_DIR/sunroom-screen.service" 0644
+	else
+		remove_screen_helper
+	fi
 	if user_systemctl daemon-reload >/dev/null 2>&1 &&
 		user_systemctl enable --now sunroom-kiosk-restart.timer >/dev/null 2>&1; then
 		note "Installed the kitchen screen's service and its nightly restart at about 04:00."
@@ -1195,6 +1229,11 @@ install_units() {
 		mkdir -p "$UNIT_DIR/timers.target.wants"
 		ln -sfn "$UNIT_DIR/sunroom-kiosk-restart.timer" "$UNIT_DIR/timers.target.wants/sunroom-kiosk-restart.timer"
 		note "Installed the kitchen screen's service; its nightly restart starts after the Pi restarts."
+	fi
+	if [[ $SCREEN_HELPER == yes ]]; then
+		# A helper already running from an earlier install switches to this version now.
+		user_systemctl try-restart sunroom-screen.service >/dev/null 2>&1 || true
+		note "Installed the screen helper, which puts the screen to sleep and dims it on Sunroom's schedule."
 	fi
 }
 
@@ -1221,8 +1260,17 @@ labwc_block() {
 	if [[ $ROTATE != 0 ]]; then
 		printf 'wlr-randr --output %s --transform %s >/dev/null 2>&1\n' "$OUTPUT" "$ROTATE"
 	fi
-	printf 'systemctl --user --no-block restart sunroom-kiosk.service\n'
+	printf 'systemctl --user --no-block restart %s\n' "$(session_units)"
 	printf '%s\n' "$BLOCK_END"
+}
+
+# The user units the desktop session starts: the browser, and the screen helper when it's on.
+session_units() {
+	if [[ $SCREEN_HELPER == yes ]]; then
+		printf 'sunroom-kiosk.service sunroom-screen.service'
+	else
+		printf 'sunroom-kiosk.service'
+	fi
 }
 
 # labwc runs ~/.config/labwc/autostart with sh at login; Raspberry Pi OS starts labwc with
@@ -1281,7 +1329,7 @@ write_xdg_autostart() {
 		printf 'Type=Application\n'
 		printf 'Name=Sunroom kitchen screen\n'
 		printf 'Comment=Starts the Sunroom kitchen screen\n'
-		printf 'Exec=sh -c "systemctl --user import-environment DISPLAY XAUTHORITY; systemctl --user --no-block restart sunroom-kiosk.service"\n'
+		printf 'Exec=sh -c "systemctl --user import-environment DISPLAY XAUTHORITY; systemctl --user --no-block restart %s"\n' "$(session_units)"
 		printf 'NoDisplay=true\n'
 		printf 'X-GNOME-Autostart-enabled=true\n'
 	} >"$TMP_DIR/sunroom-kiosk.desktop"
@@ -1437,6 +1485,143 @@ apply_force_hdmi() {
 	note "The Pi now always drives $output at $FORCE_HDMI, even if the screen is off at startup ($file)."
 }
 
+# ---------------------------------------------------------------------------- the screen helper
+
+# Kitchen-screen files from before Sunroom 0.6.0 (--version 0.5.0 downloads those) have no
+# screen helper; the page then goes dark at night by itself.
+check_screen_helper_files() {
+	if [[ $SCREEN_HELPER == yes ]] &&
+		[[ ! -f $SRC_DIR/sunroom-screen || ! -f $SRC_DIR/systemd/sunroom-screen.service ]]; then
+		SCREEN_HELPER="no"
+		note "These kitchen-screen files have no screen helper; at night the page goes dark by itself."
+	fi
+}
+
+# The first backlight under /sys/class/backlight: DSI panels such as the Touch Display have
+# one, HDMI monitors don't.
+backlight_device() {
+	local device
+	for device in /sys/class/backlight/*; do
+		if [[ -e $device/brightness ]]; then
+			printf '%s' "${device##*/}"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# ddcutil: for --brightness ddc, and for auto when the screen has no backlight of its own.
+wants_ddc() {
+	[[ $SCREEN_HELPER == yes ]] || return 1
+	case $BRIGHTNESS in
+	ddc) return 0 ;;
+	auto) ! backlight_device >/dev/null ;;
+	*) return 1 ;;
+	esac
+}
+
+# add_to_group GROUP, when it exists and this user isn't in it yet. It counts from the next
+# login, which the restart at the end brings. (The Pi's first user is usually in video and
+# i2c already.)
+add_to_group() {
+	local group=$1 user
+	user=$(id -un)
+	getent group "$group" >/dev/null 2>&1 || return 0
+	if [[ " $(id -nG "$user") " != *" $group "* ]]; then
+		sudo usermod -aG "$group" "$user"
+		note "Added $user to the $group group (it counts from the next restart)."
+	fi
+}
+
+# A panel with a backlight (the Touch Display): the video group may write its brightness and
+# bl_power, so the helper needs no sudo. udev runs the rule as each backlight appears; the
+# trigger runs it now.
+setup_backlight() {
+	local rule="$TMP_DIR/backlight.rules"
+	{
+		header_comment
+		printf '# Lets the video group dim the screen and switch its backlight off, for the Sunroom screen helper.\n'
+		# shellcheck disable=SC2016 # $sys$devpath is udev's, not the shell's
+		printf '%s\n' 'SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video $sys$devpath/brightness $sys$devpath/bl_power", RUN+="/bin/chmod g+w $sys$devpath/brightness $sys$devpath/bl_power"'
+	} >"$rule"
+	BACKLIGHT_RULE_WRITTEN=$BACKLIGHT_RULE
+	if ! sudo cmp -s "$rule" "$BACKLIGHT_RULE"; then
+		sudo install -m 0644 -o root -g root "$rule" "$BACKLIGHT_RULE"
+		sudo udevadm control --reload >/dev/null 2>&1 || true
+	fi
+	sudo udevadm trigger --action=add --subsystem-match=backlight >/dev/null 2>&1 || true
+	add_to_group video
+	if BACKLIGHT=$(backlight_device); then
+		note "The screen helper dims the screen with its backlight ($BACKLIGHT)."
+	else
+		BACKLIGHT=""
+		warn "this Pi has no screen backlight right now (/sys/class/backlight is empty)."
+		note "The screen helper looks again each time it starts; until it finds one, the page dims itself."
+	fi
+}
+
+# A monitor with DDC/CI takes brightness commands over the HDMI cable. ddcutil reaches it
+# through /dev/i2c-N, which needs the i2c-dev module (loaded now and at every start) and the
+# i2c group. The bus is found once, here, and saved for the helper.
+setup_ddc() {
+	local conf="$TMP_DIR/i2c.conf" detected
+	if ! command -v ddcutil >/dev/null 2>&1; then
+		note "Without ddcutil the screen helper can't set the brightness; the page dims itself."
+		return 0
+	fi
+	{
+		header_comment
+		printf '# Lets ddcutil reach the screen over HDMI (DDC/CI), for the Sunroom screen helper.\n'
+		printf 'i2c-dev\n'
+	} >"$conf"
+	I2C_MODULES_WRITTEN=$I2C_MODULES_FILE
+	if ! sudo cmp -s "$conf" "$I2C_MODULES_FILE"; then
+		sudo install -m 0644 -o root -g root "$conf" "$I2C_MODULES_FILE"
+	fi
+	sudo modprobe i2c-dev >/dev/null 2>&1 || true
+	add_to_group i2c
+	note "Asking the screen whether it takes brightness commands (DDC/CI); this takes a few seconds..."
+	detected=$(sudo ddcutil detect --brief 2>&1 || true)
+	printf '%s\n' "$detected" >>"$LOG_FILE"
+	DDC_BUS=$(python3 "$SRC_DIR/sunroom-screen" --ddc-bus "$OUTPUT" <<<"$detected" 2>>"$LOG_FILE" || true)
+	if [[ $DDC_BUS =~ ^[0-9]+$ ]]; then
+		note "The screen helper dims the screen over HDMI (DDC/CI, I2C bus $DDC_BUS)."
+	else
+		DDC_BUS=""
+		note "The screen doesn't take brightness commands (DDC/CI), so the page dims itself in the evening."
+		note "Many monitors have DDC/CI switched off in their own menu: turn it on there, then run the installer again."
+	fi
+}
+
+# How the screen helper sets the brightness (--brightness), worked out here and saved in the
+# kitchen screen's settings; the helper checks it again each time it starts.
+setup_brightness() {
+	DDC_BUS=""
+	BACKLIGHT=""
+	[[ $SCREEN_HELPER == yes ]] || return 0
+	case $BRIGHTNESS in
+	none) note "The screen helper leaves the brightness alone (--brightness none); the page dims itself." ;;
+	sysfs) setup_backlight ;;
+	ddc) setup_ddc ;;
+	auto)
+		if backlight_device >/dev/null; then
+			setup_backlight
+		else
+			setup_ddc
+		fi
+		;;
+	esac
+}
+
+# --no-screen-helper after an install that had it: stopping it switches the screen back on.
+remove_screen_helper() {
+	if [[ -e $UNIT_DIR/sunroom-screen.service || -e $BIN_DIR/sunroom-screen ]]; then
+		user_systemctl stop sunroom-screen.service >/dev/null 2>&1 || true
+		rm -f "$UNIT_DIR/sunroom-screen.service" "$BIN_DIR/sunroom-screen"
+		note "Removed the screen helper (--no-screen-helper); the screen itself now stays on."
+	fi
+}
+
 setup_kiosk() {
 	if ((SWITCH_TO_X11)); then
 		note "Switching the desktop to X11, as asked..."
@@ -1454,6 +1639,7 @@ setup_kiosk() {
 	if [[ $SESSION == wayland ]]; then
 		remove_swayidle
 	fi
+	setup_brightness
 	write_kiosk_config
 	install_units
 	if [[ $SESSION == wayland ]]; then
@@ -1477,8 +1663,12 @@ setup_kiosk() {
 			note "If taps land in the wrong place on the turned screen, see docs/KIOSK.md for the touch fix."
 		fi
 	fi
-	note "Screen sleep and dimming come in a later version of Sunroom; your choices" \
-		"(--brightness $BRIGHTNESS, screen helper: $SCREEN_HELPER) are saved for it."
+	if [[ $SCREEN_HELPER == yes ]]; then
+		note "Set the screen's sleep times in Sunroom: Settings → Display → Sleep."
+	else
+		note "No screen helper (--no-screen-helper): at night the page goes black or dim, and the screen itself stays on." \
+			"Set the times in Sunroom: Settings → Display → Sleep."
+	fi
 }
 
 # ---------------------------------------------------------------------------- step 5: summary
@@ -1629,6 +1819,9 @@ main() {
 	fi
 	wait_for_apt
 	get_kiosk_files
+	if [[ $MODE != server ]]; then
+		check_screen_helper_files
+	fi
 
 	step "Installing what it needs" "installing software"
 	install_packages

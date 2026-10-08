@@ -1,0 +1,22 @@
+# Sunroom kitchen screen: switches the screen off at night and dims it, as Sunroom's Sleep
+# settings say (the helper ~/.local/bin/sunroom-screen; a systemd user unit). kiosk/install.sh
+# copies it to ~/.config/systemd/user/ unless it is run with --no-screen-helper. Like
+# sunroom-kiosk.service it is not enabled at boot: the desktop session starts both, after
+# importing WAYLAND_DISPLAY or DISPLAY, so wlopm and xset can reach the screen.
+# Its log: journalctl --user -u sunroom-screen
+
+[Unit]
+Description=Sunroom kitchen screen sleep and brightness
+After=graphical-session.target sunroom-kiosk.service
+# Never stop retrying: a wall screen has nobody to press "try again".
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/sunroom-screen
+Restart=always
+RestartSec=5
+# 3: the helper is switched off in ~/.config/sunroom-kiosk/config, so starting it again won't help.
+RestartPreventExitStatus=3
+# On stop it switches the screen back on (at full brightness) before it exits.
+TimeoutStopSec=20

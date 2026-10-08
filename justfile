@@ -61,10 +61,10 @@ lint: kiosk-lint
     cd backend && uv run ruff check . && uv run ruff format --check .
     cd frontend && pnpm exec eslint . && pnpm exec prettier --check .
 
-# shellcheck on the Raspberry Pi installer and helpers; the labwc rule compiles
+# shellcheck on the Raspberry Pi installer and helpers; the labwc rule and the screen helper compile
 kiosk-lint:
     {{shellcheck}} -x kiosk/install.sh kiosk/uninstall.sh kiosk/update.sh kiosk/sunroom-kiosk
-    {{py}} -m py_compile kiosk/labwc-rule.py
+    {{py}} -m py_compile kiosk/labwc-rule.py kiosk/sunroom-screen
 
 # Type checks: pyright strict, tsc
 typecheck:
