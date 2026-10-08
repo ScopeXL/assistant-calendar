@@ -196,3 +196,7 @@ Add one line each time something surprising costs time: the symptom, the cause, 
   through the justfile's `py` (uv, Python 3.14), and the justfile prepends `~/.orbstack/bin`.
 - A sticky Save bar in the wall's side panel covered the chips above the keyboard: a sticky box
   stops at its scroller's padding, which already holds `--osk-h`. Stick it at `bottom-0`.
+- Imports broke while a plugin was half-written: `db/models.py` imports each plugin's models, so
+  a plugin package's `__init__.py` that imports its modules drags them all in. Keep it a docstring.
+- The image smoke test pins the plugin list and the export's tables (`scripts/image_common.sh`):
+  a new plugin updates both, and `backend/tests/test_export.py`.
