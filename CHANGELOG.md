@@ -6,6 +6,34 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The calendar. Add an event by typing it the way you'd say it, like "Dentist Thu 2:30pm Mia":
+  Sunroom works out the day, the time, how long, who and how often it repeats, and shows what it
+  understood as buttons you can tap to fix.
+- Events can repeat: every day, on weekdays, every week or two, every month, every year, or a
+  pattern of your own. Changing or removing one asks whether you mean just this one, this one and
+  the ones after, or all of them.
+- The kitchen screen shows the week, one day, the month, "Who's doing what" (a column for each
+  person) or a big Today view. Settings → Display → Home view picks which one it comes back to.
+- Press and hold an event on the kitchen screen to drag it to another day.
+- Everything you add, change, move or remove says so with an Undo button. Removed events stay in
+  Settings → Household → Recently removed for 7 days, with Put back.
+- The Today panel shows what's on now, what's next and the rest of today, and tomorrow after
+  6 PM.
+- An event can remind the kitchen screen 10 minutes, an hour or a day before.
+- Tap people's pictures at the top of the calendar to see only their events (and everyone's).
+- Today's events that are over fade, so what's next stands out (Settings → Display).
+- On a phone, Today shows what's on now and next, and Calendar has Week, Day, Agenda and Month
+  views, a search by title or place, and the same editor.
+- Settings → Calendars & accounts: calendars of your own, each with a color, whose it is and
+  whether it shows on the kitchen screen, and which one new events go to.
+- With kid-safe editing on, changing or removing an event on the kitchen screen asks for the
+  parent PIN. Adding and moving events don't.
+- Behind the scenes: a recurrence engine of Sunroom's own, checked against two reference
+  libraries, and the calendar's tables, which the update adds to the database on its first
+  start.
+
 ### Changed
 
 - The instructions for running Sunroom on a server now start from a `docker-compose.yml` in a
