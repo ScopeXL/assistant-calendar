@@ -357,10 +357,21 @@
 
 /* Numbers that change where they stand (the clock, counts): Lexend has no tabular figures,
    so each digit gets a box as wide as its widest digit (ADR 0021; ui/Digits). */
+/* A box as wide as Lexend's widest digit, the 0, at the text's weight (measured at M0), so a
+   changing number never shifts (ADR 0021). */
 .digit {
   display: inline-block;
   width: 0.62em;
   text-align: center;
+}
+.font-semibold .digit {
+  width: 0.65em;
+}
+.font-bold .digit {
+  width: 0.67em;
+}
+.font-extrabold .digit {
+  width: 0.71em;
 }
 
 /* Placeholders while something loads (ui/Skeleton, UX §8). They wait 300 ms before showing,
