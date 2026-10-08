@@ -61,7 +61,8 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   const board = page.getByRole("region", { name: "This week" });
   await expect(board).toBeVisible();
   await expect(board.locator("[aria-current=date]")).toContainText("today");
-  await expect(page.getByText(/^now \d{1,2}:\d{2}/)).toBeVisible();
+  // The board measures with an invisible copy of each column; the visible line is the one.
+  await expect(board.getByText(/^now \d{1,2}:\d{2}/).filter({ visible: true })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Rooms" })).toContainText(/\d{1,2}:\d{2}/);
   // The household starts its week on Monday now.
   await expect(board.getByRole("heading", { level: 2 }).first()).toContainText("Mon");

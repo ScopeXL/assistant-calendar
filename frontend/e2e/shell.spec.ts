@@ -39,7 +39,7 @@ test.describe("a phone", () => {
     await noSidewaysScroll(page, "Today");
     await expect(page.getByRole("link", { name: "Using this phone: Ana" })).toBeVisible();
     await page.getByRole("link", { name: "Calendar" }).click();
-    await expect(page.getByRole("list", { name: "This week" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Days" })).toBeVisible();
     await noSidewaysScroll(page, "Calendar");
     await page.getByRole("link", { name: "More" }).click();
     await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();

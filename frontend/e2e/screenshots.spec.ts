@@ -20,6 +20,7 @@ const NIGHT = "2026-10-08T03:30:00Z";
 const PAGES = [
   { key: "family", title: "Family" },
   { key: "features", title: "Features" },
+  { key: "calendars", title: "Calendars & accounts" },
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
   { key: "devices", title: "Phones & screens" },
@@ -89,9 +90,45 @@ test("the wall screen", async ({ page }) => {
     }
   }
 
+  // The calendar at 16:10, light: the views, an event, Add and "Change which?".
+  await change(page, { theme: "light", text_size: "standard" });
+  await moveClock(page, STOPS[1]?.at ?? "");
+  await page.reload();
+  await expect(board).toBeVisible();
+  for (const view of ["Day", "Month", "Who's doing what"]) {
+    await page.getByRole("button", { name: view, exact: true }).click();
+    await shot(page, `view-${view.split(" ")[0]?.toLowerCase() ?? view}`);
+  }
+  await page.getByRole("button", { name: "Week", exact: true }).click();
+  await board.getByRole("button", { name: /^Soccer practice, .*Thursday/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Soccer practice" });
+  await expect(sheet).toBeVisible();
+  await shot(page, "event-sheet");
+  await sheet.getByRole("button", { name: "Change" }).click();
+  const editor = page.getByRole("dialog", { name: "Change" });
+  await editor.getByLabel("Title").fill("Soccer training");
+  await editor.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByRole("dialog", { name: "Change which?" })).toBeVisible();
+  await shot(page, "change-which");
+  await page
+    .getByRole("dialog", { name: "Change which?" })
+    .getByRole("button", { name: "Close" })
+    .click();
+  await editor.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  const add = page.getByRole("dialog", { name: "Add" });
+  await add.getByLabel("What, when, who").fill("Dentist Thu 2:30pm Mia");
+  await shot(page, "add-quick");
+  await add.getByRole("button", { name: "2:30 PM" }).click();
+  await shot(page, "add-time");
+  await add.getByRole("button", { name: "Close" }).click();
+  await change(page, { display_home_view: "today" });
+  await page.reload();
+  await shot(page, "view-today");
+  await change(page, { display_home_view: "week" });
+
   // Settings at 16:10 on Auto, while there's no PIN yet (the screen opens them itself).
   await change(page, { theme: "auto", text_size: "standard" });
-  await moveClock(page, STOPS[1]?.at ?? "");
   await page.reload();
   await page.getByRole("button", { name: "Settings" }).click();
   for (const { key, title } of PAGES) {
@@ -164,8 +201,8 @@ test("a phone", async ({ page, isMobile }) => {
     await expect(page.getByRole("heading", { name: "Up next" })).toBeVisible();
     await shot(page, `today-${scheme}`);
     await page.getByRole("link", { name: "Calendar" }).click();
-    await expect(page.getByRole("list", { name: "This week" })).toBeVisible();
-    await shot(page, `calendar-${scheme}`);
+    await expect(page.getByRole("group", { name: "Days" })).toBeVisible();
+    await shot(page, `calendar-empty-${scheme}`);
     await page.getByRole("link", { name: "More" }).click();
     await shot(page, `more-${scheme}`);
     await page.getByRole("link", { name: "Pair a display" }).click();
@@ -191,6 +228,47 @@ test("a phone", async ({ page, isMobile }) => {
     await page.goto("/sign-in");
     await expect(page.getByLabel("Household password")).toBeVisible();
     await shot(page, `sign-in-${scheme}`);
+  }
+});
+
+test("a phone's calendar", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "phones");
+  test.setTimeout(240_000);
+  await moveClock(page, STOPS[1]?.at ?? "");
+  await seed(page.request);
+  await signInPhone(page);
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Up next" })).toBeVisible();
+    await shot(page, `today-events-${scheme}`);
+    await page.getByRole("link", { name: "Calendar" }).click();
+    for (const mode of ["Week", "Day", "Agenda", "Month"]) {
+      await page.getByRole("button", { name: mode, exact: true }).click();
+      await shot(page, `calendar-${mode.toLowerCase()}-${scheme}`);
+    }
+    await page.getByRole("button", { name: "Week", exact: true }).click();
+    await page.getByRole("button", { name: /^Soccer practice, .*Thursday October 8/ }).click();
+    await expect(page.getByRole("dialog", { name: "Soccer practice" })).toBeVisible();
+    await shot(page, `calendar-event-${scheme}`);
+    await page
+      .getByRole("dialog", { name: "Soccer practice" })
+      .getByRole("button", { name: "Close" })
+      .click();
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: "Add" })
+      .getByLabel("What, when, who")
+      .fill("Dentist Thu 2:30pm Mia");
+    await shot(page, `calendar-add-${scheme}`);
+    await page.getByRole("dialog", { name: "Add" }).getByRole("button", { name: "Close" }).click();
+    await page.getByRole("button", { name: "October 2026" }).click();
+    await page.getByRole("dialog", { name: "Find a day" }).getByLabel("Search").fill("soccer");
+    await shot(page, `calendar-find-${scheme}`);
+    await page
+      .getByRole("dialog", { name: "Find a day" })
+      .getByRole("button", { name: "Close" })
+      .click();
   }
 });
 
