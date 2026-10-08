@@ -16,9 +16,9 @@ function useTonight() {
   return { dinner, cook };
 }
 
-/** The Today panel's Tonight (UX §1: a glance element): tonight's dinner and who cooks. A tap
- * opens Meals. Nothing shows when there's no dinner planned. */
-export function TonightWall() {
+/** The Today panel's Tonight (UX §1: a glance element): tonight's dinner and who cooks, on one
+ * line in portrait's band. A tap opens Meals. Nothing shows when there's no dinner planned. */
+export function TonightWall({ band = false }: { band?: boolean }) {
   const { dinner, cook } = useTonight();
   const navigate = useNavigate();
   if (!dinner) return null;
@@ -35,8 +35,12 @@ export function TonightWall() {
         }}
         className="press-row -mx-3 flex min-h-16 items-center gap-3 rounded-chip-d px-3 py-2 text-left"
       >
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-d-glance font-bold break-words">{mealName(dinner)}</span>
+        <span
+          className={`flex min-w-0 flex-1 ${band ? "flex-wrap items-baseline gap-x-3" : "flex-col"}`}
+        >
+          <span className={`${band ? "text-d-title" : "text-d-glance"} font-bold break-words`}>
+            {mealName(dinner)}
+          </span>
           {cook ? (
             <span className="text-d-secondary font-semibold text-ink-soft">{cook.name} cooks</span>
           ) : null}

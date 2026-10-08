@@ -31,7 +31,8 @@ export interface TodayBlock {
   /** Its place under the calendar's sections: Chores today 10, Tonight 20, To do 30, Coming
    * up 40 (UX §3). */
   order: number;
-  Display?: ComponentType;
+  /** `band`: portrait's Today band across the top, where room is short: show the least. */
+  Display?: ComponentType<{ band?: boolean }>;
   Phone?: ComponentType;
 }
 

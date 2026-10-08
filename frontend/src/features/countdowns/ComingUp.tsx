@@ -58,10 +58,11 @@ function useDayCelebration(items: Upcoming[], members: Member[], today: string) 
   return anchor;
 }
 
-/** The Today panel's Coming up (UX §3): the nearest three; on the day, "Today: Mia's birthday!". */
-export function ComingUpWall() {
+/** The Today panel's Coming up (UX §3): the nearest three (one in portrait's band); on the day,
+ * "Today: Mia's birthday!". */
+export function ComingUpWall({ band = false }: { band?: boolean }) {
   const today = zonedParts(useMinute()).day;
-  const { data } = useUpcoming(SHOWN);
+  const { data } = useUpcoming(band ? 1 : SHOWN);
   const { data: members = [] } = useMembers();
   const navigate = useNavigate();
   const items = data?.items ?? [];

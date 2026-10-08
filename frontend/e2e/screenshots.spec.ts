@@ -98,6 +98,8 @@ test("the wall screen", async ({ page }) => {
         await change(page, { theme, text_size: size });
         await page.reload();
         await expect(board).toBeVisible();
+        // The Today panel's plugin blocks arrive a moment after the board.
+        await expect(page.getByRole("heading", { name: "Chores today" }).first()).toBeVisible();
         await shot(page, `board-${size}-${theme}-${stop.name}`);
       }
     }

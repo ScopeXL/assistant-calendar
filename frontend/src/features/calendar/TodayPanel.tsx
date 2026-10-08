@@ -74,89 +74,101 @@ export function TodayPanel({
       aria-label="Today"
       className={
         band
-          ? "h-full columns-3 gap-x-10 overflow-hidden px-6 pt-3 pb-4 [column-fill:auto] *:mb-6 *:break-inside-avoid"
+          ? "grid min-h-0 flex-1 grid-cols-3 gap-x-10 overflow-hidden px-6 pt-3 pb-4"
           : "flex flex-col gap-8 overflow-y-auto px-6 py-6"
       }
     >
-      {parts.now.length || parts.allDay.length ? (
-        <Section id="today-now" title="Now">
-          {parts.now.map((occurrence) => (
+      {/* Portrait's band: the calendar's lines in the first column, the plugins' blocks flowing
+          through the other two. On the side panel both are simply one column. */}
+      <div className={band ? "flex min-h-0 flex-col gap-5 overflow-hidden" : "contents"}>
+        {parts.now.length || parts.allDay.length ? (
+          <Section id="today-now" title="Now">
+            {parts.now.map((occurrence) => (
+              <Line
+                onOpen={open}
+                key={occurrence.key}
+                occurrence={occurrence}
+                members={members}
+                when={occurrence.end_local ? `until ${formatWallTime(occurrence.end_local)}` : ""}
+                glance
+              />
+            ))}
+            {parts.allDay.map((occurrence) => (
+              <Line
+                key={occurrence.key}
+                onOpen={open}
+                occurrence={occurrence}
+                members={members}
+                when="All day"
+              />
+            ))}
+          </Section>
+        ) : null}
+        {parts.upNext ? (
+          <Section id="today-up-next" title="Up next">
             <Line
               onOpen={open}
-              key={occurrence.key}
-              occurrence={occurrence}
+              occurrence={parts.upNext}
               members={members}
-              when={occurrence.end_local ? `until ${formatWallTime(occurrence.end_local)}` : ""}
+              when={startText(parts.upNext)}
               glance
+              detail
             />
-          ))}
-          {parts.allDay.map((occurrence) => (
-            <Line
-              key={occurrence.key}
-              onOpen={open}
-              occurrence={occurrence}
-              members={members}
-              when="All day"
-            />
-          ))}
-        </Section>
-      ) : null}
-      {parts.upNext ? (
-        <Section id="today-up-next" title="Up next">
-          <Line
-            onOpen={open}
-            occurrence={parts.upNext}
-            members={members}
-            when={startText(parts.upNext)}
-            glance
-            detail
-          />
-        </Section>
-      ) : null}
-      {parts.later.length ? (
-        <Section id="today-later" title="Later today">
-          {parts.later.map((occurrence) => (
-            <Line
-              onOpen={open}
-              key={occurrence.key}
-              occurrence={occurrence}
-              members={members}
-              when={startText(occurrence)}
-            />
-          ))}
-        </Section>
-      ) : null}
-      {nothingLeft ? (
-        <div className="flex flex-col gap-2">
-          {/* Glance-sized when it's all there is; quieter under what's on now. */}
-          <p
-            className={
-              onNow ? "text-d-body font-semibold text-ink-soft" : "text-d-glance font-bold"
-            }
-          >
-            {hadToday ? "Nothing else on today." : "Nothing on today."}
-          </p>
-          {!showTomorrow && firstTomorrow ? (
-            <p className="text-d-secondary text-ink-soft">
-              Tomorrow · {startText(firstTomorrow)} {firstTomorrow.title}
+          </Section>
+        ) : null}
+        {parts.later.length ? (
+          <Section id="today-later" title="Later today">
+            {parts.later.map((occurrence) => (
+              <Line
+                onOpen={open}
+                key={occurrence.key}
+                occurrence={occurrence}
+                members={members}
+                when={startText(occurrence)}
+              />
+            ))}
+          </Section>
+        ) : null}
+        {nothingLeft ? (
+          <div className="flex flex-col gap-2">
+            {/* Glance-sized when it's all there is; quieter under what's on now. */}
+            <p
+              className={
+                onNow ? "text-d-body font-semibold text-ink-soft" : "text-d-glance font-bold"
+              }
+            >
+              {hadToday ? "Nothing else on today." : "Nothing on today."}
             </p>
-          ) : null}
-        </div>
-      ) : null}
-      {showTomorrow ? (
-        <Section id="today-tomorrow" title="Tomorrow">
-          {tomorrows.map((occurrence) => (
-            <Line
-              onOpen={open}
-              key={occurrence.key}
-              occurrence={occurrence}
-              members={members}
-              when={startText(occurrence)}
-            />
-          ))}
-        </Section>
-      ) : null}
-      {blocks.map(({ key, Display }) => (Display ? <Display key={key} /> : null))}
+            {!showTomorrow && firstTomorrow ? (
+              <p className="text-d-secondary text-ink-soft">
+                Tomorrow · {startText(firstTomorrow)} {firstTomorrow.title}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        {showTomorrow ? (
+          <Section id="today-tomorrow" title="Tomorrow">
+            {tomorrows.map((occurrence) => (
+              <Line
+                onOpen={open}
+                key={occurrence.key}
+                occurrence={occurrence}
+                members={members}
+                when={startText(occurrence)}
+              />
+            ))}
+          </Section>
+        ) : null}
+      </div>
+      <div
+        className={
+          band
+            ? "col-span-2 h-full columns-2 gap-x-10 overflow-hidden [column-fill:auto] *:mb-2 *:break-inside-avoid"
+            : "contents"
+        }
+      >
+        {blocks.map(({ key, Display }) => (Display ? <Display key={key} band={band} /> : null))}
+      </div>
     </aside>
   );
 }

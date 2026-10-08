@@ -65,7 +65,7 @@
      wide figures need it for a glance-sized clock (ADR 0021). */
   --rail-w: 12rem;
   --panel-w: 25rem;
-  --band-h: 25rem; /* portrait's Today band */
+  --band-h: 28rem; /* portrait's Today band: room for every block in three columns */
   --keyboard-w: 960px;
   --tabbar-h: 3.5rem;
 }

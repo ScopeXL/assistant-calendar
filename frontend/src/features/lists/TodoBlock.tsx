@@ -13,7 +13,7 @@ function detailOf(item: TodoItem, today: string): string {
 }
 
 /** The Today panel's To do (UX §3): items due today, and late ones; a line opens its list. */
-export function TodoBlockWall() {
+export function TodoBlockWall({ band = false }: { band?: boolean }) {
   const today = zonedParts(useMinute()).day;
   const { data } = useTodo(today);
   const { data: members = [] } = useMembers();
@@ -38,7 +38,9 @@ export function TodoBlockWall() {
           >
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-d-body font-semibold break-words">{item.text}</span>
-              <span className="text-d-secondary text-ink-soft">{detailOf(item, today)}</span>
+              {band ? null : (
+                <span className="text-d-secondary text-ink-soft">{detailOf(item, today)}</span>
+              )}
             </span>
             {who ? <Avatar member={who} size="sm" /> : null}
           </button>
