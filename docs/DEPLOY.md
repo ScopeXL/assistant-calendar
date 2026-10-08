@@ -37,6 +37,8 @@ On a plain home network you can skip the proxy entirely: leave every variable em
    | `TZ` | Your time zone, e.g. `America/New_York`. The setup on your phone suggests one too |
    | `APP_PASSWORD` | Optional. A household password that always wins over the one chosen in setup, 12 characters or more |
    | `APP_SECRET_KEY` | Optional. Without it, Sunroom makes one and keeps it on the volume. If you set it (`openssl rand -base64 48`), keep a copy in a password manager: changing it signs everyone out |
+   | `SUNROOM_INSTALL_KIND` | Optional. `portainer` when Portainer manages the stack, so Settings → About says how to update that way (the default, `docker`, means Compose in this folder) |
+   | `SUNROOM_UPDATE_CHECK` | Optional. `0` keeps the daily check for new versions off, whatever Settings → About says |
 
 3. Keep the `volumes:` block at the end of the file, with `name: sunroom_data`. It creates the
    `sunroom_data` volume, where the database, the nightly backups and the photos live, with the
@@ -119,6 +121,10 @@ Each release prints these steps. In Sunroom's folder on the server:
 2. Wait for **healthy** (`docker compose ps`), then check `<your address>/api/version` shows the
    new version.
 
+To hear about new versions, turn on **Settings → About → Check for new versions daily**: once a
+day Sunroom asks GitHub for the newest release (GitHub sees your server's address) and About
+says when one is out, with these steps. It's off until you turn it on.
+
 Before migrating, Sunroom copies the database into `/data/backups/pre-migrate/`. If a migration
 fails, it refuses to start and the data is left exactly as it was. The kitchen screen picks up
 the new version at its overnight restart.
@@ -130,9 +136,11 @@ the new version at its overnight restart.
 
 - A verified copy is written every night at 03:30 (household time) into `/data/backups/`,
   keeping 14 daily and 8 weekly copies. **Settings → Backup** shows when the last one ran, and has
-  **Back up now** and a download of the newest copy.
-- Photos are files on the volume, not in the database. Include the whole `sunroom_data` volume in
-  your host's own backups.
+  **Back up now**, **Download backup** (the newest copy) and **Download everything** (the
+  database and every photo in one zip, which restores anywhere).
+- Photos are files on the volume, not in the database: only Download everything has them. Include
+  the whole `sunroom_data` volume in your host's own backups too, or download everything now and
+  then and keep it off the server.
 - To restore, see [RESTORE.md](RESTORE.md).
 
 ## Troubleshooting
