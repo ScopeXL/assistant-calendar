@@ -1,0 +1,43 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: uv
+    directory: /backend
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      python:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      frontend:
+        patterns: ["*"]
+    ignore:
+      # TypeScript stays on 6.0.x until typescript-eslint and openapi-typescript support newer
+      # versions (Dinner Bell's ADR 0023, PLAN §14.5).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
