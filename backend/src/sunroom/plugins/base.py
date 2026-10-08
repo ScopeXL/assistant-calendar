@@ -134,6 +134,12 @@ class Plugin(Protocol):
         """Extra checks after coercion; return plain-English problems (empty when fine)."""
         ...
 
+    async def seed_sample(self, ctx: PluginContext, people: dict[str, str]) -> None:
+        """Test mode only (``just seed``, screenshots, end-to-end runs): the synthetic Sample
+        Family's data in this plugin's tables. ``people`` maps names (Ana, Sam, Mia, Leo) to
+        member ids."""
+        ...
+
 
 class PluginBase:
     """Optional defaults for the hooks most plugins don't need."""
@@ -154,3 +160,6 @@ class PluginBase:
 
     async def validate_settings(self, ctx: PluginContext, values: dict[str, Any]) -> list[str]:
         return []
+
+    async def seed_sample(self, ctx: PluginContext, people: dict[str, str]) -> None:
+        return None

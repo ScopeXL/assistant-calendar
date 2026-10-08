@@ -12,7 +12,6 @@ from pathlib import Path
 import httpx
 import pytest
 from fastapi import FastAPI
-from fastapi.routing import APIRoute
 
 import sunroom.plugins
 from sunroom.app import create_app
@@ -27,7 +26,7 @@ from sunroom.plugins.base import PLUGIN_ID, Plugin
 from sunroom.plugins.registry import REGISTRY
 from sunroom.plugins.spec import coerce_params, defaults
 from tests.plugins.sample import SamplePlugin
-from tests.support import BASE_URL, make_settings, run_setup
+from tests.support import BASE_URL, CSRF, make_settings, run_setup
 
 PLUGINS_DIR = Path(sunroom.plugins.__file__).parent
 FRAMEWORK = {
@@ -144,19 +143,29 @@ def test_the_framework_folder_holds_only_the_framework() -> None:
 
 
 async def test_every_plugin_route_is_gated(data_dir: Path) -> None:
-    """While off, every route a plugin registers answers 404 plugin_disabled."""
+    """While off, every route a plugin registers answers 404 plugin_disabled, whatever the
+    method. The routes come from the OpenAPI document: since FastAPI 0.142 ``app.routes`` holds
+    the included routers rather than their routes, and a loop over it would check nothing."""
     plugins: dict[str, Plugin] = {**REGISTRY, "sample": SamplePlugin()}
     app: FastAPI = create_app(make_settings(data_dir), plugins=plugins)
+    paths: dict[str, dict[str, object]] = app.openapi()["paths"]
     async with app.router.lifespan_context(app):
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as client:
             await run_setup(client)
-            for route in app.routes:
-                if not isinstance(route, APIRoute):
-                    continue
-                for plugin in plugins.values():
-                    prefix = f"/api/{plugin.manifest.url_prefix}/"
-                    if route.path.startswith(prefix) and "GET" in (route.methods or set()):
-                        response = await client.get(route.path)
-                        assert response.status_code == 404, route.path
+            for plugin_id in REGISTRY:
+                off = await client.post(f"/api/plugins/{plugin_id}/disable", headers=CSRF)
+                assert off.status_code == 200, off.text
+            checked = 0
+            for plugin in plugins.values():
+                prefix = f"/api/{plugin.manifest.url_prefix}"
+                for path, operations in paths.items():
+                    if path != prefix and not path.startswith(f"{prefix}/"):
+                        continue
+                    for method in operations:
+                        response = await client.request(method.upper(), path, headers=CSRF)
+                        assert response.status_code == 404, (method, path, response.text)
                         assert response.json()["error"]["code"] == "plugin_disabled"
+                        checked += 1
+            # Every registered plugin has routes; a count of none means the walk broke.
+            assert checked >= 3 * len(REGISTRY)

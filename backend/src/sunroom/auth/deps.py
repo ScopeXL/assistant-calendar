@@ -182,6 +182,20 @@ def parent_required(actor: Actor, state: AppState) -> AppError:
     return AppError(403, "parent_required", "Ask a parent to do that.", extra={"pin": False})
 
 
+def parent_refusal(actor: Actor) -> AppError:
+    """``parent_required`` for code that can't see the app's state (plugins). A device that
+    isn't a parent's is a wall screen or a kid's phone only while the household has a PIN, so
+    the PIN is on offer exactly then."""
+    if actor.is_kiosk or actor.is_kid_device:
+        return AppError(
+            403,
+            "parent_required",
+            "Only a parent can do that. Enter the parent PIN.",
+            extra={"pin": True},
+        )
+    return AppError(403, "parent_required", "Ask a parent to do that.", extra={"pin": False})
+
+
 async def current_parent(actor: ActorDep, state: StateDep) -> Actor:
     if not actor.is_parent:
         raise parent_required(actor, state)

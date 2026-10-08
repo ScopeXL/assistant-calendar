@@ -321,6 +321,15 @@ class PluginManager:
             tx.publish("plugins.changed", {"id": plugin_id, "status": live.status.value})
         return dict(values)
 
+    async def seed_sample(self, people: dict[str, str]) -> None:
+        """Test mode's Sample Family: each enabled plugin adds its own synthetic data."""
+        for plugin_id, plugin in self.registry.items():
+            if not self.is_enabled(plugin_id):
+                continue
+            live = self._live[plugin_id]
+            ctx = live.runner.ctx if live.runner else self._idle_context(plugin_id)
+            await plugin.seed_sample(ctx, people)
+
     # ---- hub events ----------------------------------------------------------------------
 
     def deliver(self, event_type: str, payload: dict[str, Any]) -> None:

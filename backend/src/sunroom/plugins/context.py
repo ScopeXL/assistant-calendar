@@ -1,9 +1,9 @@
 """PluginContext: the whole world a plugin sees (PLAN §6.2).
 
 Time and zone, its own settings, read and write sessions (the write transaction's ``publish``
-sends live-update events after commit), read-only facades for core data (members, photos, the
-calendar, which also takes overlays), the SSRF-guarded HTTP client, encryption under the
-``plugin-secrets-v1`` key, and job registration. Never the engine, never app state.
+sends live-update events after commit), read-only facades for core data (the household, members,
+photos, the calendar, which also takes overlays), the SSRF-guarded HTTP client, encryption under
+the ``plugin-secrets-v1`` key, and job registration. Never the engine, never app state.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sunroom.core.clock import Clock
 from sunroom.core.http import FetchResult, GuardedHttp
 from sunroom.db.engine import WriteTx
-from sunroom.household.models import Member
+from sunroom.household.models import Household, Member
 
 if TYPE_CHECKING:
     from sunroom.calendar.models import Calendar
@@ -47,6 +47,13 @@ class MemberView:
     birthday: date | None
 
 
+@dataclass(frozen=True, slots=True)
+class HouseholdView:
+    name: str
+    week_starts_on: int  # 0 Monday … 6 Sunday
+    kid_safe_editing: bool
+
+
 class Sessions(Protocol):
     def read(self) -> AbstractAsyncContextManager[AsyncSession]: ...
     def write(self) -> AbstractAsyncContextManager[WriteTx]: ...
@@ -55,6 +62,18 @@ class Sessions(Protocol):
 class Runner(Protocol):
     def every(self, name: str, interval_s: float, job: Job) -> None: ...
     def spawn(self, name: str, coro: Coroutine[Any, Any, None]) -> None: ...
+
+
+class HouseholdFacade:
+    def __init__(self, sessions: Sessions) -> None:
+        self._sessions = sessions
+
+    async def get(self) -> HouseholdView:
+        async with self._sessions.read() as session:
+            home = await session.get(Household, 1)
+            if home is None:
+                return HouseholdView("Our home", 6, True)
+            return HouseholdView(home.name, home.week_starts_on, home.kid_safe_editing)
 
 
 class MembersFacade:
@@ -389,6 +408,7 @@ class PluginContext:
         self._cipher = cipher
         self._runner = runner
         self._enabled_of = enabled_of
+        self.household = HouseholdFacade(sessions)
         self.members = MembersFacade(sessions)
         self.photos = photos
         self.calendar = CalendarFacade(plugin_id, sessions, calendar, zone_of, clock.now)

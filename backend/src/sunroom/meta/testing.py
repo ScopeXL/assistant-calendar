@@ -148,6 +148,7 @@ class SeedIn(BaseModel):
     pin: Annotated[str, Field(pattern=r"^\d{4,6}$")] | None = None
     timezone: str = "America/New_York"
     events: bool = True  # a week of sample events around today; False for an empty board
+    plugins: bool = True  # each enabled plugin's sample data (lists, chores…); False for none
 
 
 SAMPLE_FAMILY: tuple[tuple[str, str, str, date | None], ...] = (
@@ -161,8 +162,8 @@ SAMPLE_FAMILY: tuple[tuple[str, str, str, date | None], ...] = (
 @router.post("/seed", status_code=204)
 async def seed(body: SeedIn, state: StateDep) -> None:
     """The synthetic "Sample Family" (`just seed`, screenshots, end-to-end runs): set up, four
-    people, an optional PIN, a second calendar and a week of events around today. Later
-    milestones add chores, lists and photos."""
+    people, an optional PIN, a second calendar and a week of events around today, and each
+    enabled plugin's own (lists and chores since M3)."""
     await _seed(state, body)
 
 
@@ -210,6 +211,8 @@ async def _seed(state: AppState, body: SeedIn) -> None:
         has_events = await db.scalar(select(Event.id).limit(1)) is not None
     if body.events and not has_events:
         await _seed_events(state, people)
+    if body.plugins:
+        await state.plugins.seed_sample(people)
 
 
 async def _seed_events(state: AppState, people: dict[str, str]) -> None:
