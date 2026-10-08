@@ -169,6 +169,23 @@ class PhotoStore:
     def free_bytes(self) -> int:
         return shutil.disk_usage(self.root if self.root.exists() else self.root.parent).free
 
+    def _check_room(self) -> None:
+        if self.free_bytes() < MIN_FREE_BYTES:
+            raise AppError(
+                507,
+                "storage_full",
+                "Photos need room. Remove some, or move photos to a bigger disk (About → Storage).",
+            )
+
+    async def encode(self, data: bytes, *, kind: PhotoKind, zone: ZoneInfo) -> Encoded:
+        """Re-encode a photo (in a thread). Call it before the write transaction and hand the
+        result to ``ingest``: on a Pi it takes a second or more, and every other change in the
+        app waits while the write lock is held."""
+        self._check_room()
+        if kind is PhotoKind.AVATAR:
+            return await asyncio.to_thread(encode_avatar, data)
+        return await asyncio.to_thread(encode_library, data, zone)
+
     async def ingest(
         self,
         session: AsyncSession,
@@ -179,13 +196,11 @@ class PhotoStore:
         now: datetime,
         source_key: str = "upload",
         original_name: str | None = None,
+        encoded: Encoded | None = None,
     ) -> Photo:
-        if self.free_bytes() < MIN_FREE_BYTES:
-            raise AppError(
-                507,
-                "storage_full",
-                "Photos need room. Remove some, or move photos to a bigger disk (About → Storage).",
-            )
+        """Store a photo (or bring back the same one, removed or not). ``encoded``: from
+        ``encode``, done outside the transaction; without it the encoding happens here."""
+        self._check_room()
         digest = hashlib.sha256(data).hexdigest()
         existing = await session.scalar(
             select(Photo).where(Photo.kind == kind.value, Photo.sha256 == digest)
@@ -193,10 +208,8 @@ class PhotoStore:
         if existing is not None and self._files_present(existing):
             existing.deleted_at = None
             return existing
-        if kind is PhotoKind.AVATAR:
-            encoded = await asyncio.to_thread(encode_avatar, data)
-        else:
-            encoded = await asyncio.to_thread(encode_library, data, zone)
+        if encoded is None:
+            encoded = await self.encode(data, kind=kind, zone=zone)
         photo = existing or Photo(kind=kind.value, sha256=digest)
         photo.source_key = source_key
         photo.original_name = (original_name or "")[:255] or None

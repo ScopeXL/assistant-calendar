@@ -1,0 +1,79 @@
+{
+  "results": [
+    {
+      "id": 9900101,
+      "name": "Sample Town",
+      "latitude": 40.71,
+      "longitude": -74.01,
+      "elevation": 10.0,
+      "feature_code": "PPL",
+      "country_code": "US",
+      "admin1_id": 9900001,
+      "timezone": "America/New_York",
+      "population": 12400,
+      "country_id": 9900000,
+      "country": "United States",
+      "admin1": "Sample State"
+    },
+    {
+      "id": 9900102,
+      "name": "Sample Village",
+      "latitude": 41.02,
+      "longitude": -73.62,
+      "elevation": 31.0,
+      "feature_code": "PPL",
+      "country_code": "US",
+      "admin1_id": 9900001,
+      "admin2_id": 9900011,
+      "timezone": "America/New_York",
+      "population": 3100,
+      "country_id": 9900000,
+      "country": "United States",
+      "admin1": "Sample State",
+      "admin2": "Sample County"
+    },
+    {
+      "id": 9900103,
+      "name": "Sampleton",
+      "latitude": 52.0,
+      "longitude": 0.5,
+      "elevation": 22.0,
+      "feature_code": "PPLA",
+      "country_code": "GB",
+      "admin1_id": 9900103,
+      "timezone": "Europe/London",
+      "population": 8600,
+      "country_id": 9900002,
+      "country": "United Kingdom",
+      "admin1": "Sampleton"
+    },
+    {
+      "id": 9900104,
+      "name": "Sample Bay",
+      "latitude": 50.1,
+      "longitude": -5.1,
+      "elevation": 4.0,
+      "feature_code": "PPL",
+      "country_code": "GB",
+      "timezone": "Europe/London",
+      "country_id": 9900002,
+      "country": "United Kingdom"
+    },
+    {
+      "id": 9900105,
+      "name": "Sample Harbour",
+      "latitude": 44.6,
+      "longitude": -63.6,
+      "elevation": 12.0,
+      "feature_code": "PPL",
+      "country_code": "CA",
+      "admin1_id": 9900003,
+      "timezone": "America/Halifax",
+      "population": 5400,
+      "country_id": 9900004,
+      "country": "Canada",
+      "admin1": "Sample Province"
+    }
+  ],
+  "generationtime_ms": 0.6141662597656
+}

@@ -118,6 +118,8 @@ async def upload_photo(request: Request, state: StateDep, actor: ActorDep) -> Ph
     _check_upload_rate(state.uploads, actor.device_id, state.clock.now())
     data = await read_upload(request)
     name = request.headers.get("x-filename")
+    # Encoded before the write lock is taken: it's the slow part.
+    encoded = await state.photos.encode(data, kind=PhotoKind.LIBRARY, zone=state.zone())
     async with state.db.write() as tx:
         photo = await state.photos.ingest(
             tx.session,
@@ -126,6 +128,7 @@ async def upload_photo(request: Request, state: StateDep, actor: ActorDep) -> Ph
             zone=state.zone(),
             now=state.clock.now(),
             original_name=name,
+            encoded=encoded,
         )
         tx.publish("photos.changed", {"id": photo.id})
         return photo_out(photo)

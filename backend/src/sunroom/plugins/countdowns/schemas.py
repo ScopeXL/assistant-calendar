@@ -77,7 +77,7 @@ class UpcomingListOut(BaseModel):
     items: list[UpcomingOut]  # soonest first
 
 
-class RemovedOut(BaseModel):
+class RemovedCountdownOut(BaseModel):
     id: str
     title: str
     date: dt.date

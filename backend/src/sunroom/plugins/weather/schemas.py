@@ -12,21 +12,21 @@ from pydantic import BaseModel
 Units = Literal["fahrenheit", "celsius"]
 
 
-class CurrentOut(BaseModel):
+class WeatherNowOut(BaseModel):
     time: dt.datetime
     temperature: int
     code: int
     is_day: bool
 
 
-class HourOut(BaseModel):
+class ForecastHourOut(BaseModel):
     time: dt.datetime
     temperature: int
     code: int
     precipitation: int | None  # the chance of rain or snow, in percent
 
 
-class DayOut(BaseModel):
+class ForecastDayOut(BaseModel):
     date: dt.date
     code: int
     high: int
@@ -39,14 +39,14 @@ class DayOut(BaseModel):
 class WeatherOut(BaseModel):
     """``status``: ok (a forecast, maybe stale), no_location (Settings → Household → Location
     isn't set), waiting (set, nothing fetched yet), error (nothing to show, ``message`` says
-    why)."""
+    why). With ok, ``message`` is why the last check failed while the last forecast shows."""
 
     status: Literal["ok", "no_location", "waiting", "error"]
     location_label: str | None
     units: Units
-    current: CurrentOut | None
-    hourly: list[HourOut]  # from this hour, the next 24
-    daily: list[DayOut]  # from today, up to 7 days
+    current: WeatherNowOut | None
+    hourly: list[ForecastHourOut]  # from this hour, the next 24
+    daily: list[ForecastDayOut]  # from today, up to 7 days
     fetched_at: dt.datetime | None
     stale: bool  # the forecast is over 3 hours old ("as of 9:10")
     message: str | None

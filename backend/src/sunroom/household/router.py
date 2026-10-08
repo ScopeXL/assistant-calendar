@@ -166,10 +166,17 @@ async def set_avatar(
 ) -> MemberOut:
     """The picture is the request body (JPEG, PNG, WebP, HEIC), up to 15 MB."""
     data = await read_upload(request)
+    # Encoded before the write lock is taken: it's the slow part.
+    encoded = await state.photos.encode(data, kind=PhotoKind.AVATAR, zone=state.zone())
     async with state.db.write() as tx:
         member = await service.get_member(tx.session, member_id)
         photo = await state.photos.ingest(
-            tx.session, data, kind=PhotoKind.AVATAR, zone=state.zone(), now=state.clock.now()
+            tx.session,
+            data,
+            kind=PhotoKind.AVATAR,
+            zone=state.zone(),
+            now=state.clock.now(),
+            encoded=encoded,
         )
         member.avatar_photo_id = photo.id
         tx.publish("members.changed", {"id": member.id})

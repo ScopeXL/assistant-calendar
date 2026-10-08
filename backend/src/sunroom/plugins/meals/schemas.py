@@ -31,7 +31,7 @@ class EntryOut(BaseModel):
     updated_at: datetime
 
 
-class WeekOut(BaseModel):
+class MealWeekOut(BaseModel):
     start: date
     days: int  # how many days from start (7 for a week, 1 for Tonight)
     slots: list[SlotName]  # the slots the household uses, in the day's order (settings)
@@ -63,7 +63,7 @@ class EntrySaved(BaseModel):
     replaced: EntryOut | None
 
 
-class MoveIn(BaseModel):
+class MealMoveIn(BaseModel):
     """Move an entry to another day (and slot); one already there takes this one's place
     ("Swap days")."""
 
@@ -71,7 +71,7 @@ class MoveIn(BaseModel):
     slot: SlotName | None = None  # None: the same slot
 
 
-class MoveOut(BaseModel):
+class MealMoveOut(BaseModel):
     moved: EntryOut
     swapped: EntryOut | None  # the one that was there, now in the moved one's old spot
 
@@ -129,7 +129,7 @@ class RemovedSavedOut(BaseModel):
     deleted_at: datetime
 
 
-class RemovedOut(BaseModel):
+class MealsRemovedOut(BaseModel):
     """Recently removed (7 days): entries taken off a day, and saved meals archived."""
 
     entries: list[RemovedEntryOut]
