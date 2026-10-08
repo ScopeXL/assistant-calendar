@@ -57,10 +57,16 @@ class CSRFGuard:
             if origin == expected:
                 return None
             if scope["scheme"] == "http" and origin == f"https://{host}":
-                # The browser is on https, but no trusted proxy said so (PLAN §13.4).
+                # The browser is on https, but no trusted proxy said so (PLAN §13.4). The
+                # proxy's own address, logged once, is what TRUSTED_PROXIES needs (DEPLOY.md).
                 if not self._warned:
                     self._warned = True
-                    log.warning("csrf.proxy_not_trusted", fix="set TRUSTED_PROXIES")
+                    client = scope.get("client")
+                    log.warning(
+                        "csrf.proxy_not_trusted",
+                        proxy=client[0] if client else None,
+                        fix="set TRUSTED_PROXIES to this proxy's address or network",
+                    )
                 return _refuse(
                     "proxy_not_trusted",
                     "Sunroom is behind an https address but doesn't trust the proxy yet. Set "

@@ -64,6 +64,14 @@ export function AboutPage() {
             >
               <Text>{`${diagnostics.client.scheme}://${diagnostics.client.host}`}</Text>
             </Row>
+            {diagnostics.client.resolved_ip ? (
+              <Row
+                label="Sunroom sees it as"
+                hint="Behind a reverse proxy, this is the phone's own address once TRUSTED_PROXIES is right."
+              >
+                <Text>{diagnostics.client.resolved_ip}</Text>
+              </Row>
+            ) : null}
             <Row
               label="Recently reached at"
               hint="Any of these works from a phone on the same network."
