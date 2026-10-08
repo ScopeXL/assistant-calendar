@@ -1054,5 +1054,10 @@ def test_the_walk_agrees_with_dateutil(spec: Spec, first: date) -> None:
         cut = first - timedelta(days=(first.weekday() - spec.wkst) % 7)
         cut += timedelta(weeks=spec.interval)
     ours = expand(series, [], dates(cut, horizon + timedelta(days=1)), limit=10_000)
-    theirs = [day for day in spec.dates(first, horizon) if day >= cut]
+    try:
+        theirs = [day for day in spec.dates(first, horizon) if day >= cut]
+    except IndexError:
+        # dateutil itself crashes on some yearly rules with a 53rd weekday and BYMONTH
+        # ("FREQ=YEARLY;BYMONTH=1,2;BYDAY=1MO,53MO"); the reference can't judge those.
+        reject()
     assert [occurrence.timing.start_date for occurrence in ours] == theirs
