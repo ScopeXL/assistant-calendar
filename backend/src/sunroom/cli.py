@@ -146,7 +146,7 @@ def cmd_reset_password(args: argparse.Namespace) -> None:
     if settings.app_password is not None:
         print(
             "APP_PASSWORD is set, and it always wins. Change it where the server's settings live "
-            "(the Portainer stack, or /opt/sunroom/.env on the Pi) and restart.",
+            "(Sunroom's docker-compose.yml or the .env beside it) and restart.",
             file=sys.stderr,
         )
         raise SystemExit(1)

@@ -53,9 +53,11 @@ screens that stay blank, updates and removal.
 Run the container on the computer that already runs Docker. Nothing needs configuring; it keeps
 everything in the `sunroom_data` volume.
 
-- **Portainer:** Stacks → Add stack → Web editor, paste
-  [docker-compose.example.yml](docker-compose.example.yml), Deploy.
-- **Docker Compose:** save that file as `docker-compose.yml`, then `docker compose up -d`.
+- **Docker Compose:** in a folder of its own on the server (for example `/opt/sunroom`), save
+  [docker-compose.example.yml](docker-compose.example.yml) as `docker-compose.yml`, then run
+  `docker compose up -d`. Keep the `volumes:` block at the end: it creates the `sunroom_data`
+  volume. Port 8080 already taken? Change only the left number, for example `"8081:8080"`.
+- **Portainer:** Stacks → Add stack → Web editor, paste the same file, Deploy.
 - **Unraid, CasaOS, Synology:** add a container from the image `scopexl/sunroom:latest`, port
   8080, and a volume (or folder) for `/data`. If you map a folder, it must be writable by the
   container's user (`--user 99:100` on Unraid's appdata).

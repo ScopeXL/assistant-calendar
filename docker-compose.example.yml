@@ -1,5 +1,6 @@
-# Sunroom with Docker Compose or as a Portainer stack (docs/DEPLOY.md). For Portainer, paste this
-# into Stacks → Add stack → Web editor, then fill in the stack's environment variables.
+# Sunroom with Docker Compose (docs/DEPLOY.md). Save this as docker-compose.yml in a folder of its
+# own on the server (for example /opt/sunroom), fill in what applies, here or in a .env beside it,
+# and run `docker compose up -d`. It also works pasted into Portainer as a stack.
 # Placeholders only; never commit real values. Nothing here is required: leave a variable empty
 # and Sunroom does without it.
 services:
@@ -17,11 +18,16 @@ services:
       APP_PASSWORD: ${APP_PASSWORD:-}
       APP_SECRET_KEY: ${APP_SECRET_KEY:-}
     volumes:
-      # A named volume: correct ownership with no extra steps. The database, nightly backups and
-      # photos all live here, so back up the whole volume.
+      # The sunroom_data volume (the volumes: block at the end creates it): correct ownership with
+      # no extra steps. The database, nightly backups and photos all live here, so back up the
+      # whole volume. A host folder instead needs `user:` set to the folder's owner, see below.
       - sunroom_data:/data
+    # With a host folder at /data instead of the volume: run as the folder's owner (id -u, id -g).
+    # user: "1000:1000"
     ports:
-      - "8080:8080" # or remove this and attach the container to your proxy's network
+      # host:container. Another app on 8080? Change only the left number, e.g. "8081:8080".
+      # Or remove these lines and put the container on your proxy's Docker network.
+      - "8080:8080"
     read_only: true
     tmpfs:
       - /tmp
@@ -34,6 +40,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
+# Keep this block: it creates the volume above, named exactly sunroom_data (RESTORE.md uses it).
 volumes:
   sunroom_data:
     name: sunroom_data

@@ -25,7 +25,8 @@ docker run --rm -v sunroom_data:/data --user 10001:10001 \
 
 ## 2. Stop Sunroom
 
-- Portainer: **Stacks → sunroom → Stop this stack**.
+- In the folder with Sunroom's `docker-compose.yml`: `docker compose stop` (Portainer's
+  **Stop** button does the same).
 - On a Raspberry Pi that runs Sunroom: `cd /opt/sunroom && sudo docker compose stop`.
 - Otherwise: `docker stop sunroom`.
 
@@ -50,9 +51,10 @@ prints the oldest Sunroom version that can open it.
 
 ## 4. Start the right version
 
-Start an image **at or above** the version `restore` printed. Sunroom runs any newer migrations
-itself, after taking its own pre-upgrade copy. An image older than the backup's database refuses
-to start (exit 65) instead of guessing.
+Start an image **at or above** the version `restore` printed: in Sunroom's folder, set that
+version in `image:` if you pin one, then run `docker compose up -d`. Sunroom runs any newer
+migrations itself, after taking its own pre-upgrade copy. An image older than the backup's
+database refuses to start (exit 65) instead of guessing.
 
 ## 5. Check
 

@@ -6,6 +6,13 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The instructions for running Sunroom on a server now start from a `docker-compose.yml` in a
+  folder of its own, started with `docker compose up -d` (a Portainer stack still works). They
+  also cover running it next to another app that already uses port 8080, and using a host folder
+  instead of the `sunroom_data` volume.
+
 ## [0.1.0] - 2026-10-08
 
 ### Added

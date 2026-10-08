@@ -58,8 +58,8 @@ Preflight checks this with a dry-run push before anything is tagged.
 
 ## Rolling back
 
-- **If the release didn't change the database** (no new migration), redeploy the previous tag
-  in Portainer.
+- **If the release didn't change the database** (no new migration), set the previous version
+  in `docker-compose.yml` (`image: scopexl/sunroom:X.Y.Z`) and run `docker compose up -d`.
 - **If it did,** restore the pre-upgrade copy ([RESTORE.md](RESTORE.md)), then deploy the
   previous tag.
 

@@ -166,8 +166,8 @@ kiosk/           install.sh, the launcher, systemd units, labwc-rule.py, update.
 5. `just smoke-image vX.Y.Z` then `just image`: multi-arch from `git archive` of the tag, pushed
    as `X.Y.Z`, `X.Y` and `latest`.
 6. `just image-verify`: both architectures, tags agree, probes and setup pass, private scan clean.
-7. Report the version, SHA and digest, what changed, whether the database changed, the Portainer
-   steps, and the phone and wall-screen checklist.
+7. Report the version, SHA and digest, what changed, whether the database changed, the server
+   steps (`docker compose pull && docker compose up -d`), and the phone and wall-screen checklist.
 
 ## Gotchas that already bit
 

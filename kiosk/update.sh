@@ -154,7 +154,7 @@ main() {
 		die "Please run:  sudo /opt/sunroom/update.sh"
 	fi
 	[[ -f $COMPOSE_FILE ]] || die "Sunroom isn't installed in $SUNROOM_DIR on this Pi, so there is nothing to update." \
-		"If Sunroom runs on another computer, update it there (Portainer: re-pull and redeploy the stack)."
+		"If Sunroom runs on another computer, update it there: docker compose pull && docker compose up -d in its folder."
 	command -v docker >/dev/null 2>&1 || die "Docker isn't installed, so Sunroom can't run here. Run the installer again."
 	docker compose version >/dev/null 2>&1 || die "Docker's compose tool is missing. Run the installer again; it adds it."
 
