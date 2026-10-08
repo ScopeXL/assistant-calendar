@@ -35,7 +35,7 @@ CORE_EXPORT_EXCLUDED: tuple[str, ...] = (
 )
 # Exported tables' columns that never leave (PLAN §10.4).
 CORE_COLUMN_EXCLUDED: dict[str, frozenset[str]] = {
-    "household": frozenset({"parent_pin_hash"}),
+    "household": frozenset({"parent_pin_hash", "pin_length"}),
 }
 SECRET_SUFFIXES = ("_enc", "_hash", "_fp")
 FORMAT = "sunroom-export"

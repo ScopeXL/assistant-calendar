@@ -21,6 +21,7 @@ async def test_the_export_lists_every_exported_table(parent: httpx.AsyncClient) 
     household = body["data"]["household"][0]
     assert household["name"] == "Sample Family"
     assert "parent_pin_hash" not in household
+    assert "pin_length" not in household
     text = response.text
     assert "pbkdf2_sha256" not in text and "scrypt$" not in text
 

@@ -26,6 +26,7 @@ class SessionOut(BaseModel):
     is_parent: bool
     is_kid_device: bool
     has_pin: bool
+    pin_length: int | None  # the PIN pad accepts as soon as this many digits are in
     grant_expires_at: datetime | None  # a parent-PIN grant on this device, until then
 
 

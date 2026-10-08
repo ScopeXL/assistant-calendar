@@ -19,6 +19,7 @@ async def test_settings_start_with_the_household_defaults(parent: httpx.AsyncCli
     assert settings["theme"] == "auto"
     assert settings["display_home_view"] == "week"
     assert settings["has_pin"] is False
+    assert settings["pin_length"] is None
     assert settings["setup_complete"] is True
 
 

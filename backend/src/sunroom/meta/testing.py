@@ -150,6 +150,7 @@ async def _seed(state: AppState, body: SeedIn) -> None:
         home.timezone = zone.key
         home.onboarded_at = home.onboarded_at or now
         home.parent_pin_hash = pin_hash
+        home.pin_length = len(body.pin) if body.pin else None
         home.pin_updated_at = now if pin_hash else None
         meta = await tx.session.get(AppMeta, 1)
         assert meta is not None

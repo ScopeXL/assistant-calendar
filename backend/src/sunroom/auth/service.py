@@ -98,6 +98,7 @@ async def session_out(
             "is_parent": is_parent,
             "is_kid_device": info.is_kid_device if info else device.is_kid_device,
             "has_pin": state.auth.has_pin,
+            "pin_length": home.pin_length if state.auth.has_pin else None,
             "grant_expires_at": datetime.fromtimestamp(expires, UTC) if expires else None,
         }
     )

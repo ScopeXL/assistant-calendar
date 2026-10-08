@@ -82,6 +82,8 @@ class Household(Base):
     sleep_mode: Mapped[str] = mapped_column(String(12), default=SleepMode.DIM_CLOCK)
     kid_safe_editing: Mapped[bool] = mapped_column(Boolean, default=True)
     parent_pin_hash: Mapped[str | None] = mapped_column(String(160), default=None)
+    # How many digits, so the PIN pad accepts as soon as they're typed (UX §4).
+    pin_length: Mapped[int | None] = mapped_column(Integer, default=None)
     pin_updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)
     onboarded_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)
     location_label: Mapped[str | None] = mapped_column(String(120), default=None)

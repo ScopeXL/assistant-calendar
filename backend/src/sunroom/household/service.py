@@ -84,6 +84,7 @@ def settings_out(home: Household, settings: Settings) -> SettingsOut:
             "sleep_mode": home.sleep_mode,
             "kid_safe_editing": home.kid_safe_editing,
             "has_pin": home.parent_pin_hash is not None,
+            "pin_length": home.pin_length if home.parent_pin_hash else None,
             "location_label": home.location_label,
             "latitude": home.latitude,
             "longitude": home.longitude,

@@ -333,6 +333,7 @@ async def set_pin(body: PinSetIn, state: StateDep, actor: ParentDep) -> None:
         ):
             raise AppError(403, "wrong_pin", "That PIN didn't match. Try again.")
         home.parent_pin_hash = await asyncio.to_thread(hash_pin, body.pin)
+        home.pin_length = len(body.pin)
         home.pin_updated_at = now
         tx.publish("settings.changed", {"area": "pin"})
     state.auth.has_pin = True
@@ -345,6 +346,7 @@ async def remove_pin(state: StateDep, actor: ParentDep) -> None:
     async with state.db.write() as tx:
         home = await household_service.household(tx.session)
         home.parent_pin_hash = None
+        home.pin_length = None
         home.pin_updated_at = now
         tx.publish("settings.changed", {"area": "pin"})
     state.auth.has_pin = False

@@ -54,6 +54,7 @@ def upgrade() -> None:
     sa.Column('sleep_mode', sa.String(length=12), nullable=False),
     sa.Column('kid_safe_editing', sa.Boolean(), nullable=False),
     sa.Column('parent_pin_hash', sa.String(length=160), nullable=True),
+    sa.Column('pin_length', sa.Integer(), nullable=True),
     sa.Column('pin_updated_at', sa.DateTime(), nullable=True),
     sa.Column('onboarded_at', sa.DateTime(), nullable=True),
     sa.Column('location_label', sa.String(length=120), nullable=True),

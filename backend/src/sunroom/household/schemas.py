@@ -70,6 +70,7 @@ class SettingsOut(BaseModel):
     sleep_mode: SleepModeName
     kid_safe_editing: bool
     has_pin: bool
+    pin_length: int | None
     location_label: str | None
     latitude: float | None
     longitude: float | None
