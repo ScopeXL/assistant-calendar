@@ -9,12 +9,12 @@ import {
   shortWeekday,
   weekdayOf,
 } from "../../lib/dates";
-import { useMembers, useSettings, type Member } from "../../lib/household";
+import { useMembers, useSettings } from "../../lib/household";
 import { serverNow } from "../../lib/clock";
-import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { useShell } from "../../ui/shell";
+import { WhoPicker } from "../../ui/WhoPicker";
 import { TextField } from "../../ui/TextField";
 import { useCalendars } from "./data";
 import { parseQuickAdd, type QuickAddDraft } from "./quickAdd";
@@ -346,7 +346,15 @@ export function EventEditor({
           ))}
         </ChipRow>
       ) : picker === "who" ? (
-        <WhoPicker members={members} chosen={draft.memberIds} set={set} />
+        <WhoPicker
+          label="Who"
+          members={members}
+          value={draft.memberIds}
+          multiple
+          onChange={(memberIds) => {
+            set({ memberIds });
+          }}
+        />
       ) : picker === "repeat" ? (
         <RepeatPicker draft={draft} set={set} />
       ) : picker === "calendar" ? (
@@ -563,67 +571,6 @@ function TimePicker({ draft, set }: { draft: Draft; set: (change: Partial<Draft>
           </Chip>
         ))}
       </ChipRow>
-    </div>
-  );
-}
-
-function WhoPicker({
-  members,
-  chosen,
-  set,
-}: {
-  members: Member[];
-  chosen: string[];
-  set: (change: Partial<Draft>) => void;
-}) {
-  const display = useShell() === "display";
-  return (
-    <div role="group" aria-label="Who" className="flex flex-wrap gap-3">
-      <button
-        type="button"
-        aria-pressed={chosen.length === 0}
-        onClick={() => {
-          set({ memberIds: [] });
-        }}
-        className={`press flex flex-col items-center gap-1 rounded-button p-2 ${display ? "min-w-24" : "min-w-16"} ${
-          chosen.length === 0 ? "bg-p-tint ring-2 ring-ink" : ""
-        }`}
-      >
-        <Avatar member={null} size={display ? "lg" : "md"} />
-        <span
-          className={display ? "text-d-secondary font-semibold" : "text-secondary font-semibold"}
-        >
-          Everyone
-        </span>
-      </button>
-      {members.map((member) => {
-        const on = chosen.includes(member.id);
-        return (
-          <button
-            key={member.id}
-            type="button"
-            aria-pressed={on}
-            data-person={member.color}
-            onClick={() => {
-              set({
-                memberIds: on ? chosen.filter((id) => id !== member.id) : [...chosen, member.id],
-              });
-            }}
-            className={`press flex flex-col items-center gap-1 rounded-button p-2 ${display ? "min-w-24" : "min-w-16"} ${
-              on ? "bg-p-tint ring-2 ring-ink" : ""
-            }`}
-          >
-            <Avatar member={member} size={display ? "lg" : "md"} />
-            <span
-              className={
-                display ? "text-d-secondary font-semibold" : "text-secondary font-semibold"
-              }
-            >
-              {member.name}
-            </span>
-          </button>
-        );
-      })}
     </div>
   );
 }

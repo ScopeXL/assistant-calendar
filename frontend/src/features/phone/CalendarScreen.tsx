@@ -347,6 +347,9 @@ export function CalendarScreen() {
         onClose={() => {
           setPanel(null);
         }}
+        onType={(type) => {
+          setPanel((open) => (open?.kind === "add" ? { ...open, type } : open));
+        }}
       />
       <MonthPicker
         open={picker}

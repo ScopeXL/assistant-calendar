@@ -19,6 +19,7 @@ import { SIGNED_IN_STEPS, SetupWizard, type SetupStep } from "./features/onboard
 import { CalendarScreen } from "./features/phone/CalendarScreen";
 import { MoreScreen } from "./features/phone/MoreScreen";
 import { PairDisplayScreen } from "./features/phone/PairDisplayScreen";
+import { PluginRoomScreen, splitPath } from "./features/PluginRoomScreen";
 import { TodayScreen } from "./features/phone/TodayScreen";
 import { SettingsIndex, SettingsPageScreen } from "./features/settings/SettingsScreens";
 import { setSignedOutHandler } from "./lib/live";
@@ -233,6 +234,24 @@ const settingsPageRoute = createRoute({
   },
 });
 
+/** A plugin's room or tab (/lists, /chores/rewards); static addresses above win (PLAN §6.5). */
+const roomRoute = createRoute({
+  getParentRoute: () => signedRoute,
+  path: "/$room",
+  component: function Room() {
+    const { room } = roomRoute.useParams();
+    return <PluginRoomScreen room={room} path={[]} />;
+  },
+});
+const roomPathRoute = createRoute({
+  getParentRoute: () => signedRoute,
+  path: "/$room/$",
+  component: function RoomPath() {
+    const params = roomPathRoute.useParams();
+    return <PluginRoomScreen room={params.room} path={splitPath(params._splat)} />;
+  },
+});
+
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([setupRoute, installRoute, joinRoute, signInRoute]),
   displayRoute,
@@ -244,6 +263,8 @@ const routeTree = rootRoute.addChildren([
     whoRoute,
     settingsRoute,
     settingsPageRoute,
+    roomRoute,
+    roomPathRoute,
   ]),
 ]);
 

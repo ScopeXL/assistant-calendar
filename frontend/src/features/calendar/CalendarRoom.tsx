@@ -262,6 +262,9 @@ export function CalendarRoom() {
         onClose={() => {
           updateDisplay({ panel: null });
         }}
+        onType={(type) => {
+          if (state.panel?.kind === "add") updateDisplay({ panel: { ...state.panel, type } });
+        }}
       />
       <ScopeChooser
         open={pendingMove !== null}

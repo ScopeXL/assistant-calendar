@@ -189,6 +189,95 @@ dialog.sheet[data-closing]::backdrop {
   }
 }
 
+/* Done (UX §7, §9): the box fills on a spring, its check draws, and the row is pressed into the
+   wall (scale and a degree of rotation, overshooting). The burst is the canvas's
+   (ui/Celebration). With Reduce Motion they all just appear. */
+.tick-fill {
+  transition:
+    background-color var(--motion-quick) var(--ease-standard),
+    border-color var(--motion-quick) var(--ease-standard);
+}
+.tick-fill[data-checked] {
+  animation: tick-settle 320ms var(--ease-overshoot);
+}
+@keyframes tick-settle {
+  0% {
+    transform: scale(0.82);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.check-draw path {
+  stroke-dasharray: 26;
+  stroke-dashoffset: 26;
+  animation: check-draw 200ms var(--ease-standard) forwards;
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.stamp {
+  animation: stamp 300ms var(--ease-overshoot) 60ms both;
+}
+@keyframes stamp {
+  0% {
+    transform: scale(1) rotate(-1deg);
+  }
+  45% {
+    transform: scale(1.03) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* "+2" rises from the box toward the person's name and fades. */
+.float-up {
+  animation: float-up 700ms var(--ease-standard) 200ms both;
+}
+@keyframes float-up {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-3rem);
+  }
+}
+
+/* A checked list item: the marker line draws across it in the checker's color (UX §9). */
+.strike {
+  background-image: linear-gradient(var(--p), var(--p));
+  background-position: 0 55%;
+  background-repeat: no-repeat;
+  background-size: 100% 3px;
+  animation: strike 250ms var(--ease-standard);
+}
+@keyframes strike {
+  from {
+    background-size: 0% 3px;
+  }
+}
+
+/* The routine runner: the next step enters from the right (UX §9 "Routine step"). */
+.step-in {
+  animation: step-in var(--motion-enter) var(--ease-arrive);
+}
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(12%);
+  }
+}
+
+/* "All done, Mia!" and the like: fades in where it appears. */
+.appear {
+  animation: fade-in var(--motion-enter) var(--ease-arrive);
+}
+
 /* The now line's soft glow (UX §7): sun, faint, around the sun-ink line. */
 .now-glow {
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--sun) 35%, transparent);

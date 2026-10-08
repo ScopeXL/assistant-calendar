@@ -10,7 +10,8 @@ export type BoardView = "week" | "day" | "month" | "people" | "today";
 
 export type BoardPanel =
   | { kind: "event"; eventId: string; recurrenceId: string | null; key: string }
-  | { kind: "add"; day: string | null; hour: number | null }
+  /** `type`: what Add makes (an event, or a plugin's "item", "chore"); none: the room's. */
+  | { kind: "add"; day: string | null; hour: number | null; type?: string }
   | { kind: "edit"; eventId: string; recurrenceId: string | null }
   | null;
 
@@ -48,6 +49,22 @@ export function updateDisplay(change: Partial<DisplayState>): void {
 export function editorOpen(): boolean {
   const panel = displayState.get().panel;
   return panel?.kind === "add" || panel?.kind === "edit";
+}
+
+/**
+ * Something on the screen that mustn't be cut short by the room's idle return (a kid running a
+ * routine, UX §6). Returns the release.
+ */
+export const idleHolds = createStore<number>(0);
+
+export function holdIdle(): () => void {
+  idleHolds.set((n) => n + 1);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    idleHolds.set((n) => Math.max(0, n - 1));
+  };
 }
 
 export function resetBoard(): void {

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Lock, LockOpen, Plus } from "lucide-react";
+import { CalendarDays, Lock, LockOpen, Plus, type LucideIcon } from "lucide-react";
 
 import {
   clockSuffix,
@@ -49,21 +49,32 @@ export function ClockBlock({ compact = false }: { compact?: boolean }) {
   );
 }
 
-const ROOMS = [{ key: "calendar", label: "Calendar", icon: CalendarDays }] as const;
+export interface RailRoom {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+const ROOM_LINK =
+  "press-row flex h-24 flex-col items-center justify-center gap-1 text-d-secondary font-semibold text-ink-soft aria-[current=page]:bg-wall aria-[current=page]:text-ink";
 
 /**
- * The display's rail (UX §3): clock and date, the rooms in the household's order, Add, and the
- * lock, which opens Settings (behind the PIN when there is one). In portrait it's the bottom bar.
+ * The display's rail (UX §3): clock and date, the Calendar room then each enabled plugin's
+ * (Lists, Chores…), Add, and the lock, which opens Settings (behind the PIN when there is one).
+ * In portrait it's the bottom bar.
  */
 export function Rail({
   home,
   room,
+  rooms,
   lock,
   onAdd,
   onLock,
 }: {
   home: "/display" | "/";
   room: string;
+  /** The plugins' rooms, in their order (the Calendar room comes first, always). */
+  rooms: RailRoom[];
   /** locked: behind the PIN; unlocked: a PIN grant is open; open: no PIN is set. */
   lock: "locked" | "unlocked" | "open";
   onAdd: () => void;
@@ -80,12 +91,23 @@ export function Rail({
         <ClockBlock />
       </div>
       <ul className="flex flex-col landscape:border-t landscape:border-line portrait:flex-1 portrait:flex-row">
-        {ROOMS.map(({ key, label, icon: Icon }) => (
+        <li className="portrait:w-40">
+          <Link
+            to={home}
+            aria-current={room === "calendar" ? "page" : undefined}
+            className={ROOM_LINK}
+          >
+            <CalendarDays aria-hidden="true" className="size-9" strokeWidth={2} />
+            Calendar
+          </Link>
+        </li>
+        {rooms.map(({ key, label, icon: Icon }) => (
           <li key={key} className="portrait:w-40">
             <Link
-              to={home}
+              to="/$room"
+              params={{ room: key }}
               aria-current={room === key ? "page" : undefined}
-              className="press-row flex h-24 flex-col items-center justify-center gap-1 text-d-secondary font-semibold text-ink-soft aria-[current=page]:bg-wall aria-[current=page]:text-ink"
+              className={ROOM_LINK}
             >
               <Icon aria-hidden="true" className="size-9" strokeWidth={2} />
               {label}

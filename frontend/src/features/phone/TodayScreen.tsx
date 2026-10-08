@@ -16,6 +16,7 @@ import { AddPanel } from "../calendar/AddPanel";
 import { useOccurrences } from "../calendar/data";
 import { peopleOf } from "../calendar/EventChip";
 import { EventSheet } from "../calendar/EventSheet";
+import { useTodayBlocks } from "../usePluginModules";
 import { byDay, isPast, todayParts } from "../calendar/layout";
 import { PhoneRow } from "../calendar/PhoneLists";
 import type { Occurrence } from "../calendar/types";
@@ -34,6 +35,7 @@ export function TodayScreen() {
   const { data: members = [] } = useMembers();
   const { data } = useOccurrences(today, addDays(today, 2));
   const [panel, setPanel] = useState<BoardPanel>(null);
+  const blocks = useTodayBlocks();
   const occurrences = data?.occurrences ?? [];
   const parts = todayParts(occurrences, now);
   const columns = byDay(occurrences, [today, tomorrow]);
@@ -182,6 +184,7 @@ export function TodayScreen() {
           </ul>
         </section>
       ) : null}
+      {blocks.map(({ key, Phone }) => (Phone ? <Phone key={key} /> : null))}
       <ActionBar>
         <Button
           block
@@ -207,6 +210,9 @@ export function TodayScreen() {
         today={today}
         onClose={() => {
           setPanel(null);
+        }}
+        onType={(type) => {
+          setPanel((open) => (open?.kind === "add" ? { ...open, type } : open));
         }}
       />
     </main>

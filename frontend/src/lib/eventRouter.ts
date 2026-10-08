@@ -80,6 +80,14 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
       case "sync.changed":
         invalidate(["calendar-sync"]);
         break;
+      case "lists.changed":
+        invalidate(["lists"]);
+        break;
+      case "chores.changed":
+      case "points.changed":
+      case "routines.changed":
+        invalidate(["chores"]);
+        break;
       case "kiosk.command":
         if (typeof event.command === "string") handlers.onKioskCommand?.(event.command, event);
         break;

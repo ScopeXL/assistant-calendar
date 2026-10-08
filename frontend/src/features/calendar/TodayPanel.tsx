@@ -1,3 +1,4 @@
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { addDays, formatWallTime, wallNow, zonedParts } from "../../lib/dates";
@@ -5,6 +6,7 @@ import { updateDisplay } from "../../lib/displayState";
 import { useMembers, type Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Avatar } from "../../ui/Avatar";
+import { useTodayBlocks } from "../usePluginModules";
 import { peopleOf } from "./EventChip";
 import { useOccurrences } from "./data";
 import { byDay, todayParts } from "./layout";
@@ -12,16 +14,22 @@ import type { Occurrence } from "./types";
 
 const TOMORROW_FROM_HOUR = 18;
 
-function open(occurrence: Occurrence) {
-  if (!occurrence.event_id) return;
-  updateDisplay({
-    panel: {
-      kind: "event",
-      eventId: occurrence.event_id,
-      recurrenceId: occurrence.recurrence_id ?? null,
-      key: occurrence.key,
-    },
-  });
+/** An event's sheet opens on the board: from another room, go there first. */
+function useOpenEvent(home: "/display" | "/") {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return (occurrence: Occurrence) => {
+    if (!occurrence.event_id) return;
+    updateDisplay({
+      panel: {
+        kind: "event",
+        eventId: occurrence.event_id,
+        recurrenceId: occurrence.recurrence_id ?? null,
+        key: occurrence.key,
+      },
+    });
+    if (pathname !== home) void navigate({ to: home });
+  };
 }
 
 const startText = (occurrence: Occurrence) =>
@@ -31,10 +39,19 @@ const startText = (occurrence: Occurrence) =>
 
 /**
  * The display's Today panel (UX §3): Now, Up next, Later today and, after 6 PM, Tomorrow, each
- * only with something in it; each enabled plugin's block joins underneath in later milestones.
- * Now and Up next are glance-sized. Tapping a line opens its event.
+ * only with something in it, then each enabled plugin's blocks (Chores today, To do…) in their
+ * order. Now and Up next are glance-sized. Tapping a line opens its event on the board.
  */
-export function TodayPanel() {
+export function TodayPanel({
+  home,
+  band = false,
+}: {
+  home: "/display" | "/";
+  /** Portrait's band across the top: the blocks flow into three columns (UX §3). */
+  band?: boolean;
+}) {
+  const open = useOpenEvent(home);
+  const blocks = useTodayBlocks();
   const minute = useMinute();
   const now = wallNow(minute);
   const { day: today, hour } = zonedParts(minute);
@@ -53,11 +70,19 @@ export function TodayPanel() {
   const firstTomorrow = next?.timed[0]?.occurrence ?? next?.allDay[0]?.occurrence;
 
   return (
-    <aside aria-label="Today" className="flex flex-col gap-8 overflow-y-auto px-6 py-6">
+    <aside
+      aria-label="Today"
+      className={
+        band
+          ? "h-full columns-3 gap-x-10 overflow-hidden px-6 pt-3 pb-4 [column-fill:auto] *:mb-6 *:break-inside-avoid"
+          : "flex flex-col gap-8 overflow-y-auto px-6 py-6"
+      }
+    >
       {parts.now.length || parts.allDay.length ? (
         <Section id="today-now" title="Now">
           {parts.now.map((occurrence) => (
             <Line
+              onOpen={open}
               key={occurrence.key}
               occurrence={occurrence}
               members={members}
@@ -66,13 +91,20 @@ export function TodayPanel() {
             />
           ))}
           {parts.allDay.map((occurrence) => (
-            <Line key={occurrence.key} occurrence={occurrence} members={members} when="All day" />
+            <Line
+              key={occurrence.key}
+              onOpen={open}
+              occurrence={occurrence}
+              members={members}
+              when="All day"
+            />
           ))}
         </Section>
       ) : null}
       {parts.upNext ? (
         <Section id="today-up-next" title="Up next">
           <Line
+            onOpen={open}
             occurrence={parts.upNext}
             members={members}
             when={startText(parts.upNext)}
@@ -85,6 +117,7 @@ export function TodayPanel() {
         <Section id="today-later" title="Later today">
           {parts.later.map((occurrence) => (
             <Line
+              onOpen={open}
               key={occurrence.key}
               occurrence={occurrence}
               members={members}
@@ -114,6 +147,7 @@ export function TodayPanel() {
         <Section id="today-tomorrow" title="Tomorrow">
           {tomorrows.map((occurrence) => (
             <Line
+              onOpen={open}
               key={occurrence.key}
               occurrence={occurrence}
               members={members}
@@ -122,6 +156,7 @@ export function TodayPanel() {
           ))}
         </Section>
       ) : null}
+      {blocks.map(({ key, Display }) => (Display ? <Display key={key} /> : null))}
     </aside>
   );
 }
@@ -147,7 +182,9 @@ function Line({
   when,
   glance = false,
   detail = false,
+  onOpen,
 }: {
+  onOpen: (occurrence: Occurrence) => void;
   occurrence: Occurrence;
   members: Member[];
   when: string;
@@ -162,7 +199,7 @@ function Line({
       type="button"
       data-person={occurrence.color ?? (people.length === 1 ? people[0]?.color : "everyone")}
       onClick={() => {
-        open(occurrence);
+        onOpen(occurrence);
       }}
       className="press-row -mx-3 flex min-h-16 items-start gap-3 rounded-chip-d px-3 py-2 text-left"
     >

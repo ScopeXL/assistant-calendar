@@ -3,7 +3,9 @@ import { useState } from "react";
 
 import { addDays } from "../../lib/dates";
 import type { BoardPanel } from "../../lib/displayState";
+import { Chip, ChipRow } from "../../ui/Chip";
 import { SidePanel } from "../../ui/SidePanel";
+import { useAddTypes } from "../usePluginModules";
 import { useEvent, useEventChanges } from "./data";
 import { EventEditor, draftFromEvent, draftToFields, type Draft } from "./EventEditor";
 import { ScopeChooser } from "./ScopeChooser";
@@ -61,19 +63,32 @@ export function fieldsFor(
   return { ...moved, clear_rrule: clear };
 }
 
-/** The wall screen's Add panel and editor (UX §4), in the side panel. */
+/**
+ * Add and the event editor (UX §4), in the wall's side panel or a phone's sheet. Adding offers
+ * every kind of thing the enabled plugins make beside events (Event, Item, Chore), with the
+ * room's own kind first; `onType` switches it.
+ */
 export function AddPanel({
   panel,
   today,
   onClose,
   onDay,
+  onType,
+  room = "calendar",
 }: {
   panel: EditorPanel | null;
   today: string;
   onClose: () => void;
   /** The day being added to or changed, for the board to light (UX §6). */
   onDay?: (day: string | null) => void;
+  onType?: (type: string) => void;
+  /** Where Add was opened: its kind of thing is chosen first. */
+  room?: string;
 }) {
+  const types = useAddTypes();
+  const adding = panel?.kind === "add" ? panel : null;
+  const chosen = adding?.type ?? types.find((type) => type.room === room)?.key ?? "event";
+  const plugin = adding ? types.find((type) => type.key === chosen) : undefined;
   const editing = panel?.kind === "edit" ? panel : null;
   const { data: event } = useEvent(editing?.eventId ?? null);
   const occurrence = useOccurrenceOf(editing?.eventId ?? null, editing?.recurrenceId ?? null);
@@ -97,7 +112,26 @@ export function AddPanel({
   return (
     <>
       <SidePanel open={panel !== null} title={title} onClose={onClose}>
-        {panel && ready ? (
+        {adding && types.length > 0 ? (
+          <div className="mb-5">
+            <ChipRow label="What to add">
+              {[{ key: "event", label: "Event" }, ...types].map((type) => (
+                <Chip
+                  key={type.key}
+                  on={type.key === chosen}
+                  onClick={() => {
+                    onType?.(type.key);
+                  }}
+                >
+                  {type.label}
+                </Chip>
+              ))}
+            </ChipRow>
+          </div>
+        ) : null}
+        {plugin && adding ? (
+          <plugin.Editor key={plugin.key} day={adding.day} onDone={onClose} />
+        ) : panel && ready ? (
           <EventEditor
             key={editing ? `${editing.eventId}|${editing.recurrenceId ?? ""}` : "new"}
             initial={editing && event ? draftFromEvent(event, occurrence) : null}

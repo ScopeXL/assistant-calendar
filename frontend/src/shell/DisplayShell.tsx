@@ -4,10 +4,18 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { api } from "../api/client";
 import { qk } from "../api/keys";
+import { AddPanel } from "../features/calendar/AddPanel";
 import { useReminders } from "../features/calendar/reminders";
 import { TodayPanel } from "../features/calendar/TodayPanel";
+import { usePluginRooms } from "../features/usePluginModules";
 import { zonedParts } from "../lib/dates";
-import { displayState, editorOpen, resetBoard, updateDisplay } from "../lib/displayState";
+import {
+  displayState,
+  editorOpen,
+  idleHolds,
+  resetBoard,
+  updateDisplay,
+} from "../lib/displayState";
 import { useSettings } from "../lib/household";
 import { idleFor, swallowFollowingClick, watchActivity, whenIdle } from "../lib/idle";
 import { watchKeyboardFields } from "../lib/keyboard";
@@ -21,6 +29,7 @@ import { allowAppearanceMotion, applyAppearance } from "../lib/theme";
 import { useMinute } from "../lib/time";
 import { setToastProfile } from "../lib/toast";
 import { useKeepAwake } from "../lib/wakeLock";
+import { CelebrationLayer } from "../ui/Celebration";
 import { KeyboardHost } from "../ui/Keyboard";
 import { PinDialog } from "../ui/PinDialog";
 import { ShellContext } from "../ui/shell";
@@ -49,11 +58,18 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const room = pathname.startsWith("/settings") ? "settings" : "calendar";
+  const rooms = usePluginRooms();
+  const segment = pathname.split("/")[1] ?? "";
+  const room = pathname.startsWith("/settings")
+    ? "settings"
+    : rooms.some((r) => r.key === segment)
+      ? segment
+      : "calendar";
+  const inPluginRoom = room !== "settings" && room !== "calendar";
   const { data: settings } = useSettings();
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
   const now = useMinute();
-  const { panelShown } = useStore(displayState);
+  const { panelShown, panel } = useStore(displayState);
   // Woken at night (a tap, or a parent's Wake): awake for 2 minutes from the latest wake.
   const [awake, setAwake] = useState(false);
   const [wakes, setWakes] = useState(0);
@@ -124,6 +140,18 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     });
   }, [room, session?.grant_expires_at, home, navigate, lockNow]);
 
+  // Lists, Chores and the other rooms return to the board after the household's minutes idle
+  // (UX §1), unless something holds the screen (a routine being run).
+  const returnMinutes = settings?.display_return_minutes ?? 5;
+  useEffect(() => {
+    if (!inPluginRoom || returnMinutes <= 0) return;
+    return whenIdle(returnMinutes * 60_000, () => {
+      if (idleHolds.get() > 0) return;
+      updateDisplay({ panel: null });
+      void navigate({ to: home });
+    });
+  }, [inPluginRoom, returnMinutes, home, navigate]);
+
   // A new version waits for the night (3 AM), and for a quiet screen, before it reloads.
   useEffect(() => {
     if (!kiosk || !update.ready) return;
@@ -182,6 +210,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
             <Rail
               home={home}
               room={room}
+              rooms={rooms}
               lock={
                 session?.grant_expires_at
                   ? "unlocked"
@@ -203,7 +232,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
               <div className="flex items-center justify-between px-6 pt-4">
                 <ClockBlock compact />
               </div>
-              <TodayPanel />
+              <TodayPanel home={home} band />
             </div>
           ) : null}
           <main className="flex min-h-0 min-w-0 flex-1 flex-col pb-[var(--osk-h,0px)]">
@@ -214,10 +243,24 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
               data-surface=""
               className="w-[var(--panel-w)] shrink-0 border-l border-line bg-surface portrait:hidden"
             >
-              <TodayPanel />
+              <TodayPanel home={home} />
             </div>
           ) : null}
         </div>
+        {inPluginRoom ? (
+          <AddPanel
+            panel={panel?.kind === "add" ? panel : null}
+            today={zonedParts(now).day}
+            room={room}
+            onClose={() => {
+              updateDisplay({ panel: null });
+            }}
+            onType={(type) => {
+              if (panel?.kind === "add") updateDisplay({ panel: { ...panel, type } });
+            }}
+          />
+        ) : null}
+        <CelebrationLayer />
         <ToastRegion display />
         <OfflinePill display />
         {kiosk ? <KeyboardHost railSide={railSide} /> : null}

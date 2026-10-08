@@ -13,6 +13,7 @@ export function TextField({
   hint,
   error,
   layout = "text",
+  hideLabel = false,
   className,
   ...props
 }: Omit<ComponentPropsWithRef<"input">, "id"> & {
@@ -20,6 +21,8 @@ export function TextField({
   hint?: string | null;
   error?: string | null;
   layout?: KeyboardLayout;
+  /** Only for screen readers: the field's placeholder or context says it on screen. */
+  hideLabel?: boolean;
 }) {
   const display = useShell() === "display";
   const id = useId();
@@ -30,7 +33,9 @@ export function TextField({
     <div className="flex flex-col gap-2">
       <label
         htmlFor={id}
-        className={display ? "text-d-body font-semibold" : "text-body font-semibold"}
+        className={
+          hideLabel ? "sr-only" : display ? "text-d-body font-semibold" : "text-body font-semibold"
+        }
       >
         {label}
       </label>

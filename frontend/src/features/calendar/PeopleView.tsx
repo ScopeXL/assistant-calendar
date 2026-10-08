@@ -1,5 +1,6 @@
 import type { Member } from "../../lib/household";
 import { Avatar } from "../../ui/Avatar";
+import { usePersonColumns } from "../usePluginModules";
 import { EventChip } from "./EventChip";
 import { byDay } from "./layout";
 import type { Occurrence } from "./types";
@@ -8,8 +9,9 @@ const COLUMNS = 7;
 
 /**
  * Who's doing what (UX §4): a column per person, Everyone first, in household order, with the
- * avatar and name glance-sized so a kid finds their own column; today's events underneath.
- * Chores join each column in M3. Seven columns fit; more page sideways.
+ * avatar and name glance-sized so a kid finds their own column; today's events underneath, then
+ * what the plugins add (their chores, with working boxes). Seven columns fit; more page
+ * sideways.
  */
 export function PeopleView({
   today,
@@ -26,6 +28,7 @@ export function PeopleView({
   dimPast: boolean;
   onOpen: (occurrence: Occurrence) => void;
 }) {
+  const extras = usePersonColumns();
   const column = byDay(occurrences, [today]).get(today);
   const todays = [...(column?.allDay ?? []), ...(column?.timed ?? [])].map((e) => e.occurrence);
   const columns: { key: string; member: Member | null; items: Occurrence[] }[] = [
@@ -42,7 +45,7 @@ export function PeopleView({
         <section
           key={key}
           aria-label={member ? member.name : "Everyone"}
-          className="flex min-h-0 shrink-0 snap-start flex-col gap-3 border-r border-line px-3 py-4"
+          className="flex min-h-0 shrink-0 snap-start flex-col gap-3 overflow-y-auto border-r border-line px-3 py-4"
           style={{ width: `${String(100 / Math.min(columns.length, COLUMNS))}%` }}
         >
           <header className="flex flex-col items-center gap-2 pb-2">
@@ -65,8 +68,11 @@ export function PeopleView({
               />
             ))
           ) : (
-            <p className="px-2 text-center text-d-secondary text-ink-soft">Nothing today</p>
+            <p className="px-2 text-center text-d-secondary text-ink-soft">Nothing on</p>
           )}
+          {extras.map((Extra, index) => (
+            <Extra key={index} memberId={member?.id ?? null} day={today} />
+          ))}
         </section>
       ))}
     </div>

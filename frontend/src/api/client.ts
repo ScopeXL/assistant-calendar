@@ -84,3 +84,13 @@ export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   return OFFLINE_MESSAGE;
 }
+
+/**
+ * Who tapped, on the wall screen (PLAN §12.3): the person whose avatar or column it was. Spread
+ * into a request's options; the server ignores it from phones, which act as their own person.
+ */
+export function asMember(memberId: string | null | undefined): {
+  headers?: Record<string, string>;
+} {
+  return memberId ? { headers: { "X-Sunroom-Member": memberId } } : {};
+}

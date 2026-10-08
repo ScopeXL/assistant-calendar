@@ -2,34 +2,51 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { CalendarDays, Menu, Sun, type LucideIcon } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
+import { usePluginRooms } from "../features/usePluginModules";
 import { useSettings } from "../lib/household";
 import { useLiveUpdates } from "../lib/live";
 import { MotionProvider } from "../lib/motion";
 import { applyAppearance } from "../lib/theme";
 import { useMinute } from "../lib/time";
 import { zonedParts } from "../lib/dates";
+import { CelebrationLayer } from "../ui/Celebration";
 import { ShellContext } from "../ui/shell";
 import { OfflinePill, ToastRegion, UpdatePrompt } from "../ui/StatusLayer";
 
 interface Tab {
-  to: "/" | "/calendar" | "/more";
+  key: string;
   label: string;
   icon: LucideIcon;
 }
 
-// Today, Calendar, then enabled plugins' tabs in the household's order (M2+), then More (UX §3).
-const TABS: Tab[] = [
-  { to: "/", label: "Today", icon: Sun },
-  { to: "/calendar", label: "Calendar", icon: CalendarDays },
-  { to: "/more", label: "More", icon: Menu },
-];
+// Today and Calendar, then the plugins' rooms until four tabs are used, then More (UX §3).
+const PLUGIN_TABS = 2;
 
 // Screens opened from More keep More lit (Settings, Pair a display, Who's using this).
 const UNDER_MORE = /^\/(more|settings|pair|who|install)(\/|$)/;
 
+const TAB_LINK =
+  "group flex min-h-(--tabbar-h) flex-col items-center justify-center gap-0.5 text-caption font-semibold text-ink-soft data-lit:text-ink data-[status=active]:text-ink";
+const TAB_PILL =
+  "flex h-7 w-12 items-center justify-center rounded-full group-data-lit:bg-ink group-data-lit:text-on-ink group-data-[status=active]:bg-ink group-data-[status=active]:text-on-ink";
+
+function TabFace({ tab }: { tab: Tab }) {
+  const Icon = tab.icon;
+  return (
+    <>
+      {/* The active icon sits in a filled ink pill, a cue that isn't color alone. */}
+      <span className={TAB_PILL}>
+        <Icon aria-hidden="true" size={22} strokeWidth={2.25} />
+      </span>
+      <span>{tab.label}</span>
+    </>
+  );
+}
+
 /** Bottom tabs on phones (UX §3 "The phone shell"). */
 export function TabBar() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const rooms = usePluginRooms().slice(0, PLUGIN_TABS);
   return (
     <nav
       aria-label="Main"
@@ -37,23 +54,32 @@ export function TabBar() {
       className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] print:hidden"
     >
       <ul className="mx-auto flex max-w-xl">
-        {TABS.map(({ to, label, icon: Icon }) => (
-          <li key={label} className="flex-1">
-            <Link
-              to={to}
-              activeOptions={{ exact: to === "/" }}
-              data-lit={to === "/more" && UNDER_MORE.test(pathname) ? "" : undefined}
-              // The router sets data-status="active"; the active icon sits in a filled ink pill, a
-              // cue that isn't color alone.
-              className="group flex min-h-(--tabbar-h) flex-col items-center justify-center gap-0.5 text-caption font-semibold text-ink-soft data-lit:text-ink data-[status=active]:text-ink"
-            >
-              <span className="flex h-7 w-12 items-center justify-center rounded-full group-data-lit:bg-ink group-data-lit:text-on-ink group-data-[status=active]:bg-ink group-data-[status=active]:text-on-ink">
-                <Icon aria-hidden="true" size={22} strokeWidth={2.25} />
-              </span>
-              <span>{label}</span>
+        <li className="flex-1">
+          <Link to="/" activeOptions={{ exact: true }} className={TAB_LINK}>
+            <TabFace tab={{ key: "today", label: "Today", icon: Sun }} />
+          </Link>
+        </li>
+        <li className="flex-1">
+          <Link to="/calendar" className={TAB_LINK}>
+            <TabFace tab={{ key: "calendar", label: "Calendar", icon: CalendarDays }} />
+          </Link>
+        </li>
+        {rooms.map((room) => (
+          <li key={room.key} className="flex-1">
+            <Link to="/$room" params={{ room: room.key }} className={TAB_LINK}>
+              <TabFace tab={room} />
             </Link>
           </li>
         ))}
+        <li className="flex-1">
+          <Link
+            to="/more"
+            data-lit={UNDER_MORE.test(pathname) ? "" : undefined}
+            className={TAB_LINK}
+          >
+            <TabFace tab={{ key: "more", label: "More", icon: Menu }} />
+          </Link>
+        </li>
       </ul>
     </nav>
   );
@@ -86,6 +112,7 @@ export function PhoneShell({ children, tabs = true }: { children: ReactNode; tab
           {children}
         </div>
         {tabs ? <TabBar /> : null}
+        <CelebrationLayer />
         <OfflinePill />
         <ToastRegion />
         <UpdatePrompt />
