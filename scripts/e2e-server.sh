@@ -10,6 +10,8 @@ export TZ="America/New_York"
 export PORT=4173
 export DATA_DIR="$DATA"
 export SUNROOM_TEST_MODE=1
+# What a phone should open, as kiosk/install.sh sets it on a Pi (the wall itself is on loopback).
+export SUNROOM_ADVERTISED_URL="http://sunroom.local:4173"
 export SUNROOM_STATIC_DIR="$ROOT/frontend/dist"
 export LOG_LEVEL=WARNING
 cd "$ROOT/backend"

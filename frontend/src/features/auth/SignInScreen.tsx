@@ -62,12 +62,12 @@ function PasswordForm({ onUseCode }: { onUseCode: () => void }) {
         />
         <Button
           variant="secondary"
+          icon
           aria-label={visible ? "Hide password" : "Show password"}
           aria-pressed={visible}
           onClick={() => {
             setVisible((v) => !v);
           }}
-          className="min-h-12 w-12 px-0"
         >
           {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
         </Button>

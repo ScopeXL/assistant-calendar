@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
+import { isLoopbackAddress } from "../../lib/address";
 import { zonedParts } from "../../lib/dates";
 import { whenIdle, watchActivity } from "../../lib/idle";
 import { watchKeyboardFields } from "../../lib/keyboard";
@@ -128,11 +129,21 @@ function Welcome({ address }: { address: string }) {
     <>
       <Brand />
       <h1 className="text-d-glance font-bold">Set up Sunroom on your phone</h1>
-      <QrCode value={address} label={`A code that opens ${address}`} className="size-72" />
-      <p className="max-w-3xl text-d-body">
-        Open <span className="font-bold">{address}</span> on your phone. Then come back here: this
-        screen will show a code to pair it.
-      </p>
+      {isLoopbackAddress(address) ? (
+        <p className="max-w-3xl text-d-body">
+          Open Sunroom on your phone with this computer's name or network address instead of{" "}
+          <span className="font-bold">{new URL(address).hostname}</span>. Then come back here: this
+          screen will show a code to pair it.
+        </p>
+      ) : (
+        <>
+          <QrCode value={address} label={`A code that opens ${address}`} className="size-72" />
+          <p className="max-w-3xl text-d-body">
+            Open <span className="font-bold">{address}</span> on your phone. Then come back here:
+            this screen will show a code to pair it.
+          </p>
+        </>
+      )}
     </>
   );
 }
@@ -262,7 +273,7 @@ function PasswordPairing({ onCancel, onPaired }: { onCancel: () => void; onPaire
 
   return (
     <form
-      className="flex w-full max-w-2xl flex-col gap-6 text-left"
+      className="flex w-full max-w-3xl flex-col gap-6 text-left"
       onSubmit={(event) => {
         event.preventDefault();
         if (password) pair.mutate();
@@ -282,7 +293,7 @@ function PasswordPairing({ onCancel, onPaired }: { onCancel: () => void; onPaire
           setPassword(event.target.value);
         }}
       />
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3 whitespace-nowrap">
         <Button type="submit" pending={pair.isPending} disabled={!password}>
           Pair this screen
         </Button>
@@ -331,7 +342,7 @@ function NameThisScreen({ onDone }: { onDone: () => void }) {
     >
       <Brand />
       <h1 className="text-d-glance font-bold">Name this screen</h1>
-      <ChipRow label="Where is this screen?">
+      <ChipRow label="Where is this screen?" center>
         {[...NAMES, "Other"].map((option) => (
           <Chip
             key={option}

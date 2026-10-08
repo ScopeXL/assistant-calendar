@@ -1,23 +1,48 @@
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, Lock, LockOpen } from "lucide-react";
 
-import { clockSuffix, formatClock, longWeekday, monthDay, zonedParts } from "../lib/dates";
+import {
+  clockSuffix,
+  formatClock,
+  longWeekday,
+  monthDay,
+  shortWeekday,
+  zonedParts,
+} from "../lib/dates";
 import { useMinute } from "../lib/time";
 import { Digits } from "../ui/Digits";
 
-/** The clock and date at the top of the rail (and of the Today band in portrait). Glance-sized
- * (UX §1): the clock is 56 px in weight 800, its digits in fixed boxes so it never jiggles. */
+/**
+ * The clock and date at the top of the rail, glance-sized (UX §1): weight 800, digits in fixed
+ * boxes so it never jiggles, as large as the rail allows. The rail shows no AM/PM, like a wall
+ * clock (UX §3); screen readers still hear it. In portrait's Today band (compact) it has room
+ * for AM/PM and the full weekday.
+ */
 export function ClockBlock({ compact = false }: { compact?: boolean }) {
   const now = useMinute();
   const day = zonedParts(now).day;
+  const time = formatClock(now);
+  const suffix = clockSuffix(now);
+  if (compact) {
+    return (
+      <div className="flex items-baseline gap-4">
+        <p className="text-d-clock font-extrabold whitespace-nowrap">
+          <Digits value={time} />
+          {suffix ? <span className="ml-1 text-d-secondary font-bold">{suffix}</span> : null}
+        </p>
+        <p className="text-d-secondary font-semibold">
+          {longWeekday(day)} {monthDay(day)}
+        </p>
+      </div>
+    );
+  }
   return (
-    <div className={compact ? "flex items-baseline gap-4" : "flex flex-col gap-1"}>
-      <p className="text-d-clock font-extrabold">
-        <Digits value={formatClock(now)} />
-        <span className="ml-1 text-d-secondary font-bold">{clockSuffix(now)}</span>
+    <div className="rail-clock flex flex-col gap-1">
+      <p className="rail-clock-time font-extrabold whitespace-nowrap">
+        <Digits value={time} spoken={suffix ? `${time} ${suffix}` : time} />
       </p>
       <p className="text-d-secondary font-semibold">
-        <span className={compact ? "" : "block"}>{longWeekday(day)}</span>{" "}
+        <span className="block">{shortWeekday(day)}</span>
         <span>{monthDay(day)}</span>
       </p>
     </div>
@@ -33,12 +58,13 @@ const ROOMS = [{ key: "calendar", label: "Calendar", icon: CalendarDays }] as co
 export function Rail({
   home,
   room,
-  unlocked,
+  lock,
   onLock,
 }: {
   home: "/display" | "/";
   room: string;
-  unlocked: boolean;
+  /** locked: behind the PIN; unlocked: a PIN grant is open; open: no PIN is set. */
+  lock: "locked" | "unlocked" | "open";
   onLock: () => void;
 }) {
   return (
@@ -53,7 +79,7 @@ export function Rail({
       </div>
       <ul className="flex flex-col landscape:border-t landscape:border-line portrait:flex-1 portrait:flex-row">
         {ROOMS.map(({ key, label, icon: Icon }) => (
-          <li key={key} className="portrait:flex-1">
+          <li key={key} className="portrait:w-40">
             <Link
               to={home}
               aria-current={room === key ? "page" : undefined}
@@ -73,12 +99,12 @@ export function Rail({
         aria-current={room === "settings" ? "page" : undefined}
         className="press-row flex h-24 flex-col items-center justify-center gap-1 text-d-caption font-semibold text-ink-soft aria-[current=page]:bg-wall aria-[current=page]:text-ink landscape:border-t landscape:border-line portrait:w-32"
       >
-        {unlocked ? (
-          <LockOpen aria-hidden="true" className="size-9" />
-        ) : (
+        {lock === "locked" ? (
           <Lock aria-hidden="true" className="size-9" />
+        ) : (
+          <LockOpen aria-hidden="true" className="size-9" />
         )}
-        <span aria-hidden="true">{unlocked ? "Unlocked" : "Settings"}</span>
+        <span aria-hidden="true">{lock === "unlocked" ? "Unlocked" : "Settings"}</span>
       </button>
     </nav>
   );

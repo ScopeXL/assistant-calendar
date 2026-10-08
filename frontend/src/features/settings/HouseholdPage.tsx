@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
+import type { components } from "../../api/schema";
 import { useSettings, useUpdateSettings } from "../../lib/household";
 import { Button } from "../../ui/Button";
 import { Segmented } from "../../ui/Segmented";
@@ -17,14 +18,20 @@ function zones(): string[] {
   }
 }
 
+type Settings = components["schemas"]["SettingsOut"];
+
 /** Settings → Household (UX §4): name, time zone, the week's first day and the clock. */
 export function HouseholdPage() {
-  const display = useShell() === "display";
   const { data: settings } = useSettings();
+  // The form starts from the saved values, so it waits for them.
+  return settings ? <HouseholdForm settings={settings} /> : null;
+}
+
+function HouseholdForm({ settings }: { settings: Settings }) {
+  const display = useShell() === "display";
   const update = useUpdateSettings();
-  const [name, setName] = useState(settings?.household_name ?? "");
-  const [zone, setZone] = useState(settings?.timezone ?? "");
-  if (!settings) return null;
+  const [name, setName] = useState(settings.household_name);
+  const [zone, setZone] = useState(settings.timezone);
   const allZones = zones();
   return (
     <>
@@ -79,7 +86,7 @@ export function HouseholdPage() {
               ))}
             </Select>
           </label>
-          <Button type="submit" variant="secondary" disabled={zone === settings.timezone}>
+          <Button type="submit" variant="secondary" disabled={!zone || zone === settings.timezone}>
             Save time zone
           </Button>
         </form>

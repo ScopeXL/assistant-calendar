@@ -3,7 +3,16 @@
  * figures, so each digit sits in a box as wide as the widest digit (ADR 0021). Screen readers
  * hear the plain text.
  */
-export function Digits({ value, className }: { value: string; className?: string }) {
+export function Digits({
+  value,
+  spoken,
+  className,
+}: {
+  value: string;
+  /** What a screen reader hears, when it should differ from the digits (adding AM or PM). */
+  spoken?: string | undefined;
+  className?: string;
+}) {
   return (
     <span className={className}>
       <span aria-hidden="true">
@@ -17,7 +26,7 @@ export function Digits({ value, className }: { value: string; className?: string
           ),
         )}
       </span>
-      <span className="sr-only">{value}</span>
+      <span className="sr-only">{spoken ?? value}</span>
     </span>
   );
 }

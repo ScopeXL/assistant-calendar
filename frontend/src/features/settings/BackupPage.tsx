@@ -10,7 +10,7 @@ import { useShell } from "../../ui/shell";
 import { Group, Row, Text } from "./parts";
 
 function when(iso: string | null): string {
-  if (!iso) return "never";
+  if (!iso) return "Not yet. The first runs tonight.";
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
@@ -64,7 +64,7 @@ export function BackupPage() {
         </Row>
         {status?.stale ? (
           <div className="py-4">
-            <Text>There hasn’t been a backup for over a day.</Text>
+            <Text>The newest backup is over a week old. Try Back up now, and check the log.</Text>
           </div>
         ) : null}
         <div className={`flex flex-wrap gap-3 ${display ? "py-5" : "py-4"}`}>

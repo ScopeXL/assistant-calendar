@@ -21,6 +21,9 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: "retain-on-failure",
+    // The household's zone in these runs; the setup wizard suggests the browser's own.
+    timezoneId: "America/New_York",
+    locale: "en-US",
   },
   projects: [
     {

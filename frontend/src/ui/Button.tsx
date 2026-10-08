@@ -30,12 +30,15 @@ export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   block?: boolean;
   /** Waiting on the server: the button keeps its label, shows a spinner, and can't be pressed. */
   pending?: boolean;
+  /** Only an icon (name it with aria-label): a square at the shell's tap size, no padding. */
+  icon?: boolean;
 }
 
 export function Button({
   variant = "primary",
   block = false,
   pending = false,
+  icon = false,
   className,
   disabled,
   children,
@@ -44,7 +47,10 @@ export function Button({
   const display = useShell() === "display";
   const classes = [
     "press inline-flex items-center justify-center gap-2 font-semibold",
-    display ? "rounded-button-d px-7 text-d-body" : "rounded-button px-5 text-body",
+    display ? "rounded-button-d text-d-body" : "rounded-button text-body",
+    // Padding is chosen here, never overridden by className: in the built CSS a later utility
+    // for the same property wins, whatever the class order.
+    icon ? (display ? "size-14 shrink-0" : "size-12 shrink-0") : display ? "px-7" : "px-5",
     "disabled:cursor-not-allowed disabled:opacity-60",
     (display ? DISPLAY : PHONE)[variant],
     block ? "w-full" : "",

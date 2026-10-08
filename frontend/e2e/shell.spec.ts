@@ -98,9 +98,9 @@ test.describe("the wall screen", () => {
       expect(rooms?.width).toBeCloseTo(size.width, 0);
       expect(panel?.y ?? Infinity).toBeLessThan((await board.boundingBox())?.y ?? 0);
     } else {
-      // Landscape: the 176 px rail on the left, the 400 px Today panel on the right.
+      // Landscape: the 192 px rail on the left, the 400 px Today panel on the right.
       expect(rooms?.x).toBe(0);
-      expect(rooms?.width).toBeCloseTo(176, 0);
+      expect(rooms?.width).toBeCloseTo(192, 0);
       expect((panel?.x ?? 0) + (panel?.width ?? 0)).toBeCloseTo(size.width, 0);
       await steadyDigits(page);
       await page.getByRole("button", { name: "Hide the Today panel" }).click();

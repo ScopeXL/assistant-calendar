@@ -37,13 +37,21 @@ export function Chip({
 }
 
 /** A row of chips with a group name for screen readers. */
-export function ChipRow({ label, children }: { label: string; children: ReactNode }) {
+export function ChipRow({
+  label,
+  center = false,
+  children,
+}: {
+  label: string;
+  center?: boolean;
+  children: ReactNode;
+}) {
   const display = useShell() === "display";
   return (
     <div
       role="group"
       aria-label={label}
-      className={`flex flex-wrap ${display ? "gap-3" : "gap-2"}`}
+      className={`flex flex-wrap ${display ? "gap-3" : "gap-2"} ${center ? "justify-center" : ""}`}
     >
       {children}
     </div>

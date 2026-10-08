@@ -155,6 +155,21 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
     expect(contrast(at("on-alert"), at("alert"))).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("text on today's lit column passes AA, and the column stands out from the wall", () => {
+    for (const name of ["ink", "ink-soft", "sun-ink"]) {
+      expect(contrast(at(name), at("lit")), name).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const daypart of DAYPARTS[theme]) {
+      const step = contrast(at("lit"), wall(daypart, theme));
+      expect(step, daypart).toBeGreaterThanOrEqual(theme === "light" ? 1.08 : 1.2);
+    }
+  });
+
+  it("switches read at 3:1 against the row, on and off", () => {
+    expect(contrast(at("ink-soft"), at("surface"))).toBeGreaterThanOrEqual(3);
+    expect(contrast(at("on-ink"), at("ink"))).toBeGreaterThanOrEqual(3);
+  });
+
   it("grid lines show against the wall and the surface", () => {
     expect(contrast(at("line"), at("surface"))).toBeGreaterThanOrEqual(1.2);
   });

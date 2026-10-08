@@ -18,7 +18,7 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   // Before setup, the wall says where to set Sunroom up.
   await page.goto("/display");
   await expect(page.getByRole("heading", { name: "Set up Sunroom on your phone" })).toBeVisible();
-  await expect(page.getByText("http://127.0.0.1:4173")).toBeVisible();
+  await expect(page.getByText("http://sunroom.local:4173")).toBeVisible();
   await expect(page.getByRole("img", { name: /A code that opens/ })).toBeVisible();
 
   const { page: phonePage, context } = await phone(browser, watch);

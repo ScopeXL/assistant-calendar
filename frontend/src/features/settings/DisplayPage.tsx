@@ -67,7 +67,7 @@ export function DisplayPage() {
         />
       </Group>
       <Group title="Layout">
-        <Row label="Rooms on the" hint="For a screen hung to your left or right.">
+        <Row label="Rail side" hint="Where the clock and rooms sit, for a screen hung to one side.">
           <Segmented
             label="Rail side"
             value={settings.display_rail_side}

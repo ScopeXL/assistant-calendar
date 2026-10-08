@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { CalendarDays, Menu, Sun, type LucideIcon } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
@@ -24,8 +24,12 @@ const TABS: Tab[] = [
   { to: "/more", label: "More", icon: Menu },
 ];
 
+// Screens opened from More keep More lit (Settings, Pair a display, Who's using this).
+const UNDER_MORE = /^\/(more|settings|pair|who|install)(\/|$)/;
+
 /** Bottom tabs on phones (UX §3 "The phone shell"). */
 export function TabBar() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
     <nav
       aria-label="Main"
@@ -38,11 +42,12 @@ export function TabBar() {
             <Link
               to={to}
               activeOptions={{ exact: to === "/" }}
+              data-lit={to === "/more" && UNDER_MORE.test(pathname) ? "" : undefined}
               // The router sets data-status="active"; the active icon sits in a filled ink pill, a
               // cue that isn't color alone.
-              className="group flex min-h-(--tabbar-h) flex-col items-center justify-center gap-0.5 text-caption font-semibold text-ink-soft data-[status=active]:text-ink"
+              className="group flex min-h-(--tabbar-h) flex-col items-center justify-center gap-0.5 text-caption font-semibold text-ink-soft data-lit:text-ink data-[status=active]:text-ink"
             >
-              <span className="flex h-7 w-12 items-center justify-center rounded-full group-data-[status=active]:bg-ink group-data-[status=active]:text-on-ink">
+              <span className="flex h-7 w-12 items-center justify-center rounded-full group-data-lit:bg-ink group-data-lit:text-on-ink group-data-[status=active]:bg-ink group-data-[status=active]:text-on-ink">
                 <Icon aria-hidden="true" size={22} strokeWidth={2.25} />
               </span>
               <span>{label}</span>

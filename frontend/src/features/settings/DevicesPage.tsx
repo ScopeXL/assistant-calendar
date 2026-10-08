@@ -89,7 +89,7 @@ export function DevicesPage() {
       ) : (
         <Smartphone aria-hidden="true" className={display ? "size-9" : "size-6"} />
       )}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 basis-56 flex-col">
         <span className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>
           {device.label}
           {device.is_current ? " (this one)" : ""}

@@ -179,7 +179,7 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
         <legend className={`mb-2 font-semibold ${display ? "text-d-body" : "text-body"}`}>
           Color
         </legend>
-        <div className="grid grid-cols-4 gap-2">
+        <div className={`grid gap-2 ${display ? "grid-cols-4" : "grid-cols-2"}`}>
           {COLORS.map((option) => (
             <label
               key={option.value}

@@ -38,7 +38,7 @@ export function Segmented<T extends string>({
           onClick={() => {
             onChange(option.value);
           }}
-          className={`press select-fill flex items-center justify-center rounded-full px-3 font-semibold aria-pressed:bg-ink aria-pressed:text-on-ink ${
+          className={`press select-fill flex items-center justify-center rounded-full px-3 font-semibold whitespace-nowrap aria-pressed:bg-ink aria-pressed:text-on-ink ${
             display ? "min-h-14" : "min-h-11"
           }`}
         >

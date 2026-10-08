@@ -174,7 +174,7 @@ function PasswordStep({
   return (
     <Page
       title={fromServer ? "Type the household password" : "Set a household password"}
-      step="1 of 2"
+      step="1 of 5"
     >
       <p className="text-body text-ink-soft">
         {fromServer
@@ -254,7 +254,7 @@ function HouseholdStep({
   });
   if (!password) {
     return (
-      <Page title="Name your household" step="2 of 2">
+      <Page title="Name your household" step="2 of 5">
         <p className="text-body">Choose the household password first.</p>
         <Button block onClick={onBack}>
           Back
@@ -263,7 +263,7 @@ function HouseholdStep({
     );
   }
   return (
-    <Page title="Name your household" step="2 of 2">
+    <Page title="Name your household" step="2 of 5">
       <form
         className="flex flex-col gap-5"
         onSubmit={(event) => {
@@ -376,7 +376,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
     },
   });
   return (
-    <Page title="Who lives here?">
+    <Page title="Who lives here?" step="3 of 5">
       <p className="text-body text-ink-soft">
         {first
           ? "Start with you. Each person gets a color, used everywhere they appear."
@@ -453,7 +453,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
     onSuccess: onNext,
   });
   return (
-    <Page title="Set a parent PIN?">
+    <Page title="Set a parent PIN?" step="4 of 5">
       <p className="text-body text-ink-soft">
         It keeps kids out of Settings on the kitchen screen. Adding events and checking off chores
         never ask for it.
@@ -499,7 +499,7 @@ function PairStep({ onNext }: { onNext: () => void }) {
   });
   const valid = normalizeCode(code);
   return (
-    <Page title="Pair the kitchen screen">
+    <Page title="Pair the kitchen screen" step="5 of 5">
       <p className="text-body text-ink-soft">
         On the screen, Sunroom now shows a code. Type it here.
       </p>

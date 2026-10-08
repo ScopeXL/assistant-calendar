@@ -171,14 +171,20 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
             <Rail
               home={home}
               room={room}
-              unlocked={Boolean(session?.grant_expires_at) || (kiosk && session?.has_pin === false)}
+              lock={
+                session?.grant_expires_at
+                  ? "unlocked"
+                  : session?.has_pin === false || (!kiosk && session?.is_parent === true)
+                    ? "open"
+                    : "locked"
+              }
               onLock={() => {
                 void openSettings();
               }}
             />
           </div>
           {showPanel ? (
-            <div className="hidden portrait:block portrait:border-b portrait:border-line">
+            <div className="hidden portrait:flex portrait:h-[var(--band-h)] portrait:shrink-0 portrait:flex-col portrait:overflow-hidden portrait:border-b portrait:border-line portrait:bg-surface">
               <div className="flex items-center justify-between px-6 pt-4">
                 <ClockBlock compact />
               </div>

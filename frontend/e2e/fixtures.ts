@@ -83,6 +83,8 @@ export async function phone(
     hasTouch: true,
     isMobile: true,
     baseURL: "http://127.0.0.1:4173",
+    timezoneId: "America/New_York",
+    locale: "en-US",
   });
   const page = await context.newPage();
   watch(page);
@@ -99,6 +101,8 @@ export async function wall(
     viewport,
     hasTouch: true,
     baseURL: "http://127.0.0.1:4173",
+    timezoneId: "America/New_York",
+    locale: "en-US",
   });
   const page = await context.newPage();
   watch(page);

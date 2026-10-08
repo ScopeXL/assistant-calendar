@@ -18,6 +18,8 @@
 
   --wall: light-dark(#f5f5f2, #0f171f);
   --surface: light-dark(#ffffff, #1a222b);
+  /* Today's column: one step lighter than the wall at every tint, in both themes (UX §3). */
+  --lit: light-dark(#ffffff, #232c37);
   --ink: light-dark(#1c2430, #edf1f4);
   --on-ink: light-dark(#ffffff, #0f171f);
   --ink-soft: light-dark(#5b6775, #a6b1bd);
@@ -55,9 +57,12 @@
   --rose-l: #b3436e;
   --rose-d: #c1758d;
 
-  /* Shell sizes (UX §1): the display's rail and Today panel, the phone's tab bar. */
-  --rail-w: 176px;
-  --panel-w: 400px;
+  /* Shell sizes (UX §1): the display's rail and Today panel, the phone's tab bar. In rem, so
+     they widen with the display's text size (UX §10). The rail is 192 px at Standard: Lexend's
+     wide figures need it for a glance-sized clock (ADR 0021). */
+  --rail-w: 12rem;
+  --panel-w: 25rem;
+  --band-h: 25rem; /* portrait's Today band */
   --keyboard-w: 960px;
   --tabbar-h: 3.5rem;
 }
@@ -143,6 +148,7 @@
 @theme inline {
   --color-wall: var(--wall);
   --color-surface: var(--surface);
+  --color-lit: var(--lit);
   --color-ink: var(--ink);
   --color-on-ink: var(--on-ink);
   --color-ink-soft: var(--ink-soft);
@@ -281,32 +287,40 @@
   }
 
   /* An on/off switch (ui/Switch): a native checkbox, so every screen reader knows it. */
+  /* Off: an outlined track with a soft-ink knob; on: an ink track with a light knob. Both read
+     at 3:1 or more against the row in either theme (WCAG non-text contrast). */
   input.switch {
     appearance: none;
     position: relative;
     width: 3.25rem;
     height: 2rem;
+    border: 2px solid var(--ink-soft);
     border-radius: 9999px;
-    background: var(--line);
+    background: var(--surface);
     cursor: pointer;
-    transition: background-color var(--motion-quick) var(--ease-standard);
+    transition:
+      background-color var(--motion-quick) var(--ease-standard),
+      border-color var(--motion-quick) var(--ease-standard);
   }
   input.switch::before {
     content: "";
     position: absolute;
-    top: 0.25rem;
-    left: 0.25rem;
+    top: 0.125rem;
+    left: 0.125rem;
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 9999px;
-    background: var(--surface);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
-    transition: transform var(--motion-quick) var(--ease-standard);
+    background: var(--ink-soft);
+    transition:
+      transform var(--motion-quick) var(--ease-standard),
+      background-color var(--motion-quick) var(--ease-standard);
   }
   input.switch:checked {
+    border-color: var(--ink);
     background: var(--ink);
   }
   input.switch:checked::before {
+    background: var(--on-ink);
     transform: translateX(1.25rem);
   }
   input.switch-d {
@@ -357,6 +371,28 @@
 
 /* Numbers that change where they stand (the clock, counts): Lexend has no tabular figures,
    so each digit gets a box as wide as its widest digit (ADR 0021; ui/Digits). */
+/* The rail's clock: as large as the rail allows, up to the glance size (UX §1). "10:08" in
+   digit boxes is about 3.1 times the font size wide at weight 800. */
+.rail-clock {
+  container-type: inline-size;
+}
+.rail-clock-time {
+  font-size: min(var(--text-d-clock), 31cqi);
+  line-height: 1;
+}
+
+/* A day's column on the board sizes its heading and the now label to its own width, so seven
+   columns hold at Extra large on one line each (UX §10). Never under the display's 18 px. */
+.day-column {
+  container-type: inline-size;
+}
+.day-head {
+  font-size: min(var(--text-d-title), 20cqi);
+}
+.now-label {
+  font-size: max(1.125rem, min(var(--text-d-caption), 12cqi));
+}
+
 /* A box as wide as Lexend's widest digit, the 0, at the text's weight (measured at M0), so a
    changing number never shifts (ADR 0021). */
 .digit {
