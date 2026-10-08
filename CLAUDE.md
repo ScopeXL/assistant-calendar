@@ -11,21 +11,16 @@ It is built and maintained entirely by AI sessions, and copied from Dinner Bell'
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
 length from a wall screen.
 
-**Status:** M0 (the foundation), M1 (the calendar core), M2 (synced calendars), M3 (lists and
-chores) and M4 (meals, countdowns, photos and weather) are built.
-- M0: setup, pairing, the PIN, Settings, the plugin framework, the Pi installer.
-- M1: local calendars, repeating events (our own engine, ADR 0023), the board's views, quick add,
-  scoped changes with Undo, Recently removed, and the phone's Today and Calendar.
-- M2: the `calendar_sync` plugin with calendar addresses, holidays, iCloud and other CalDAV
-  servers, and Google (helper and sign-in), on our own clients behind the guard (ADR 0024);
+**Status:** M0 to M5 are built (docs/PLAN.md §15):
+- M0 the foundation; M1 the calendar core (our own recurrence engine, ADR 0023).
+- M2 synced calendars: `calendar_sync` on our own clients behind the guard (ADR 0024),
   docs/SYNC.md.
-- M3: the `lists` and `chores` plugins (chores as rules in `domain/chores.py`, ADR 0025), the done
-  moment's canvas burst (`ui/Celebration`), the routine runner, and plugin rooms at `/<key>`.
-- M4: the `meals`, `countdowns`, `screensaver` and `weather` plugins (ADR 0026): board overlays,
-  the screensaver over the idle wall, the inbox folder, sunset from the household's place
-  (`lib/sun.ts`), and "Where's home?" at first run.
+- M3 lists and chores (chores as rules, ADR 0025; the done moment's `ui/Celebration`).
+- M4 meals, countdowns, photos and weather (ADR 0026).
+- M5 the wall, polished (ADR 0027): the display state and the Pi's `kiosk/sunroom-screen`, the
+  evening dim, the opt-in update check, Download everything and `sunroom restore`.
 
-Next is M5: the wall, polished (docs/PLAN.md §15).
+Next is M6: polish from the first weeks of use (docs/PLAN.md §15).
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -125,7 +120,8 @@ frontend/src/
   ui/            primitives styled only with tokens; sized by ShellContext (display or phone)
   shell/         DisplayShell (rail, Today panel, idle, Night, keyboard, PIN), PhoneShell
   features/      display (pairing), onboarding, auth, calendar, phone, settings; registry.ts
-kiosk/           install.sh, the launcher, systemd units, labwc-rule.py, update.sh, uninstall.sh
+kiosk/           install.sh, the launcher, sunroom-screen (sleep and brightness), systemd units,
+                 labwc-rule.py, update.sh, uninstall.sh
 ```
 
 ## Conventions
