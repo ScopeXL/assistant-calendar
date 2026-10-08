@@ -42,6 +42,10 @@ class BackupError(Exception):
     pass
 
 
+class NoRoomError(BackupError):
+    """Not enough free disk space for a verified copy."""
+
+
 @dataclass(frozen=True)
 class BackupResult:
     path: Path
@@ -107,7 +111,7 @@ def take_backup(source: Path, destination: Path) -> BackupResult:
     size = source.stat().st_size
     free = shutil.disk_usage(destination.parent).free
     if free < 2 * size + MIN_FREE_EXTRA:
-        raise BackupError("not enough free disk space for a verified copy")
+        raise NoRoomError("not enough free disk space for a verified copy")
     # Opened read-write on purpose: a read-only open of an idle WAL database can leave
     # -wal/-shm files behind.
     src = sqlite3.connect(source)

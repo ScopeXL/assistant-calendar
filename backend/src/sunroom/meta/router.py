@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import shutil
 from typing import Any
 
 from fastapi import APIRouter, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import text
+from starlette.types import Receive, Scope, Send
 
 from sunroom.auth.deps import ParentDep
 from sunroom.core.errors import AppError
+from sunroom.core.logging import get_logger
 from sunroom.core.version import build_info
-from sunroom.db import migrate
-from sunroom.db.backup import NIGHTLY_RE
+from sunroom.db import full_backup, migrate
+from sunroom.db.backup import NIGHTLY_RE, NoRoomError
 from sunroom.db.export import export_data
 from sunroom.state import StateDep
 from sunroom.web.hosts import host_name, is_ip_literal
 
 router = APIRouter(prefix="/api", tags=["meta"])
+log = get_logger(__name__)
 
 
 def _phone_can_use(host: str) -> bool:
@@ -167,6 +171,66 @@ async def run_backup(state: StateDep, actor: ParentDep) -> BackupRunOut:
     except Exception as exc:
         raise AppError(500, "backup_failed", f"The backup didn't complete: {exc}") from exc
     return BackupRunOut(file=result.path.name, bytes=result.bytes, seconds=result.seconds)
+
+
+class FullBackupResponse(StreamingResponse):
+    """The zip as the worker writes it. However the response ends (done, failed, or the phone
+    gone away), the worker stops and the database copy goes."""
+
+    media_type = "application/zip"
+
+    def __init__(self, download: full_backup.FullBackupStream, filename: str) -> None:
+        super().__init__(
+            download.chunks(),
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Cache-Control": "no-store",
+            },
+        )
+        self.download = download
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            self.download.close()
+
+
+# Before /admin/backups/{name}, which would otherwise take "full.zip" as a name.
+@router.get(
+    "/admin/backups/full.zip",
+    status_code=200,  # FastAPI would look for it in the response class's __init__
+    response_class=FullBackupResponse,
+    responses={507: {"description": "Not enough free space for the database copy"}},
+)
+async def download_everything(state: StateDep, actor: ParentDep) -> FullBackupResponse:
+    """Download everything (PLAN §13.7): the database, the photos and a manifest in one zip,
+    streamed as it is written."""
+    now = state.clock.now()
+    try:
+        copy = await asyncio.to_thread(
+            full_backup.make_database_copy, state.settings.db_path, state.settings.backup_dir
+        )
+    except NoRoomError as exc:
+        raise AppError(
+            507,
+            "storage_full",
+            "There isn't enough free space on the server to make the download. Free some space, "
+            "then try again.",
+        ) from exc
+    except Exception as exc:
+        log.error("backup.download_failed", reason=f"{type(exc).__name__}: {exc}")
+        raise AppError(
+            500, "backup_failed", "The download couldn't be made. Try again in a minute."
+        ) from exc
+    download = full_backup.FullBackupStream(
+        db_copy=copy,
+        photos_root=state.photos.root,
+        app_version=build_info().version,
+        created_at=now,
+        zone=state.zone(),
+    )
+    return FullBackupResponse(download, full_backup.zip_name(now.astimezone(state.zone()).date()))
 
 
 @router.get("/admin/backups/{name}")

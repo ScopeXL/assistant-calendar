@@ -9096,6 +9096,31 @@
         ]
       }
     },
+    "/api/admin/backups/full.zip": {
+      "get": {
+        "description": "Download everything (PLAN \u00a713.7): the database, the photos and a manifest in one zip,\nstreamed as it is written.",
+        "operationId": "download_everything_api_admin_backups_full_zip_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "507": {
+            "description": "Not enough free space for the database copy"
+          }
+        },
+        "summary": "Download Everything",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
     "/api/admin/backups/run": {
       "post": {
         "operationId": "run_backup_api_admin_backups_run_post",

@@ -21,6 +21,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/backups/full.zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Everything
+         * @description Download everything (PLAN §13.7): the database, the photos and a manifest in one zip,
+         *     streamed as it is written.
+         */
+        get: operations["download_everything_api_admin_backups_full_zip_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/backups/run": {
         parameters: {
             query?: never;
@@ -5211,6 +5232,33 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["BackupStatusOut"];
                 };
+            };
+        };
+    };
+    download_everything_api_admin_backups_full_zip_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            /** @description Not enough free space for the database copy */
+            507: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -14,9 +14,14 @@ function when(iso: string | null): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
+/** The downloads are plain links: the browser saves the file itself, however big it is. */
+const DOWNLOAD_LINK =
+  "press inline-flex min-h-11 items-center rounded-button border-2 border-line bg-surface px-5 text-body font-semibold";
+
 /**
- * Settings → Backup (UX §4; PLAN §13.7): the nightly copies, a copy on demand, and the household's
- * data to take away. Restoring is a runbook step (docs/RESTORE.md); a Restore button arrives in M5.
+ * Settings → Backup (UX §4; PLAN §13.7): the nightly copies, a copy on demand, the newest copy or
+ * everything (photos too) to download on a phone, and the household's data to take away.
+ * Restoring is a runbook step with the server stopped (docs/RESTORE.md).
  */
 export function BackupPage() {
   const display = useShell() === "display";
@@ -67,24 +72,36 @@ export function BackupPage() {
             <Text>The newest backup is over a week old. Try Back up now, and check the log.</Text>
           </div>
         ) : null}
-        <div className={`flex flex-wrap gap-3 ${display ? "py-5" : "py-4"}`}>
-          <Button
-            variant="secondary"
-            pending={run.isPending}
-            onClick={() => {
-              run.mutate();
-            }}
-          >
-            Back up now
-          </Button>
-          {newest && !display ? (
-            <a
-              href={`/api/admin/backups/${newest.name}`}
-              download
-              className="press inline-flex min-h-11 items-center rounded-button border-2 border-line bg-surface px-5 text-body font-semibold"
+        <div className={display ? "py-5" : "py-4"}>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="secondary"
+              pending={run.isPending}
+              onClick={() => {
+                run.mutate();
+              }}
             >
-              Download backup
-            </a>
+              Back up now
+            </Button>
+            {newest && !display ? (
+              <a href={`/api/admin/backups/${newest.name}`} download className={DOWNLOAD_LINK}>
+                Download backup
+              </a>
+            ) : null}
+            {status && !display ? (
+              <a href="/api/admin/backups/full.zip" download className={DOWNLOAD_LINK}>
+                Download everything
+              </a>
+            ) : null}
+          </div>
+          {display ? (
+            <p className="mt-4 text-d-secondary text-ink-soft">
+              Download a backup from a phone or computer: More, then Settings, then Backup.
+            </p>
+          ) : status ? (
+            <p className="mt-3 text-secondary text-ink-soft">
+              Everything, photos included: this can take a while and be large.
+            </p>
           ) : null}
         </div>
       </Group>

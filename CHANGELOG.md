@@ -12,6 +12,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   evening, from the time you choose, a little, half or low.
 - Settings → About → New versions: Sunroom can check once a day whether there's a new version,
   and says how to update. It's off until you turn it on.
+- Settings → Backup → Download everything: the family's data and every photo in one file, to
+  keep somewhere safe. [docs/RESTORE.md](docs/RESTORE.md) shows how to put it back, on the same
+  server or a new one.
 - On a Raspberry Pi, the screen itself now switches off at bedtime and turns down in the evening
   (on monitors that allow it), and a tap brings it back. Run the Pi installer again to add this
   to a screen you already have (docs/KIOSK.md).
