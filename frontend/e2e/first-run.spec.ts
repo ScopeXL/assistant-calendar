@@ -123,6 +123,15 @@ test("a wall screen typed in with the password, and a toast that leaves under th
   await screen.getByRole("button", { name: "Done" }).click();
   await expect(screen.getByRole("region", { name: "This week" })).toBeVisible();
 
+  // From here on the page is the service worker's cached index.html, whose CSP header and
+  // nonce were stamped together when it was cached (ADR 0007).
+  await screen.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  await screen.reload();
+  await expect(screen.getByRole("region", { name: "This week" })).toBeVisible();
+  expect(await screen.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  const nonce = await screen.locator('meta[name="csp-nonce"]').getAttribute("content");
+  expect(nonce).toMatch(/^[\w+/=-]{16,}$/);
+
   // Settings → Family → remove Mia, then Undo: the toast rises and leaves with `motion`, whose
   // style block carries the page's nonce, while the CSP guard watches (ADR 0007).
   await screen.getByRole("button", { name: "Settings" }).click();
