@@ -6,6 +6,41 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Meals: the week's dinners on the kitchen screen and on phones.
+  - Tonight's dinner, and who cooks, shows on the Today panel.
+  - Every meal you add is kept under Saved meals, so next week it's one tap. A saved meal can
+    have its recipe link and ingredients.
+  - Add ingredients to Groceries puts a meal's ingredients on your grocery list in one tap.
+  - Swap days, and Copy last week, both with Undo.
+  - Breakfast, lunch and snacks too if you want them, and dinner on the calendar, in
+    Settings → Meals.
+- Countdowns: "12 days" to the things your family looks forward to.
+  - Birthdays count down by themselves, from the birthdays in Family.
+  - The nearest three show on the Today panel; on the day it says "Today: Mia's birthday!" and
+    the kitchen screen celebrates the first time someone touches it.
+  - Add a countdown from any event on the calendar.
+  - Keep one off the kitchen screen, for a surprise.
+- Photos and the screensaver: add photos from a phone (several at once, iPhone photos too), and
+  when nobody has touched the kitchen screen for a while they fade in with the clock and what's
+  next. A tap takes you back to where you were.
+  - The Photos room shows them all; hide one from the screensaver right there.
+  - A parent can start the screensaver from their phone.
+  - Photos put in the photos/inbox folder on the server are added by themselves.
+  - Settings → Photos & screensaver sets when it starts and how often the photo changes.
+- Weather by the clock, with each day's sky on the board and the forecast a tap away, from
+  Open-Meteo.
+- Where's home: a new first-run step (also in Settings → Household → Location) for the weather.
+  With it, the kitchen screen turns dark at your sunset and light at sunrise, instead of 7 PM
+  and 7 AM, and it waits until nobody's touching the screen.
+- At night, the dim clock shows tomorrow's first event under it.
+
+### Changed
+
+- Behind the scenes: adding photos no longer holds up everything else while they're
+  processed, which matters on a Raspberry Pi.
+
 ## [0.4.0] - 2026-10-08
 
 ### Added

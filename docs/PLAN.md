@@ -287,7 +287,8 @@ One asyncio task and queue per enabled plugin (the earlier project's pattern, §
 // features/registry.ts
 export const plugins: Record<string, () => Promise<{ default: PluginModule }>> = {
   calendar_sync: () => import("./sync"), lists: () => import("./lists"), chores: () => import("./chores"),
-  // M4: meals, countdowns, screensaver, weather
+  meals: () => import("./meals"), countdowns: () => import("./countdowns"),
+  screensaver: () => import("./screensaver"), weather: () => import("./weather"),
 };
 export interface PluginModule {
   id: string;
@@ -297,15 +298,19 @@ export interface PluginModule {
   personColumn?: ComponentType<{ memberId: string | null; day: string }>;   // under a person in Who's doing what
   removed?: ComponentType<{ onCount: (n: number) => void }>;                 // rows in Recently removed
   settingsPages?: SettingsPage[];  // whole pages in Settings, after Calendars & accounts
-  settings?: Record<string, ComponentType>;  // sections inside core pages (Calendars & accounts)
-  overlay?: ComponentType;         // the screensaver (M4)
-  calendarOverlays?: string[];     // overlay keys to request from /occurrences
+  settings?: Record<string, ComponentType>;  // sections inside core pages (accounts; household)
+  overlay?: ComponentType<{ asleep: boolean; home: string }>;  // over the whole wall: the screensaver
+  calendarOverlays?: { key: string; icon: LucideIcon; room: string }[];  // quiet chips on the board
+  railBlock?: ComponentType<{ place: "rail" | "band" | "phone" }>;  // by the clock: the weather
+  dayHeader?: ComponentType<{ day: string }>;  // a mark in a board day's header
+  saverCorner?: ComponentType;     // beside the date on the screensaver
+  eventAction?: ComponentType<{ occurrence: Occurrence; onDone: () => void }>;  // "Add a countdown"
   boardPill?: ComponentType;       // a quiet pill in the board header
   onboarding?: ComponentType<{ onDone: () => void }>;  // a first-run step
 }
 ```
 
-A plugin's room lives at its own address (`/lists`, `/chores/rewards`): the router's `/$room` and `/$room/$` routes render the module's `Display` on the wall and `Phone` on a phone, and an address whose plugin is off goes home. The rail lists Calendar, then each room by `order`; the tab bar has Today, Calendar, then rooms until four tabs are used, then More. Rooms return to the board after the household's idle minutes unless something holds the screen (`holdIdle`, the routine runner). Today blocks follow the calendar's sections by `order` (Chores today 10, Tonight 20, To do 30, Coming up 40). On the wall, Add in a plugin room opens with that room's kind first; the shell hosts it outside the Calendar room.
+A plugin's room lives at its own address (`/lists`, `/chores/rewards`): the router's `/$room` and `/$room/$` routes render the module's `Display` on the wall and `Phone` on a phone, and an address whose plugin is off goes home. The rail lists Calendar, then each room by `order`; the tab bar has Today, Calendar, then rooms until four tabs are used, then More. Rooms return to the board after the household's idle minutes unless something holds the screen (`holdIdle`, the routine runner). Today blocks follow the calendar's sections by `order` (Chores today 10, Tonight 20, To do 30, Coming up 40). Rooms in order: Lists 20, Chores 30, Meals 40, Countdowns 50, Photos 60; on phones the first two are tabs and the rest are in More. On the wall, Add in a plugin room opens with that room's kind first; the shell hosts it outside the Calendar room.
 
 The display's panel order lives in `kiosk_panels` rows (seeded with `calendar.week`), editable in Settings → Display with up/down buttons.
 
@@ -351,7 +356,7 @@ Identity is `(calendar_id, remote_uid, recurrence_id)`. The sync plugin converts
 
 ### 7.6 Overlays
 
-`ctx.calendar.register_overlay(key, provider)` lets a plugin add computed, read-only occurrences (meals on their day, countdowns, chores due) to `/occurrences?overlays=meals,countdowns,chores` without rows in `events`. Overlay occurrences carry `overlay: "meals"`, `event_id: null`, `read_only: true`, and are not cached.
+`ctx.calendar.register_overlay(provider, key)` lets a plugin add computed, read-only occurrences (meals on their day, countdowns) to `/occurrences?overlays=meals,countdowns` without rows in `events`. Overlay occurrences carry `overlay: "meals"`, `event_id: null`, `read_only: true`, and are not cached. The facade wraps each provider so a switched-off plugin answers nothing; the board asks for the overlays of the plugins that are on and draws them as quiet chips that open the plugin's room (ADR 0026).
 
 ## 8. Calendar sync (the `sync` plugin)
 
@@ -388,10 +393,10 @@ Fourteen ICS fixtures with golden expected occurrences, cross-checked against `r
 |---|---|---|---|---|
 | `lists` | `lists`, `list_items` | Shared checklists (grocery, to-do, packing, custom) with items that can carry a quantity, a note, a person and a due date; reorder; clear checked (with Undo); optional auto-clear after N days. Items with a due date appear in the `chores` overlay as tasks | Room "Lists"; Today panel block "Needs doing" (due or assigned items) | Tab "Lists" |
 | `chores` | `chores`, `chore_completions`, `point_adjustments`, `rewards`, `redemptions`, `routines`, `routine_steps`, `routine_checks` | Recurring responsibilities (RRULE, due time, fixed / rotating / anyone assignment) computed into a due list per day; completion with attribution, optional parent approval, points, streaks (computed); rewards a person can request and a parent approves; routines (morning, bedtime) as step-by-step checklists per kid that reset daily. All optional: points, rewards and routines each have a switch | Room "Chores" (today per person), Today panel blocks "Chores today" and "Points"; the routine runner is full-screen | Tab "Chores" |
-| `meals` | `meal_entries` | A week grid of breakfast / lunch / dinner / snack entries: free text with an optional emoji, link and person; saved meals for one-tap re-adding; copy last week. Appears on the calendar as an all-day overlay chip if enabled. `source_url` is reserved for a later Dinner Bell link (§19) | Room "Meals"; Today panel block "Tonight" | Tab "Meals" (in More) |
-| `countdowns` | `countdowns` | "12 days until Disney" with an emoji or photo, optional person, yearly repeat; birthdays come from members automatically | Today panel block "Coming up" (max 3); a room if more than 3 | In More |
-| `screensaver` | `photo_sources` (+ core `photos`) | Photo slideshow when the display is idle (idle minutes, seconds per photo, shuffle, clock and next-event overlay, dim hours); sources: phone upload, the inbox folder on the volume, later Immich and Nextcloud | The overlay; Settings → Photos & screensaver | Upload from More |
-| `weather` | `weather_cache` | Open-Meteo current conditions and a 7-day forecast for the household's location (geocoded once by name); units; refreshed every 30 min; "as of 9:10" when stale | Rail block and day-header icons; Today panel block | Today header |
+| `meals` | `meal_entries`, `saved_meals` | A week grid of breakfast / lunch / dinner / snack entries (the household picks which; Dinner by default): free text with an optional emoji, link and the person cooking; every meal typed is kept as a saved meal for one-tap re-adding, with its ingredients for "Add ingredients to Groceries" while Lists is on; Swap days; copy last week. Dinner appears on the calendar as an all-day overlay chip when the household turns it on. `source_url` is reserved for a later Dinner Bell link (§19) | Room "Meals" (and Saved meals); Today panel block "Tonight" | In More |
+| `countdowns` | `countdowns` | "12 days until the beach trip" with an emoji, optional person and color, yearly repeat, and "not on the kitchen screen" for a surprise; birthdays come from members automatically; "Add a countdown" from an event's sheet; the big celebration on the day | Room "Countdowns"; Today panel block "Coming up" (the nearest 3); a star on the board's day | In More |
+| `screensaver` | `photo_sources` (+ core `photos`) | Photo slideshow when the display is idle (idle minutes, seconds per photo, shuffle, the clock and Up next); Night wins over it; sources: phone upload and the inbox folder on the volume, later Immich and Nextcloud | The overlay; room "Photos"; Settings → Photos & screensaver | Photos in More: add, remove, Start screensaver |
+| `weather` | `weather_cache` | Open-Meteo current conditions, the next hours and a 7-day forecast for the household's place (searched by name at first run or in Settings → Household → Location); units (auto by the time zone); refreshed every 30 min; "as of 9:10" when stale | Rail block (in portrait's band) and day-header icons; the screensaver's date line | Today header |
 
 Each plugin's full endpoint list is in §11.3.
 
@@ -438,9 +443,9 @@ Conventions: `String(36)` UUIDv7 ids; `UTCDateTime`; `IsoDate` (`YYYY-MM-DD`); S
 | `routine_steps` | routine_id; title; icon; position |
 | `routine_checks` | routine_step_id; member_id; day; checked_at; PK(step, member, day); kept 60 days |
 | `routine_finishes` | routine_id; member_id; day; finished_at; points_awarded; PK(routine, member, day): a routine's stars, once a day |
-| `meal_entries` | day; slot (`breakfast`/`lunch`/`dinner`/`snack`/custom); text; emoji; recipe_url; note; member_id; source_url; position; created_by_member_id; created_at; updated_at; deleted_at; `UNIQUE(day, slot, position)` |
-| `saved_meals` | text; emoji; recipe_url; last_used_at; use_count; deleted_at |
-| `countdowns` | title; emoji; photo_id; color; date; time; repeat_yearly; member_id; show_on_display; created_by_member_id; created_at; updated_at; deleted_at |
+| `meal_entries` | day; slot (`breakfast`/`lunch`/`dinner`/`snack`); position; text; emoji; recipe_url; note; member_id (who cooks); saved_meal_id; source_url; created_by_member_id; created_at; updated_at; deleted_at; one live entry per (day, slot, position): a unique index on rows not removed (ADR 0026) |
+| `saved_meals` | text; emoji; recipe_url; ingredients_json; use_count; last_used_at; created_by_member_id; created_at; updated_at; deleted_at (Archive) |
+| `countdowns` | title; emoji; color; date (a yearly one's first); time; repeat_yearly; member_id; show_on_display; created_by_member_id; created_at; updated_at; deleted_at |
 | `photo_sources` | kind (`inbox`/`immich`/`nextcloud`); label; config_json; credentials_enc; allow_private; enabled; last_scan_at; last_error; items_seen; created_at; deleted_at |
 | `weather_cache` (one row) | latitude; longitude; units; payload_json; fetched_at; expires_at; last_error; last_error_at |
 
@@ -470,7 +475,7 @@ All under `/api`; the error envelope everywhere; mutations carry `X-Sunroom: 1`.
 | Network allowlist | `GET`, `POST`, `DELETE network-allowlist` P | `settings.changed` |
 | Calendar | `GET calendar/calendars` A; `POST`, `PATCH`, `DELETE` (soft), `…/restore calendar/calendars` P (local only; 409 `managed_by_sync` otherwise); `GET calendar/occurrences` A; `GET calendar/events/{id}` A; `POST calendar/events` A K; `PATCH calendar/events/{id} {scope: all, expected_version}` A K; `PATCH calendar/events/{id}/occurrences/{rid} {scope: this \| following}` A K; `DELETE calendar/events/{id}?scope=all`, `DELETE …/occurrences/{rid}?scope=` A K; `POST calendar/events/{id}/undo` A; `POST calendar/events/{id}/move` A K (drag fast path); `GET calendar/rrule/describe` A | `calendars.changed`, `events.changed {calendar_id, event_ids, calendar_version}` |
 | Plugins | `GET plugins` A; `POST plugins/{id}/enable`, `…/disable`, `…/restart` P; `GET plugins/{id}/settings` A; `PUT plugins/{id}/settings` P | `plugins.changed` |
-| Test only (`SUNROOM_TEST_MODE=1`, localhost) | `POST _test/reset`, `_test/drop-streams`, `_test/revoke-sessions`, `_test/clock {set \| advance}`, `PUT _test/fake-provider`, `PUT _test/fake-weather`, `POST _test/seed {profile: "sample-family"}` | |
+| Test only (`SUNROOM_TEST_MODE=1`, localhost) | `POST _test/reset`, `_test/drop-streams`, `_test/revoke-sessions`, `_test/clock {set \| advance}`, `POST _test/seed {profile: "sample-family"}` (the Sample Family in Sample Town, and each plugin's own data); the sync plugin's scripted account (`calendar-sync/_test/fake`); the weather plugin makes up its forecast in test mode | |
 
 ### 11.2 Sync plugin (`/api/calendar-sync`)
 
@@ -482,10 +487,10 @@ All under `/api`; the error envelope everywhere; mutations carry `X-Sunroom: 1`.
 |---|---|
 | `lists` | `GET lists`, `POST lists`, `PATCH lists/{id}`, `DELETE lists/{id}`, `POST lists/{id}/restore` (a parent, or a kid's own list), `PUT lists/order`; `GET lists/{id}/items` (open items, done ones, Usuals), `POST lists/{id}/items` (several at once; one already open isn't added twice), `PATCH lists/{id}/items/{item}` (text, note, quantity, due, assignee, position, checked), `DELETE …/items/{item}`, `POST lists/{id}/restore-items {ids}` (Undo and Put back), `POST lists/{id}/clear-checked` (returns ids for Undo); `GET lists/todo?date` (open items due by that day), `GET lists/removed`. All A K. `lists.changed {list_id}` |
 | `chores` | `GET chores?include_inactive` A; `POST chores` A K (adding never asks for the PIN); `PATCH`, `DELETE chores/{id}`, `POST chores/{id}/restore`, `POST chores/{id}/skip \| unskip {date}` P; `GET chores/today?date` A (columns, boxes, routines, stars with streaks, asks, completions waiting); `GET chores/week?start` A; `GET chores/removed` A; `POST chores/{id}/complete {due_date, member_id}` A K (credit: ADR 0025); `POST chores/{id}/undo {due_date, member_id}` A K (own completion, or P); `POST chores/completions/{id}/approve \| reject` P; `GET chores/points` A; `POST chores/points/adjust` P; `GET chores/rewards?include_inactive` A; `POST`, `PATCH`, `DELETE chores/rewards` P; `POST chores/rewards/{id}/redeem` A K; `POST chores/redemptions/{id}/cancel` A K (the asker, or P); `POST chores/redemptions/{id}/approve \| deny` P; `GET chores/routines?member_id&date&include_inactive` A; `POST`, `PATCH`, `DELETE chores/routines` P; `PUT chores/routines/{id}/steps` P; `POST chores/routines/{id}/steps/{step}/check {date, member_id, checked}` A K; `POST chores/routines/{id}/finish {date, member_id}` A K (stars once a day). Events: `chores.changed`, `points.changed {member_id}`, `routines.changed` |
-| `meals` | `GET meals/week?start` A; `PUT meals/entries` (upsert) A K; `DELETE meals/entries/{id}`, `POST …/restore` A K; `POST meals/copy-week {from, to}` A K; `GET meals/saved` A. `meals.changed {days}` |
-| `countdowns` | `GET countdowns/upcoming?limit&include_birthdays` A; `GET`, `POST`, `PATCH`, `DELETE`, `…/restore countdowns` A K. `countdowns.changed` |
-| `screensaver` | `GET screensaver/manifest?since` A (photo ids, thumb and full URLs, order, settings); `GET`, `POST`, `PATCH`, `DELETE screensaver/sources` P; `POST screensaver/sources/{id}/scan` P; `POST screensaver/preview` P (a `kiosk.command`). `screensaver.changed`, `photos.changed` |
-| `weather` | `GET weather` A (cached current, hourly, 7-day; `fetched_at`, `stale`); `POST weather/refresh` P; `GET weather/geocode?q` P (10/min). `weather.changed` |
+| `meals` | `GET meals/week?start&days` A (the household's slots and the entries, each with its saved meal's ingredients); `PUT meals/entries` A K (with an id it changes that entry, without one it fills the spot; returns what it replaced, for Undo; a new text becomes a saved meal); `DELETE meals/entries/{id}`, `POST …/restore` A K; `POST meals/entries/{id}/move {day, slot}` A K (Swap days); `POST meals/copy-week {from_start, to_start}` A K (returns ids for Undo; filled spots are kept); `GET meals/saved?q` A; `POST`, `PATCH`, `DELETE` (Archive), `…/restore meals/saved` A K; `GET meals/removed` A. `meals.changed {days}` |
+| `countdowns` | `GET countdowns/upcoming?limit&include_birthdays&date` A (countdowns and birthdays, soonest first, with days to go; the wall never lists a surprise); `GET`, `POST`, `PATCH`, `DELETE`, `…/restore countdowns` A K; `GET countdowns/removed` A. `countdowns.changed` |
+| `screensaver` | `GET screensaver/manifest` A (every library photo not hidden or removed, newest first, with its URLs; the settings); `GET screensaver/sources`, `PATCH screensaver/sources/{id}` P; `POST screensaver/sources/{id}/scan` P (Check now). Start screensaver from a phone is core's `POST kiosk/command {screensaver}`. Adding Immich or Nextcloud sources comes later. `screensaver.changed`, `photos.changed` |
+| `weather` | `GET weather` A (status, the place, units, now, the next 24 hours, 7 days with sunrise and sunset; `fetched_at`, `stale` after 3 h); `POST weather/refresh` P (once a minute); `GET weather/geocode?q` P (10 a minute per device). The test server makes up its forecast and places and never calls Open-Meteo. `weather.changed` |
 
 ### 11.4 Background jobs
 
@@ -496,10 +501,12 @@ All under `/api`; the error envelope everywhere; mutations carry `X-Sunroom: 1`.
 | `photos-reconcile` (core) | 6 h | Hide rows without files; quarantine files without rows | Diagnostics count |
 | `calendar_sync:tick` | 60 s | Spawn due account workers (≤ 2 concurrent) | Account `last_error`; status `error` after 3 failures; `needs_reconnect` on auth failure; `sync.changed`; the quiet banner |
 | `calendar_sync:push-sweep` | 60 s and on `events.changed` | Push pending edits and deletes | "Not synced yet" on the event; the banner |
-| `screensaver:inbox-scan` | 5 min | Import new files from `/data/photos/inbox` (JPEG, PNG, WebP, HEIC), re-encode, move originals to `imported/` | Source `last_error`; Settings banner |
-| `screensaver:source-sync` | 30 min | Immich and Nextcloud albums since `last_scan_at` | Same |
+| `screensaver:inbox-scan` | 5 min | Import files from `/data/photos/inbox` (JPEG, PNG, WebP, HEIC) that have sat still for 10 s, re-encoded before the write lock, one transaction each; originals move to `inbox/imported/`, unreadable files to `inbox/unreadable/` | Source `last_error` in Settings → Photos & screensaver |
+| `screensaver:source-sync` | 30 min (later) | Immich and Nextcloud albums since `last_scan_at` | Same |
 | `screensaver:thumb-backlog` | 10 min | Missing thumbnails after a crash mid-import | Log |
-| `weather:refresh` | 30 min and on settings change | Open-Meteo forecast; cache 60 min | Panel shows "as of 9:10" and a stale hint after 3 h |
+| `meals:prune` | hourly | Delete entries removed and saved meals archived over 7 days ago | Log |
+| `countdowns:tidy` | hourly | A one-off countdown whose day has passed leaves for Recently removed; removed ones go after 7 days | Log |
+| `weather:refresh` | 30 min, and when the household's place or the units change | Open-Meteo forecast; cache 60 min; after a failure, 5 minutes before the next try | The rail shows "as of 9:10" after 3 h |
 | `lists:tidy` | hourly | Auto-clear done items after the chosen days; delete lists and items removed over 7 days ago, and cleared items over 180 days | Log |
 | `chores:prune` | hourly | Delete routine checks over 60 days old (chores, completions and redemptions are history) | Log |
 | `core:update-check` | daily, opt-in | GitHub releases: newest version | A quiet pill in Settings (§13.6) |

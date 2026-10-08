@@ -11,8 +11,8 @@ It is built and maintained entirely by AI sessions, and copied from Dinner Bell'
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
 length from a wall screen.
 
-**Status:** M0 (the foundation), M1 (the calendar core), M2 (synced calendars) and M3 (lists and
-chores) are built.
+**Status:** M0 (the foundation), M1 (the calendar core), M2 (synced calendars), M3 (lists and
+chores) and M4 (meals, countdowns, photos and weather) are built.
 - M0: setup, pairing, the PIN, Settings, the plugin framework, the Pi installer.
 - M1: local calendars, repeating events (our own engine, ADR 0023), the board's views, quick add,
   scoped changes with Undo, Recently removed, and the phone's Today and Calendar.
@@ -21,8 +21,11 @@ chores) are built.
   docs/SYNC.md.
 - M3: the `lists` and `chores` plugins (chores as rules in `domain/chores.py`, ADR 0025), the done
   moment's canvas burst (`ui/Celebration`), the routine runner, and plugin rooms at `/<key>`.
+- M4: the `meals`, `countdowns`, `screensaver` and `weather` plugins (ADR 0026): board overlays,
+  the screensaver over the idle wall, the inbox folder, sunset from the household's place
+  (`lib/sun.ts`), and "Where's home?" at first run.
 
-Next is M4: meals, countdowns, photos and weather (docs/PLAN.md §15).
+Next is M5: the wall, polished (docs/PLAN.md §15).
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -199,6 +202,11 @@ Add one line each time something surprising costs time: the symptom, the cause, 
   through the justfile's `py` (uv, Python 3.14), and the justfile prepends `~/.orbstack/bin`.
 - A sticky Save bar in the wall's side panel covered the chips above the keyboard: a sticky box
   stops at its scroller's padding, which already holds `--osk-h`. Stick it at `bottom-0`.
+- `tsc --noEmit -p .` in `frontend/` passed while the code had type errors: the root tsconfig has
+  no files of its own, only references. Type-check with `pnpm exec tsc -b` (what `just check` runs).
+- Two plugins' pydantic shapes with one class name (`WeekOut`, `RemovedOut`) came out of OpenAPI
+  as `sunroom__plugins__…` names the frontend can't use. Give each shape a name unique across the
+  app (`MealWeekOut`), and check `schema.d.ts` after `just api-types`.
 - Imports broke while a plugin was half-written: `db/models.py` imports each plugin's models, so
   a plugin package's `__init__.py` that imports its modules drags them all in. Keep it a docstring.
 - The image smoke test pins the plugin list and the export's tables (`scripts/image_common.sh`):

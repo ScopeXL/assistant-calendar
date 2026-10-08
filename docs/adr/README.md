@@ -35,3 +35,4 @@ Each record covers one decision: the context, what was decided, and the conseque
 | [0023](0023-recurrence-engine-walks-rules-itself.md) | The recurrence engine walks rules itself; python-dateutil is its test reference (supersedes the engine library in 0003) | — |
 | [0024](0024-sync-speaks-http-through-the-guard.md) | Sync providers speak HTTP through the guarded client, with their own small CalDAV and Google clients (supersedes the libraries in 0005) | — |
 | [0025](0025-chores-are-rules.md) | Chores are rules: due days, turns, credit and streaks are computed, in `domain/chores.py` (settles ADR 0019's open question) | — |
+| [0026](0026-m4-meals-countdowns-photos-weather.md) | Meals, countdowns, photos and weather: overlays answer only while on, Groceries through the Lists API, sunset worked out in the browser, the screensaver as a frontend overlay | — |
