@@ -116,9 +116,10 @@ export async function signInPhone(page: Page, name = "Ana"): Promise<void> {
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "Who’s using this phone?" })).toBeVisible();
   await page.getByRole("button", { name: new RegExp(name) }).click();
-  // On a laptop the Today panel (and its "Up next") shows beside Who's using this, too.
+  // On a laptop the Today panel shows beside Who's using this, too: wait for the address, then
+  // for the question to go. Not for "Up next", which only shows while events are still to come.
   await page.waitForURL((url) => url.pathname === "/");
-  await expect(page.getByRole("heading", { name: "Up next" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Who’s using this phone?" })).toBeHidden();
 }
 
 /** Pair a wall screen through the API with the household password, in its own context. */
