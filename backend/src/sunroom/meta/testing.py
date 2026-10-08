@@ -100,6 +100,10 @@ async def reset(state: StateDep) -> None:
     state.pin_limiter.reset()
     state.uploads.clear()
     state.calendar.cache.clear()
+    # What lives only in memory: the update check's last answer, and a wall screen's wake.
+    state.updates.latest = state.updates.checked_at = state.updates.problem = None
+    state.screen.awake_until = None
+    state.screen.notify()
     state.household.setup_complete = False
     state.household.password_set = state.settings.app_password is not None
     state.household.members.clear()

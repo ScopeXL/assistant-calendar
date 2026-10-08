@@ -156,7 +156,7 @@ function UpdatesGroup() {
               status.available ? (
                 <p
                   role="status"
-                  className={`rounded-full bg-sun/25 px-4 py-1 font-semibold ${display ? "text-d-body" : "text-body"}`}
+                  className={`bg-sun/25 font-semibold ${display ? "rounded-button-d px-5 py-3 text-d-body" : "rounded-button px-4 py-3 text-body"}`}
                 >
                   {line}
                 </p>

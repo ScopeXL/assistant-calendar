@@ -201,6 +201,9 @@ async def test_the_test_server_makes_up_its_answer_and_sends_nothing(
             checked = await http.post("/api/admin/update/check", headers=CSRF)
             assert checked.status_code == 200, checked.text
             body = checked.json()
+            # The next end-to-end test starts from nothing: the answer goes with the reset.
+            assert (await http.post("/api/_test/reset", headers=CSRF)).status_code == 204
+            assert state_of(app).updates.checked_at is None
     assert github.requests == []
     assert (body["latest"], body["available"]) == (made_up(build_info().version), True)
     assert made_up("0.6.0") == "0.7.0"
