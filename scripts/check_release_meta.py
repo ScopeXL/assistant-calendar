@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""VERSION is the only version (docs/adr/0019-versioning.md); everything else stays 0.0.0."""
+"""VERSION is the only version (PLAN §14.5, after Dinner Bell's ADR 0019); everything else stays
+0.0.0.
+"""
 
 from __future__ import annotations
 
