@@ -1,12 +1,12 @@
 /**
  * The two shells at every size (ADR 0014, UX §3): the wall screen's rail and Today panel in
  * landscape, the Today band and bottom bar in portrait, a laptop in the display shell with its
- * own keyboard, phones with the tab bar. Nothing scrolls sideways. About's New versions on a
- * phone. Synthetic data only.
+ * own keyboard, phones with the tab bar. Nothing scrolls sideways. The evening dim on the wall,
+ * and About's New versions on a phone. Synthetic data only.
  */
 import type { Page } from "@playwright/test";
 
-import { expect, pairWall, seed, signInPhone, test, wall } from "./fixtures";
+import { expect, pairWall, PASSWORD, seed, signInPhone, test, wall } from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 
@@ -130,6 +130,35 @@ test.describe("the wall screen", () => {
       await page.getByRole("button", { name: "Show the Today panel" }).click();
       await expect(today).toBeVisible();
     }
+  });
+
+  test("dims in the evening with a veil, unless the Pi's helper turns the screen down", async ({
+    page,
+    request,
+  }) => {
+    // 9 PM in New York: after "Dim in the evening" starts (8 PM), before sleep (10 PM).
+    await request.post("/api/_test/clock", {
+      headers: CSRF,
+      data: { set: "2026-10-08T01:00:00Z" },
+    });
+    await seed(request);
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    const evening = await request.patch("/api/settings", {
+      headers: CSRF,
+      data: { sleep_from: "22:00", sleep_to: "06:30", dim_from: "20:00", dim_level: 40 },
+    });
+    expect(evening.ok()).toBe(true);
+    await pairWall(page);
+    // The launcher says who dims: the helper on a Pi that sets the brightness, else the page.
+    await page.goto("/display?dimmer=screen");
+    await expect(page.getByRole("region", { name: "This week" })).toBeVisible();
+    await expect(page.locator("[data-veil]")).toHaveCount(0);
+    await page.goto("/display?dimmer=page");
+    await expect(page.locator("[data-veil]")).toHaveClass(/opacity-45/);
   });
 
   test("pages through the weeks and comes back to this one", async ({ page, request }) => {

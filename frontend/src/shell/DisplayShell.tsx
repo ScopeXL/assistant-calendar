@@ -307,6 +307,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
         {dim !== null && dimmer === "page" ? (
           <div
             aria-hidden="true"
+            data-veil=""
             className={`pointer-events-none fixed inset-0 z-[58] bg-night ${VEIL[dim] ?? "opacity-45"}`}
           />
         ) : null}
