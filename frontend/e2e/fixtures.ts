@@ -130,14 +130,30 @@ export async function pairWall(page: Page): Promise<void> {
   expect(response.status()).toBe(200);
 }
 
-/** Wait until every finite animation has ended, so a check sees the final look. */
+/**
+ * Wait until every finite animation has ended, so a check sees the final look. Headless Chromium
+ * draws no frame until something asks for one, and a transition (even Reduce Motion's 0.01 ms)
+ * holds its starting value until a frame comes. A theme change then settles one level of the page
+ * per frame, as each child's inherited color starts its own transition: so ask for frames until
+ * nothing is left running.
+ */
 export async function settled(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    const finite = document.getAnimations().filter((animation) => {
-      const end = animation.effect?.getComputedTiming().endTime;
-      return typeof end === "number" && Number.isFinite(end);
-    });
-    await Promise.all(finite.map((animation) => animation.finished.catch(() => undefined)));
+    const frame = () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          resolve();
+        });
+      });
+    for (let round = 0; round < 60; round++) {
+      await frame();
+      const running = document.getAnimations().filter((animation) => {
+        const end = animation.effect?.getComputedTiming().endTime;
+        return typeof end === "number" && Number.isFinite(end) && animation.playState === "running";
+      });
+      if (!running.length) return;
+      await Promise.all(running.map((animation) => animation.finished.catch(() => undefined)));
+    }
   });
 }
 

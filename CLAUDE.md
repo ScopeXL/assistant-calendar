@@ -213,3 +213,7 @@ Add one line each time something surprising costs time: the symptom, the cause, 
   a new plugin updates both, and `backend/tests/test_export.py`.
 - A route test silently checked nothing: since FastAPI 0.142 `app.routes` holds included
   routers, not their routes. Walk `app.openapi()["paths"]` instead, and assert a count.
+- An a11y check failed only in the evening: the unpaired wall starts on the browser's clock and
+  flips to the test server's 10 AM, and headless Chromium draws no frame until asked, so Reduce
+  Motion's 0.01 ms transitions held the old colors, one level of the page per frame. `settled()`
+  asks for frames until nothing runs; set the server's clock in any test that needs "Up next".

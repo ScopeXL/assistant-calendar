@@ -151,6 +151,13 @@ async function check(page: Page, where: string): Promise<void> {
   ).toEqual([]);
 }
 
+/** An unpaired wall starts from the browser's own clock and moves to the test server's (10 AM:
+ * light, midday) when its first answer comes back. Check once it has, or axe can catch the theme
+ * half switched in the evening. */
+async function onServerTime(page: Page): Promise<void> {
+  await expect(page.locator("html")).toHaveAttribute("data-daypart", "midday");
+}
+
 /** Open a side panel or sheet with a button, check it, close it. */
 async function sheet(page: Page, open: string, where: string): Promise<void> {
   await page.getByRole("button", { name: open }).click();
@@ -318,10 +325,12 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(
         page.getByRole("heading", { name: "Set up Sunroom on your phone" }),
       ).toBeVisible();
+      await onServerTime(page);
       await check(page, "display: before setup");
       await seed(request, { pin: PIN });
       await page.reload();
       await expect(page.getByTestId("pair-code")).toBeVisible();
+      await onServerTime(page);
       await check(page, "display: pair this screen");
       await page.getByRole("button", { name: "Type the household password here instead" }).click();
       await page.getByLabel("Household password").click();
@@ -445,6 +454,8 @@ for (const scheme of ["light", "dark"] as const) {
 
     test("a laptop", async ({ page, request }, testInfo) => {
       test.skip(testInfo.project.name !== "desktop", "a laptop");
+      // The board's "Up next" needs events still to come today: the server's 10 AM.
+      await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
       await seed(request);
       await page.goto("/sign-in");
       await expect(page.getByLabel("Household password")).toBeVisible();
