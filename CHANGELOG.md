@@ -21,13 +21,16 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Changed
 
-- On an upright kitchen screen, the Today band at the top shows everything again, in three
-  columns.
+- On an upright kitchen screen, the Today band at the top now fits everything (Tonight and Coming
+  up too), in three columns.
 - When a chore with stars is done, the "+2" flies to the person's picture on the Today panel.
 - A long press on a list's tile opens Change list.
 - Adding an iCloud or Google calendar on a phone: each step now has a drawing of what to tap.
 - The Copy button for Google's helper address works on a plain home address too (it did
   nothing there before).
+- Behind the scenes: restoring a backup checks it completely before anything changes; new guides
+  for choosing the hardware, reaching Sunroom away from home, and adding a feature; and the
+  privacy page lists everything Sunroom sends and to whom.
 
 ## [0.5.0] - 2026-10-08
 
