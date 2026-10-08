@@ -6,11 +6,40 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Lists, on the kitchen screen and on phones: groceries, to-dos, packing lists and your own.
+  - Add several things at once ("milk, eggs, bread"), or tap one of the list's Usuals, the
+    things your family adds most.
+  - Give a thing a person or a day; things due today show on the Today panel under To do.
+  - Checking one off strikes it through in the color of whoever checked it, and it moves to
+    Done. Clear done tidies the list, with Undo.
+- Chores, with a column for each person and one for anyone:
+  - a chore can be each person's own, taken in turns ("Mia's turn"), or anyone's ("Who did
+    it?");
+  - ticking one stamps it, with a burst in that person's color; their last one of the day
+    says "All done, Mia!";
+  - This week shows how each person did, day by day.
+- Stars: chores can give stars, kids see their balance, a week's total and how many days in a
+  row they finished everything.
+- Rewards: kids ask for a reward with their stars, and a parent says yes or not now, on a
+  phone or on the kitchen screen with the PIN.
+- Routines: a morning or bedtime checklist a kid runs on the kitchen screen, one big step at a
+  time, with a picture for each, ending with a celebration (and stars, if you like).
+- Settings → Chores turns stars, rewards, routines and a parent's check on or off, and sets
+  up rewards and routines. Turning on "A parent checks finished chores" holds a kid's stars
+  until a parent says it's done.
+- Who's doing what shows each person's chores under their events, and the Today panel shows
+  how everyone is doing.
+- Recently removed now brings back lists, things on them and chores, too.
+
 ### Fixed
 
 - A calendar address that stops working, say after you reset Google's secret address, now says
   so on the board, and Connect again takes its new address. Before, it quietly kept showing the
   last events it had.
+- Behind the scenes: a check that every feature's addresses answer "turned off" when it's off
+  had quietly stopped looking at any; it checks them all again.
 
 ## [0.3.0] - 2026-10-08
 

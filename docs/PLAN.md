@@ -186,7 +186,7 @@ frontend/src/
   ui/          Button, IconButton, Sheet (native dialog), Chip, PersonBadge, Avatar, Segmented, Skeleton, EmptyState, Toast, Keyboard, Celebration (canvas), ProgressRing, DatePicker, TimePicker, ColorPicker
   shell/       DisplayShell (kiosk: rail + board + today panel), PhoneShell (tab bar), nav.ts (built from the plugin registry), Screensaver
   features/
-    registry.ts            the plugin registry: id → {routes, displayTiles, displayRoom, phoneTab, settingsPanel}
+    registry.ts            the plugin registry: id → {rooms, today, add, personColumn, removed, settingsPages, …} (§6.5)
     calendar/              week/day/month/agenda views, event editor, quick add, occurrence sheet
     sync/ lists/ chores/ meals/ countdowns/ screensaver/ weather/
     settings/ onboarding/ auth/ display/ (pairing, the screensaver host, the on-screen keyboard host)
@@ -255,9 +255,12 @@ class Plugin(Protocol):
     async def on_disable(self, ctx: PluginContext) -> None: ...     # 10 s budget; must not raise
     async def on_event(self, ctx: PluginContext, event: HubEvent) -> None: ...          # optional
     async def validate_settings(self, ctx: PluginContext, values: dict) -> list[str]: ...  # optional
+    async def seed_sample(self, ctx: PluginContext, people: dict[str, str]) -> None: ...  # test mode's Sample Family
 ```
 
-`PluginContext` is the whole world a plugin sees: `now()`, `zone()`, `settings()` (coerced against the spec), `read()` / `write()` session managers (the write transaction carries `tx.publish`), read-only facades `members`, `calendar` (occurrences, calendars, `upsert_synced`, `register_overlay`), `photos` (ingest, list, remove), `publish()`, `http(allow_private=False)` (the SSRF-guarded client, §12.6), `encrypt()` / `decrypt()` (Fernet under the `plugin-secrets-v1` HKDF subkey), `every(name, seconds, job)`, `spawn(name, coro)` and `enabled(other_id)`. Plugins never see the engine. A contract test (`tests/plugins/test_contract.py`) enforces: no plugin imports the engine, another plugin, or state internals; plugin models only reference core tables or their own; every table in the metadata is owned by exactly one of core or a manifest; every `*_enc`, `*_hash`, `*_fp` column is in an export exclusion; every plugin route returns 404 `plugin_disabled` when disabled; spec defaults round-trip through `coerce_params`.
+`PluginBase` gives every hook a no-op default. A plugin keeps its context when it stops (no `ctx = None` in `on_disable`): a job that raises marks it errored while its routes stay up (§11.4), and switched off, the framework's gate answers for them. The test server's `POST _test/seed` calls `seed_sample` on each enabled plugin; it adds its synthetic data only when its tables are empty.
+
+`PluginContext` is the whole world a plugin sees: `now()`, `zone()`, `settings()` (coerced against the spec), `read()` / `write()` session managers (the write transaction carries `tx.publish`), read-only facades `household` (name, week start, kid-safe editing), `members`, `calendar` (occurrences, calendars, `upsert_synced`, `register_overlay`), `photos` (ingest, list, remove), `publish()`, `http(allow_private=False)` (the SSRF-guarded client, §12.6), `encrypt()` / `decrypt()` (Fernet under the `plugin-secrets-v1` HKDF subkey), `every(name, seconds, job)`, `spawn(name, coro)` and `enabled(other_id)`. Plugins never see the engine. A contract test (`tests/plugins/test_contract.py`) enforces: no plugin imports the engine, another plugin, or state internals; plugin models only reference core tables or their own; every table in the metadata is owned by exactly one of core or a manifest; every `*_enc`, `*_hash`, `*_fp` column is in an export exclusion; every plugin route returns 404 `plugin_disabled` when disabled; spec defaults round-trip through `coerce_params`.
 
 `ParamField` is the earlier project's (§4) with more types: `int, float, bool, string, text, secret, percent, choice, multichoice, time, date, color, member, calendar, latlon, json`. The frontend renders a settings form generically from the spec; `secret` values are write-only and read back as `***`.
 
@@ -282,21 +285,27 @@ One asyncio task and queue per enabled plugin (the earlier project's pattern, §
 
 ```ts
 // features/registry.ts
-export const plugins: Record<string, () => Promise<PluginModule>> = {
+export const plugins: Record<string, () => Promise<{ default: PluginModule }>> = {
   calendar_sync: () => import("./sync"), lists: () => import("./lists"), chores: () => import("./chores"),
-  meals: () => import("./meals"), countdowns: () => import("./countdowns"), screensaver: () => import("./screensaver"),
-  weather: () => import("./weather"),
+  // M4: meals, countdowns, screensaver, weather
 };
 export interface PluginModule {
   id: string;
-  rooms?: Record<string, React.ComponentType>;        // display rooms by key
-  panels?: Record<string, React.ComponentType<{ size: string }>>;
-  tabs?: Record<string, React.ComponentType>;          // phone tabs by key
-  settings?: Record<string, React.ComponentType>;      // custom settings sections (otherwise the generic spec form)
-  overlay?: React.ComponentType;                       // screensaver
-  calendarOverlays?: string[];                         // overlay keys to request from /occurrences
+  rooms?: PluginRoom[];            // {key, label, icon, order, Display, Phone}: a rail room and a phone tab at /<key>
+  today?: TodayBlock[];            // {key, order, Display?, Phone?}: Today panel blocks and phone Today sections
+  add?: AddType[];                 // {key, label, order, room?, Editor}: kinds Add makes beside Event
+  personColumn?: ComponentType<{ memberId: string | null; day: string }>;   // under a person in Who's doing what
+  removed?: ComponentType<{ onCount: (n: number) => void }>;                 // rows in Recently removed
+  settingsPages?: SettingsPage[];  // whole pages in Settings, after Calendars & accounts
+  settings?: Record<string, ComponentType>;  // sections inside core pages (Calendars & accounts)
+  overlay?: ComponentType;         // the screensaver (M4)
+  calendarOverlays?: string[];     // overlay keys to request from /occurrences
+  boardPill?: ComponentType;       // a quiet pill in the board header
+  onboarding?: ComponentType<{ onDone: () => void }>;  // a first-run step
 }
 ```
+
+A plugin's room lives at its own address (`/lists`, `/chores/rewards`): the router's `/$room` and `/$room/$` routes render the module's `Display` on the wall and `Phone` on a phone, and an address whose plugin is off goes home. The rail lists Calendar, then each room by `order`; the tab bar has Today, Calendar, then rooms until four tabs are used, then More. Rooms return to the board after the household's idle minutes unless something holds the screen (`holdIdle`, the routine runner). Today blocks follow the calendar's sections by `order` (Chores today 10, Tonight 20, To do 30, Coming up 40). On the wall, Add in a plugin room opens with that room's kind first; the shell hosts it outside the Calendar room.
 
 The display's panel order lives in `kiosk_panels` rows (seeded with `calendar.week`), editable in Settings → Display with up/down buttons.
 
@@ -418,27 +427,28 @@ Conventions: `String(36)` UUIDv7 ids; `UTCDateTime`; `IsoDate` (`YYYY-MM-DD`); S
 
 | Table | Columns |
 |---|---|
-| `lists` | name; kind (`grocery`/`todo`/`custom`); icon; sort; created_by_member_id; created_at; updated_at; deleted_at |
-| `list_items` | list_id; text (200); note; quantity (20); due_date (IsoDate, NULL); checked_at; checked_by_member_id; assigned_member_id; position; version; created_by_member_id; created_at; updated_at; deleted_at |
-| `chores` | title; description; icon; points (default 0); rrule (NULL = one-off); start_date; due_time (`HH:MM`); assignee_mode (`fixed`/`rotate`/`any`); assignee_member_ids_json (ordered); rotation_index; requires_approval (NULL → plugin setting); active; created_by_member_id; created_at; updated_at; deleted_at |
-| `chore_completions` | chore_id; due_date; member_id; completed_at; completed_by_device_id; points_awarded; status (`done`/`pending`/`rejected`); approved_by_member_id; approved_at; undone_at; `UNIQUE(chore_id, due_date, member_id)` |
+| `lists` | name; kind (`grocery`/`todo`/`packing`/`custom`, guessed from the name); icon; sort; created_by_member_id; created_at; updated_at; deleted_at |
+| `list_items` | list_id; text (200); note; quantity (20); due_date (IsoDate, NULL); checked_at; checked_by_member_id; assigned_member_id; position; version; created_by_member_id; created_at; updated_at; deleted_at; cleared_at (Clear done: hidden, kept as the list's history for its Usuals, gone after 180 days) |
+| `chores` | title; description; icon; points (default 0); rrule (NULL = one-off); start_date; due_time (`HH:MM`); assignee_mode (`fixed`/`rotate`/`any`); assignee_member_ids_json (ordered); rotation_index; requires_approval (NULL → plugin setting); skipped_dates_json (Skip today); active; created_by_member_id; created_at; updated_at; deleted_at |
+| `chore_completions` | chore_id; due_date; member_id; completed_at; completed_by_device_id; points_awarded; status (`done`/`pending`/`rejected`); approved_by_member_id; approved_at; `UNIQUE(chore_id, due_date, member_id)`. Undo deletes the row (ADR 0025) |
 | `point_adjustments` | member_id; points (±); reason; by_member_id; created_at |
-| `rewards` | title; cost_points; icon; active; created_at; deleted_at |
-| `redemptions` | reward_id; member_id; cost_points; status (`requested`/`approved`/`denied`/`fulfilled`); requested_at; decided_by_member_id; decided_at |
-| `routines` | title; member_id (NULL = every kid); days_json; window_start; window_end (`HH:MM`); icon; sort; active; deleted_at |
+| `rewards` | title; cost_points; icon; active; sort; created_at; deleted_at |
+| `redemptions` | reward_id; member_id; cost_points; status (`requested`/`approved`/`denied`/`cancelled`: Take it back); requested_at; decided_by_member_id; decided_at |
+| `routines` | title; member_id (NULL = every kid); days_json; window_start; window_end (`HH:MM`); icon; points (stars for finishing); sort; active; created_at; deleted_at |
 | `routine_steps` | routine_id; title; icon; position |
-| `routine_checks` | routine_step_id; member_id; day; checked_at; PK(step, member, day) |
+| `routine_checks` | routine_step_id; member_id; day; checked_at; PK(step, member, day); kept 60 days |
+| `routine_finishes` | routine_id; member_id; day; finished_at; points_awarded; PK(routine, member, day): a routine's stars, once a day |
 | `meal_entries` | day; slot (`breakfast`/`lunch`/`dinner`/`snack`/custom); text; emoji; recipe_url; note; member_id; source_url; position; created_by_member_id; created_at; updated_at; deleted_at; `UNIQUE(day, slot, position)` |
 | `saved_meals` | text; emoji; recipe_url; last_used_at; use_count; deleted_at |
 | `countdowns` | title; emoji; photo_id; color; date; time; repeat_yearly; member_id; show_on_display; created_by_member_id; created_at; updated_at; deleted_at |
 | `photo_sources` | kind (`inbox`/`immich`/`nextcloud`); label; config_json; credentials_enc; allow_private; enabled; last_scan_at; last_error; items_seen; created_at; deleted_at |
 | `weather_cache` (one row) | latitude; longitude; units; payload_json; fetched_at; expires_at; last_error; last_error_at |
 
-Points balance = done completions + adjustments − approved or fulfilled redemptions, computed in `domain/points.py`. Chores never store per-day instances; the due list is computed from the rule and the completions.
+Points balance = done completions + finished routines + adjustments − approved redemptions, computed in `domain/points.py`; a request not yet answered holds its cost. The due list, turns and streaks are computed in `domain/chores.py` (ADR 0025). Chores never store per-day instances; the due list is computed from the rule and the completions.
 
 ### 10.4 Export
 
-Exported: household (minus `parent_pin_hash`), members, kiosk_panels, network_allowlist, photos metadata, calendars, events, event_members, event_reminders, plugin_state, sync_accounts (minus `credentials_enc`), remote_calendars, lists, list_items, chores, chore_completions, point_adjustments, rewards, redemptions, routines, routine_steps, routine_checks, meal_entries, saved_meals, countdowns, photo_sources (minus `credentials_enc`). Excluded: app_meta, devices, join_codes, event_revisions, oauth_states, sync_runs, weather_cache. Plus one `.ics` per local calendar. A test asserts every table is in exactly one list and every `*_enc`/`*_hash`/`*_fp` column is excluded. Photo files are on the volume; `docs/RESTORE.md` says to back up `/data` whole.
+Exported: household (minus `parent_pin_hash`), members, kiosk_panels, network_allowlist, photos metadata, calendars, events, event_members, event_reminders, plugin_state, sync_accounts (minus `credentials_enc`), remote_calendars, lists, list_items, chores, chore_completions, point_adjustments, rewards, redemptions, routines, routine_steps, routine_checks, routine_finishes, meal_entries, saved_meals, countdowns, photo_sources (minus `credentials_enc`). Excluded: app_meta, devices, join_codes, event_revisions, oauth_states, sync_runs, weather_cache. Plus one `.ics` per local calendar. A test asserts every table is in exactly one list and every `*_enc`/`*_hash`/`*_fp` column is excluded. Photo files are on the volume; `docs/RESTORE.md` says to back up `/data` whole.
 
 ## 11. API outline, jobs and live events
 
@@ -470,8 +480,8 @@ All under `/api`; the error envelope everywhere; mutations carry `X-Sunroom: 1`.
 
 | Plugin | Endpoints |
 |---|---|
-| `lists` | `GET lists`, `POST lists`, `PATCH lists/{id}`, `DELETE lists/{id}`, `POST lists/{id}/restore`, `PUT lists/order`; `GET lists/{id}/items`, `POST lists/{id}/items`, `PATCH lists/{id}/items/{item}` (text, note, quantity, due, assignee, position, checked), `DELETE …/items/{item}`, `POST …/items/{item}/restore`, `POST lists/{id}/clear-checked` (returns ids for Undo). All A K. `lists.changed {list_id}` |
-| `chores` | `GET chores` A; `POST`, `PATCH`, `DELETE chores/{id}` P; `GET chores/today?date&member_id` A (the computed due list with status and streaks); `POST chores/{id}/complete {due_date}` A K; `POST chores/{id}/undo {due_date}` A K (own completion, or P); `POST chores/completions/{id}/approve \| reject` P; `GET chores/points` A; `POST chores/points/adjust` P; `GET chores/rewards` A; `POST`, `PATCH`, `DELETE chores/rewards` P; `POST chores/rewards/{id}/redeem` A K; `POST chores/redemptions/{id}/approve \| deny \| fulfill` P; `GET chores/routines?member_id&date` A; `POST`, `PATCH`, `DELETE chores/routines` P; `PUT chores/routines/{id}/steps` P; `POST chores/routines/{id}/steps/{step}/check {date, member_id, checked}` A K. Events: `chores.changed`, `points.changed {member_id}`, `routines.changed` |
+| `lists` | `GET lists`, `POST lists`, `PATCH lists/{id}`, `DELETE lists/{id}`, `POST lists/{id}/restore` (a parent, or a kid's own list), `PUT lists/order`; `GET lists/{id}/items` (open items, done ones, Usuals), `POST lists/{id}/items` (several at once; one already open isn't added twice), `PATCH lists/{id}/items/{item}` (text, note, quantity, due, assignee, position, checked), `DELETE …/items/{item}`, `POST lists/{id}/restore-items {ids}` (Undo and Put back), `POST lists/{id}/clear-checked` (returns ids for Undo); `GET lists/todo?date` (open items due by that day), `GET lists/removed`. All A K. `lists.changed {list_id}` |
+| `chores` | `GET chores?include_inactive` A; `POST chores` A K (adding never asks for the PIN); `PATCH`, `DELETE chores/{id}`, `POST chores/{id}/restore`, `POST chores/{id}/skip \| unskip {date}` P; `GET chores/today?date` A (columns, boxes, routines, stars with streaks, asks, completions waiting); `GET chores/week?start` A; `GET chores/removed` A; `POST chores/{id}/complete {due_date, member_id}` A K (credit: ADR 0025); `POST chores/{id}/undo {due_date, member_id}` A K (own completion, or P); `POST chores/completions/{id}/approve \| reject` P; `GET chores/points` A; `POST chores/points/adjust` P; `GET chores/rewards?include_inactive` A; `POST`, `PATCH`, `DELETE chores/rewards` P; `POST chores/rewards/{id}/redeem` A K; `POST chores/redemptions/{id}/cancel` A K (the asker, or P); `POST chores/redemptions/{id}/approve \| deny` P; `GET chores/routines?member_id&date&include_inactive` A; `POST`, `PATCH`, `DELETE chores/routines` P; `PUT chores/routines/{id}/steps` P; `POST chores/routines/{id}/steps/{step}/check {date, member_id, checked}` A K; `POST chores/routines/{id}/finish {date, member_id}` A K (stars once a day). Events: `chores.changed`, `points.changed {member_id}`, `routines.changed` |
 | `meals` | `GET meals/week?start` A; `PUT meals/entries` (upsert) A K; `DELETE meals/entries/{id}`, `POST …/restore` A K; `POST meals/copy-week {from, to}` A K; `GET meals/saved` A. `meals.changed {days}` |
 | `countdowns` | `GET countdowns/upcoming?limit&include_birthdays` A; `GET`, `POST`, `PATCH`, `DELETE`, `…/restore countdowns` A K. `countdowns.changed` |
 | `screensaver` | `GET screensaver/manifest?since` A (photo ids, thumb and full URLs, order, settings); `GET`, `POST`, `PATCH`, `DELETE screensaver/sources` P; `POST screensaver/sources/{id}/scan` P; `POST screensaver/preview` P (a `kiosk.command`). `screensaver.changed`, `photos.changed` |
@@ -490,7 +500,8 @@ All under `/api`; the error envelope everywhere; mutations carry `X-Sunroom: 1`.
 | `screensaver:source-sync` | 30 min | Immich and Nextcloud albums since `last_scan_at` | Same |
 | `screensaver:thumb-backlog` | 10 min | Missing thumbnails after a crash mid-import | Log |
 | `weather:refresh` | 30 min and on settings change | Open-Meteo forecast; cache 60 min | Panel shows "as of 9:10" and a stale hint after 3 h |
-| `lists:clear-checked` | daily 03:00 | Auto-clear if configured | Log |
+| `lists:tidy` | hourly | Auto-clear done items after the chosen days; delete lists and items removed over 7 days ago, and cleared items over 180 days | Log |
+| `chores:prune` | hourly | Delete routine checks over 60 days old (chores, completions and redemptions are history) | Log |
 | `core:update-check` | daily, opt-in | GitHub releases: newest version | A quiet pill in Settings (§13.6) |
 
 Plugin jobs run inside their runner; a job exception marks the plugin errored (restartable) while its routes stay up.

@@ -289,7 +289,7 @@ Quick add parses as you type, locally (chrono-node plus a small grammar for peop
 +----------+----------------------------------------------------------------------------+------------------------+
 ```
 
-Tiles 400 × 160 px, two or three across: the name at title size, the count at body, the last change at secondary. **New list** asks for a name with chips (Groceries, To do, Packing, Costco, Pharmacy) and opens it. Long-press a tile for Rename and Delete (Delete confirms when the list has items; otherwise Undo).
+Tiles 400 × 160 px, two or three across: the name at title size, the count at body, the last change at secondary. **New list** asks for a name with chips (Groceries, To do, Packing, Costco, Pharmacy) and opens it. **Change list** in a list's header renames or removes it (removing confirms when the list has items; otherwise Undo); a long-press on a tile as a shortcut comes with M5's polish.
 
 **List detail**
 
@@ -346,7 +346,7 @@ One column per person with chores today, plus **Anyone** last; the header is gla
 +-------------------------------------------------------------------------------------------------+
 ```
 
-The step title is 64 px; the icon comes from the step library (toothbrush, bed, book, shirt, backpack, sun, moon, bath, plate, dog…) chosen when the routine is made, so a pre-reader can follow. **Done** (120 px tall, 60% wide, in the kid's color) stamps and bursts, and the next step slides in from the right; skipped steps show hollow dots. The last Done shows "All done, Leo! Night night." for 6 s with the full-screen burst and "+5 stars" if the routine gives stars, then returns to Chores. **Stop** asks nothing; progress is kept for an hour.
+The step title is 64 px; the icon comes from the step library (toothbrush, bed, book, shirt, backpack, sun, moon, bath, plate, dog…) chosen when the routine is made, so a pre-reader can follow. **Done** (120 px tall, 60% wide, in the kid's color) stamps and bursts, and the next step slides in from the right; skipped steps show hollow dots. The last Done shows "All done, Leo! Night night." for 6 s with the full-screen burst and "+5 stars" if the routine gives stars, then returns to Chores. **Stop** asks nothing; checked steps are kept for the day, so the column offers **Continue** while the routine's window is open.
 
 **Meals room**
 
@@ -658,7 +658,7 @@ The signature moment, **Done**, frame by frame (a chore or list item checked on 
 | 0 ms | The finger lifts. The check circle fills with the person's solid color on a spring (settle 320); the check mark draws in `on-ink` over 200 ms |
 | 60 ms | The row stamps: scale 1 → 1.03 → 1 with a −1° → 0° rotation over 300 ms, as if pressed into the wall |
 | 120 ms | A burst of 28 particles (small discs and 4-point stars in the person's solid and `sun`) rises from the check for 600 ms on the canvas layer above the UI, with gravity, and fades |
-| 200 ms | If points are on, "+2" floats from the check to the person's avatar in the rail or Today panel (settle 320) and the avatar bumps (scale 1.1) as its badge count changes |
+| 200 ms | If points are on, "+2" floats from the check to the person's avatar in the rail or Today panel (settle 320) and the avatar bumps (scale 1.1) as its badge count changes. M3 ships it rising from the row while the column's star count pops; the flight to the avatar comes with M5's polish |
 | 900 ms | The row folds into the Done group below (exit 180 + layout spring); the Undo toast is already showing ("Done: Feed the cat, by Mia", 6 s) |
 
 Other motions: a press dips controls by 3% and shades rows (tap); sheets slide up from the bottom edge on phones and rise 16 px with a fade on the display (enter/exit); the week board swipes between weeks with inertia and snaps (settle), a tap on the week header's arrows does the same; a long-pressed chip lifts (scale 1.04, a soft shadow) and follows the finger across days, drops with a spring, and the toast offers Undo; the now line moves once a minute with a 500 ms ease; a toast rises and eases out; a countdown number ticks over with a vertical roll when the day changes; the screensaver fades in over 1 s and out in 300 ms; the theme crossfades over 500 ms when switched by hand; the routine runner's steps slide left as each is done, and the final step fires the celebration with all of that person's color plus `sun`.

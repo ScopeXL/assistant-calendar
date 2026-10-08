@@ -11,15 +11,18 @@ It is built and maintained entirely by AI sessions, and copied from Dinner Bell'
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
 length from a wall screen.
 
-**Status:** M0 (the foundation), M1 (the calendar core) and M2 (synced calendars) are built.
+**Status:** M0 (the foundation), M1 (the calendar core), M2 (synced calendars) and M3 (lists and
+chores) are built.
 - M0: setup, pairing, the PIN, Settings, the plugin framework, the Pi installer.
 - M1: local calendars, repeating events (our own engine, ADR 0023), the board's views, quick add,
   scoped changes with Undo, Recently removed, and the phone's Today and Calendar.
 - M2: the `calendar_sync` plugin with calendar addresses, holidays, iCloud and other CalDAV
   servers, and Google (helper and sign-in), on our own clients behind the guard (ADR 0024);
   docs/SYNC.md.
+- M3: the `lists` and `chores` plugins (chores as rules in `domain/chores.py`, ADR 0025), the done
+  moment's canvas burst (`ui/Celebration`), the routine runner, and plugin rooms at `/<key>`.
 
-Next is M3, lists and chores (docs/PLAN.md §15).
+Next is M4: meals, countdowns, photos and weather (docs/PLAN.md §15).
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -200,3 +203,5 @@ Add one line each time something surprising costs time: the symptom, the cause, 
   a plugin package's `__init__.py` that imports its modules drags them all in. Keep it a docstring.
 - The image smoke test pins the plugin list and the export's tables (`scripts/image_common.sh`):
   a new plugin updates both, and `backend/tests/test_export.py`.
+- A route test silently checked nothing: since FastAPI 0.142 `app.routes` holds included
+  routers, not their routes. Walk `app.openapi()["paths"]` instead, and assert a count.

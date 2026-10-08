@@ -1,6 +1,6 @@
 # ADR 0019: Chores ship the full kids layer, each part switchable
 
-- **Status:** Accepted (the owner's answer to Q4)
+- **Status:** Accepted (the owner's answer to Q4). Its open question, switches for streaks and rotation, is settled in ADR 0025
 - **Date:** 2026-10-07
 
 ## Context
