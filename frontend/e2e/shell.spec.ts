@@ -1,7 +1,8 @@
 /**
  * The two shells at every size (ADR 0014, UX §3): the wall screen's rail and Today panel in
  * landscape, the Today band and bottom bar in portrait, a laptop in the display shell with its
- * own keyboard, phones with the tab bar. Nothing scrolls sideways. Synthetic data only.
+ * own keyboard, phones with the tab bar. Nothing scrolls sideways. About's New versions on a
+ * phone. Synthetic data only.
  */
 import type { Page } from "@playwright/test";
 
@@ -52,6 +53,27 @@ test.describe("a phone", () => {
       await page.getByRole("button", { name: "Back" }).click();
       await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
     }
+  });
+
+  test("About says a new version is out once a parent turns the check on", async ({
+    page,
+    request,
+  }) => {
+    // The test server never asks GitHub: it makes up the next minor version.
+    await seed(request);
+    await signInPhone(page);
+    await page.getByRole("link", { name: "More" }).click();
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "About", exact: true }).click();
+    const daily = page.getByRole("switch", { name: "Check for new versions daily" });
+    await expect(daily).not.toBeChecked();
+    await expect(page.getByRole("button", { name: "Check now" })).toBeHidden();
+    await daily.click();
+    await expect(daily).toBeChecked();
+    await page.getByRole("button", { name: "Check now" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "is available" })).toHaveText(
+      /^Sunroom \d+\.\d+\.0 is available\. In Sunroom's folder on the server, run docker compose pull, then docker compose up -d\.$/,
+    );
   });
 
   test("pairs a wall screen from More", async ({ page, request, browser, watch }) => {

@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from sunroom.app import create_app
 from sunroom.core.clock import FakeClock
 from sunroom.core.config import InstallKind
-from sunroom.core.updates import newer, parse
+from sunroom.core.updates import made_up, newer, parse
 from sunroom.core.version import build_info
 from sunroom.meta import updates
 from tests.support import BASE_URL, CSRF, make_settings, run_setup, state_of
@@ -186,3 +186,22 @@ async def test_checking_now_is_a_parents(server: FastAPI, phone: httpx.AsyncClie
     async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as stranger:
         assert (await stranger.post("/api/admin/update/check", headers=CSRF)).status_code == 401
     assert timedelta(minutes=1) == updates.CHECK_NOW_EVERY
+
+
+async def test_the_test_server_makes_up_its_answer_and_sends_nothing(
+    data_dir: Path, clock: FakeClock, github: FakeGitHub
+) -> None:
+    """End-to-end runs and `just seed` never reach GitHub: the next minor version stands in."""
+    app = build(data_dir, clock, github, sunroom_test_mode=True)
+    async with app.router.lifespan_context(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as http:
+            assert (await run_setup(http)).status_code == 201
+            await http.patch("/api/settings", json={"update_check": True}, headers=CSRF)
+            checked = await http.post("/api/admin/update/check", headers=CSRF)
+            assert checked.status_code == 200, checked.text
+            body = checked.json()
+    assert github.requests == []
+    assert (body["latest"], body["available"]) == (made_up(build_info().version), True)
+    assert made_up("0.6.0") == "0.7.0"
+    assert made_up("not a version") is None

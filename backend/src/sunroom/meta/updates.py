@@ -57,7 +57,17 @@ async def tick(state: AppState) -> None:
         home = await service.household(db)
     now = state.clock.now()
     if home.update_check and state.updates.due(now):
-        await updates.check(state.http, build_info().version, now, state.updates)
+        await ask(state, build_info().version, now)
+
+
+async def ask(state: AppState, current: str, now: datetime) -> None:
+    """Ask GitHub for the newest release. The test server never does: it makes up the next minor
+    version (core/updates.py ``made_up``), as the weather makes up its forecast."""
+    if state.settings.sunroom_test_mode:
+        found = state.updates
+        found.latest, found.checked_at, found.problem = updates.made_up(current), now, None
+        return
+    await updates.check(state.http, current, now, state.updates)
 
 
 @router.get("/update")
@@ -77,5 +87,5 @@ async def check_now(state: StateDep, actor: ParentDep) -> UpdateOut:
     last = state.updates.checked_at
     if last is not None and now - last < CHECK_NOW_EVERY:
         raise AppError(429, "too_soon", "It just checked. Try again in a minute.")
-    await updates.check(state.http, found.current, now, state.updates)
+    await ask(state, found.current, now)
     return await update_out(state)

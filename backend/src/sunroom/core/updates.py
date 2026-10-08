@@ -51,6 +51,16 @@ def parse(version: str) -> tuple[int, int, int] | None:
     return major, minor, patch
 
 
+def made_up(current: str) -> str | None:
+    """The test server's answer instead of GitHub's: the next minor version, so Settings → About
+    shows a new version without anything leaving the machine."""
+    found = parse(current)
+    if found is None:
+        return None
+    major, minor, _ = found
+    return f"{major}.{minor + 1}.0"
+
+
 def newer(candidate: str | None, current: str) -> bool:
     """Whether ``candidate`` is a later release than the running ``current``."""
     if candidate is None:
