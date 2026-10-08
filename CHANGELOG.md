@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-08
+
 ### Added
 
 - Lists, on the kitchen screen and on phones: groceries, to-dos, packing lists and your own.
@@ -38,8 +40,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A calendar address that stops working, say after you reset Google's secret address, now says
   so on the board, and Connect again takes its new address. Before, it quietly kept showing the
   last events it had.
-- Behind the scenes: a check that every feature's addresses answer "turned off" when it's off
-  had quietly stopped looking at any; it checks them all again.
+- Behind the scenes: a feature whose background work trips up keeps working on screen, and a
+  safety check that each feature switches fully off works again.
 
 ## [0.3.0] - 2026-10-08
 
@@ -155,5 +157,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.2.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.1.0...v0.2.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.2.0...v0.3.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.3.0...v0.4.0
