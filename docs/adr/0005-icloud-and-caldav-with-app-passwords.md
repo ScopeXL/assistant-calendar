@@ -1,6 +1,6 @@
 # ADR 0005: iCloud through CalDAV with an app-specific password; ICS as the fallback
 
-- **Status:** Accepted
+- **Status:** Accepted; the `caldav` library superseded by ADR 0024 (the protocol choices stand)
 - **Date:** 2026-10-07
 
 ## Context

@@ -6,6 +6,34 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Bring in the calendars you already use, from Settings → Calendars & accounts on a phone:
+  - Google, three ways: paste its secret address (shows events only), share your calendars with
+    a Sunroom helper you make once, or sign in with Google when Sunroom has an https:// address;
+  - iCloud, with an app-specific password;
+  - other calendar servers such as Nextcloud and Fastmail;
+  - any calendar address (.ics): school, team and Outlook calendars;
+  - public holidays for your country and region, with no address at all.
+- Each calendar can belong to a person, so its events show in their color, or to everyone, with
+  a color of its own (each color says who already uses it). Any calendar can stay off the
+  kitchen screen and show only on phones.
+- Calendars from iCloud, Google's helper or sign-in, and calendar servers sync both ways:
+  - what you add, change, move or remove on the kitchen screen or a phone goes back within a
+    minute;
+  - changes made elsewhere arrive within about five minutes, or straight away with Refresh now;
+  - a change waiting to go out says "Not synced yet".
+- An event's sheet says where it comes from, like "iCloud · Work". Events from calendars that
+  only show events, such as holidays or a school's calendar address, say so and can't be changed
+  by mistake.
+- When an account stops answering, the board shows one quiet line ("iCloud hasn't answered since
+  9:10 AM. Showing what we had."), and its events stay. A refused password asks to be connected
+  again.
+- Setting up Sunroom now offers to bring in your calendars just before it finishes.
+- Behind the scenes: Sunroom talks to calendar servers through its own guarded connection.
+  Passwords, keys and calendar addresses are stored encrypted, and are never shown again or sent
+  to another server.
+
 ## [0.2.0] - 2026-10-08
 
 ### Added

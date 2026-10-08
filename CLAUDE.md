@@ -11,11 +11,15 @@ It is built and maintained entirely by AI sessions, and copied from Dinner Bell'
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
 length from a wall screen.
 
-**Status:** M0 (the foundation) and M1 (the calendar core) are built. M0: setup, pairing, the
-PIN, Settings, the plugin framework with an empty registry, the Pi installer. M1: local calendars,
-repeating events (our own engine, ADR 0023), the board's views, quick add, scoped changes with
-Undo, Recently removed, and the phone's Today and Calendar. Next is M2, synced calendars
-(docs/PLAN.md §15).
+**Status:** M0 (the foundation), M1 (the calendar core) and M2 (synced calendars) are built.
+- M0: setup, pairing, the PIN, Settings, the plugin framework, the Pi installer.
+- M1: local calendars, repeating events (our own engine, ADR 0023), the board's views, quick add,
+  scoped changes with Undo, Recently removed, and the phone's Today and Calendar.
+- M2: the `calendar_sync` plugin with calendar addresses, holidays, iCloud and other CalDAV
+  servers, and Google (helper and sign-in), on our own clients behind the guard (ADR 0024);
+  docs/SYNC.md.
+
+Next is M3, lists and chores (docs/PLAN.md §15).
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -91,6 +95,7 @@ Keep this file under 15 KB; detail belongs in `docs/`.
 | `just db-revision "msg"` | Create a new migration |
 | `just scan` | gitleaks plus the private-terms scan (tree and history) |
 | `just smoke-image [REF]` | Build the image from git, boot it with no settings, set it up through the API, probe it |
+| `just smoke-caldav` | The CalDAV client against a real Radicale server in Docker, with the ICS fixtures (opt-in; needs network) |
 | `just preflight` | The full release gate. The deploy skill runs it |
 
 ## Architecture map

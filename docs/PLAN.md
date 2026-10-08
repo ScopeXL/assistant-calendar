@@ -146,9 +146,9 @@ Pin at M0 to what Dinner Bell pinned on 2026-10-06 (its `docs/PLAN.md` §4.2), r
 
 | Side | Additions |
 |---|---|
-| Python | `icalendar` 7 (zoneinfo-native), `x-wr-timezone` (Google's non-standard feed header), `python-dateutil` and `recurring-ical-events` (dev only: the references the expansion engine is tested against, ADR 0023), `caldav` 3 (`caldav.aio`; iCloud and generic CalDAV), `google-api-python-client` + `google-auth` (service-account and OAuth tiers), `holidays` (offline public-holiday calendars), `httpx` (ICS, Open-Meteo, Immich; always through the SSRF guard), `Pillow` (thumbnails, EXIF orientation), `pillow-heif` (iPhone HEIC uploads), `zoneinfo` + `tzdata` |
+| Python | `icalendar` 7 (zoneinfo-native), `x-wr-timezone` (Google's non-standard feed header), `python-dateutil` and `recurring-ical-events` (dev only: the references the expansion engine is tested against, ADR 0023), `holidays` (offline public-holiday calendars), `httpx` (ICS, Open-Meteo, Immich; always through the SSRF guard), `Pillow` (thumbnails, EXIF orientation), `pillow-heif` (iPhone HEIC uploads), `zoneinfo` + `tzdata` |
 | Frontend | `motion` 14 (animations and gestures; 13 when planned, 14 current at M0 with the same API and `nonce`), `@dnd-kit/core` + `@dnd-kit/sortable` (long-press drag with a delay constraint), `chrono-node` (quick-add parsing), the display's on-screen keyboard is Sunroom's own (ADR 0022; `react-simple-keyboard` was the plan), `canvas-confetti` or a 60-line in-house particle burst (celebrations; decide at M3 by bundle size), `date-fns` + `date-fns-tz` (formatting only; never recurrence math), `@fontsource-variable/lexend` (one family; M0 found no tabular figures (`tnum`), so changing numbers render each digit in a fixed-width box: ADR 0021), `lucide-react` |
-| Not used | FullCalendar, Schedule-X, react-big-calendar (the grid is custom so the design is ours and touch targets are right), rrule.js (0003), shadcn/Radix/vaul/sonner (inject styles; Dinner Bell ADR 0023), zustand (Dinner Bell's 25-line store suffices) |
+| Not used | `caldav` and the Google client libraries (their own HTTP stacks would bypass the SSRF guard; Sunroom has small clients of its own, ADR 0024), FullCalendar, Schedule-X, react-big-calendar (the grid is custom so the design is ours and touch targets are right), rrule.js (0003), shadcn/Radix/vaul/sonner (inject styles; Dinner Bell ADR 0023), zustand (Dinner Bell's 25-line store suffices) |
 
 ### 5.3 Backend layout
 
@@ -371,7 +371,7 @@ Connect flows live on the phone (typing), never on the display, except the loopb
 
 ### 8.3 Fixtures and tests
 
-Twelve ICS fixtures with golden expected occurrences, cross-checked against `recurring-ical-events`: weekly with EXDATEs, a RECURRENCE-ID override, an all-day span across both DST changes, floating time, UTC, an Outlook VTIMEZONE with a Windows TZID ("Eastern Standard Time", mapped by `tzmap.py`), monthly by last Friday with COUNT, a yearly birthday, a cancelled instance, a multi-day timed event over DST, RDATE, and an UNTIL in 2099 (capped). `FakeCalendarProvider` scripts remote state (calendars, items with etags, `fail_next`) for engine tests; an opt-in `just smoke-caldav` runs the real CalDAV adapter against a Radicale container with the fixtures imported.
+Fourteen ICS fixtures with golden expected occurrences, cross-checked against `recurring-ical-events` (twelve from M1; M2 added an Outlook calendar with a Windows TZID and a Google feed with `X-WR-TIMEZONE`): weekly with EXDATEs, a RECURRENCE-ID override, an all-day span across both DST changes, floating time, UTC, an Outlook VTIMEZONE with a Windows TZID ("Eastern Standard Time", mapped by `tzmap.py`), monthly by last Friday with COUNT, a yearly birthday, a cancelled instance, a multi-day timed event over DST, RDATE, and an UNTIL in 2099 (capped). `FakeCalendarProvider` scripts remote state (calendars, items with etags, `fail_next`) for engine tests; an opt-in `just smoke-caldav` runs the real CalDAV adapter against a Radicale container with the fixtures imported, and checks every fixture's occurrences against its golden after the round trip.
 
 ## 9. The other plugins
 

@@ -44,4 +44,5 @@
   a date-only UNTIL on a timed series means the end of that day (recurring-ical-events reads
   midnight UTC), and an occurrence keeps the master's length as an absolute time across a clock
   change.
-- The runtime image no longer needs `python-dateutil`.
+- The engine no longer needs `python-dateutil`. (Since M2, `icalendar`, a runtime dependency
+  for synced calendars, brings it into the image anyway; nothing of Sunroom's calls it.)
