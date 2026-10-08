@@ -52,6 +52,10 @@ class HouseholdView:
     name: str
     week_starts_on: int  # 0 Monday … 6 Sunday
     kid_safe_editing: bool
+    # Where the household is (Settings → Household → Location): the weather's place.
+    location_label: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 class Sessions(Protocol):
@@ -73,7 +77,14 @@ class HouseholdFacade:
             home = await session.get(Household, 1)
             if home is None:
                 return HouseholdView("Our home", 6, True)
-            return HouseholdView(home.name, home.week_starts_on, home.kid_safe_editing)
+            return HouseholdView(
+                home.name,
+                home.week_starts_on,
+                home.kid_safe_editing,
+                home.location_label,
+                home.latitude,
+                home.longitude,
+            )
 
 
 class MembersFacade:
@@ -118,12 +129,14 @@ class CalendarFacade:
         runtime: CalendarRuntime | None,
         zone_of: Callable[[], ZoneInfo],
         now_of: Callable[[], datetime],
+        enabled_of: Callable[[str], bool] | None = None,
     ) -> None:
         self._plugin_id = plugin_id
         self._sessions = sessions
         self._runtime = runtime
         self._zone_of = zone_of
         self._now_of = now_of
+        self._enabled_of = enabled_of
 
     async def calendars(self, *, include_removed: bool = False) -> list[CalendarView]:
         from sunroom.calendar.service import list_calendars
@@ -297,9 +310,17 @@ class CalendarFacade:
 
     def register_overlay(self, provider: OverlayProvider, key: str | None = None) -> None:
         """Add this plugin's occurrences when a client asks for ``overlays=<key>`` (the plugin's
-        id by default)."""
-        if self._runtime is not None:
-            self._runtime.overlays[key or self._plugin_id] = provider
+        id by default). While the plugin is switched off its overlay answers nothing."""
+        if self._runtime is None:
+            return
+        plugin_id, enabled_of = self._plugin_id, self._enabled_of
+
+        async def gated(start: date, end: date, zone: ZoneInfo) -> Sequence[OccurrenceOut]:
+            if enabled_of is not None and not enabled_of(plugin_id):
+                return []
+            return await provider(start, end, zone)
+
+        self._runtime.overlays[key or plugin_id] = gated
 
 
 def _member_view(member: Member) -> MemberView:
@@ -411,7 +432,9 @@ class PluginContext:
         self.household = HouseholdFacade(sessions)
         self.members = MembersFacade(sessions)
         self.photos = photos
-        self.calendar = CalendarFacade(plugin_id, sessions, calendar, zone_of, clock.now)
+        self.calendar = CalendarFacade(
+            plugin_id, sessions, calendar, zone_of, clock.now, enabled_of
+        )
 
     def now(self) -> datetime:
         return self._clock.now()

@@ -162,8 +162,9 @@ SAMPLE_FAMILY: tuple[tuple[str, str, str, date | None], ...] = (
 @router.post("/seed", status_code=204)
 async def seed(body: SeedIn, state: StateDep) -> None:
     """The synthetic "Sample Family" (`just seed`, screenshots, end-to-end runs): set up, four
-    people, an optional PIN, a second calendar and a week of events around today, and each
-    enabled plugin's own (lists and chores since M3)."""
+    people, an optional PIN, a place (Sample Town), a second calendar and a week of events
+    around today, and each enabled plugin's own (lists and chores since M3; meals, countdowns,
+    photos and the weather since M4)."""
     await _seed(state, body)
 
 
@@ -178,6 +179,9 @@ async def _seed(state: AppState, body: SeedIn) -> None:
         home = await household_service.household(tx.session)
         home.name = "Sample Family"
         home.timezone = zone.key
+        # Sample Town: a made-up name on a famous public spot, for the weather and sunset.
+        home.location_label = "Sample Town"
+        home.latitude, home.longitude = 40.71, -74.01
         home.onboarded_at = home.onboarded_at or now
         home.parent_pin_hash = pin_hash
         home.pin_length = len(body.pin) if body.pin else None

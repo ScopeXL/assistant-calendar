@@ -57,7 +57,8 @@ probe() {
 
 # set_up PORT JAR: finish setup through the API as a phone would, keeping the cookie in JAR,
 # then check that the plugins that ship are on and running (synced calendars since M2, lists and
-# chores since M3), and that the export lists every exported table.
+# chores since M3, meals, countdowns, the screensaver and weather since M4), and that the export
+# lists every exported table.
 set_up() {
   local base="http://127.0.0.1:$1" jar="$2" status
   [ "$(curl -fsS "$base/api/setup/status" | jq -r .setup_complete)" = false ] \
@@ -70,10 +71,10 @@ set_up() {
   [ "$(curl -fsS "$base/api/setup/status" | jq -r .setup_complete)" = true ] \
     || fail "setup didn't stick"
   [ "$(curl -fsS -b "$jar" "$base/api/plugins" | jq -r '[.[] | "\(.id):\(.status)"] | join(",")')" \
-    = "calendar_sync:running,lists:running,chores:running" ] \
+    = "calendar_sync:running,lists:running,chores:running,meals:running,countdowns:running,screensaver:running,weather:running" ] \
     || fail "the plugins that ship aren't on and running"
   [ "$(curl -fsS -b "$jar" "$base/api/export" | jq -r '.data | keys | join(",")')" \
-    = "calendars,chore_completions,chores,event_members,event_reminders,events,household,kiosk_panels,list_items,lists,members,network_allowlist,photos,plugin_state,point_adjustments,redemptions,remote_calendars,rewards,routine_checks,routine_finishes,routine_steps,routines,sync_accounts" ] \
+    = "calendars,chore_completions,chores,countdowns,event_members,event_reminders,events,household,kiosk_panels,list_items,lists,meal_entries,members,network_allowlist,photo_sources,photos,plugin_state,point_adjustments,redemptions,remote_calendars,rewards,routine_checks,routine_finishes,routine_steps,routines,saved_meals,sync_accounts" ] \
     || fail "the export doesn't list every exported table"
 }
 

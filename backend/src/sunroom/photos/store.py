@@ -138,6 +138,34 @@ class PhotoStore:
     def file(self, folder: str, photo_id: str) -> Path:
         return self.root / FOLDERS[folder] / f"{photo_id}.webp"
 
+    @property
+    def inbox(self) -> Path:
+        """Files dropped in by hand; the screensaver plugin imports them (PLAN §11.4)."""
+        return self.root / "inbox"
+
+    def thumb_missing(self, photo: Photo) -> bool:
+        """A library photo whose picture is here but whose thumbnail isn't (a crash mid-import)."""
+        return (
+            photo.kind == PhotoKind.LIBRARY
+            and self.file("library", photo.id).is_file()
+            and not self.file("thumbs", photo.id).is_file()
+        )
+
+    def rebuild_thumb(self, photo: Photo) -> bool:
+        """Make a library photo's thumbnail again from its stored picture. Blocking: run it in a
+        thread. False when there's no picture to make it from."""
+        source = self.file("library", photo.id)
+        if photo.kind != PhotoKind.LIBRARY or not source.is_file():
+            return False
+        try:
+            with Image.open(source) as stored:
+                thumb = stored.convert("RGB")
+        except UnidentifiedImageError, OSError:
+            return False
+        thumb.thumbnail((THUMB_SIDE, THUMB_SIDE), Image.Resampling.LANCZOS)
+        _write_atomic(self.file("thumbs", photo.id), _webp(thumb))
+        return True
+
     def free_bytes(self) -> int:
         return shutil.disk_usage(self.root if self.root.exists() else self.root.parent).free
 

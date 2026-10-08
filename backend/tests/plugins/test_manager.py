@@ -54,6 +54,10 @@ async def test_the_real_registry_turns_its_plugins_on(parent: httpx.AsyncClient)
         ("calendar_sync", True),
         ("lists", True),
         ("chores", True),
+        ("meals", True),
+        ("countdowns", True),
+        ("screensaver", True),
+        ("weather", True),
     ]
 
 
