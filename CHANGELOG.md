@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-08
+
 ### Added
 
 - The calendar. Add an event by typing it the way you'd say it, like "Dentist Thu 2:30pm Mia":
@@ -21,7 +23,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
   Settings → Household → Recently removed for 7 days, with Put back.
 - The Today panel shows what's on now, what's next and the rest of today, and tomorrow after
   6 PM.
-- An event can remind the kitchen screen 10 minutes, an hour or a day before.
+- An event can show a reminder on the kitchen screen 10 minutes, an hour or a day before.
 - Tap people's pictures at the top of the calendar to see only their events (and everyone's).
 - Today's events that are over fade, so what's next stands out (Settings → Display).
 - On a phone, Today shows what's on now and next, and Calendar has Week, Day, Agenda and Month
@@ -84,5 +86,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Outside addresses are checked before every connection, so a setting can't reach into your home
   network unless you allow it.
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/ScopeXL/assistant-calendar/releases/tag/v0.1.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.1.0...v0.2.0
