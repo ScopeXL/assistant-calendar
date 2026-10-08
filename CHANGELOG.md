@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-08
+
 ### Added
 
 - Meals: the week's dinners on the kitchen screen and on phones.
@@ -194,5 +196,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.3.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.2.0...v0.3.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.4.0...HEAD
 [0.4.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.3.0...v0.4.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.4.0...v0.5.0
