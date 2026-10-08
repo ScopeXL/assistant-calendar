@@ -21,9 +21,11 @@ from sunroom.core.clock import Clock
 from sunroom.core.config import Settings
 from sunroom.core.http import GuardedHttp
 from sunroom.core.jobs import Jobs
+from sunroom.core.updates import UpdateCheck
 from sunroom.db.backup import BackupService
 from sunroom.db.engine import Database
 from sunroom.events.hub import EventHub
+from sunroom.household.screenwatch import ScreenWatch
 from sunroom.photos.store import PhotoStore
 from sunroom.plugins.manager import PluginManager
 
@@ -66,6 +68,10 @@ class AppState:
     uploads: dict[str, deque[datetime]] = field(default_factory=dict[str, deque[datetime]])
     # Addresses this server was recently reached at (Settings → Connection), newest last.
     recent_hosts: OrderedDict[str, datetime] = field(default_factory=OrderedDict[str, datetime])
+    # The wall screen's wake and its state's long polls (household/screen.py).
+    screen: ScreenWatch = field(default_factory=ScreenWatch)
+    # The newest release GitHub named, when the household opted in (core/updates.py).
+    updates: UpdateCheck = field(default_factory=UpdateCheck)
     started: bool = False
 
     def zone(self) -> ZoneInfo:

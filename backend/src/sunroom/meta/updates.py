@@ -1,0 +1,81 @@
+"""Settings → About's update line (PLAN §13.6, core/updates.py): whether a newer Sunroom is out,
+and how to update this server. Asking GitHub is the household's opt-in."""
+
+from __future__ import annotations
+
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter
+from pydantic import BaseModel
+
+from sunroom.auth.deps import ActorDep, ParentDep
+from sunroom.core import updates
+from sunroom.core.errors import AppError
+from sunroom.core.version import build_info
+from sunroom.household import service
+from sunroom.state import AppState, StateDep
+
+router = APIRouter(prefix="/api/admin", tags=["meta"])
+
+CHECK_NOW_EVERY = timedelta(minutes=1)
+
+
+class UpdateOut(BaseModel):
+    enabled: bool  # "Check for new versions daily" is on (and not pinned off)
+    locked: bool  # SUNROOM_UPDATE_CHECK=0 keeps it off
+    current: str
+    latest: str | None
+    available: bool  # latest is newer than current
+    checked_at: datetime | None
+    problem: str | None  # why the last check got no answer
+    how: str  # how to update this server, in plain words
+
+
+async def update_out(state: AppState) -> UpdateOut:
+    async with state.db.read() as db:
+        home = await service.household(db)
+    locked = state.settings.update_check_forced_off
+    current = build_info().version
+    found = state.updates
+    return UpdateOut(
+        enabled=home.update_check and not locked,
+        locked=locked,
+        current=current,
+        latest=found.latest,
+        available=updates.newer(found.latest, current),
+        checked_at=found.checked_at,
+        problem=found.problem,
+        how=updates.HOW[state.settings.sunroom_install_kind],
+    )
+
+
+async def tick(state: AppState) -> None:
+    """Hourly: ask GitHub when the household opted in and a day has passed since last time."""
+    if state.settings.update_check_forced_off:
+        return
+    async with state.db.read() as db:
+        home = await service.household(db)
+    now = state.clock.now()
+    if home.update_check and state.updates.due(now):
+        await updates.check(state.http, build_info().version, now, state.updates)
+
+
+@router.get("/update")
+async def update_status(state: StateDep, actor: ActorDep) -> UpdateOut:
+    return await update_out(state)
+
+
+@router.post("/update/check")
+async def check_now(state: StateDep, actor: ParentDep) -> UpdateOut:
+    """Check now (About's button), at most once a minute."""
+    found = await update_out(state)
+    if found.locked:
+        raise AppError(409, "update_check_off", "This server keeps update checks off.")
+    if not found.enabled:
+        raise AppError(409, "update_check_off", "Turn on Check for new versions daily first.")
+    now = state.clock.now()
+    last = state.updates.checked_at
+    if last is not None and now - last < CHECK_NOW_EVERY:
+        raise AppError(429, "too_soon", "It just checked. Try again in a minute.")
+    await updates.check(state.http, found.current, now, state.updates)
+    return await update_out(state)

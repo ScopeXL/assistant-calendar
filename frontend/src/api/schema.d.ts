@@ -72,6 +72,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Update Status */
+        get: operations["update_status_api_admin_update_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/update/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Now
+         * @description Check now (About's button), at most once a minute.
+         */
+        post: operations["check_now_api_admin_update_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/device/label": {
         parameters: {
             query?: never;
@@ -1395,6 +1432,47 @@ export interface paths {
         put?: never;
         /** Restore Countdown */
         post: operations["restore_countdown_api_countdowns__countdown_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/display/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Display State
+         * @description What the panel should be doing. With ``etag`` and ``wait``, the answer comes when that
+         *     changes or after ``wait`` seconds, whichever is first.
+         */
+        get: operations["display_state_api_display_state_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/display/wake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Wake
+         * @description A tap on the sleeping wall screen: it stays on for 2 minutes (PLAN §13.5).
+         */
+        post: operations["wake_api_display_wake_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3002,6 +3080,31 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** DisplayStateOut */
+        DisplayStateOut: {
+            /** Awake Until */
+            awake_until: string | null;
+            /** Brightness */
+            brightness: number;
+            /** Etag */
+            etag: string;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "day" | "dim" | "sleep" | "awake";
+            schedule: components["schemas"]["ScheduleOut"];
+            /**
+             * Screen
+             * @enum {string}
+             */
+            screen: "on" | "off";
+            /**
+             * Server Time
+             * Format: date-time
+             */
+            server_time: string;
+        };
         /**
          * EntryIn
          * @description PUT meals/entries: with an id, that entry changes (its day and slot too); without one, it
@@ -4526,6 +4629,22 @@ export interface components {
             /** Unreadable */
             unreadable: number;
         };
+        /** ScheduleOut */
+        ScheduleOut: {
+            /** Dim From */
+            dim_from: string | null;
+            /** Dim Level */
+            dim_level: number;
+            /** Sleep From */
+            sleep_from: string | null;
+            /**
+             * Sleep Mode
+             * @enum {string}
+             */
+            sleep_mode: "dim_clock" | "screen_off";
+            /** Sleep To */
+            sleep_to: string | null;
+        };
         /** SearchHit */
         SearchHit: {
             event: components["schemas"]["EventOut"];
@@ -4581,6 +4700,10 @@ export interface components {
         SettingsOut: {
             /** Daylight Tint */
             daylight_tint: boolean;
+            /** Dim From */
+            dim_from: string | null;
+            /** Dim Level */
+            dim_level: number;
             /** Display Controls Bottom */
             display_controls_bottom: boolean;
             /** Display Dim Past */
@@ -4652,6 +4775,10 @@ export interface components {
             timezone: string;
             /** Timezone Chosen */
             timezone_chosen: boolean;
+            /** Update Check */
+            update_check: boolean;
+            /** Update Check Locked */
+            update_check_locked: boolean;
             /** Week Starts On */
             week_starts_on: number;
         };
@@ -4659,6 +4786,10 @@ export interface components {
         SettingsUpdate: {
             /** Daylight Tint */
             daylight_tint?: boolean | null;
+            /** Dim From */
+            dim_from?: string | null;
+            /** Dim Level */
+            dim_level?: (20 | 40 | 60) | null;
             /** Display Controls Bottom */
             display_controls_bottom?: boolean | null;
             /** Display Dim Past */
@@ -4701,6 +4832,8 @@ export interface components {
             time_format?: ("12h" | "24h") | null;
             /** Timezone */
             timezone?: string | null;
+            /** Update Check */
+            update_check?: boolean | null;
             /** Week Starts On */
             week_starts_on?: number | null;
         };
@@ -4925,6 +5058,25 @@ export interface components {
             /** Turning */
             turning: number | null;
         };
+        /** UpdateOut */
+        UpdateOut: {
+            /** Available */
+            available: boolean;
+            /** Checked At */
+            checked_at: string | null;
+            /** Current */
+            current: string;
+            /** Enabled */
+            enabled: boolean;
+            /** How */
+            how: string;
+            /** Latest */
+            latest: string | null;
+            /** Locked */
+            locked: boolean;
+            /** Problem */
+            problem: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -5129,6 +5281,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DiagnosticsOut"];
+                };
+            };
+        };
+    };
+    update_status_api_admin_update_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateOut"];
+                };
+            };
+        };
+    };
+    check_now_api_admin_update_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateOut"];
                 };
             };
         };
@@ -7920,6 +8112,56 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    display_state_api_display_state_get: {
+        parameters: {
+            query?: {
+                wait?: number;
+                etag?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisplayStateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wake_api_display_wake_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

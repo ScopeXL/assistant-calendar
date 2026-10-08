@@ -2168,6 +2168,67 @@
         "title": "DiagnosticsOut",
         "type": "object"
       },
+      "DisplayStateOut": {
+        "properties": {
+          "awake_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awake Until"
+          },
+          "brightness": {
+            "title": "Brightness",
+            "type": "integer"
+          },
+          "etag": {
+            "title": "Etag",
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "day",
+              "dim",
+              "sleep",
+              "awake"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleOut"
+          },
+          "screen": {
+            "enum": [
+              "on",
+              "off"
+            ],
+            "title": "Screen",
+            "type": "string"
+          },
+          "server_time": {
+            "format": "date-time",
+            "title": "Server Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "etag",
+          "screen",
+          "brightness",
+          "reason",
+          "awake_until",
+          "schedule",
+          "server_time"
+        ],
+        "title": "DisplayStateOut",
+        "type": "object"
+      },
       "EntryIn": {
         "description": "PUT meals/entries: with an id, that entry changes (its day and slot too); without one, it\ngoes into the spot (day, slot, position) and replaces what's there, if anything. A new text\nis kept as a saved meal (or counts one more use of the saved meal with that name).",
         "properties": {
@@ -7168,6 +7229,64 @@
         "title": "ScanOut",
         "type": "object"
       },
+      "ScheduleOut": {
+        "properties": {
+          "dim_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dim From"
+          },
+          "dim_level": {
+            "title": "Dim Level",
+            "type": "integer"
+          },
+          "sleep_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep From"
+          },
+          "sleep_mode": {
+            "enum": [
+              "dim_clock",
+              "screen_off"
+            ],
+            "title": "Sleep Mode",
+            "type": "string"
+          },
+          "sleep_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep To"
+          }
+        },
+        "required": [
+          "sleep_from",
+          "sleep_to",
+          "sleep_mode",
+          "dim_from",
+          "dim_level"
+        ],
+        "title": "ScheduleOut",
+        "type": "object"
+      },
       "SearchHit": {
         "properties": {
           "event": {
@@ -7339,6 +7458,21 @@
           "daylight_tint": {
             "title": "Daylight Tint",
             "type": "boolean"
+          },
+          "dim_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dim From"
+          },
+          "dim_level": {
+            "title": "Dim Level",
+            "type": "integer"
           },
           "display_controls_bottom": {
             "title": "Display Controls Bottom",
@@ -7514,6 +7648,14 @@
             "title": "Timezone Chosen",
             "type": "boolean"
           },
+          "update_check": {
+            "title": "Update Check",
+            "type": "boolean"
+          },
+          "update_check_locked": {
+            "title": "Update Check Locked",
+            "type": "boolean"
+          },
           "week_starts_on": {
             "title": "Week Starts On",
             "type": "integer"
@@ -7540,6 +7682,10 @@
           "sleep_from",
           "sleep_to",
           "sleep_mode",
+          "dim_from",
+          "dim_level",
+          "update_check",
+          "update_check_locked",
           "kid_safe_editing",
           "has_pin",
           "pin_length",
@@ -7563,6 +7709,34 @@
               }
             ],
             "title": "Daylight Tint"
+          },
+          "dim_from": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dim From"
+          },
+          "dim_level": {
+            "anyOf": [
+              {
+                "enum": [
+                  20,
+                  40,
+                  60
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dim Level"
           },
           "display_controls_bottom": {
             "anyOf": [
@@ -7842,6 +8016,17 @@
               }
             ],
             "title": "Timezone"
+          },
+          "update_check": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Update Check"
           },
           "week_starts_on": {
             "anyOf": [
@@ -8522,6 +8707,76 @@
         "title": "UpcomingOut",
         "type": "object"
       },
+      "UpdateOut": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "current": {
+            "title": "Current",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "how": {
+            "title": "How",
+            "type": "string"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          }
+        },
+        "required": [
+          "enabled",
+          "locked",
+          "current",
+          "latest",
+          "available",
+          "checked_at",
+          "problem",
+          "how"
+        ],
+        "title": "UpdateOut",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -8918,6 +9173,49 @@
           }
         },
         "summary": "Diagnostics",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/update": {
+      "get": {
+        "operationId": "update_status_api_admin_update_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Update Status",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/update/check": {
+      "post": {
+        "description": "Check now (About's button), at most once a minute.",
+        "operationId": "check_now_api_admin_update_check_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check Now",
         "tags": [
           "meta"
         ]
@@ -12872,6 +13170,84 @@
         "summary": "Restore Countdown",
         "tags": [
           "countdowns"
+        ]
+      }
+    },
+    "/api/display/state": {
+      "get": {
+        "description": "What the panel should be doing. With ``etag`` and ``wait``, the answer comes when that\nchanges or after ``wait`` seconds, whichever is first.",
+        "operationId": "display_state_api_display_state_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 55,
+              "minimum": 0,
+              "title": "Wait",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "etag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Etag"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisplayStateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Display State",
+        "tags": [
+          "display"
+        ]
+      }
+    },
+    "/api/display/wake": {
+      "post": {
+        "description": "A tap on the sleeping wall screen: it stays on for 2 minutes (PLAN \u00a713.5).",
+        "operationId": "wake_api_display_wake_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Wake",
+        "tags": [
+          "display"
         ]
       }
     },

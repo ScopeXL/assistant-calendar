@@ -68,6 +68,10 @@ class SettingsOut(BaseModel):
     sleep_from: str | None
     sleep_to: str | None
     sleep_mode: SleepModeName
+    dim_from: str | None
+    dim_level: int
+    update_check: bool
+    update_check_locked: bool  # SUNROOM_UPDATE_CHECK=0 keeps it off
     kid_safe_editing: bool
     has_pin: bool
     pin_length: int | None
@@ -97,6 +101,9 @@ class SettingsUpdate(BaseModel):
     sleep_from: Clock24 | None = None  # send null (with sleep_to) to turn sleep off
     sleep_to: Clock24 | None = None
     sleep_mode: SleepModeName | None = None
+    dim_from: Clock24 | None = None  # send null to stop dimming
+    dim_level: Literal[20, 40, 60] | None = None
+    update_check: bool | None = None
     kid_safe_editing: bool | None = None
     location_label: Annotated[str, StringConstraints(max_length=120)] | None = None
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None

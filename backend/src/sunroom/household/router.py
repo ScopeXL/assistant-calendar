@@ -84,7 +84,14 @@ async def update_settings(body: SettingsUpdate, state: StateDep, actor: ParentDe
         for key, value in changes.items():
             if key == "household_name":
                 home.name = value
-            elif key in {"latitude", "longitude", "location_label", "sleep_from", "sleep_to"}:
+            elif key in {
+                "latitude",
+                "longitude",
+                "location_label",
+                "sleep_from",
+                "sleep_to",
+                "dim_from",
+            }:
                 setattr(home, key, value)
             elif value is not None:
                 setattr(home, key, value)

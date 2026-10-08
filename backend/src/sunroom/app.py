@@ -23,6 +23,7 @@ from sunroom.calendar import service as calendar_service
 from sunroom.calendar.occurrences import CalendarRuntime
 from sunroom.calendar.router import router as calendar_router
 from sunroom.core import secretkey
+from sunroom.core import updates as core_updates
 from sunroom.core.clock import Clock, ShiftableClock, SystemClock
 from sunroom.core.config import Settings
 from sunroom.core.crypto import plugin_cipher
@@ -35,9 +36,11 @@ from sunroom.db.backup import BackupService
 from sunroom.db.engine import Database, make_database
 from sunroom.events.hub import EventHub
 from sunroom.events.router import router as events_router
+from sunroom.household import screen
 from sunroom.household import service as household_service
 from sunroom.household.models import AppMeta, NetworkAllowEntry
 from sunroom.household.router import router as household_router
+from sunroom.meta import updates as meta_updates
 from sunroom.meta.router import router as meta_router
 from sunroom.meta.setup import router as setup_router
 from sunroom.meta.testing import router as testing_router
@@ -246,6 +249,17 @@ def create_app(
         state.jobs.every("prune-expired", PRUNE_INTERVAL_S, prune_expired)
         state.jobs.every("photos-reconcile", PHOTOS_RECONCILE_INTERVAL_S, reconcile_photos)
         state.jobs.every("auth-sync", AUTH_SYNC_INTERVAL_S, sync_auth_epoch)
+
+        async def screen_tick() -> None:
+            await screen.tick(state)
+
+        state.jobs.every("screen-schedule", screen.TICK_S, screen_tick)
+
+        async def update_tick() -> None:
+            await meta_updates.tick(state)
+
+        state.jobs.every("update-check", core_updates.TICK_S, update_tick)
+        hub.listeners.append(lambda event_type, _payload: screen.on_event(state, event_type))
         app.state.sunroom = state
         await manager.boot()
         state.started = True
@@ -270,10 +284,12 @@ def create_app(
     )
     install_error_handlers(app)
     app.include_router(meta_router)
+    app.include_router(meta_updates.router)
     app.include_router(setup_router)
     app.include_router(auth_router)
     app.include_router(kiosk_router)
     app.include_router(household_router)
+    app.include_router(screen.router)
     app.include_router(photos_router)
     app.include_router(calendar_router)
     app.include_router(plugins_router)

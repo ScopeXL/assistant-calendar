@@ -109,6 +109,38 @@ def test_changing_the_secret_key_signs_everyone_out_and_wipes_credentials(
         assert conn.execute("SELECT credentials_enc FROM sample_sources").fetchone() == (None,)
 
 
+def test_every_real_credentials_table_is_wiped_when_the_key_changes(data_dir: Path) -> None:
+    """The real schema (PLAN §15 M5): each table that keeps encrypted credentials today. A new
+    one fails the first assert until it's added here, so nobody forgets what a key change does
+    to it."""
+    db = data_dir / "sunroom.db"
+    boot.prepare(make_settings(data_dir), CLOCK)
+    with closing(sqlite3.connect(db)) as conn:
+        assert sorted(boot._credential_tables(conn)) == [  # pyright: ignore[reportPrivateUsage]
+            ("photo_sources", False),
+            ("sync_accounts", True),
+        ]
+        conn.execute(
+            "INSERT INTO sync_accounts (id, provider, auth_mode, label, status, server_url,"
+            " credentials_enc, config_json, allow_private, interval_s, consecutive_failures,"
+            " version, created_at) VALUES ('a1', 'caldav', 'app_password', 'Sample', 'connected',"
+            " 'caldav.example.com', 'gAAAAA-sample', '{}', 0, 1800, 0, 1, '2026-10-07 12:00:00')"
+        )
+        conn.execute(
+            "INSERT INTO photo_sources (id, kind, label, config_json, credentials_enc,"
+            " allow_private, enabled, items_seen, created_at) VALUES ('s1', 'immich', 'Sample',"
+            " '{}', 'gAAAAA-sample', 0, 1, 0, '2026-10-07 12:00:00')"
+        )
+        conn.commit()
+    _reboot(data_dir, app_secret_key=OTHER_SECRET)
+    with closing(sqlite3.connect(db)) as conn:
+        assert conn.execute("SELECT status, credentials_enc FROM sync_accounts").fetchone() == (
+            "needs_reconnect",
+            None,
+        )
+        assert conn.execute("SELECT credentials_enc FROM photo_sources").fetchone() == (None,)
+
+
 def test_a_version_change_takes_a_pre_migration_backup_once(data_dir: Path) -> None:
     settings = make_settings(data_dir)
     boot.prepare(settings, CLOCK)  # the template DB has no last_boot_version yet
