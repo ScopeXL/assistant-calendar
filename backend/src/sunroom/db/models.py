@@ -1,0 +1,21 @@
+"""Imports every model so Base.metadata is complete (Alembic, export and tests rely on it).
+
+Add each new feature's models module here, plugins' included (PLAN §5.3): a plugin's tables
+exist whether or not it is enabled (PLAN §6.4).
+"""
+
+from __future__ import annotations
+
+from sunroom.auth import models as auth_models
+from sunroom.db.base import Base
+from sunroom.household import models as household_models
+from sunroom.photos import models as photos_models
+from sunroom.plugins import models as plugins_models
+
+__all__ = [
+    "Base",
+    "auth_models",
+    "household_models",
+    "photos_models",
+    "plugins_models",
+]
