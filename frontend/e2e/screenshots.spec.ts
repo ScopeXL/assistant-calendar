@@ -140,11 +140,12 @@ test("the wall screen", async ({ page }) => {
   await shot(page, "view-today");
   await change(page, { display_home_view: "week" });
 
-  // A synced account that stopped answering: the board's quiet pill.
+  // A synced account that stopped answering: the board's quiet pill. More failures are queued
+  // than the three syncs below use: the plugin's own minute check may use some first.
   const account = await scriptedAccount(page.request);
   await page.request.put(`/api/calendar-sync/_test/fake/${account}`, {
     headers: CSRF,
-    data: { fail_next: ["unreachable", "unreachable", "unreachable"] },
+    data: { fail_next: Array.from({ length: 8 }, () => "unreachable") },
   });
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     // "Refresh now" waits a minute between syncs, and this clock only moves when told to.
@@ -231,6 +232,12 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByLabel("Household name").fill("Sample Family");
     await shot(page, `setup-household-${scheme}`);
     await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
+    await page.getByLabel("Your town").fill("Sample");
+    await page.getByRole("button", { name: "Search" }).click();
+    await expect(page.getByRole("list", { name: "Places" })).toBeVisible();
+    await shot(page, `setup-place-${scheme}`);
+    await page.getByRole("button", { name: /^Sample Town/ }).click();
     await page.getByLabel("Your name").fill("Ana");
     await page.getByRole("button", { name: "Add me" }).click();
     await page.getByLabel("Name", { exact: true }).fill("Mia");
