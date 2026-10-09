@@ -1,4 +1,5 @@
-"""GET /api/events: the household-wide live-update stream (PLAN §11.5)."""
+"""GET /api/events: the household-wide live-update stream (PLAN §11.5). Its hello names the
+server's version, so every open screen notices an updated container and reloads (ADR 0028)."""
 
 from __future__ import annotations
 
@@ -10,6 +11,7 @@ from fastapi.responses import StreamingResponse
 
 from sunroom.auth.deps import read_token
 from sunroom.core.errors import AppError
+from sunroom.core.version import build_info
 from sunroom.events.hub import STOP, render
 from sunroom.state import StateDep
 
@@ -58,6 +60,7 @@ async def events(request: Request, state: StateDep, since: str | None = None) ->
                     "epoch": hub.epoch,
                     "seq": hub.seq if mode != "replay" else start_seq,
                     "server_time": int(state.clock.now().timestamp() * 1000),
+                    "version": state.hello_version.named(build_info().version),
                 }
             )
             for frame in backlog:
@@ -78,6 +81,7 @@ async def events(request: Request, state: StateDep, since: str | None = None) ->
                             "epoch": hub.epoch,
                             "seq": hub.seq,
                             "server_time": int(state.clock.now().timestamp() * 1000),
+                            "version": state.hello_version.named(build_info().version),
                         }
                     )
                     continue

@@ -725,7 +725,7 @@ Quiet states, never error walls:
 | Backup older than 7 days | A line in Backup; never a pill on the board |
 | A plugin stopped | A line in Settings → Features: "Weather stopped working. Retry" |
 | Live updates | One icon at the board's top-right corner, at the right end of a phone Calendar's Show row (the header has no room beside its arrows) and in About → Connection, told apart by shape: connected (a Wi-Fi mark, quiet), reconnecting (a slowly turning arrow; still with Reduce Motion), checking every 30 seconds (a clock: something between here and the server holds the stream back), offline (Wi-Fi crossed out, in ink); nothing once signed out. Anything but connected shows only after 2 s, so a reconnect on a room switch never flickers. A tap says it in words: "Live updates are on.", "Reconnecting to Sunroom…", "Live updates are off for now; checking every 30 seconds.", "Can't reach Sunroom." |
-| Update available | On the display "New version · Restart tonight" (it reloads at 3 AM); on phones "New version · Refresh". Never during a routine or while changes wait |
+| Update available | The server was updated: every open screen says "Sunroom was updated to 0.7.0. Refreshing…" and reloads itself 4 s later, fresh (ADR 0028), once per version, waiting while an editor, a routine, a sheet or a save is open (10 minutes at most). Without the live stream, phones still show "New version · Refresh" and the wall reloads at 3 AM |
 | Loading | Grey placeholder shapes after 300 ms, with "Loading…" for screen readers; the board's first paint from cache is instant, placeholders apply to panels and settings only |
 | Night | The dim clock or black screen (§4) |
 

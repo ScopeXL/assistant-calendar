@@ -43,6 +43,23 @@ class HouseholdCache:
 
 
 @dataclass
+class HelloVersion:
+    """The version the live stream's hello names (events/router.py): the build's own, or on the
+    test server a stand-in, as if the container had just been updated (meta/testing.py)."""
+
+    stand_in: str | None = None
+    once: bool = False  # only the next hello names the stand-in
+
+    def named(self, real: str) -> str:
+        if self.stand_in is None:
+            return real
+        named = self.stand_in
+        if self.once:
+            self.stand_in = None
+        return named
+
+
+@dataclass
 class AppState:
     settings: Settings
     clock: Clock
@@ -72,6 +89,8 @@ class AppState:
     screen: ScreenWatch = field(default_factory=ScreenWatch)
     # The newest release GitHub named, when the household opted in (core/updates.py).
     updates: UpdateCheck = field(default_factory=UpdateCheck)
+    # What the stream's hello says this server is (every screen reloads on a new one).
+    hello_version: HelloVersion = field(default_factory=HelloVersion)
     started: bool = False
 
     def zone(self) -> ZoneInfo:

@@ -21,6 +21,7 @@ import { idleFor, swallowFollowingClick, watchActivity, whenIdle } from "../lib/
 import { watchKeyboardFields } from "../lib/keyboard";
 import { MotionProvider } from "../lib/motion";
 import { useLiveUpdates } from "../lib/live";
+import { reloadFresh, useServerUpdate } from "../lib/update";
 import { noteDimmer } from "../lib/dimmer";
 import { dimmedTo, isNight } from "../lib/night";
 import { askForPin } from "../lib/parent";
@@ -88,6 +89,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const update = useAppUpdate();
   useKeepAwake(kiosk);
   useLiveUpdates();
+  useServerUpdate();
   useDatePreferences();
   useReminders();
 
@@ -196,7 +198,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     () =>
       kioskCommands.subscribe(() => {
         const command = kioskCommands.get()?.command;
-        if (command === "reload") window.location.reload();
+        if (command === "reload") void reloadFresh();
         if (command === "wake") {
           setAwake(true);
           setWakes((n) => n + 1);

@@ -299,3 +299,39 @@ test.describe("a laptop", () => {
     await expect(page.getByRole("button", { name: "Change Zoe" })).toBeVisible();
   });
 });
+
+test.describe("after the container is updated", () => {
+  test.beforeEach(() => {
+    const name = test.info().project.name;
+    test.skip(name !== "display-1080p" && name !== "phone-webkit", "the wall and an iPhone");
+  });
+
+  test("every open screen says so and refreshes itself, once", async ({ page, request }) => {
+    await seed(request);
+    if (test.info().project.name === "display-1080p") {
+      await pairWall(page);
+      await page.goto("/display");
+    } else {
+      await signInPhone(page);
+      await page.goto("/calendar");
+    }
+    const live = page.locator("[data-live]").first();
+    await expect(live).toHaveAttribute("data-live", "live");
+    // The next hello names another version, as after `docker compose pull && up -d`.
+    const updated = await request.post("/api/_test/version", {
+      headers: CSRF,
+      data: { version: "9.9.9", once: true },
+    });
+    expect(updated.status()).toBe(204);
+    const reloaded = page.waitForEvent("load");
+    const dropped = await request.post("/api/_test/drop-streams", { headers: CSRF });
+    expect(dropped.status()).toBe(204);
+    const toasts = page.locator("[data-toast]");
+    await expect(toasts.filter({ hasText: "Sunroom was updated to 9.9.9" })).toBeVisible();
+    await reloaded;
+    // The reloaded page hears its own version: nothing more to say.
+    await expect(live).toHaveAttribute("data-live", "live");
+    await page.waitForTimeout(1500);
+    await expect(toasts).toHaveCount(0);
+  });
+});

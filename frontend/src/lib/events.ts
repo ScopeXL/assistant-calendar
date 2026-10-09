@@ -12,6 +12,7 @@
  * * If a proxy appears to buffer the stream, we quietly fall back to polling.
  */
 import { createStore } from "./store";
+import { announceServerVersion } from "./update";
 
 export type LiveStatus = "connecting" | "live" | "polling" | "offline" | "signed-out";
 
@@ -150,6 +151,8 @@ export class LiveUpdates {
       this.position = `${epoch}:${seq}`;
       this.lastSeq = seq;
       liveStatus.set("live");
+      // An updated container says so here; the shells reload for it (lib/update).
+      announceServerVersion(event.version);
     } else if (message.lastEventId) {
       const seq = Number(message.lastEventId.split(":").pop());
       if (this.lastSeq !== null && seq !== this.lastSeq + 1) {

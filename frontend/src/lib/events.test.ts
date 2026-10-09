@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HELLO_TIMEOUT_MS, LiveUpdates, WATCHDOG_MS, liveStatus, type ServerEvent } from "./events";
+import { serverVersion } from "./update";
 
 class FakeSource {
   static all: FakeSource[] = [];
@@ -57,6 +58,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   FakeSource.all = [];
   liveStatus.set("connecting");
+  serverVersion.set(null);
 });
 
 afterEach(() => {
@@ -71,6 +73,17 @@ describe("LiveUpdates", () => {
     latest().emit({ type: "members.changed" }, "e1:5");
     expect(liveStatus.get()).toBe("live");
     expect(events.map((e) => e.type)).toEqual(["hello", "members.changed"]);
+    live.stop();
+  });
+
+  it("announces the server's version from each hello, when it isn't this build's", () => {
+    const { live } = setup();
+    live.start();
+    latest().emit({ type: "hello", mode: "live", epoch: "e1", seq: 4, version: __APP_VERSION__ });
+    expect(serverVersion.get()).toBeNull();
+    // The container was updated: the next connection's hello says so.
+    latest().emit({ type: "hello", mode: "live", epoch: "e1", seq: 4, version: "9.9.9" });
+    expect(serverVersion.get()).toBe("9.9.9");
     live.stop();
   });
 

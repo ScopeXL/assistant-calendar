@@ -104,6 +104,7 @@ async def reset(state: StateDep) -> None:
     state.updates.latest = state.updates.checked_at = state.updates.problem = None
     state.screen.awake_until = None
     state.screen.notify()
+    state.hello_version.stand_in = None
     state.household.setup_complete = False
     state.household.password_set = state.settings.app_password is not None
     state.household.members.clear()
@@ -116,6 +117,19 @@ async def reset(state: StateDep) -> None:
 @router.post("/drop-streams", status_code=204)
 async def drop_streams(state: StateDep) -> None:
     state.hub.drop_all()
+
+
+class VersionIn(BaseModel):
+    version: Annotated[str, Field(min_length=1, max_length=40)]
+    once: bool = False
+
+
+@router.post("/version", status_code=204)
+async def stand_in_version(body: VersionIn, state: StateDep) -> None:
+    """The stream's next hello (or, without ``once``, every hello until a reset) names this
+    version, as if the container had been updated: every screen then says so and reloads."""
+    state.hello_version.stand_in = body.version
+    state.hello_version.once = body.once
 
 
 @router.post("/revoke-sessions", status_code=204)

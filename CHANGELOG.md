@@ -32,6 +32,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   says how it went and opens the new account's calendars.
 - Add photos from a computer's browser too, not only a phone: Photos → Add photos, and a
   person's photo in Settings → Family.
+- After you update Sunroom, every kitchen screen and phone that's open says so and refreshes
+  itself.
 
 ### Fixed
 

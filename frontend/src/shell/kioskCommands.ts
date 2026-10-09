@@ -1,6 +1,7 @@
 /**
  * Commands a parent sends every wall screen (POST /api/kiosk/command → the kiosk.command event):
- * reload, wake. The screensaver and "show this event" arrive with M4 and M1.
+ * reload (fresh, as after an update: lib/update), wake. The screensaver and "show this event"
+ * arrive with M4 and M1.
  */
 import { createStore } from "../lib/store";
 

@@ -126,8 +126,9 @@ day Sunroom asks GitHub for the newest release (GitHub sees your server's addres
 says when one is out, with these steps. It's off until you turn it on.
 
 Before migrating, Sunroom copies the database into `/data/backups/pre-migrate/`. If a migration
-fails, it refuses to start and the data is left exactly as it was. The kitchen screen picks up
-the new version at its overnight restart.
+fails, it refuses to start and the data is left exactly as it was. Every open kitchen screen and
+phone refreshes itself within a minute of the update; a screen in the middle of an edit waits
+for it.
 
 **If Portainer manages it instead** (a stack pasted from the example): update the stack with
 **Re-pull image and redeploy** switched on.

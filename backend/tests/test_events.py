@@ -3,15 +3,28 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import Any
 
 import httpx
 import pytest
 from fastapi import FastAPI
 
+from sunroom.app import create_app
+from sunroom.core.clock import ShiftableClock
+from sunroom.core.version import build_info
 from sunroom.events.hub import EventHub
 from sunroom.state import AppState
-from tests.support import CSRF, StreamProbe, login, run_setup, session_cookie
+from tests.support import (
+    BASE_URL,
+    CSRF,
+    StreamProbe,
+    login,
+    make_settings,
+    run_setup,
+    session_cookie,
+    state_of,
+)
 
 
 def hub_of(app: FastAPI) -> EventHub:
@@ -46,6 +59,8 @@ async def test_headers_retry_and_hello_come_first(stream: StreamProbe) -> None:
     assert stream.raw().startswith("retry: 3000\n\n")
     assert frames[0]["type"] == "hello"
     assert frames[0]["mode"] == "live"
+    # Every screen compares this with its own build, and reloads on a new one (ADR 0028).
+    assert frames[0]["version"] == build_info().version
 
 
 async def test_published_events_arrive_with_positions(
@@ -100,7 +115,8 @@ async def test_overflow_turns_into_resync_not_silent_loss(
     frames = await stream.wait_for(
         lambda f: any(x["type"] == "hello" and x["mode"] == "resync" for x in f)
     )
-    assert any(x["type"] == "hello" and x["mode"] == "resync" for x in frames)
+    resync = [x for x in frames if x["type"] == "hello" and x["mode"] == "resync"]
+    assert resync and resync[0]["version"] == build_info().version
 
 
 async def test_no_session_means_401(app: FastAPI) -> None:
@@ -135,3 +151,38 @@ async def test_disconnect_releases_the_connection(
     assert hub_of(app).connection_count == 1
     await probe.close()
     assert hub_of(app).connection_count == 0
+
+
+async def first_hello(app: FastAPI, cookie: str) -> dict[str, Any]:
+    probe = StreamProbe(app, cookie=cookie).start()
+    try:
+        frames = await probe.wait_for(lambda f: "hello" in types(f))
+        return frames[0]
+    finally:
+        await probe.close()
+
+
+async def test_the_test_server_can_pretend_it_was_updated(data_dir: Path) -> None:
+    """End-to-end runs check that screens reload for a new version: the next hello (or every
+    one until a reset) names a stand-in."""
+    app = create_app(make_settings(data_dir, sunroom_test_mode=True), clock=ShiftableClock())
+    real = build_info().version
+    async with app.router.lifespan_context(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as http:
+            assert (await run_setup(http)).status_code == 201
+            cookie = session_cookie(http)
+            once = {"version": "9.9.9", "once": True}
+            assert (
+                await http.post("/api/_test/version", json=once, headers=CSRF)
+            ).status_code == 204
+            assert (await first_hello(app, cookie))["version"] == "9.9.9"
+            assert (await first_hello(app, cookie))["version"] == real
+            every = {"version": "9.9.9"}
+            assert (
+                await http.post("/api/_test/version", json=every, headers=CSRF)
+            ).status_code == 204
+            assert (await first_hello(app, cookie))["version"] == "9.9.9"
+            assert (await first_hello(app, cookie))["version"] == "9.9.9"
+            assert (await http.post("/api/_test/reset", headers=CSRF)).status_code == 204
+            assert state_of(app).hello_version.stand_in is None
