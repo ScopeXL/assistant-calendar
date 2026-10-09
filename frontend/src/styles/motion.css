@@ -18,6 +18,7 @@
   --motion-saver-in: 800ms;
   --motion-saver-out: 220ms;
   --motion-photo: 1500ms;
+  --motion-minute: 60s;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-arrive: cubic-bezier(0.05, 0.7, 0.1, 1);
   --ease-leave: cubic-bezier(0.3, 0, 0.8, 0.15);
@@ -313,6 +314,12 @@ dialog.sheet[data-closing]::backdrop {
 }
 .saver-photo-in {
   animation: fade-in var(--motion-photo) linear both;
+}
+
+/* The Hours grid's now line (UX §9): each minute's move glides over the whole minute, so it
+   creeps rather than jumps. Reduce Motion makes it step (below). */
+.now-minute {
+  transition: transform var(--motion-minute) linear;
 }
 
 /* The live-updates icon while it reconnects (ui/LiveStatus): a slow turn. Reduce Motion keeps

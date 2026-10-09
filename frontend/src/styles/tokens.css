@@ -431,3 +431,16 @@
     opacity: 1;
   }
 }
+
+/* The Hours grid's lines (features/calendar/HoursGrid): one each hour and a fainter one each
+   step (--step minutes), painted by the background, so there's no element per line. --pph is
+   the grid's pixels per hour. */
+.hour-lines {
+  background-image:
+    repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--pph)),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--line) 55%, transparent) 0 1px,
+      transparent 1px calc(var(--pph) * var(--step) / 60)
+    );
+}

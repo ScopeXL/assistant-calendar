@@ -25,6 +25,7 @@ import { PeopleView } from "./PeopleView";
 import { ScopeChooser } from "./ScopeChooser";
 import { TodayView } from "./TodayView";
 import type { Occurrence, Scope } from "./types";
+import { WeekTools } from "./WeekTools";
 import { WeekView } from "./WeekView";
 
 function homeView(setting: string | undefined): BoardView {
@@ -48,6 +49,7 @@ export function CalendarRoom() {
   const weekStartsOn = settings?.week_starts_on ?? 6;
   const view = state.view ?? homeView(settings?.display_home_view);
   const panelShown = state.panelShown ?? settings?.display_show_today_panel ?? true;
+  const layout = state.weekLayout ?? settings?.display_week_layout ?? "agenda";
   const dimPast = settings?.display_dim_past ?? true;
   const changes = useEventChanges();
   const pills = usePluginModules().flatMap((module) =>
@@ -87,8 +89,8 @@ export function CalendarRoom() {
       },
     });
   };
-  const add = (day: string | null, hour: number | null = null) => {
-    updateDisplay({ panel: { kind: "add", day, hour } });
+  const add = (day: string | null, hour: number | null = null, minute: number | null = null) => {
+    updateDisplay({ panel: { kind: "add", day, hour, minute } });
   };
   const move = (occurrence: Occurrence, toDay: string) => {
     if (!occurrence.event_id) return;
@@ -184,6 +186,20 @@ export function CalendarRoom() {
         pills={pills.map(({ id, Pill }) => (
           <Pill key={id} />
         ))}
+        tools={
+          view === "week" ? (
+            <WeekTools
+              layout={layout}
+              zoom={state.hoursZoom}
+              onLayout={(weekLayout) => {
+                updateDisplay({ weekLayout });
+              }}
+              onZoom={(hoursZoom) => {
+                updateDisplay({ hoursZoom });
+              }}
+            />
+          ) : null
+        }
       />
       {view === "week" ? (
         <WeekView
@@ -194,9 +210,11 @@ export function CalendarRoom() {
           members={members}
           dimPast={dimPast}
           people={state.people}
+          layout={layout}
+          zoom={state.hoursZoom}
           onOpen={open}
-          onAdd={(day) => {
-            add(day);
+          onAdd={(day, hour, minute) => {
+            add(day, hour ?? null, minute ?? null);
           }}
           onMore={(day) => {
             updateDisplay({ view: "day", day });

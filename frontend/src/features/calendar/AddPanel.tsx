@@ -143,6 +143,7 @@ export function AddPanel({
             editing={editing !== null}
             defaultDay={panel.kind === "add" ? (panel.day ?? today) : today}
             defaultHour={panel.kind === "add" ? panel.hour : null}
+            defaultMinute={panel.kind === "add" ? (panel.minute ?? null) : null}
             pending={changes.add.isPending || changes.save.isPending}
             {...(onDay ? { onDay } : {})}
             error={changes.add.error ?? changes.save.error}

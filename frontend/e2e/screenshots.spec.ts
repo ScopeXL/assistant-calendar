@@ -120,6 +120,27 @@ test("the wall screen", async ({ page }) => {
     await shot(page, `view-${view.split(" ")[0]?.toLowerCase() ?? view}`);
   }
   await page.getByRole("button", { name: "Week", exact: true }).click();
+  // The Hours layout: the whole day at 24h, then zoomed in to 15m, light and dark.
+  await page.getByRole("button", { name: "Hours", exact: true }).click();
+  const root = page.locator("html");
+  for (const theme of ["light", "dark"] as const) {
+    await change(page, { theme });
+    await expect(root).toHaveAttribute("data-theme", theme);
+    await page.getByRole("button", { name: "24h", exact: true }).click();
+    await expect(board.locator("[data-now-line]")).toBeVisible();
+    await shot(page, `board-hours-24h-${theme}`);
+    await page.getByRole("button", { name: "15m", exact: true }).click();
+    await shot(page, `board-hours-15m-${theme}`);
+  }
+  // At Extra large the header holds Show, the zoom and the switch on its second line.
+  await change(page, { theme: "light", text_size: "xl", display_week_layout: "hours" });
+  await page.reload();
+  await expect(root).toHaveAttribute("data-text-size", "xl");
+  await expect(board.locator("[data-now-line]")).toBeVisible();
+  await shot(page, "board-hours-24h-xl");
+  await change(page, { text_size: "standard", display_week_layout: "agenda" });
+  await page.reload();
+  await expect(board).toBeVisible();
   await board.getByRole("button", { name: /^Soccer practice, .*Thursday/ }).click();
   const sheet = page.getByRole("dialog", { name: "Soccer practice" });
   await expect(sheet).toBeVisible();

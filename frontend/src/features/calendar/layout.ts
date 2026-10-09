@@ -96,6 +96,31 @@ export function byDay<T extends Placed>(occurrences: readonly T[], days: readonl
   return columns;
 }
 
+/** Events that overlap in time, from the first's start to the latest end, in start order. */
+export interface Cluster<T extends Placed> {
+  start: string;
+  end: string;
+  items: T[];
+}
+
+/** Timed events (in start order) grouped where they overlap: one that starts as another ends
+ * begins a new group. The Day view sets each group side by side, the Hours grid in lanes. */
+export function clusters<T extends Placed>(timed: readonly T[]): Cluster<T>[] {
+  const out: Cluster<T>[] = [];
+  for (const occurrence of timed) {
+    const start = occurrence.start_local ?? "";
+    const end = occurrence.end_local ?? start;
+    const last = out.at(-1);
+    if (last && start < last.end) {
+      last.items.push(occurrence);
+      if (end > last.end) last.end = end;
+    } else {
+      out.push({ start, end, items: [occurrence] });
+    }
+  }
+  return out;
+}
+
 /** Over before `now` (a wall time); an all-day event is past from the next day. */
 export function isPast(occurrence: Placed, now: string): boolean {
   if (occurrence.all_day) return (occurrence.end_date ?? "") <= dayOf(now);

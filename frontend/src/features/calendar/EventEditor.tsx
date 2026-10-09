@@ -185,6 +185,7 @@ export function EventEditor({
   editing,
   defaultDay,
   defaultHour,
+  defaultMinute = null,
   pending,
   error,
   onSave,
@@ -196,6 +197,8 @@ export function EventEditor({
   editing: boolean;
   defaultDay: string;
   defaultHour: number | null;
+  /** With `defaultHour`: the minute a tap on the Hours grid chose. */
+  defaultMinute?: number | null;
   pending: boolean;
   error: unknown;
   onSave: (draft: Draft) => void;
@@ -230,7 +233,10 @@ export function EventEditor({
     if (!initial) setManual((current) => ({ ...current, day: defaultDay }));
   }
 
-  const fromHour = defaultHour === null ? null : `${String(defaultHour).padStart(2, "0")}:00`;
+  const fromHour =
+    defaultHour === null
+      ? null
+      : `${String(defaultHour).padStart(2, "0")}:${String(defaultMinute ?? 0).padStart(2, "0")}`;
   const draft: Draft = {
     title: editing ? text : (parsed?.title ?? text),
     day: manual.day ?? parsed?.day ?? defaultDay,

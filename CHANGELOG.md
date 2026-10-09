@@ -6,15 +6,21 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The week can show each day as hours, midnight to midnight, with longer events taller and the
+  now line creeping through today: Settings → Display → Week layout → Hours, or the Hours
+  button on the board. When a day is busy, zoom with 24h · 12h · 1h · 15m.
+- The top-right corner of the board, and the phone's Calendar, show whether the screen is
+  getting live updates: connected, reconnecting, checking every 30 seconds, or offline. Tap it
+  to hear which. Settings → About → Connection shows the same icon.
+
 ### Changed
 
 - Titles, headings and the names of rooms, views and tabs now capitalize each word
   ("Calendars & Accounts", "This Week", "Who's Doing What"). Buttons and messages stay as
   they were.
 - "Kid" is now "Child" everywhere you read it.
-- The top-right corner of the board, and the phone's Calendar, show whether the screen is
-  getting live updates: connected, reconnecting, checking every 30 seconds, or offline. Tap it
-  to hear which. Settings → About → Connection shows the same icon.
 - The Today panel's button at the top of the board is now an icon, the same size as the
   arrows beside it.
 - Settings → About → Storage says "Free space".
@@ -29,6 +35,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
   birthday) no longer read as unavailable to a screen reader.
 - On a portrait kitchen screen, a busy day's all-day events no longer spill into the next
   day's row or hide its other events: whatever doesn't fit is behind "+N more".
+- On the week board, today's now line always shows, even when the day's events don't all fit.
 
 ## [0.6.0] - 2026-10-08
 

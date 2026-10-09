@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   byDay,
+  clusters,
   daysCovered,
   isOn,
   isPast,
@@ -119,5 +120,25 @@ describe("the person filter", () => {
     expect(shownFor(timed("Leo's", "a", "b", ["leo"]), people)).toBe(false);
     expect(shownFor(timed("Family", "a", "b"), people)).toBe(true);
     expect(shownFor(timed("Leo's", "a", "b", ["leo"]), new Set())).toBe(true);
+  });
+});
+
+describe("events that overlap (clusters)", () => {
+  it("groups what overlaps and starts again where one ends as the next begins", () => {
+    const found = clusters([
+      timed("Swim", "2026-10-07T09:00:00", "2026-10-07T10:00:00"),
+      timed("Piano", "2026-10-07T09:30:00", "2026-10-07T10:30:00"),
+      timed("Vet", "2026-10-07T10:30:00", "2026-10-07T11:00:00"),
+    ]);
+    expect(found.map((cluster) => cluster.items.map((item) => item.title))).toEqual([
+      ["Swim", "Piano"],
+      ["Vet"],
+    ]);
+    expect(found[0]?.end).toBe("2026-10-07T10:30:00");
+    const apart = clusters([
+      timed("Swim", "2026-10-07T09:00:00", "2026-10-07T10:00:00"),
+      timed("Vet", "2026-10-07T10:00:00", "2026-10-07T11:00:00"),
+    ]);
+    expect(apart).toHaveLength(2);
   });
 });

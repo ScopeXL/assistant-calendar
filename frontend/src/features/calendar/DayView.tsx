@@ -2,33 +2,10 @@ import { formatWallTime } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { useShell } from "../../ui/shell";
 import { EventChip } from "./EventChip";
-import { byDay, isPast, shownFor } from "./layout";
+import { byDay, clusters, isPast, shownFor, type Cluster } from "./layout";
 import type { Occurrence } from "./types";
 
 const SIDE_BY_SIDE = 3; // at least half the width each, so two to a row
-
-interface Cluster {
-  start: string;
-  end: string;
-  items: Occurrence[];
-}
-
-/** Events that overlap in time, side by side (UX §4), in start order. */
-function clusters(timed: Occurrence[]): Cluster[] {
-  const out: Cluster[] = [];
-  for (const occurrence of timed) {
-    const start = occurrence.start_local ?? "";
-    const end = occurrence.end_local ?? start;
-    const last = out.at(-1);
-    if (last && start < last.end) {
-      last.items.push(occurrence);
-      if (end > last.end) last.end = end;
-    } else {
-      out.push({ start, end, items: [occurrence] });
-    }
-  }
-  return out;
-}
 
 const hourOf = (local: string) => Number(local.slice(11, 13));
 const minutesBetween = (a: string, b: string) =>
@@ -71,7 +48,7 @@ export function DayView({
   const dayStart = `${day}T00:00:00`;
 
   type Row =
-    | { kind: "cluster"; cluster: Cluster }
+    | { kind: "cluster"; cluster: Cluster<Occurrence> }
     | { kind: "free"; from: string; until: string | null }
     | { kind: "now" };
   const rows: Row[] = [];

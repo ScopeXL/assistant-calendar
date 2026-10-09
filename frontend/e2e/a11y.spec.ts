@@ -116,6 +116,10 @@ async function tapTargets(page: Page, where: string): Promise<void> {
         const shared = Math.min(one.bottom, two.bottom) - Math.max(one.top, two.top);
         if (shared < Math.min(one.height, two.height) / 2) continue; // not on one line
         const gap = Math.max(two.left - one.right, one.left - two.right);
+        // Chips stacked in one Hours column: the later one sits on the earlier one's tail, the
+        // way a Month cell holds its day; the zoom is what makes a short one bigger (UX §1).
+        const dense = a.closest("[data-dense]");
+        if (gap < 0 && dense && dense === b.closest("[data-dense]")) continue;
         if (gap < 7.5) found.push(`${String(Math.round(gap))} px apart: ${name(a)} and ${name(b)}`);
       }
     }
@@ -364,6 +368,13 @@ for (const scheme of ["light", "dark"] as const) {
         await check(page, `display: ${view}`);
       }
       await page.getByRole("button", { name: "Week", exact: true }).click();
+      // The Hours layout, the whole day and zoomed in all the way.
+      await page.getByRole("button", { name: "Hours", exact: true }).click();
+      await expect(page.locator("[data-hours] [data-now-line]")).toBeVisible();
+      await check(page, "display: hours at 24h");
+      await page.getByRole("button", { name: "15m", exact: true }).click();
+      await check(page, "display: hours at 15m");
+      await page.getByRole("button", { name: "Agenda", exact: true }).click();
       await page.getByRole("link", { name: "Lists" }).click();
       await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
       await check(page, "display: lists");

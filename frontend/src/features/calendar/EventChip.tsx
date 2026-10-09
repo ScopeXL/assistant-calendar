@@ -26,6 +26,39 @@ export function peopleOf(occurrence: Occurrence, members: Member[]): Member[] {
 }
 
 /**
+ * How an event's chip is painted (UX §4 "Week board"), in either Week layout: one person's light
+ * tint and a 6 px bar at the left; a neutral tint for several people or Everyone; filled solid
+ * while it's on; no tint and quiet text once it's over today (when the household dims the past).
+ */
+export function chipTone(
+  occurrence: Occurrence,
+  people: Member[],
+  now: string,
+  dimPast: boolean,
+  /** A past chip's fill: none on the Agenda (its text shows it); the Hours grid's thin blocks
+   * need a faint one to show at all. */
+  pastFill = "bg-transparent",
+): { person: string; className: string } {
+  const one = people.length === 1 ? people[0] : undefined;
+  const on = isOn(occurrence, now);
+  const past = dimPast && !on && isPast(occurrence, now);
+  const color = occurrence.color ?? one?.color ?? null;
+  const fill = on
+    ? color
+      ? "bg-p text-on-ink"
+      : "bg-ink text-on-ink"
+    : past
+      ? `${pastFill} text-ink-soft`
+      : color
+        ? "bg-p-tint text-ink"
+        : "bg-line/60 text-ink";
+  return {
+    person: on && !color ? "everyone" : (color ?? "everyone"),
+    className: `${fill} ${color && !past ? "border-l-[6px] border-p pl-3" : "pl-3"}`,
+  };
+}
+
+/**
  * An event on the board (UX §4 "Week board"). One person: a light tint of their color and a
  * 6 px bar at the left; several: a neutral tint with up to three avatars; Everyone: neutral. On
  * now: filled solid. Past (today): no tint, quiet text, when the household dims past events.
@@ -83,17 +116,7 @@ export function EventChip({
       </button>
     );
   }
-  const one = people.length === 1 ? people[0] : undefined;
-  const on = isOn(occurrence, now);
-  const past = dimPast && !on && isPast(occurrence, now);
-  const color = occurrence.color ?? one?.color ?? null;
-  const tone = on
-    ? "bg-p text-on-ink"
-    : past
-      ? "bg-transparent text-ink-soft"
-      : color
-        ? "bg-p-tint text-ink"
-        : "bg-line/60 text-ink";
+  const tone = chipTone(occurrence, people, now, dimPast);
   const time =
     !occurrence.all_day && occurrence.start_local ? formatWallTime(occurrence.start_local) : null;
   // A core overlay's mark before the title: a birthday's cake (ADR 0028).
@@ -101,7 +124,7 @@ export function EventChip({
   return (
     <button
       type="button"
-      data-person={on && !color ? "everyone" : (color ?? "everyone")}
+      data-person={tone.person}
       data-chip=""
       data-overlay={occurrence.overlay ?? undefined}
       data-key={occurrence.key}
@@ -110,9 +133,7 @@ export function EventChip({
       onClick={onOpen}
       className={`press relative flex w-full min-w-0 flex-col gap-0.5 overflow-hidden py-2 pr-2 text-left ${
         display ? "rounded-chip-d" : "rounded-chip"
-      } ${color && !past ? "border-l-[6px] border-p pl-3" : "pl-3"} ${
-        on && !color ? "bg-ink text-on-ink" : tone
-      } ${compact ? `${display ? "min-h-14" : "min-h-11"} justify-center` : display ? "min-h-16" : "min-h-14"}`}
+      } ${tone.className} ${compact ? `${display ? "min-h-14" : "min-h-11"} justify-center` : display ? "min-h-16" : "min-h-14"}`}
     >
       {compact || !time ? (
         <span className="flex min-w-0 items-center gap-2">
@@ -167,7 +188,8 @@ export function EventChip({
   );
 }
 
-function PeopleMarks({ people }: { people: Member[] }) {
+/** Up to three avatars, overlapping: who an event is for. */
+export function PeopleMarks({ people }: { people: Member[] }) {
   if (people.length === 0) return null;
   return (
     <span className="flex shrink-0 -space-x-2">

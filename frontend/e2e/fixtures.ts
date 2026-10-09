@@ -150,9 +150,15 @@ export async function settled(page: Page): Promise<void> {
       });
     for (let round = 0; round < 60; round++) {
       await frame();
+      // Not the Hours grid's now line, which glides over a whole minute.
       const running = document.getAnimations().filter((animation) => {
         const end = animation.effect?.getComputedTiming().endTime;
-        return typeof end === "number" && Number.isFinite(end) && animation.playState === "running";
+        return (
+          typeof end === "number" &&
+          Number.isFinite(end) &&
+          end <= 10_000 &&
+          animation.playState === "running"
+        );
       });
       if (!running.length) return;
       await Promise.all(running.map((animation) => animation.finished.catch(() => undefined)));

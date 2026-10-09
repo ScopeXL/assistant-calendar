@@ -1,18 +1,30 @@
 /**
  * What the wall screen is showing right now, beyond the URL: the board's view, which week, day
- * or month, the person filter, whether the Today panel is hidden on this screen, and the event
- * sheet or Add panel that's open. The idle machine puts it back after 2 minutes, so the next
+ * or month, the person filter, whether the Today panel is hidden on this screen, the Week
+ * layout and zoom chosen on it, and the event sheet or Add panel that's open. The idle machine puts it back after 2 minutes, so the next
  * person who glances sees this week (UX §1 "Idle, wake and reset").
  */
 import { createStore } from "./store";
 
 export type BoardView = "week" | "day" | "month" | "people" | "today";
+/** How the Week board draws a day (ADR 0028): stacked chips, or the hours from midnight. */
+export type WeekLayout = "agenda" | "hours";
+/** The Hours grid's zoom: the whole day fits at 24h, half of it at 12h, then doubling. */
+export type HoursZoom = "24h" | "12h" | "1h" | "15m";
 
 export type BoardPanel =
   /** `eventId` null: a birthday's read-only sheet, which has no event behind it. */
   | { kind: "event"; eventId: string | null; recurrenceId: string | null; key: string }
   /** `type`: what Add makes (an event, or a plugin's "item", "chore"); none: the room's. */
-  | { kind: "add"; day: string | null; hour: number | null; type?: string; title?: string }
+  | {
+      kind: "add";
+      day: string | null;
+      hour: number | null;
+      /** With `hour`, the minute a tap on the Hours grid chose. */
+      minute?: number | null;
+      type?: string;
+      title?: string;
+    }
   | { kind: "edit"; eventId: string; recurrenceId: string | null }
   | null;
 
@@ -25,6 +37,9 @@ export interface DisplayState {
   monthOffset: number;
   /** null: as the household set it in Settings → Display. */
   panelShown: boolean | null;
+  /** null: the household's Week layout (Settings → Display). */
+  weekLayout: WeekLayout | null;
+  hoursZoom: HoursZoom;
   /** Show these people's events (and Everyone's); empty shows all. */
   people: string[];
   panel: BoardPanel;
@@ -36,6 +51,8 @@ const INITIAL: DisplayState = {
   day: null,
   monthOffset: 0,
   panelShown: null,
+  weekLayout: null,
+  hoursZoom: "24h",
   people: [],
   panel: null,
 };
@@ -75,6 +92,8 @@ export function resetBoard(): void {
     state.day === null &&
     state.monthOffset === 0 &&
     state.panelShown === null &&
+    state.weekLayout === null &&
+    state.hoursZoom === "24h" &&
     state.people.length === 0 &&
     state.panel === null
       ? state

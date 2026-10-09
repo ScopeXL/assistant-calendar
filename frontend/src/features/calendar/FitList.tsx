@@ -21,43 +21,61 @@ export interface Flow {
  * How many items to show, the rest behind "+N more" (pure, for FitList): every item shown ends
  * inside `space`, and when some are left out, "+N more" does too, where it would really land:
  * right after the last item shown, beside it if its line has room, else on the next line.
+ * `pinned` (an index, or -1) always shows, after the items shown when it would be among the
+ * hidden ones, and is never counted as hidden: the board's now line.
  */
 export function fitCount(
   cells: readonly Box[],
   more: { width: number; height: number },
   space: number,
   flow: Flow,
+  pinned = -1,
 ): number {
-  let count = 0;
-  while (count < cells.length && bottomOf(cells[count]) <= space) count += 1;
-  if (count === cells.length) return count;
-  while (count > 0 && moreBottom(cells, count, more, flow) > space) count -= 1;
-  return count;
+  let natural = 0;
+  while (natural < cells.length && bottomOf(cells[natural]) <= space) natural += 1;
+  if (natural === cells.length) return natural;
+  for (let shown = natural; shown > 0; shown -= 1) {
+    if (fitsWith(shown)) return shown;
+  }
+  return 0;
+
+  function fitsWith(shown: number): boolean {
+    let sequence = cells.slice(0, shown);
+    const pin = cells[pinned];
+    if (pin && pinned >= shown) {
+      const box = placeAfter(sequence, pin, flow);
+      if (bottomOf(box) > space) return false;
+      sequence = [...sequence, box];
+    }
+    const hidden = cells.length - shown - (pin && pinned >= shown ? 1 : 0);
+    if (hidden <= 0) return true;
+    return bottomOf(placeAfter(sequence, { ...more, marginBottom: 0 }, flow)) <= space;
+  }
 }
 
 function bottomOf(cell: Box | undefined): number {
   return cell ? cell.top + cell.height : Number.POSITIVE_INFINITY;
 }
 
-function moreBottom(
-  cells: readonly Box[],
-  shown: number,
-  more: { width: number; height: number },
+/** Where something that size lands after `sequence`: beside the last item if its line has room,
+ * else at the start of the next line, under everything on the last item's line. */
+function placeAfter(
+  sequence: readonly Box[],
+  size: { width: number; height: number; marginBottom: number },
   flow: Flow,
-): number {
-  const last = cells[shown - 1];
-  if (!last) return more.height;
-  if (flow.row && last.left + last.width + flow.columnGap + more.width <= flow.width) {
-    return last.top + more.height;
-  }
-  // The next line starts under everything on the last item's line.
+): Box {
+  const last = sequence.at(-1);
+  const box = { width: size.width, height: size.height, marginBottom: size.marginBottom };
+  if (!last) return { ...box, top: 0, left: 0 };
+  const left = last.left + last.width + flow.columnGap;
+  if (flow.row && left + size.width <= flow.width) return { ...box, top: last.top, left };
   let lineBottom = 0;
-  for (const cell of cells.slice(0, shown)) {
+  for (const cell of sequence) {
     if (Math.abs(cell.top - last.top) < 1) {
       lineBottom = Math.max(lineBottom, cell.top + cell.height + cell.marginBottom);
     }
   }
-  return lineBottom + flow.rowGap + more.height;
+  return { ...box, top: lineBottom + flow.rowGap, left: 0 };
 }
 
 function boxOf(element: HTMLElement): Box {
@@ -81,6 +99,7 @@ export function FitList<T>({
   itemKey,
   render,
   renderMore,
+  pinned = () => false,
   listClassName = "flex flex-col gap-2",
   itemClassName = () => "",
   moreClassName = "",
@@ -89,7 +108,10 @@ export function FitList<T>({
   itemKey: (item: T) => string;
   /** `measuring` is true for the invisible copy: render it without drag handles or focus. */
   render: (item: T, index: number, measuring: boolean) => ReactNode;
-  renderMore: (hidden: number) => ReactNode;
+  /** "+N more" for the items left out. */
+  renderMore: (hidden: readonly T[]) => ReactNode;
+  /** The one item that always shows (the now line): never left out, never counted. */
+  pinned?: (item: T) => boolean;
   listClassName?: string;
   itemClassName?: (item: T) => string;
   moreClassName?: string;
@@ -97,6 +119,7 @@ export function FitList<T>({
   const box = useRef<HTMLDivElement>(null);
   const measure = useRef<HTMLDivElement>(null);
   const [fits, setFits] = useState(items.length);
+  const pinnedIndex = items.findIndex(pinned);
 
   useLayoutEffect(() => {
     const node = box.current;
@@ -117,6 +140,7 @@ export function FitList<T>({
             rowGap: Number.parseFloat(style.rowGap) || 0,
             columnGap: Number.parseFloat(style.columnGap) || 0,
           },
+          pinnedIndex,
         ),
       );
     };
@@ -126,18 +150,21 @@ export function FitList<T>({
     return () => {
       observer.disconnect();
     };
-  }, [items]);
+  }, [items, pinnedIndex]);
 
-  const hidden = items.length - fits;
+  const shown = items.slice(0, fits);
+  const pin = pinnedIndex >= fits ? items[pinnedIndex] : undefined;
+  if (pin !== undefined) shown.push(pin);
+  const hidden = items.filter((_, index) => index >= fits && index !== pinnedIndex);
   return (
     <div ref={box} className="relative min-h-0 flex-1 overflow-hidden">
       <div className={listClassName}>
-        {items.slice(0, fits).map((item, index) => (
+        {shown.map((item, index) => (
           <div key={itemKey(item)} className={itemClassName(item)}>
             {render(item, index, false)}
           </div>
         ))}
-        {hidden > 0 ? <div className={moreClassName}>{renderMore(hidden)}</div> : null}
+        {hidden.length > 0 ? <div className={moreClassName}>{renderMore(hidden)}</div> : null}
       </div>
       <div
         ref={measure}
@@ -150,7 +177,7 @@ export function FitList<T>({
             {render(item, index, true)}
           </div>
         ))}
-        <div className={moreClassName}>{renderMore(items.length)}</div>
+        <div className={moreClassName}>{renderMore(items)}</div>
       </div>
     </div>
   );

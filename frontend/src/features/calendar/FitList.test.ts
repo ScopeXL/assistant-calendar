@@ -54,4 +54,15 @@ describe("how many chips fit, and where +N more goes (fitCount)", () => {
     // With room for the timed line, everything shows.
     expect(fitCount(cells, SHORT_MORE, 160, ROW)).toBe(4);
   });
+
+  it("keeps the pinned now line, after the chips shown, and makes room for it", () => {
+    // Two finished chips, the now line, one to come: room for one chip, the line and +2 more.
+    const cells = column([64, 64, 24, 64]);
+    expect(fitCount(cells, MORE, 170, COLUMN, 2)).toBe(1);
+    // Without pinning it, the line would go behind +N more with the chip after it.
+    expect(fitCount(cells, MORE, 170, COLUMN)).toBe(1);
+    expect(fitCount(cells, MORE, 400, COLUMN, 2)).toBe(4);
+    // Too short for a chip and the line: the line and +N more only.
+    expect(fitCount(cells, MORE, 100, COLUMN, 2)).toBe(0);
+  });
 });

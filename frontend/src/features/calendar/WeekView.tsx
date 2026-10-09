@@ -2,20 +2,22 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useRef, useState, type ComponentType, type ReactNode } from "react";
+import { useRef, useState, type ComponentType } from "react";
 
 import { dayNumber, formatWallTime, shortWeekday } from "../../lib/dates";
+import type { HoursZoom, WeekLayout } from "../../lib/displayState";
 import type { Member } from "../../lib/household";
 import { useDayHeaders } from "../usePluginModules";
+import { Draggable, MoreButton } from "./Draggable";
 import { EventChip } from "./EventChip";
 import { FitList } from "./FitList";
+import { HoursGrid } from "./HoursGrid";
 import { byDay, nowSlot, shownFor, type DayEntry } from "./layout";
 import type { Occurrence } from "./types";
 
@@ -34,8 +36,12 @@ export interface WeekViewProps {
   members: Member[];
   dimPast: boolean;
   people: string[];
+  /** Agenda (stacked chips) or Hours (the grid), and the grid's zoom (ADR 0028). */
+  layout: WeekLayout;
+  zoom: HoursZoom;
   onOpen: (occurrence: Occurrence) => void;
-  onAdd: (day: string) => void;
+  /** A tap on a day's empty space; on the Hours grid, at a time. */
+  onAdd: (day: string, hour?: number, minute?: number) => void;
   onMore: (day: string) => void;
   onMove: (occurrence: Occurrence, toDay: string) => void;
   onSwipe: (step: -1 | 1) => void;
@@ -45,10 +51,11 @@ export interface WeekViewProps {
 }
 
 /**
- * The week board (UX §4): a column per day (a row in portrait), the all-day band on top, chips
- * in time order, "+N more" when they don't fit, and today's now line under the last finished
- * chip. Long-press a chip to drag it to another day; swipe sideways for the next week. Every
- * gesture has a button twin (Move in the event sheet; the arrows in the header).
+ * The week board (UX §4). Agenda: a column per day (a row in portrait), the all-day band on top,
+ * chips in time order, "+N more" when they don't fit, and today's now line under the last
+ * finished chip. Hours: the same days from midnight to midnight (HoursGrid). Long-press a chip
+ * to drag it to another day; swipe sideways for the next week. Every gesture has a button twin
+ * (Move in the event sheet; the arrows in the header).
  */
 export function WeekView(props: WeekViewProps) {
   const { days, occurrences, onMove, onDragging, onSwipe } = props;
@@ -85,7 +92,11 @@ export function WeekView(props: WeekViewProps) {
       }}
     >
       <div
-        className="grid min-h-0 flex-1 grid-cols-7 border-t border-line portrait:grid-cols-1 portrait:grid-rows-7"
+        className={
+          props.layout === "hours"
+            ? "flex min-h-0 flex-1 flex-col"
+            : "grid min-h-0 flex-1 grid-cols-7 border-t border-line portrait:grid-cols-1 portrait:grid-rows-7"
+        }
         onPointerDown={(event) => {
           swipe.current = { x: event.clientX, y: event.clientY, at: event.timeStamp };
         }}
@@ -100,16 +111,35 @@ export function WeekView(props: WeekViewProps) {
           }
         }}
       >
-        {days.map((day) => (
-          <DayColumn
-            key={day}
-            {...props}
-            day={day}
-            column={columns.get(day)}
+        {props.layout === "hours" ? (
+          <HoursGrid
+            days={days}
+            today={props.today}
+            now={props.now}
+            columns={columns}
+            members={props.members}
+            dimPast={props.dimPast}
+            people={props.people}
+            zoom={props.zoom}
             lifted={lifted}
+            lit={props.lit ?? null}
             marks={marks}
+            onOpen={props.onOpen}
+            onAdd={props.onAdd}
+            onMore={props.onMore}
           />
-        ))}
+        ) : (
+          days.map((day) => (
+            <DayColumn
+              key={day}
+              {...props}
+              day={day}
+              column={columns.get(day)}
+              lifted={lifted}
+              marks={marks}
+            />
+          ))
+        )}
       </div>
       <DragOverlay dropAnimation={null}>
         {lifted ? (
@@ -167,9 +197,8 @@ function DayColumn({
   const firstTimed = rows.length;
   rows.push(...timed.map((entry): Row => ({ kind: "chip", entry, allDay: false })));
   if (isToday) rows.splice(firstTimed + slot, 0, { kind: "now" });
-  // "+N more" counts events, not the band's line break or the now line.
-  const hiddenEvents = (hidden: number) =>
-    rows.slice(rows.length - hidden).filter((row) => row.kind === "chip").length;
+  // "+N more" counts events, not the band's line break.
+  const events = (hidden: readonly Row[]) => hidden.filter((row) => row.kind === "chip").length;
 
   const chip = (entry: DayEntry<Occurrence>, compact: boolean, measuring: boolean) => {
     const faded = !shownFor(entry.occurrence, filter);
@@ -226,7 +255,7 @@ function DayColumn({
       </h2>
       {/* A tap on empty space adds an event on this day: a shortcut for Add in the rail. */}
       <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-2 pb-2 portrait:py-2"
+        className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-2 pb-2 portrait:py-1"
         onClick={(event) => {
           if (!(event.target as HTMLElement).closest("button, [data-chip]")) onAdd(day);
         }}
@@ -242,10 +271,9 @@ function DayColumn({
             ) : null
           }
           renderMore={(hidden) =>
-            hiddenEvents(hidden) ? (
-              <MoreButton count={hiddenEvents(hidden)} day={day} onMore={onMore} />
-            ) : null
+            events(hidden) ? <MoreButton count={events(hidden)} day={day} onMore={onMore} /> : null
           }
+          pinned={(row) => row.kind === "now"}
           listClassName={`flex flex-col gap-2 ${PORTRAIT_ROW}`}
           itemClassName={(row) =>
             row.kind === "now"
@@ -258,70 +286,6 @@ function DayColumn({
         />
       </div>
     </div>
-  );
-}
-
-function Draggable({
-  entry,
-  day,
-  faded,
-  lifted,
-  children,
-}: {
-  entry: DayEntry<Occurrence>;
-  day: string;
-  faded: boolean;
-  lifted: Occurrence | null;
-  children: ReactNode;
-}) {
-  const fixed = entry.occurrence.read_only || entry.occurrence.overlay !== null;
-  const { setNodeRef, listeners, attributes } = useDraggable({
-    id: `${entry.occurrence.key}|${day}`,
-    data: { occurrence: entry.occurrence, day },
-    disabled: fixed,
-  });
-  const origin = lifted?.key === entry.occurrence.key;
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      // The chip inside is the control: dnd-kit's attributes would make this box a second one,
-      // and its aria-disabled (on what can't move) would mark the chip itself unavailable.
-      role={undefined}
-      tabIndex={undefined}
-      aria-roledescription={undefined}
-      aria-describedby={undefined}
-      aria-disabled={undefined}
-      className={`rounded-chip-d ${faded ? "opacity-30" : ""} ${
-        origin ? "opacity-50 outline-2 outline-ink-soft outline-dashed" : ""
-      }`}
-    >
-      {children}
-    </div>
-  );
-}
-
-function MoreButton({
-  count,
-  day,
-  onMore,
-}: {
-  count: number;
-  day: string;
-  onMore: (day: string) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        onMore(day);
-      }}
-      // In portrait's rows it's only as wide as its words, so another chip fits on its line.
-      className="press min-h-14 w-full rounded-chip-d px-3 text-left text-d-secondary font-semibold whitespace-nowrap text-ink-soft portrait:w-auto portrait:px-5"
-    >
-      {`+${String(count)} more`}
-    </button>
   );
 }
 

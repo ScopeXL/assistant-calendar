@@ -36,6 +36,7 @@ export function BoardHeader({
   onTogglePanel,
   notice,
   pills,
+  tools,
 }: {
   title: string;
   subtitle?: string | undefined;
@@ -54,6 +55,8 @@ export function BoardHeader({
   notice?: string | null;
   /** Quiet one-line states from plugins ("Google hasn't answered since 9:10 AM"). */
   pills?: ReactNode;
+  /** The view's own controls, at the end of the second line (the Week's layout and zoom). */
+  tools?: ReactNode;
 }) {
   const toggle = (id: string) => {
     onPeople(people.includes(id) ? people.filter((p) => p !== id) : [...people, id]);
@@ -165,6 +168,7 @@ export function BoardHeader({
             ) : null}
           </div>
         ) : null}
+        {tools ? <div className="ml-auto">{tools}</div> : null}
       </div>
     </header>
   );
