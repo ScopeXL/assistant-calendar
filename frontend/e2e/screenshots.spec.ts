@@ -648,4 +648,15 @@ test("a laptop", async ({ page }) => {
     await expect(page.getByRole("heading", { name: title, level: 2 })).toBeVisible();
     await shot(page, `settings-${key}`);
   }
+  // A computer adds photos itself: the room's Add photos, and a person's Add a photo.
+  await page
+    .getByRole("navigation", { name: "Settings" })
+    .getByRole("link", { name: "Family", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Change Mia" }).click();
+  await expect(page.getByRole("dialog", { name: "Change Mia" })).toBeVisible();
+  await shot(page, "settings-change-a-person");
+  await page.goto("/photos");
+  await expect(page.getByRole("list", { name: "Photos" })).toBeVisible();
+  await shot(page, "photos");
 });

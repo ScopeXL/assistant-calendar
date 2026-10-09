@@ -132,7 +132,7 @@ One Docker image runs one process, `sunroom serve`: uvicorn with exactly one wor
 |---|---|
 | `/api/*` | JSON, `Cache-Control: no-store`; one error envelope `{"error":{"code","message"}}` |
 | `/api/events` | Server-sent events |
-| `/photos/*` | Household photos and thumbnails from `/data/photos`, session-gated, `Cache-Control: private, max-age=31536000` keyed by content hash |
+| `/photos/*` | Household photos and thumbnails from `/data/photos`, session-gated, `Cache-Control: private, max-age=31536000` keyed by content hash. The bare `/photos` is the Photos room, so it gets the SPA fallback |
 | `/assets/*` | Hashed build files, `max-age=31536000, immutable`; a missing asset is a 404, never `index.html` |
 | Any other GET | `index.html` with `no-cache` (the SPA fallback); `/sw.js` and `/manifest.webmanifest` also `no-cache` |
 

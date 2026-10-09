@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { EyeOff, ImagePlus, Play } from "lucide-react";
+import { EyeOff, Play } from "lucide-react";
 import { useState } from "react";
 
 import { qk } from "../../api/keys";
@@ -8,6 +8,7 @@ import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
 import { Screen } from "../../ui/Screen";
 import { Sheet } from "../../ui/Sheet";
+import { AddPhotosButton } from "./AddPhotosButton";
 import { useLibrary, useManifest, usePhotoChanges, type LibraryPhoto } from "./data";
 import { photosCount } from "./PhotosRoom";
 
@@ -24,28 +25,7 @@ export function PhotosTab() {
   const photos = library.data?.pages.flatMap((page) => page.photos) ?? [];
   const [open, setOpen] = useState<LibraryPhoto | null>(null);
   return (
-    <Screen
-      title="Photos"
-      back="/more"
-      actions={
-        <label className="press flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-button bg-ink px-5 text-body font-semibold text-on-ink has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink">
-          <ImagePlus aria-hidden="true" className="size-5" />
-          {changes.upload.isPending ? "Adding…" : "Add photos"}
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="sr-only"
-            disabled={changes.upload.isPending}
-            onChange={(event) => {
-              const files = [...(event.target.files ?? [])];
-              event.target.value = "";
-              if (files.length) changes.upload.mutate(files);
-            }}
-          />
-        </label>
-      }
-    >
+    <Screen title="Photos" back="/more" actions={<AddPhotosButton block />}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-body text-ink-soft">
           {library.isSuccess
@@ -66,7 +46,7 @@ export function PhotosTab() {
         ) : null}
       </div>
       {library.isSuccess && photos.length === 0 ? (
-        <EmptyState message="Photos added from phones show here and on the screensaver." />
+        <EmptyState message="Photos added from a phone or a computer show here and on the screensaver." />
       ) : (
         <ul aria-label="Photos" className="grid grid-cols-3 gap-2">
           {photos.map((photo) => (

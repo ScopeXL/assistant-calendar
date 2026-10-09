@@ -30,6 +30,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   password is typed on its own keyboard and stays hidden. Google's helper and Sign in with
   Google show a code to finish on a phone. Back from Google's sign-in, Calendars & Accounts
   says how it went and opens the new account's calendars.
+- Add photos from a computer's browser too, not only a phone: Photos → Add photos, and a
+  person's photo in Settings → Family.
 
 ### Fixed
 
@@ -44,6 +46,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - On the week board, today's now line always shows, even when the day's events don't all fit.
 - The kitchen screen's keyboard now types into sheets (changing a person, setting the PIN), and
   the sheet moves up so the field stays above the keys.
+- The code in the kitchen screen's Photos room opens Sunroom on a phone that has never used it,
+  instead of an error.
 
 ## [0.6.0] - 2026-10-08
 

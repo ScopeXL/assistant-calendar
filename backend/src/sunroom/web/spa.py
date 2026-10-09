@@ -3,11 +3,12 @@
 * ``/assets/*``: hashed build files, cached forever by the security-headers middleware; a
   missing asset is a 404, never index.html.
 * other top-level files (``sw.js``, ``manifest.webmanifest``, icons): ``no-cache``.
-* every other GET outside /api and /photos, and ``/index.html`` itself: index.html with
-  ``no-cache``, stamped with a fresh CSP nonce. The same nonce goes into the page's
-  ``<meta name="csp-nonce">`` and into that response's ``style-src``, so the app can hand it to
-  the animation library and nothing else can add styles. A service worker's cached copy keeps
-  its own matching header and meta, so it stays consistent offline.
+* every other GET outside /api and the photo files under /photos/ (``/photos`` itself is the
+  Photos room), and ``/index.html`` itself: index.html with ``no-cache``, stamped with a fresh
+  CSP nonce. The same nonce goes into the page's ``<meta name="csp-nonce">`` and into that
+  response's ``style-src``, so the app can hand it to the animation library and nothing else
+  can add styles. A service worker's cached copy keeps its own matching header and meta, so it
+  stays consistent offline.
 """
 
 from __future__ import annotations
@@ -35,7 +36,12 @@ def _not_found() -> AppError:
 
 
 def _reserved(path: str) -> bool:
-    return any(path == top or path.startswith(f"{top}/") for top in ("api", "assets", "photos"))
+    """Paths the app never answers: the API, the build's assets, and the photo files. The bare
+    ``/photos`` is the Photos room's address (the wall's code opens it on a phone that may never
+    have loaded the app), so only what's under it is reserved."""
+    if path.startswith("photos/"):
+        return True
+    return any(path == top or path.startswith(f"{top}/") for top in ("api", "assets"))
 
 
 def new_nonce() -> str:

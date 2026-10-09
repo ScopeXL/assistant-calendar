@@ -99,6 +99,18 @@ async def test_path_traversal_falls_back_to_index(spa_client: httpx.AsyncClient)
     assert "root:" not in response.text
 
 
+async def test_the_photos_room_is_the_app_and_only_the_files_under_it_are_reserved(
+    spa_client: httpx.AsyncClient,
+) -> None:
+    # The wall's code opens /photos on a phone that may never have loaded the app.
+    room = await spa_client.get("/photos")
+    assert room.status_code == 200
+    assert "id=root" in room.text
+    missing = await spa_client.get("/photos/nope")
+    assert missing.status_code == 404
+    assert "id=root" not in missing.text
+
+
 async def test_photos_need_a_session(spa_client: httpx.AsyncClient) -> None:
     path = "/photos/avatars/01890000-0000-7000-8000-000000000000.webp"
     assert (await spa_client.get(path)).status_code == 401

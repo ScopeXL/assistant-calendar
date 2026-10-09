@@ -1,9 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
+import { qk } from "../../api/keys";
 import type { Member } from "../../lib/household";
 import { asParent } from "../../lib/parent";
+import { fetchSession } from "../../lib/session";
 import { uploadPicture } from "../../lib/upload";
 import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
@@ -46,6 +48,9 @@ export function MemberSheet({ member, onClose }: { member: Member | null; onClos
 
 function MemberForm({ member, onClose }: { member: Member; onClose: () => void }) {
   const display = useShell() === "display";
+  // A photo comes from a phone or a computer; the kitchen screen has no files (ADR 0028).
+  const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
+  const kiosk = session?.device_kind === "kiosk";
   const queryClient = useQueryClient();
   const [name, setName] = useState(member.name);
   const [role, setRole] = useState<Member["role"]>(member.role);
@@ -220,12 +225,18 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
       />
       <div className="flex items-center gap-4">
         <Avatar member={{ name: member.name, color, avatar_url: member.avatar_url }} size="lg" />
-        {display ? (
+        {kiosk ? (
           <p className="text-d-secondary text-ink-soft">
             Add a photo from a phone: More, then Settings, then Family.
           </p>
         ) : (
-          <label className="press inline-flex min-h-11 cursor-pointer items-center rounded-button border-2 border-line bg-surface px-4 text-body font-semibold">
+          <label
+            className={`press inline-flex cursor-pointer items-center border-2 border-line bg-surface font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink ${
+              display
+                ? "min-h-14 rounded-button-d px-7 text-d-body"
+                : "min-h-11 rounded-button px-4 text-body"
+            }`}
+          >
             {member.avatar_url ? "Change photo" : "Add a photo"}
             <input
               type="file"

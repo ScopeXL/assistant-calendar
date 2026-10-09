@@ -9,6 +9,7 @@ import { fetchSession } from "../../lib/session";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
 import { QrCode } from "../../ui/QrCode";
+import { AddPhotosButton } from "./AddPhotosButton";
 import { useLibrary, useManifest, usePhotoChanges, type LibraryPhoto } from "./data";
 import { startSaver } from "./start";
 
@@ -18,14 +19,16 @@ export function photosCount(count: number): string {
 }
 
 /**
- * The Photos room on the wall screen (UX §4): how many there are, Start screensaver, its
- * Settings (behind the PIN), how to add photos from a phone, and the photos newest first. A
- * photo opens full screen with Previous, Next and Hide from screensaver: the wall can hide
- * photos but never removes them (phones do, with Undo).
+ * The Photos room in the wall's shell (UX §4): how many there are, Start screensaver, its
+ * Settings (behind the PIN), and the photos newest first. The kitchen screen shows a code for
+ * adding photos from a phone; a computer adds them itself with Add photos (ADR 0028). A photo
+ * opens full screen with Previous, Next and Hide from screensaver: this room can hide photos
+ * but never removes them (phones do, with Undo).
  */
 export function PhotosRoom() {
   const navigate = useNavigate();
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
+  const kiosk = session?.device_kind === "kiosk";
   const { data: manifest } = useManifest();
   const library = useLibrary();
   const photos = library.data?.pages.flatMap((page) => page.photos) ?? [];
@@ -57,6 +60,7 @@ export function PhotosRoom() {
             Settings
           </Button>
           <Button
+            variant={kiosk ? "primary" : "secondary"}
             onClick={() => {
               startSaver();
             }}
@@ -64,17 +68,24 @@ export function PhotosRoom() {
             <Play aria-hidden="true" className="size-7" />
             Start screensaver
           </Button>
+          {kiosk ? null : <AddPhotosButton />}
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-6" tabIndex={0}>
-        <div className="mb-6 flex items-center gap-6 rounded-panel border border-line bg-surface p-5">
-          <QrCode value={address} label="A code that opens Photos on a phone" className="size-32" />
-          <p className="text-d-body">
-            Add photos from a phone: open Sunroom, then More, then Photos.
-          </p>
-        </div>
+        {kiosk ? (
+          <div className="mb-6 flex items-center gap-6 rounded-panel border border-line bg-surface p-5">
+            <QrCode
+              value={address}
+              label="A code that opens Photos on a phone"
+              className="size-32"
+            />
+            <p className="text-d-body">
+              Add photos from a phone: open Sunroom, then More, then Photos.
+            </p>
+          </div>
+        ) : null}
         {library.isSuccess && photos.length === 0 ? (
-          <EmptyState message="Photos added from phones show here and on the screensaver." />
+          <EmptyState message="Photos added from a phone or a computer show here and on the screensaver." />
         ) : (
           <ul
             aria-label="Photos"

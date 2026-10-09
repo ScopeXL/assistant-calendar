@@ -2,8 +2,9 @@
  * Photos and the screensaver end to end (PLAN §15 M4, UX §4 "Photos room", "Screensaver", §6
  * "Screensaver in and out"): after the idle minutes the photos fade in over the wall, uncropped,
  * with the clock band; a tap goes back to exactly where the wall was and presses nothing; a
- * parent's phone starts it; a phone adds a photo and removes it with Undo. The browser's clock
- * is Playwright's, so ten idle minutes take no time. Synthetic photos only (the seed draws them).
+ * parent's phone starts it; a phone adds a photo and removes it with Undo; a computer adds one
+ * from the Photos room, where the wall shows a code for a phone instead. The browser's clock is
+ * Playwright's, so ten idle minutes take no time. Synthetic photos only (the seed draws them).
  */
 import type { Locator, Page } from "@playwright/test";
 
@@ -11,7 +12,7 @@ import { expect, pairWall, phone, seed, signInPhone, test } from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 const WEDNESDAY_10AM = "2026-10-07T14:00:00Z";
-// A 2 × 2 JPEG (synthetic: four flat colors), for the phone's upload.
+// A 2 × 2 JPEG (synthetic: four flat colors), for the uploads.
 const TINY_JPEG = Buffer.from(
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAACAAIDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABgf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
   "base64",
@@ -26,14 +27,22 @@ function saver(page: Page): Locator {
 }
 
 test.beforeEach(async ({ request }, testInfo) => {
-  test.skip(testInfo.project.name !== "display-1080p", "the wall screen at 1080p");
+  test.skip(
+    testInfo.project.name !== "display-1080p" && testInfo.project.name !== "desktop",
+    "the wall screen at 1080p, and a computer",
+  );
   await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
   await seed(request);
 });
 
+function onTheWall(): void {
+  test.skip(test.info().project.name !== "display-1080p", "the wall screen at 1080p");
+}
+
 test("the photos fade in after the idle minutes, and a tap goes back to where the wall was", async ({
   page,
 }) => {
+  onTheWall();
   await page.clock.install();
   await pairWall(page);
   // Rooms stay put while nobody touches the wall, so the screensaver finds Chores.
@@ -58,6 +67,7 @@ test("the photos fade in after the idle minutes, and a tap goes back to where th
 });
 
 test("a parent's phone starts the screensaver on the wall", async ({ page, browser, watch }) => {
+  onTheWall();
   await pairWall(page);
   await page.goto("/display");
   await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
@@ -71,6 +81,7 @@ test("a parent's phone starts the screensaver on the wall", async ({ page, brows
 });
 
 test("a phone adds a photo, and removes it with Undo", async ({ browser, watch }) => {
+  onTheWall();
   const { context, page: ana } = await phone(browser, watch);
   await signInPhone(ana, "Ana");
   await ana.goto("/photos");
@@ -92,4 +103,39 @@ test("a phone adds a photo, and removes it with Undo", async ({ browser, watch }
   await toast(ana, "Removed the photo").getByRole("button", { name: "Undo" }).click();
   await expect(photos).toHaveCount(before + 1);
   await context.close();
+});
+
+test("a computer adds photos itself, where the wall shows a code for a phone", async ({
+  page,
+}, testInfo) => {
+  const code = page.getByRole("img", { name: "A code that opens Photos on a phone" });
+  const mia = page.getByRole("dialog", { name: "Change Mia" });
+  if (testInfo.project.name === "display-1080p") {
+    await pairWall(page);
+    await page.goto("/photos");
+    await expect(code).toBeVisible();
+    await expect(page.getByLabel("Add photos")).toHaveCount(0);
+    // A person's photo comes from a phone too.
+    await page.goto("/settings/family");
+    await page.getByRole("button", { name: "Change Mia" }).click();
+    await expect(mia).toContainText("Add a photo from a phone");
+    await expect(mia.getByLabel("Add a photo", { exact: true })).toHaveCount(0);
+    return;
+  }
+  await signInPhone(page, "Ana");
+  await page.goto("/photos");
+  const photos = page.getByRole("list", { name: "Photos" }).getByRole("listitem");
+  await expect(photos).toHaveCount(8);
+  await expect(code).toHaveCount(0);
+  await page.getByLabel("Add photos").setInputFiles({
+    name: "garden.jpg",
+    mimeType: "image/jpeg",
+    buffer: TINY_JPEG,
+  });
+  await expect(toast(page, "Added 1 photo")).toBeVisible();
+  await expect(photos).toHaveCount(9);
+  // And a person's photo.
+  await page.goto("/settings/family");
+  await page.getByRole("button", { name: "Change Mia" }).click();
+  await expect(mia.getByLabel("Add a photo", { exact: true })).toBeAttached();
 });
