@@ -180,6 +180,9 @@ describe("the gutter, the lines and a tapped time", () => {
   it("names every other hour at 24h and every hour otherwise, never 0 or 24", () => {
     expect(gutterHours("24h")).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]);
     expect(gutterHours("1h")).toEqual(Array.from({ length: 23 }, (_, n) => n + 1));
+    // An hour too short for a label every two (portrait at Extra large): every three.
+    expect(gutterHours("24h", 13, 20.8)).toEqual([3, 6, 9, 12, 15, 18, 21]);
+    expect(gutterHours("24h", 25, 16)).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]);
   });
 
   it("draws finer lines as it zooms in", () => {

@@ -9,17 +9,20 @@ import type { Occurrence } from "./types";
  * The Today view (UX §3, board B): today's events at glance size, every line readable from
  * across the room, then a strip of the next days with how much each holds. For small
  * households, grandparents and hallway screens; chosen in Settings → Display → Home view.
+ * Until the events first arrive it says nothing, rather than "Nothing on today."
  */
 export function TodayView({
   today,
   now,
   occurrences,
+  loading = false,
   members,
   onOpen,
 }: {
   today: string;
   now: string;
   occurrences: Occurrence[];
+  loading?: boolean;
   members: Member[];
   onOpen: (occurrence: Occurrence) => void;
 }) {
@@ -30,7 +33,7 @@ export function TodayView({
   return (
     <div className="flex min-h-0 flex-1 flex-col border-t border-line">
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-5" tabIndex={0}>
-        {items.length === 0 ? (
+        {loading ? null : items.length === 0 ? (
           <p className="text-d-glance font-bold text-ink-soft">Nothing on today.</p>
         ) : (
           items.map((occurrence) => {
@@ -83,7 +86,7 @@ export function TodayView({
           return (
             <li key={day} className="flex flex-col gap-1 border-r border-line px-4 py-3">
               <span className="text-d-body font-semibold">{shortWeekday(day)}</span>
-              <span className="text-d-secondary text-ink-soft">
+              <span className={`text-d-secondary text-ink-soft ${loading ? "invisible" : ""}`}>
                 {count === 0 ? "Nothing yet" : count === 1 ? "1 event" : `${String(count)} events`}
               </span>
             </li>

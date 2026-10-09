@@ -22,6 +22,8 @@ const TWO_LINES_REM = 6.5;
 /** How much of a chip a later one in its column must leave uncovered: 24 px at standard size
  * (WCAG 2.5.8, axe's target-size). */
 const UNCOVERED_REM = 1.5;
+/** The room a gutter label needs, one caption line and a little air. */
+const LABEL_REM = 1.75;
 const LANE_GAP = 8;
 const DAY_MINUTES = 24 * 60;
 
@@ -223,8 +225,12 @@ export function rescaledScrollTop(
 }
 
 /** The hours the gutter names: every other one at 24h, every one otherwise; never 0 or 24. */
-export function gutterHours(zoom: HoursZoom): number[] {
-  const every = zoom === "24h" ? 2 : 1;
+/** The hours the gutter names: every hour, every 2 at 24h, or fewer when an hour is too short
+ * for its label (Extra large in portrait), so no two labels touch. */
+export function gutterHours(zoom: HoursZoom, pph = Infinity, rem = 16): number[] {
+  const least = zoom === "24h" ? 2 : 1;
+  const every =
+    [1, 2, 3, 4, 6, 12].find((step) => step >= least && step * pph >= LABEL_REM * rem) ?? 12;
   return Array.from({ length: 24 / every - 1 }, (_, n) => (n + 1) * every);
 }
 

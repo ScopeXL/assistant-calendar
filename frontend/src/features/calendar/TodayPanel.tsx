@@ -75,7 +75,7 @@ export function TodayPanel({
       className={
         band
           ? "grid min-h-0 flex-1 grid-cols-3 gap-x-10 overflow-hidden px-6 pt-3 pb-4"
-          : "flex flex-col gap-8 overflow-y-auto px-6 py-6"
+          : "flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-6 py-6"
       }
     >
       {/* Portrait's band: the calendar's lines in the first column, the plugins' blocks flowing

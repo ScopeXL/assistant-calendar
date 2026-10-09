@@ -15,9 +15,10 @@ const ROLES: { value: RoleChoice; label: string }[] = [
 
 /**
  * Add a person in one row (UX §4 Family, §6 the wizard's people step): a name, Parent or Child,
- * and Add. It wraps only where it can't fit; a 390 px phone holds it on one line. After an add
- * the name clears and keeps focus, and the role stays as chosen: two children in a row is
- * common.
+ * and Add, one row even on a 390 px phone (the owner's note), the name keeping at least 5rem.
+ * Narrower than 20rem (the Family card on the smallest phones) the name takes a line of its own,
+ * with Parent or Child beside Add under it. After an add the name clears and keeps focus, and
+ * the role stays as chosen: two children in a row is common.
  */
 export function AddPersonRow({
   label,
@@ -48,7 +49,7 @@ export function AddPersonRow({
   const field = useRef<HTMLInputElement>(null);
   return (
     <form
-      className="flex flex-col gap-2"
+      className="@container flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
         const typed = name.trim();
@@ -63,7 +64,7 @@ export function AddPersonRow({
       }}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <div className="min-w-20 flex-1">
+        <div className="min-w-20 flex-1 @max-[20rem]:basis-full">
           <TextField
             ref={field}
             label={label}

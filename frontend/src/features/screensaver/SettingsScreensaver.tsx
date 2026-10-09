@@ -41,9 +41,12 @@ function SourceGroup({ source }: { source: PhotoSource }) {
   const checked = source.last_scan_at
     ? `Checked at ${formatTime(new Date(source.last_scan_at))}`
     : "Not checked yet";
+  // Sunroom's own folder gets its name from here, a heading in Title Case (UX §2); a source
+  // someone named keeps its name as they wrote it.
+  const inbox = source.kind === "inbox";
   return (
     <Group
-      title={source.label}
+      title={inbox ? "Photos Folder" : source.label}
       note={
         source.kind === "inbox"
           ? "Photos put in the photos/inbox folder in Sunroom's data folder on the server are added every 5 minutes, then moved to inbox/imported."
@@ -51,7 +54,9 @@ function SourceGroup({ source }: { source: PhotoSource }) {
       }
     >
       <Switch
-        label={`Bring in photos from ${source.label.toLowerCase()}`}
+        label={
+          inbox ? "Bring in photos from the photos folder" : `Bring in photos from ${source.label}`
+        }
         checked={source.enabled}
         onChange={(enabled) => {
           setSource.mutate({ id: source.id, enabled });

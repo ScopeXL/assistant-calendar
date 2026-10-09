@@ -175,6 +175,13 @@ test("the wall screen", async ({ page }) => {
   await add.getByRole("button", { name: "Close" }).click();
   await change(page, { display_home_view: "today" });
   await page.reload();
+  // The coming days' counts show once the events have arrived.
+  await expect(
+    page
+      .getByRole("list", { name: "The coming days" })
+      .getByText(/events?$/)
+      .first(),
+  ).toBeVisible();
   await shot(page, "view-today");
   await change(page, { display_home_view: "week" });
 

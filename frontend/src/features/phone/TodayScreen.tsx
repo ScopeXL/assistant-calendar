@@ -103,7 +103,10 @@ export function TodayScreen() {
                   day={today}
                   dim={false}
                   {...(!occurrence.all_day && occurrence.end_local
-                    ? { when: `until ${formatWallTime(occurrence.end_local)}` }
+                    ? // The time stays whole when the narrow column wraps: "until / 4:15 PM".
+                      {
+                        when: `until ${formatWallTime(occurrence.end_local).replace(" ", "\u00a0")}`,
+                      }
                     : {})}
                   onOpen={() => {
                     open(occurrence);

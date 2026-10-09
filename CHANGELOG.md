@@ -52,6 +52,16 @@ Everything that changes in Sunroom, written in plain English. The format follows
   the sheet moves up so the field stays above the keys.
 - The code in the kitchen screen's Photos room opens Sunroom on a phone that has never used it,
   instead of an error.
+- After typing in the Add panel or a sheet, the kitchen screen no longer stays shifted up with
+  the clock cut off at the top.
+- The Today panel scrolls when it holds more than fits, instead of cutting its last lines.
+- At Extra large text, and on a laptop's shorter screen, the rail's rooms make room so Add and
+  Settings stay on the screen.
+- "Change which?" keeps the days' capitals: "every week on Tue and Thu".
+- The Today view waits for the day's events before saying "Nothing on today."
+- Settings choices with longer words (Change photo every, Clear done items) wrap as buttons on
+  a phone instead of running into each other, and Google's helper asks for its key file with a
+  proper Upload the key file button.
 
 ## [0.6.0] - 2026-10-08
 

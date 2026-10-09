@@ -371,18 +371,25 @@
     --key-h: 72px;
   }
 }
+/* Chromium's own small clear button in a search field: off-palette and far under a tap target. */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  appearance: none;
+}
+
 /* The tips strip under the board (features/tips): while it shows, the wall's toasts sit above it. */
 :root:has([data-tips]) {
   --tips-h: 3.5rem;
 }
 
 /* A focused field stays 16 px above the keyboard (the shell scrolls it into view). A sheet
-   already sits above the keyboard, so inside one it's just the 16 px. */
+   already sits above the keyboard, so inside one the margin leaves room for what follows the
+   field, often its button (Connect, Add calendar). */
 [data-osk] {
   scroll-margin-bottom: calc(var(--osk-h, 0px) + 16px);
 }
 dialog [data-osk] {
-  scroll-margin-bottom: 16px;
+  scroll-margin-bottom: 6rem;
 }
 
 /* Numbers that change where they stand (the clock, counts): Lexend has no tabular figures,

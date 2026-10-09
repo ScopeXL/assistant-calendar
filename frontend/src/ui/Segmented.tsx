@@ -6,8 +6,10 @@ export interface SegmentOption<T extends string> {
 }
 
 /**
- * Two to four choices side by side, one chosen (Light, Dark, Auto). Each option is a button
- * with aria-pressed; the chosen one fills with ink. 56 px on the display, 44 on phones (UX §1).
+ * Two to four short choices side by side, one chosen (Light, Dark, Auto). Each option is a
+ * button with aria-pressed; the chosen one fills with ink. 56 px on the display, 44 on phones
+ * (UX §1). Each takes its own width and an even share of the rest, so a long one ("Who's Doing
+ * What") never spills past the edge while a short one has room to spare.
  */
 export function Segmented<T extends string>({
   label,
@@ -26,7 +28,7 @@ export function Segmented<T extends string>({
       role="group"
       aria-label={label}
       data-segmented=""
-      className={`grid auto-cols-fr grid-flow-col gap-1 rounded-full border-2 border-line bg-surface p-1 ${
+      className={`flex gap-1 rounded-full border-2 border-line bg-surface p-1 ${
         display ? "text-d-body" : "text-secondary"
       }`}
     >
@@ -38,8 +40,8 @@ export function Segmented<T extends string>({
           onClick={() => {
             onChange(option.value);
           }}
-          className={`press select-fill flex items-center justify-center rounded-full px-3 font-semibold whitespace-nowrap aria-pressed:bg-ink aria-pressed:text-on-ink ${
-            display ? "min-h-14" : "min-h-11"
+          className={`press select-fill flex flex-auto items-center justify-center rounded-full px-3 font-semibold whitespace-nowrap aria-pressed:bg-ink aria-pressed:text-on-ink ${
+            display ? "min-h-14 min-w-14" : "min-h-11 min-w-11"
           }`}
         >
           {option.label}

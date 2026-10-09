@@ -38,7 +38,10 @@ export function ScopeChooser({
     <Sheet open={open} title={`${verb} Which?`} onClose={onCancel}>
       <div className="flex flex-col gap-4 pb-2">
         <p className={display ? "text-d-body" : "text-body"}>
-          {repeatText ? `${title} repeats: ${repeatText.toLowerCase()}.` : `${title} repeats.`}
+          {/* Mid-sentence, only the first word drops its capital: "every week on Tue and Thu". */}
+          {repeatText
+            ? `${title} repeats: ${repeatText.charAt(0).toLowerCase()}${repeatText.slice(1)}.`
+            : `${title} repeats.`}
         </p>
         {choice("this", "Just this one")}
         {choice("following", "This and the ones after")}

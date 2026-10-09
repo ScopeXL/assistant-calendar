@@ -23,8 +23,7 @@ import type { Occurrence } from "./types";
 
 const LONG_PRESS_MS = 400;
 // Portrait (UX §3): days are rows, chips 224 px wide in lines across, the now line a divider.
-// Lines are spaced by each cell's margin, not a row gap, so the all-day band's line break adds
-// no height of its own.
+// Lines are spaced by each cell's margin, not a row gap.
 const PORTRAIT_ROW = "portrait:flex-row portrait:flex-wrap portrait:content-start portrait:gap-y-0";
 const PORTRAIT_CELL = "portrait:w-56 portrait:mb-2";
 
@@ -187,17 +186,14 @@ function DayColumn({
   const filter = new Set(people);
   // One list, so whatever doesn't fit becomes "+N more" and nothing is lost off the end (UX §4):
   // the all-day band on top in compact chips, then the timed ones, with today's now line under
-  // the last finished one. In portrait the band keeps a line of its own.
-  type Row =
-    | { kind: "chip"; entry: DayEntry<Occurrence>; allDay: boolean }
-    | { kind: "now" }
-    | { kind: "break" };
+  // the last finished one. In portrait they share the lines, so a dinner or a birthday never
+  // pushes the day's events off its row.
+  type Row = { kind: "chip"; entry: DayEntry<Occurrence>; allDay: boolean } | { kind: "now" };
   const rows: Row[] = allDay.map((entry): Row => ({ kind: "chip", entry, allDay: true }));
-  if (allDay.length && (timed.length || isToday)) rows.push({ kind: "break" });
   const firstTimed = rows.length;
   rows.push(...timed.map((entry): Row => ({ kind: "chip", entry, allDay: false })));
   if (isToday) rows.splice(firstTimed + slot, 0, { kind: "now" });
-  // "+N more" counts events, not the band's line break.
+  // "+N more" counts events, not the now line.
   const events = (hidden: readonly Row[]) => hidden.filter((row) => row.kind === "chip").length;
 
   const chip = (entry: DayEntry<Occurrence>, compact: boolean, measuring: boolean) => {
@@ -264,11 +260,7 @@ function DayColumn({
           items={rows}
           itemKey={(row) => (row.kind === "chip" ? row.entry.occurrence.key : row.kind)}
           render={(row, _index, measuring) =>
-            row.kind === "now" ? (
-              <NowLine now={now} />
-            ) : row.kind === "chip" ? (
-              chip(row.entry, row.allDay, measuring)
-            ) : null
+            row.kind === "now" ? <NowLine now={now} /> : chip(row.entry, row.allDay, measuring)
           }
           renderMore={(hidden) =>
             events(hidden) ? <MoreButton count={events(hidden)} day={day} onMore={onMore} /> : null
@@ -276,11 +268,7 @@ function DayColumn({
           pinned={(row) => row.kind === "now"}
           listClassName={`flex flex-col gap-2 ${PORTRAIT_ROW}`}
           itemClassName={(row) =>
-            row.kind === "now"
-              ? "portrait:mb-2 portrait:self-stretch"
-              : row.kind === "break"
-                ? "hidden portrait:block portrait:basis-full"
-                : PORTRAIT_CELL
+            row.kind === "now" ? "portrait:mb-2 portrait:self-stretch" : PORTRAIT_CELL
           }
           moreClassName="portrait:mb-2"
         />

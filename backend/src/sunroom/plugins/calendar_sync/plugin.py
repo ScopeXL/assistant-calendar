@@ -36,7 +36,7 @@ MANIFEST = PluginManifest(
             "google_client_id",
             "Google app's client ID",
             "string",
-            help="Only for Sign in with Google. Settings → Calendars & accounts explains it.",
+            help="Only for Sign in with Google. Settings → Calendars & Accounts explains it.",
             group="Sign in with Google",
             max_length=200,
         ),
@@ -52,7 +52,7 @@ MANIFEST = PluginManifest(
     export_tables=EXPORT_TABLES,
     export_column_excluded={"sync_accounts": frozenset({"credentials_enc"})},
     contributes=Contributions(
-        settings_sections=(SettingsSection("accounts", "Calendars & accounts"),),
+        settings_sections=(SettingsSection("accounts", "Calendars & Accounts"),),
         banners=("sync_error",),
     ),
     default_enabled=True,

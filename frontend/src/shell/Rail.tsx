@@ -57,7 +57,11 @@ export interface RailRoom {
 }
 
 const ROOM_LINK =
-  "press-row flex h-24 flex-col items-center justify-center gap-1 text-d-secondary font-semibold text-ink-soft aria-[current=page]:bg-wall aria-[current=page]:text-ink";
+  "press-row flex flex-col items-center justify-center gap-1 text-d-secondary font-semibold text-ink-soft aria-[current=page]:bg-wall aria-[current=page]:text-ink portrait:h-24 landscape:min-h-0 landscape:flex-1";
+// A room is 6rem tall, and gives way down to a tap target (3.5rem) when the screen is short
+// (Extra large text, a laptop), so Add and the lock always stay on screen.
+const ROOM_ITEM =
+  "portrait:max-w-40 portrait:min-w-0 portrait:flex-1 landscape:flex landscape:min-h-14 landscape:flex-[0_1_6rem] landscape:flex-col";
 
 /**
  * The display's rail (UX §3): clock and date, the Calendar room then each enabled plugin's
@@ -95,8 +99,8 @@ export function Rail({
           <Block key={index} place="rail" />
         ))}
       </div>
-      <ul className="flex flex-col landscape:border-t landscape:border-line portrait:flex-1 portrait:flex-row">
-        <li className="portrait:max-w-40 portrait:min-w-0 portrait:flex-1">
+      <ul className="flex flex-col landscape:min-h-0 landscape:border-t landscape:border-line portrait:flex-1 portrait:flex-row">
+        <li className={ROOM_ITEM}>
           <Link
             to={home}
             aria-current={room === "calendar" ? "page" : undefined}
@@ -107,7 +111,7 @@ export function Rail({
           </Link>
         </li>
         {rooms.map(({ key, label, icon: Icon }) => (
-          <li key={key} className="portrait:max-w-40 portrait:min-w-0 portrait:flex-1">
+          <li key={key} className={ROOM_ITEM}>
             <Link
               to="/$room"
               params={{ room: key }}

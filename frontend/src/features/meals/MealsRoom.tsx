@@ -100,7 +100,7 @@ function MealsWeek() {
               setOffset(0);
             }}
           >
-            This week
+            This Week
           </Button>
           <Button
             variant="secondary"

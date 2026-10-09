@@ -146,7 +146,7 @@ export function HoursGrid(props: HoursGridProps) {
           </div>
           <div aria-hidden="true" className="relative">
             {pph > 0
-              ? gutterHours(zoom).map((hour) => (
+              ? gutterHours(zoom, pph, measure?.rem).map((hour) => (
                   <span
                     key={hour}
                     className="absolute right-3 -translate-y-1/2 text-d-secondary whitespace-nowrap text-ink-soft"

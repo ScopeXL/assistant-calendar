@@ -352,20 +352,20 @@ function AddressFlow({
             <GoogleSettingsArt />
           </li>
           <li>
-            Under "Settings for my calendars", pick the calendar, then Integrate calendar.
+            Under “Settings for my calendars”, pick the calendar, then Integrate calendar.
             <GoogleIntegrateArt />
           </li>
           <li>
             {kiosk
-              ? 'Type the address under "Secret address in iCal format" here.'
-              : 'Copy "Secret address in iCal format" and paste it here.'}
+              ? "Type the address under “Secret address in iCal format” here."
+              : "Copy “Secret address in iCal format” and paste it here."}
             <GoogleSecretAddressArt />
           </li>
         </Steps>
       ) : (
         <p className={text.body}>
           {kiosk ? "Type" : "Paste"} the calendar's address. School and team sites, Outlook's
-          "Publish calendar" and iCloud's public calendars all give one.
+          “Publish calendar” and iCloud's public calendars all give one.
         </p>
       )}
       <TextField
@@ -639,6 +639,7 @@ function ServerFlow({
 /** Google's helper (a service account the family makes once, never called that here). */
 function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
   const text = useText();
+  const display = useShell() === "display";
   const [account, setAccount] = useState<Account | null>(null);
   const [calendarId, setCalendarId] = useState("");
   const upload = useMutation({
@@ -699,14 +700,21 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
             <HelperKeyArt />
           </li>
         </Steps>
-        <label className="flex flex-col gap-2">
-          <span className={`${text.body} font-semibold`}>Upload the key file</span>
+        {/* The app's own button, not the browser's "Choose File" (as Add photos). */}
+        <label
+          className={`press inline-flex cursor-pointer items-center justify-center self-start border-2 border-line bg-surface font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink ${
+            display ? "min-h-14 rounded-button-d px-7" : "min-h-11 rounded-button px-5"
+          } ${text.body}`}
+        >
+          Upload the key file
           <input
             type="file"
             accept="application/json,.json"
-            className={`min-h-12 rounded-button border-2 border-line bg-surface px-3 py-2 ${text.body}`}
+            className="sr-only"
+            disabled={upload.isPending}
             onChange={(event) => {
               const file = event.target.files?.[0];
+              event.target.value = "";
               if (file) upload.mutate(file);
             }}
           />

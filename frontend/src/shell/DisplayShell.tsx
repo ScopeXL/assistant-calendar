@@ -239,7 +239,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
       <MotionProvider reduceMotion={settings?.display_reduce_motion ?? false}>
         <div
           data-shell="display"
-          className={`flex h-dvh overflow-hidden bg-wall text-ink landscape:flex-row portrait:flex-col ${
+          className={`flex h-dvh overflow-clip bg-wall text-ink landscape:flex-row portrait:flex-col ${
             railSide === "right" ? "landscape:flex-row-reverse" : ""
           }`}
         >
@@ -265,7 +265,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
             />
           </div>
           {showPanel ? (
-            <div className="hidden portrait:flex portrait:h-[var(--band-h)] portrait:shrink-0 portrait:flex-col portrait:overflow-hidden portrait:border-b portrait:border-line portrait:bg-surface">
+            <div className="hidden portrait:flex portrait:h-[var(--band-h)] portrait:shrink-0 portrait:flex-col portrait:overflow-clip portrait:border-b portrait:border-line portrait:bg-surface">
               <div className="flex items-center justify-between gap-6 px-6 pt-4">
                 <ClockBlock compact />
                 {railBlocks.map((Block, index) => (
@@ -282,7 +282,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
           {showPanel ? (
             <div
               data-surface=""
-              className="w-[var(--panel-w)] shrink-0 border-l border-line bg-surface portrait:hidden"
+              className="flex w-[var(--panel-w)] shrink-0 flex-col border-l border-line bg-surface portrait:hidden"
             >
               <TodayPanel home={home} />
             </div>

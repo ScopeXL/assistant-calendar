@@ -106,6 +106,9 @@ function FieldInput({
   onChange: (value: unknown) => void;
 }) {
   const { data: members = [] } = useMembers();
+  const display = useShell() === "display";
+  // A group's name reads like a field's label (ui/TextField): the shell's body size.
+  const groupLabel = `${display ? "text-d-body" : "text-body"} font-semibold`;
   const hint = field.help || null;
   const text =
     typeof value === "string"
@@ -156,10 +159,16 @@ function FieldInput({
     case "choice": {
       const choices = field.choices ?? [];
       const labels = field.choice_labels ?? choices;
-      if (choices.length <= 4) {
+      // Side by side only when the words are short enough to fit a phone ("Light, Dark,
+      // Auto"); longer ones ("After 3 days", "30 seconds") wrap as chips.
+      const words = choices.reduce(
+        (sum, choice, index) => sum + (labels[index] ?? choice).length,
+        0,
+      );
+      if (choices.length <= 4 && words <= 24) {
         return (
           <div className="flex flex-col gap-2">
-            <span className="font-semibold">{field.label}</span>
+            <span className={groupLabel}>{field.label}</span>
             <Segmented
               label={field.label}
               value={text}
@@ -174,7 +183,7 @@ function FieldInput({
       }
       return (
         <div className="flex flex-col gap-2">
-          <span className="font-semibold">{field.label}</span>
+          <span className={groupLabel}>{field.label}</span>
           <ChipRow label={field.label}>
             {choices.map((choice, index) => (
               <Chip
@@ -197,7 +206,7 @@ function FieldInput({
       const labels = field.choice_labels ?? choices;
       return (
         <div className="flex flex-col gap-2">
-          <span className="font-semibold">{field.label}</span>
+          <span className={groupLabel}>{field.label}</span>
           <ChipRow label={field.label}>
             {choices.map((choice, index) => (
               <Chip
@@ -221,7 +230,7 @@ function FieldInput({
     case "color":
       return (
         <div className="flex flex-col gap-2">
-          <span className="font-semibold">{field.label}</span>
+          <span className={groupLabel}>{field.label}</span>
           <ChipRow label={field.label}>
             {COLORS.map((color) => (
               <Chip
@@ -240,7 +249,7 @@ function FieldInput({
     case "member":
       return (
         <div className="flex flex-col gap-2">
-          <span className="font-semibold">{field.label}</span>
+          <span className={groupLabel}>{field.label}</span>
           <ChipRow label={field.label}>
             {members.map((member) => (
               <Chip

@@ -262,6 +262,7 @@ export function CalendarRoom() {
           today={today}
           now={now}
           occurrences={occurrences}
+          loading={data === undefined}
           members={members}
           onOpen={open}
         />
