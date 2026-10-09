@@ -15,6 +15,7 @@ RoleName = Literal["parent", "kid"]
 ThemeName = Literal["auto", "light", "dark"]
 TextSizeName = Literal["standard", "large", "xl"]
 HomeViewName = Literal["week", "today", "people"]
+WeekLayoutName = Literal["agenda", "hours"]
 TimeFormat = Literal["12h", "24h"]
 RailSide = Literal["left", "right"]
 Orientation = Literal["auto", "landscape", "portrait"]
@@ -65,6 +66,8 @@ class SettingsOut(BaseModel):
     display_sounds: bool
     display_dim_past: bool
     display_reduce_motion: bool
+    display_week_layout: WeekLayoutName  # how the Week board draws a day (ADR 0028)
+    show_tips: bool  # a tip under the board on the wall and laptops
     sleep_from: str | None
     sleep_to: str | None
     sleep_mode: SleepModeName
@@ -98,6 +101,8 @@ class SettingsUpdate(BaseModel):
     display_sounds: bool | None = None
     display_dim_past: bool | None = None
     display_reduce_motion: bool | None = None
+    display_week_layout: WeekLayoutName | None = None
+    show_tips: bool | None = None
     sleep_from: Clock24 | None = None  # send null (with sleep_to) to turn sleep off
     sleep_to: Clock24 | None = None
     sleep_mode: SleepModeName | None = None

@@ -7524,6 +7524,14 @@
             "title": "Display Sounds",
             "type": "boolean"
           },
+          "display_week_layout": {
+            "enum": [
+              "agenda",
+              "hours"
+            ],
+            "title": "Display Week Layout",
+            "type": "string"
+          },
           "has_pin": {
             "title": "Has Pin",
             "type": "boolean"
@@ -7582,6 +7590,10 @@
           },
           "setup_complete": {
             "title": "Setup Complete",
+            "type": "boolean"
+          },
+          "show_tips": {
+            "title": "Show Tips",
             "type": "boolean"
           },
           "sleep_from": {
@@ -7679,6 +7691,8 @@
           "display_sounds",
           "display_dim_past",
           "display_reduce_motion",
+          "display_week_layout",
+          "show_tips",
           "sleep_from",
           "sleep_to",
           "sleep_mode",
@@ -7857,6 +7871,21 @@
             ],
             "title": "Display Sounds"
           },
+          "display_week_layout": {
+            "anyOf": [
+              {
+                "enum": [
+                  "agenda",
+                  "hours"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Week Layout"
+          },
           "household_name": {
             "anyOf": [
               {
@@ -7918,6 +7947,17 @@
               }
             ],
             "title": "Longitude"
+          },
+          "show_tips": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Tips"
           },
           "sleep_from": {
             "anyOf": [

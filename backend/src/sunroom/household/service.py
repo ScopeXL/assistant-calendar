@@ -79,6 +79,8 @@ def settings_out(home: Household, settings: Settings) -> SettingsOut:
             "display_sounds": home.display_sounds,
             "display_dim_past": home.display_dim_past,
             "display_reduce_motion": home.display_reduce_motion,
+            "display_week_layout": home.display_week_layout,
+            "show_tips": home.show_tips,
             "sleep_from": home.sleep_from,
             "sleep_to": home.sleep_to,
             "sleep_mode": home.sleep_mode,

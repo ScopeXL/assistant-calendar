@@ -21,6 +21,8 @@
 
 ## Consequences
 
+- `household` gains `display_week_layout` (`agenda`/`hours`, default `agenda`) and `show_tips`
+  (default off): one migration for the batch, `202610091752_household_week_layout_and_tips`.
 - A page's name keeps its Title Case inside a sentence ("Settings → Calendars & Accounts"), and
   so do the plugins' names from their manifests ("Synced Calendars", "Photos & Screensaver").
 - The rule is mechanical, so a small word stays lowercase even where it belongs to the verb

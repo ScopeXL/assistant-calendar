@@ -4752,6 +4752,11 @@ export interface components {
             display_show_today_panel: boolean;
             /** Display Sounds */
             display_sounds: boolean;
+            /**
+             * Display Week Layout
+             * @enum {string}
+             */
+            display_week_layout: "agenda" | "hours";
             /** Has Pin */
             has_pin: boolean;
             /** Household Name */
@@ -4768,6 +4773,8 @@ export interface components {
             pin_length: number | null;
             /** Setup Complete */
             setup_complete: boolean;
+            /** Show Tips */
+            show_tips: boolean;
             /** Sleep From */
             sleep_from: string | null;
             /**
@@ -4829,6 +4836,8 @@ export interface components {
             display_show_today_panel?: boolean | null;
             /** Display Sounds */
             display_sounds?: boolean | null;
+            /** Display Week Layout */
+            display_week_layout?: ("agenda" | "hours") | null;
             /** Household Name */
             household_name?: string | null;
             /** Kid Safe Editing */
@@ -4839,6 +4848,8 @@ export interface components {
             location_label?: string | null;
             /** Longitude */
             longitude?: number | null;
+            /** Show Tips */
+            show_tips?: boolean | null;
             /** Sleep From */
             sleep_from?: string | null;
             /** Sleep Mode */

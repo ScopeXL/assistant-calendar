@@ -49,6 +49,13 @@ class HomeView(StrEnum):
     PEOPLE = "people"
 
 
+class WeekLayout(StrEnum):
+    """How the wall's Week board draws a day (ADR 0028): stacked chips, or an hour grid."""
+
+    AGENDA = "agenda"
+    HOURS = "hours"
+
+
 class SleepMode(StrEnum):
     DIM_CLOCK = "dim_clock"
     SCREEN_OFF = "screen_off"
@@ -77,6 +84,10 @@ class Household(Base):
     display_sounds: Mapped[bool] = mapped_column(Boolean, default=False)
     display_dim_past: Mapped[bool] = mapped_column(Boolean, default=True)
     display_reduce_motion: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Settings → Display → Week layout: Agenda (stacked chips) or Hours (the grid), ADR 0028.
+    display_week_layout: Mapped[str] = mapped_column(String(8), default=WeekLayout.AGENDA)
+    # Settings → Display → Show tips: a strip under the board on the wall and laptops.
+    show_tips: Mapped[bool] = mapped_column(Boolean, default=False)
     sleep_from: Mapped[str | None] = mapped_column(String(5), default=None)  # "HH:MM"
     sleep_to: Mapped[str | None] = mapped_column(String(5), default=None)
     sleep_mode: Mapped[str] = mapped_column(String(12), default=SleepMode.DIM_CLOCK)

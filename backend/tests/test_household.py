@@ -18,6 +18,8 @@ async def test_settings_start_with_the_household_defaults(parent: httpx.AsyncCli
     assert settings["week_starts_on"] == 6  # Sunday
     assert settings["theme"] == "auto"
     assert settings["display_home_view"] == "week"
+    assert settings["display_week_layout"] == "agenda"  # stacked chips until a parent picks Hours
+    assert settings["show_tips"] is False
     assert settings["has_pin"] is False
     assert settings["pin_length"] is None
     assert settings["setup_complete"] is True
@@ -49,6 +51,18 @@ async def test_a_parent_changes_settings_and_everyone_hears(
     assert off.json()["sleep_from"] is None
 
 
+async def test_the_week_layout_and_tips_are_a_parents_to_change(
+    parent: httpx.AsyncClient,
+) -> None:
+    hours = await parent.patch("/api/settings", json={"display_week_layout": "hours"}, headers=CSRF)
+    assert hours.status_code == 200, hours.text
+    assert (hours.json()["display_week_layout"], hours.json()["show_tips"]) == ("hours", False)
+    tips = await parent.patch("/api/settings", json={"show_tips": True}, headers=CSRF)
+    assert (tips.json()["display_week_layout"], tips.json()["show_tips"]) == ("hours", True)
+    again = (await parent.get("/api/settings")).json()
+    assert (again["display_week_layout"], again["show_tips"]) == ("hours", True)
+
+
 async def test_bad_settings_are_refused(parent: httpx.AsyncClient) -> None:
     zone = await parent.patch("/api/settings", json={"timezone": "Mars/Base"}, headers=CSRF)
     assert zone.status_code == 422
@@ -56,6 +70,8 @@ async def test_bad_settings_are_refused(parent: httpx.AsyncClient) -> None:
     assert half.status_code == 422
     minutes = await parent.patch("/api/settings", json={"display_return_minutes": 7}, headers=CSRF)
     assert minutes.status_code == 422
+    grid = await parent.patch("/api/settings", json={"display_week_layout": "grid"}, headers=CSRF)
+    assert grid.status_code == 422
 
 
 async def test_people_get_the_next_color_and_names_stay_unique(

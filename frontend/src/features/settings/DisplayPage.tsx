@@ -94,6 +94,30 @@ export function DisplayPage() {
             ]}
           />
         </Row>
+        <Row
+          label="Week layout"
+          hint="Agenda stacks each day's events; Hours draws them on a 24-hour grid."
+        >
+          <Segmented
+            label="Week layout"
+            value={settings.display_week_layout}
+            onChange={(display_week_layout) => {
+              update.mutate({ display_week_layout });
+            }}
+            options={[
+              { value: "agenda", label: "Agenda" },
+              { value: "hours", label: "Hours" },
+            ]}
+          />
+        </Row>
+        <Switch
+          label="Show tips"
+          hint="A line under the board with one thing Sunroom can do, changing every half hour. Not on phones."
+          checked={settings.show_tips}
+          onChange={(show_tips) => {
+            update.mutate({ show_tips });
+          }}
+        />
         <Switch
           label="Dim past events"
           hint="Today's events that are over fade, so what's next stands out."
