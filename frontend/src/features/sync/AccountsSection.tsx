@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 import { errorMessage } from "../../api/client";
+import { qk } from "../../api/keys";
 import { formatTime } from "../../lib/dates";
 import { useMembers, type Member } from "../../lib/household";
+import { fetchSession } from "../../lib/session";
+import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
-import { QrCode } from "../../ui/QrCode";
 import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
@@ -28,14 +31,44 @@ export function statusLine(account: Account): string {
   return slow ? `${updated} · Google updates this slowly` : updated;
 }
 
+type GoogleOutcome = "connected" | "denied" | "expired" | "failed";
+
+/** What the app says when Google's sign-in sends the browser back (google_accounts.callback). */
+const GOOGLE_WORDS: Record<GoogleOutcome, string> = {
+  connected: "Connected Google",
+  denied: "Google didn't finish signing in. Try again.",
+  expired: "That sign-in took too long. Try again.",
+  failed: "Google said no. Try again, or use the secret address.",
+};
+
+function isOutcome(value: string): value is GoogleOutcome {
+  return Object.hasOwn(GOOGLE_WORDS, value);
+}
+
+/** Back from Google's sign-in: `?google=<how it went>`, and `&account=<id>` for a new account. */
+function googleReturn(): { outcome: GoogleOutcome; account: string | null } | null {
+  try {
+    const search = new URLSearchParams(window.location.search);
+    const outcome = search.get("google") ?? "";
+    if (!isOutcome(outcome)) return null;
+    return { outcome, account: outcome === "connected" ? search.get("account") : null };
+  } catch {
+    return null;
+  }
+}
+
 /**
- * The accounts part of Settings → Calendars & accounts (UX §4): each account with its
- * calendars, a person chip and "Show on the kitchen screen" each, its status line, Refresh
- * now, and (on a phone) Disconnect. Add an account opens the flows on a phone, or a code to
- * scan on the wall screen, where passwords aren't typed.
+ * The accounts part of Settings → Calendars & Accounts (UX §4): each account with its
+ * calendars, a person chip and "Show on the kitchen screen" each, its status line, Refresh now,
+ * Connect again and Disconnect. Add an account opens the same steps on a phone, a computer or
+ * the wall screen (ADR 0028); on the wall, the device's kind (not its size) hands the two Google
+ * ways that need a phone to one. Back from Google's sign-in it says how it went, and opens a new
+ * account's calendars.
  */
 export function AccountsSection() {
   const display = useShell() === "display";
+  const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
+  const kiosk = session?.device_kind === "kiosk";
   const { data: accounts = [] } = useAccounts();
   const { data: members = [] } = useMembers();
   const [adding, setAdding] = useState(() => {
@@ -45,6 +78,19 @@ export function AccountsSection() {
       return false;
     }
   });
+  const [landing] = useState(googleReturn);
+  const [returnedId, setReturnedId] = useState(landing?.account ?? null);
+  const returned = accounts.find((account) => account.id === returnedId) ?? null;
+  useEffect(() => {
+    if (!landing) return;
+    // Once: the address loses ?google=…, so a reload (or React's second look) says nothing.
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("google")) return;
+    url.searchParams.delete("google");
+    url.searchParams.delete("account");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    showToast(GOOGLE_WORDS[landing.outcome]);
+  }, [landing]);
   const title = display ? "text-d-title font-bold" : "text-row font-bold";
   // As Settings' other groups: the page's title is the h2 on the wall, the h1 on a phone.
   const Heading = display ? "h3" : "h2";
@@ -64,7 +110,7 @@ export function AccountsSection() {
       ) : null}
       <div className="flex flex-col gap-4">
         {accounts.map((account) => (
-          <AccountBlock key={account.id} account={account} members={members} />
+          <AccountBlock key={account.id} account={account} members={members} kiosk={kiosk} />
         ))}
       </div>
       <div className={display ? "mt-5" : "mt-4"}>
@@ -77,30 +123,33 @@ export function AccountsSection() {
           Add an account
         </Button>
       </div>
-      {display ? (
-        <ConnectOnPhone
-          open={adding}
-          onClose={() => {
-            setAdding(false);
-          }}
-        />
-      ) : (
-        <AddAccountSheet
-          open={adding}
-          onClose={() => {
-            setAdding(false);
-          }}
-        />
-      )}
+      <AddAccountSheet
+        open={adding || returned !== null}
+        kiosk={kiosk}
+        returned={returned}
+        onClose={() => {
+          setAdding(false);
+          setReturnedId(null);
+        }}
+      />
     </section>
   );
 }
 
-function AccountBlock({ account, members }: { account: Account; members: Member[] }) {
+function AccountBlock({
+  account,
+  members,
+  kiosk,
+}: {
+  account: Account;
+  members: Member[];
+  kiosk: boolean;
+}) {
   const display = useShell() === "display";
   const changes = useSyncChanges();
   const [confirming, setConfirming] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const body = display ? "text-d-body" : "text-body";
   const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
   const broken = account.status === "needs_reconnect";
   return (
@@ -120,7 +169,7 @@ function AccountBlock({ account, members }: { account: Account; members: Member[
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {broken && !display ? (
+          {broken ? (
             <Button
               variant="secondary"
               onClick={() => {
@@ -160,19 +209,17 @@ function AccountBlock({ account, members }: { account: Account; members: Member[
           />
         ))}
       </div>
-      {display ? null : (
-        <div className="mt-3 flex justify-end">
-          <Button
-            variant="quiet-danger"
-            onClick={() => {
-              setConfirming(true);
-            }}
-          >
-            Disconnect
-            <span className="sr-only"> {account.label}</span>
-          </Button>
-        </div>
-      )}
+      <div className="mt-3 flex justify-end">
+        <Button
+          variant="quiet-danger"
+          onClick={() => {
+            setConfirming(true);
+          }}
+        >
+          Disconnect
+          <span className="sr-only"> {account.label}</span>
+        </Button>
+      </div>
       <Sheet
         open={confirming}
         title={`Disconnect ${sourceName(account)}?`}
@@ -181,7 +228,7 @@ function AccountBlock({ account, members }: { account: Account; members: Member[
         }}
       >
         <div className="flex flex-col gap-4">
-          <p className="text-body">
+          <p className={body}>
             Its calendars leave the board, and Sunroom forgets its password. Events stay on{" "}
             {sourceName(account)} itself.
           </p>
@@ -212,6 +259,7 @@ function AccountBlock({ account, members }: { account: Account; members: Member[
       </Sheet>
       <ReconnectSheet
         account={account}
+        kiosk={kiosk}
         open={reconnecting}
         onClose={() => {
           setReconnecting(false);
@@ -316,38 +364,20 @@ export function CalendarRow({
   );
 }
 
-function ConnectOnPhone({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const address = (() => {
-    try {
-      return `${window.location.origin}/settings/calendars?add=1`;
-    } catch {
-      return "/settings/calendars?add=1";
-    }
-  })();
-  return (
-    <Sheet open={open} title="Add an Account" onClose={onClose}>
-      <div className="flex flex-col items-center gap-5 text-center">
-        <p className="text-d-body">
-          Connect accounts on a phone: it needs a password you shouldn't type here.
-        </p>
-        <QrCode value={address} label="Open Calendars & Accounts on a phone" />
-        <p className="text-d-secondary text-ink-soft">
-          Scan this with a parent's phone, or open Settings → Calendars & Accounts there.
-        </p>
-      </div>
-    </Sheet>
-  );
-}
-
+/** A new password or address for an account that stopped working; on the wall screen it's
+ * typed on the screen's own keyboard, and Apple's page is opened on a phone or computer. */
 function ReconnectSheet({
   account,
+  kiosk,
   open,
   onClose,
 }: {
   account: Account;
+  kiosk: boolean;
   open: boolean;
   onClose: () => void;
 }) {
+  const display = useShell() === "display";
   const changes = useSyncChanges();
   const [value, setValue] = useState("");
   const feed = account.provider === "ics";
@@ -369,16 +399,20 @@ function ReconnectSheet({
           );
         }}
       >
-        <p className="text-body">
+        <p className={display ? "text-d-body" : "text-body"}>
           {feed
-            ? "Paste the calendar's new address."
+            ? `${kiosk ? "Type" : "Paste"} the calendar's new address.`
             : sourceName(account) === "iCloud"
-              ? "Make a new app-specific password at appleid.apple.com and paste it here."
+              ? kiosk
+                ? "On a phone or computer, make a new app-specific password at appleid.apple.com, then type it here."
+                : "Make a new app-specific password at appleid.apple.com and paste it here."
               : "Type the account's password again."}
         </p>
         <TextField
           label={feed ? "Calendar address" : "Password"}
           type={feed ? "url" : "password"}
+          layout={feed ? "text" : "password"}
+          autoCapitalize="none"
           autoComplete="off"
           value={value}
           error={changes.reconnect.isError ? errorMessage(changes.reconnect.error) : null}

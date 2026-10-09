@@ -48,8 +48,7 @@ NEEDS_KEYS = (
     "Features → Synced Calendars."
 )
 NEEDS_HTTPS = (
-    "Google only signs in to apps at an https:// address, or on the kitchen screen itself. "
-    "Use Share with a Sunroom helper instead."
+    "Google only signs in to apps at an https:// address. Use Share with a Sunroom helper instead."
 )
 
 

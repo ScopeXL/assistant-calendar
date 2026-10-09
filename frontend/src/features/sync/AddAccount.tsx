@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { Smartphone } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
@@ -9,8 +10,10 @@ import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { QrCode } from "../../ui/QrCode";
 import { Select } from "../../ui/Select";
 import { Sheet } from "../../ui/Sheet";
+import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { sourceName, useHolidayPlaces, useSyncChanges, type Account } from "./data";
@@ -52,14 +55,47 @@ const TITLES: Record<Step, string> = {
   pick: "Pick Calendars",
 };
 
+/** The words' sizes: the wall screen's (read from across the kitchen), or a phone's. */
+function useText(): { body: string; secondary: string } {
+  return useShell() === "display"
+    ? { body: "text-d-body", secondary: "text-d-secondary" }
+    : { body: "text-body", secondary: "text-secondary" };
+}
+
+/** Where a phone adds an account: this server's Calendars & Accounts, with this sheet open. */
+function phoneAddress(): string {
+  try {
+    return `${window.location.origin}/settings/calendars?add=1`;
+  } catch {
+    return "/settings/calendars?add=1";
+  }
+}
+
 /**
- * Add an account on a phone (UX §6): Google (three ways), iCloud, a calendar server, any
- * calendar address, or holidays. Each flow ends on the account's calendars, with a switch and a
- * person each, then Done.
+ * Add an account (UX §6) on a phone, a computer or the wall screen (ADR 0028): Google (three
+ * ways), iCloud, a calendar server, any calendar address, or holidays. Each flow ends on the
+ * account's calendars, with a switch and a person each, then Done. On the wall screen passwords
+ * are masked fields on its own keyboard, behind the PIN; the two Google ways that need a phone
+ * (a key file, Google's own page) show a code to scan instead, and so does "Or add it from a
+ * phone" under the choices. Back from Google's sign-in, it opens on the new account's calendars.
  */
-export function AddAccountSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [step, setStep] = useState<Step>("choose");
-  const [account, setAccount] = useState<Account | null>(null);
+export function AddAccountSheet({
+  open,
+  onClose,
+  kiosk = false,
+  returned = null,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** The wall screen: no files, no Google page, and nothing that opens a browser tab. */
+  kiosk?: boolean;
+  /** An account Google's sign-in just added: the sheet opens on its calendars. */
+  returned?: Account | null;
+}) {
+  const [chosen, setStep] = useState<Step>("choose");
+  const [connected, setAccount] = useState<Account | null>(null);
+  const step = returned ? "pick" : chosen;
+  const account = returned ?? connected;
   const close = () => {
     setStep("choose");
     setAccount(null);
@@ -72,24 +108,27 @@ export function AddAccountSheet({ open, onClose }: { open: boolean; onClose: () 
   return (
     <Sheet open={open} title={TITLES[step]} onClose={close} step={step}>
       {step === "choose" ? (
-        <Choices
-          options={[
-            { step: "google", label: "Google", line: "Google Calendar, three ways to connect." },
-            { step: "icloud", label: "iCloud", line: "Your iPhone's calendars, both ways." },
-            {
-              step: "address",
-              label: "Another calendar",
-              line: "Any calendar address (.ics): school, team, Outlook.",
-            },
-            { step: "holidays", label: "Holidays", line: "Public holidays, no address needed." },
-            {
-              step: "server",
-              label: "A calendar server",
-              line: "Nextcloud, Fastmail and others, with a user name and password.",
-            },
-          ]}
-          onPick={setStep}
-        />
+        <div className="flex flex-col gap-6">
+          <Choices
+            options={[
+              { step: "google", label: "Google", line: "Google Calendar, three ways to connect." },
+              { step: "icloud", label: "iCloud", line: "Your iPhone's calendars, both ways." },
+              {
+                step: "address",
+                label: "Another calendar",
+                line: "Any calendar address (.ics): school, team, Outlook.",
+              },
+              { step: "holidays", label: "Holidays", line: "Public holidays, no address needed." },
+              {
+                step: "server",
+                label: "A calendar server",
+                line: "Nextcloud, Fastmail and others, with a user name and password.",
+              },
+            ]}
+            onPick={setStep}
+          />
+          {kiosk ? <PhoneShortcut /> : null}
+        </div>
       ) : step === "google" ? (
         <Choices
           options={[
@@ -102,29 +141,39 @@ export function AddAccountSheet({ open, onClose }: { open: boolean; onClose: () 
               step: "google-helper",
               label: "Share with a Sunroom helper",
               line: "About 10 minutes, once. Lets you add and change events from Sunroom.",
+              phone: kiosk,
             },
             {
               step: "google-signin",
               label: "Sign in with Google",
               line: "Needs Sunroom at an https:// address on the internet and your own Google app keys.",
+              phone: kiosk,
             },
           ]}
           onPick={setStep}
         />
       ) : step === "google-address" ? (
-        <AddressFlow google onDone={close} />
+        <AddressFlow google kiosk={kiosk} onDone={close} />
       ) : step === "address" ? (
-        <AddressFlow onDone={close} />
+        <AddressFlow kiosk={kiosk} onDone={close} />
       ) : step === "holidays" ? (
         <HolidaysFlow onDone={close} />
       ) : step === "icloud" ? (
-        <ServerFlow icloud onConnected={picked} />
+        <ServerFlow icloud kiosk={kiosk} onConnected={picked} />
       ) : step === "server" ? (
-        <ServerFlow onConnected={picked} />
+        <ServerFlow kiosk={kiosk} onConnected={picked} />
       ) : step === "google-helper" ? (
-        <HelperFlow onFound={picked} />
+        kiosk ? (
+          <FromPhone why="It needs a key file from Google, and this screen can't open files." />
+        ) : (
+          <HelperFlow onFound={picked} />
+        )
       ) : step === "google-signin" ? (
-        <SignInFlow />
+        kiosk ? (
+          <FromPhone why="Google's sign-in page doesn't work on this screen." />
+        ) : (
+          <SignInFlow />
+        )
       ) : account ? (
         <PickCalendars account={account} onDone={close} />
       ) : null}
@@ -136,9 +185,11 @@ function Choices({
   options,
   onPick,
 }: {
-  options: { step: Step; label: string; line: string }[];
+  /** `phone`: on the wall screen, a way that needs a phone, marked "From a phone". */
+  options: { step: Step; label: string; line: string; phone?: boolean }[];
   onPick: (step: Step) => void;
 }) {
+  const text = useText();
   return (
     <ul className="flex flex-col gap-3">
       {options.map((option) => (
@@ -150,8 +201,14 @@ function Choices({
             }}
             className="press-row flex min-h-16 w-full flex-col items-start justify-center rounded-button border-2 border-line bg-surface px-4 py-3 text-left"
           >
-            <span className="text-body font-semibold">{option.label}</span>
-            <span className="text-secondary text-ink-soft">{option.line}</span>
+            <span className={`${text.body} font-semibold`}>{option.label}</span>
+            <span className={`${text.secondary} text-ink-soft`}>{option.line}</span>
+            {option.phone ? (
+              <span className={`${text.secondary} mt-1 flex items-center gap-2 font-semibold`}>
+                <Smartphone aria-hidden="true" className="size-6" />
+                From a phone
+              </span>
+            ) : null}
           </button>
         </li>
       ))}
@@ -159,11 +216,48 @@ function Choices({
   );
 }
 
+/** On the wall screen, under the choices: the same steps on a phone, one scan away. */
+function PhoneShortcut() {
+  const text = useText();
+  return (
+    <div className="flex items-center gap-5 rounded-panel border border-line bg-wall p-4">
+      <QrCode
+        value={phoneAddress()}
+        label="A code that opens Add an Account on a phone"
+        className="size-32 shrink-0"
+      />
+      <div className="flex flex-col gap-1">
+        <p className={`${text.body} font-semibold`}>Or add it from a phone</p>
+        <p className={`${text.secondary} text-ink-soft`}>Scan this with a parent's phone.</p>
+      </div>
+    </div>
+  );
+}
+
+/** A way the wall screen can't do itself (ADR 0028): a code that opens it on a phone. */
+function FromPhone({ why }: { why: string }) {
+  const text = useText();
+  return (
+    <div className="flex flex-col items-center gap-5 text-center">
+      <p className={`${text.body} font-semibold`}>Do this from a phone</p>
+      <p className={text.body}>{why}</p>
+      <QrCode value={phoneAddress()} label="A code that opens Add an Account on a phone" />
+      <p className={`${text.secondary} text-ink-soft`}>
+        Scan this with a parent's phone, or open Settings → Calendars & Accounts on a phone or
+        computer.
+      </p>
+    </div>
+  );
+}
+
 /** Numbered steps. With drawings under them, more room between, so each step's words sit with
  * its own drawing rather than the one above. */
 function Steps({ children }: { children: ReactNode }) {
+  const text = useText();
   return (
-    <ol className="flex list-decimal flex-col gap-2 pl-5 text-body has-[svg]:gap-6">{children}</ol>
+    <ol className={`flex list-decimal flex-col gap-2 pl-5 ${text.body} has-[svg]:gap-6`}>
+      {children}
+    </ol>
   );
 }
 
@@ -176,9 +270,10 @@ function Who({
   value: string | null;
   onChange: (id: string | null) => void;
 }) {
+  const text = useText();
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-body font-semibold">Whose calendar</p>
+      <p className={`${text.body} font-semibold`}>Whose calendar</p>
       <ChipRow label="Whose calendar">
         <Chip
           on={value === null}
@@ -213,8 +308,18 @@ const INTERVALS = [
   { minutes: 360, label: "6 hours" },
 ];
 
-/** Paste a calendar address: Google's secret address, or any .ics link. */
-function AddressFlow({ google = false, onDone }: { google?: boolean; onDone: () => void }) {
+/** Paste a calendar address (on the wall screen, type it): Google's secret address, or any
+ * .ics link. */
+function AddressFlow({
+  google = false,
+  kiosk = false,
+  onDone,
+}: {
+  google?: boolean;
+  kiosk?: boolean;
+  onDone: () => void;
+}) {
+  const text = useText();
   const { data: members = [] } = useMembers();
   const { addIcs } = useSyncChanges();
   const [url, setUrl] = useState("");
@@ -251,20 +356,23 @@ function AddressFlow({ google = false, onDone }: { google?: boolean; onDone: () 
             <GoogleIntegrateArt />
           </li>
           <li>
-            Copy "Secret address in iCal format" and paste it here.
+            {kiosk
+              ? 'Type the address under "Secret address in iCal format" here.'
+              : 'Copy "Secret address in iCal format" and paste it here.'}
             <GoogleSecretAddressArt />
           </li>
         </Steps>
       ) : (
-        <p className="text-body">
-          Paste the calendar's address. School and team sites, Outlook's "Publish calendar" and
-          iCloud's public calendars all give one.
+        <p className={text.body}>
+          {kiosk ? "Type" : "Paste"} the calendar's address. School and team sites, Outlook's
+          "Publish calendar" and iCloud's public calendars all give one.
         </p>
       )}
       <TextField
         label="Calendar address"
         type="url"
         inputMode="url"
+        autoCapitalize="none"
         autoComplete="off"
         placeholder="https://…/calendar.ics"
         value={url}
@@ -285,7 +393,7 @@ function AddressFlow({ google = false, onDone }: { google?: boolean; onDone: () 
       />
       <Who members={members} value={owner} onChange={setOwner} />
       <div className="flex flex-col gap-2">
-        <p className="text-body font-semibold">Check for changes every</p>
+        <p className={`${text.body} font-semibold`}>Check for changes every</p>
         <ChipRow label="Check for changes every">
           {INTERVALS.map((option) => (
             <Chip
@@ -324,6 +432,7 @@ function regionName(code: string): string {
 }
 
 function HolidaysFlow({ onDone }: { onDone: () => void }) {
+  const text = useText();
   const { data: places = [] } = useHolidayPlaces();
   const { data: members = [] } = useMembers();
   const { addHolidays } = useSyncChanges();
@@ -353,7 +462,7 @@ function HolidaysFlow({ onDone }: { onDone: () => void }) {
       }}
     >
       <label className="flex flex-col gap-2">
-        <span className="text-body font-semibold">Country</span>
+        <span className={`${text.body} font-semibold`}>Country</span>
         <Select
           value={country}
           onChange={(event) => {
@@ -370,7 +479,7 @@ function HolidaysFlow({ onDone }: { onDone: () => void }) {
       </label>
       {regions.length ? (
         <label className="flex flex-col gap-2">
-          <span className="text-body font-semibold">State or region (optional)</span>
+          <span className={`${text.body} font-semibold`}>State or region (optional)</span>
           <Select
             value={region}
             onChange={(event) => {
@@ -388,7 +497,7 @@ function HolidaysFlow({ onDone }: { onDone: () => void }) {
       ) : null}
       <Who members={members} value={owner} onChange={setOwner} />
       {addHolidays.isError ? (
-        <p role="alert" className="font-semibold text-alert">
+        <p role="alert" className={`${text.body} font-semibold text-alert`}>
           {errorMessage(addHolidays.error)}
         </p>
       ) : null}
@@ -399,14 +508,18 @@ function HolidaysFlow({ onDone }: { onDone: () => void }) {
   );
 }
 
-/** iCloud (an app-specific password) or another CalDAV server (its address and login). */
+/** iCloud (an app-specific password) or another CalDAV server (its address and login). On the
+ * wall screen, the steps at Apple happen on a phone or computer, and the password is typed here. */
 function ServerFlow({
   icloud = false,
+  kiosk = false,
   onConnected,
 }: {
   icloud?: boolean;
+  kiosk?: boolean;
   onConnected: (account: Account) => void;
 }) {
+  const text = useText();
   const { addCaldav } = useSyncChanges();
   const [server, setServer] = useState("");
   const [user, setUser] = useState("");
@@ -435,16 +548,25 @@ function ServerFlow({
         <>
           <Steps>
             <li>
-              Open{" "}
-              <a
-                href="https://appleid.apple.com"
-                target="_blank"
-                rel="noreferrer"
-                className="font-semibold underline"
-              >
-                appleid.apple.com
-              </a>{" "}
-              and sign in.
+              {kiosk ? (
+                <>
+                  On a phone or computer, open{" "}
+                  <span className="font-semibold">appleid.apple.com</span> and sign in.
+                </>
+              ) : (
+                <>
+                  Open{" "}
+                  <a
+                    href="https://appleid.apple.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold underline"
+                  >
+                    appleid.apple.com
+                  </a>{" "}
+                  and sign in.
+                </>
+              )}
               <ICloudSignInArt />
             </li>
             <li>
@@ -453,11 +575,13 @@ function ServerFlow({
               <ICloudNewPasswordArt />
             </li>
             <li>
-              Copy the password it shows (xxxx-xxxx-xxxx-xxxx) and paste it below.
+              {kiosk
+                ? "Type the password it shows (xxxx-xxxx-xxxx-xxxx) below."
+                : "Copy the password it shows (xxxx-xxxx-xxxx-xxxx) and paste it below."}
               <ICloudCopyPasswordArt />
             </li>
           </Steps>
-          <p className="text-secondary text-ink-soft">
+          <p className={`${text.secondary} text-ink-soft`}>
             Two-factor authentication has to be on for your Apple ID. Your Apple ID's own password
             doesn't work here.
           </p>
@@ -467,6 +591,7 @@ function ServerFlow({
           label="Server address"
           type="url"
           inputMode="url"
+          autoCapitalize="none"
           autoComplete="off"
           placeholder="https://cloud.example.com"
           value={server}
@@ -478,6 +603,7 @@ function ServerFlow({
       <TextField
         label={icloud ? "Apple ID email" : "User name"}
         type={icloud ? "email" : "text"}
+        autoCapitalize="none"
         autoComplete="username"
         value={user}
         onChange={(event) => {
@@ -487,6 +613,7 @@ function ServerFlow({
       <TextField
         label={icloud ? "App-specific password" : "Password"}
         type="password"
+        layout="password"
         autoComplete="off"
         value={password}
         onChange={(event) => {
@@ -511,6 +638,7 @@ function ServerFlow({
 
 /** Google's helper (a service account the family makes once, never called that here). */
 function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
+  const text = useText();
   const [account, setAccount] = useState<Account | null>(null);
   const [calendarId, setCalendarId] = useState("");
   const upload = useMutation({
@@ -541,7 +669,7 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
   if (!account) {
     return (
       <div className="flex flex-col gap-5">
-        <p className="text-body">
+        <p className={text.body}>
           You'll make a helper account at Google and share your calendar with it.
         </p>
         <Steps>
@@ -572,11 +700,11 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
           </li>
         </Steps>
         <label className="flex flex-col gap-2">
-          <span className="text-body font-semibold">Upload the key file</span>
+          <span className={`${text.body} font-semibold`}>Upload the key file</span>
           <input
             type="file"
             accept="application/json,.json"
-            className="min-h-12 rounded-button border-2 border-line bg-surface px-3 py-2 text-body"
+            className={`min-h-12 rounded-button border-2 border-line bg-surface px-3 py-2 ${text.body}`}
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) upload.mutate(file);
@@ -584,12 +712,12 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
           />
         </label>
         {upload.isError ? (
-          <p role="alert" className="font-semibold text-alert">
+          <p role="alert" className={`${text.body} font-semibold text-alert`}>
             {errorMessage(upload.error)}
           </p>
         ) : null}
         {upload.isPending ? (
-          <p className="text-secondary text-ink-soft">Checking the key…</p>
+          <p className={`${text.secondary} text-ink-soft`}>Checking the key…</p>
         ) : null}
       </div>
     );
@@ -603,8 +731,8 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
       }}
     >
       <div className="flex flex-col gap-2">
-        <p className="text-body font-semibold">Your helper's address:</p>
-        <p className="rounded-button bg-wall px-3 py-2 text-secondary break-all select-all">
+        <p className={`${text.body} font-semibold`}>Your helper's address:</p>
+        <p className={`rounded-button bg-wall px-3 py-2 ${text.secondary} break-all select-all`}>
           {account.helper_email}
         </p>
         <div>
@@ -624,12 +752,13 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
           </Button>
         </div>
       </div>
-      <p className="text-body">
+      <p className={text.body}>
         In Google Calendar's settings, pick the calendar, go to Share with specific people, paste
         the helper's address, choose Make changes to events, and Send.
       </p>
       <TextField
         label="The calendar's ID"
+        autoCapitalize="none"
         hint="Your Gmail address for your main calendar; another calendar's ID is under Integrate calendar."
         autoComplete="off"
         value={calendarId}
@@ -645,12 +774,14 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
   );
 }
 
-/** Sign in with Google: only where Google allows the way back (https, or this screen). */
+/** Sign in with Google: only where Google allows the way back (https, or this computer itself,
+ * as the server's check: google_accounts.sign_in_allowed). */
 function SignInFlow() {
+  const text = useText();
   const secure = (() => {
     try {
       const { protocol, hostname } = window.location;
-      return protocol === "https:" || hostname === "localhost";
+      return protocol === "https:" || hostname === "localhost" || hostname === "127.0.0.1";
     } catch {
       return false;
     }
@@ -670,7 +801,7 @@ function SignInFlow() {
   });
   if (!secure) {
     return (
-      <p className="text-body">
+      <p className={text.body}>
         Google only signs in to apps at an https:// address. Use Share with a Sunroom helper
         instead, or set up an https address for Sunroom first (docs/REMOTE-ACCESS.md).
       </p>
@@ -690,11 +821,11 @@ function SignInFlow() {
         </li>
         <li>Paste the client ID and secret under Settings → Features → Synced Calendars.</li>
       </Steps>
-      <p className="text-secondary text-ink-soft">
+      <p className={`${text.secondary} text-ink-soft`}>
         Google may say the app isn't verified: tap Advanced, then Go to Sunroom. It's your own app.
       </p>
       {start.isError ? (
-        <p role="alert" className="font-semibold text-alert">
+        <p role="alert" className={`${text.body} font-semibold text-alert`}>
           {errorMessage(start.error)}
         </p>
       ) : null}
@@ -713,6 +844,7 @@ function SignInFlow() {
 
 /** After connecting: which calendars go on the board, and whose each is. */
 function PickCalendars({ account, onDone }: { account: Account; onDone: () => void }) {
+  const text = useText();
   const { data: members = [] } = useMembers();
   const { map } = useSyncChanges();
   const [choices, setChoices] = useState(() =>
@@ -742,7 +874,7 @@ function PickCalendars({ account, onDone }: { account: Account; onDone: () => vo
   };
   if (account.calendars.length === 0) {
     return (
-      <p className="text-body">
+      <p className={text.body}>
         No calendars there yet. Sharing can take a minute; try again from Calendars & Accounts.
       </p>
     );
@@ -789,7 +921,7 @@ function PickCalendars({ account, onDone }: { account: Account; onDone: () => vo
         );
       })}
       {map.isError ? (
-        <p role="alert" className="font-semibold text-alert">
+        <p role="alert" className={`${text.body} font-semibold text-alert`}>
           {errorMessage(map.error)}
         </p>
       ) : null}

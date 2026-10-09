@@ -52,6 +52,10 @@ export function Sheet({
   const display = useShell() === "display";
   const ref = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  // Where the last press started: a tap on the backdrop closes the sheet only if it started
+  // there. A press on a field raises the wall's keyboard, the sheet moves up above it, and the
+  // release can land on the backdrop: that click belongs to the field, not the backdrop.
+  const pressedBackdrop = useRef(false);
   const shownStep = useRef(step);
   const titleId = useId();
   // Sliding away: `open` went false, but the dialog is still on screen until its animation ends.
@@ -112,12 +116,15 @@ export function Sheet({
         event.preventDefault();
         onClose();
       }}
+      onPointerDown={(event) => {
+        pressedBackdrop.current = event.target === ref.current;
+      }}
       onClick={(event) => {
-        if (event.target === ref.current) onClose();
+        if (event.target === ref.current && pressedBackdrop.current) onClose();
       }}
     >
       {open || closing ? (
-        <div className="flex max-h-[88dvh] flex-col">
+        <div className="flex max-h-[min(88dvh,calc(100dvh_-_var(--osk-h,0px)_-_48px))] flex-col">
           <Frozen frozen={!open}>
             <header
               className={`flex items-center justify-between gap-3 border-b border-line ${

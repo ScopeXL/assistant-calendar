@@ -1,5 +1,6 @@
 import { ArrowBigUp, CornerDownLeft, Delete } from "lucide-react";
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import {
   backspace,
@@ -141,8 +142,16 @@ export function KeyboardHost({ railSide }: { railSide: "left" | "right" }) {
     };
   }, [open, target, layout]);
 
+  // A field in an open sheet (a modal <dialog>): the keyboard goes inside it, because the page
+  // behind a modal dialog can't be tapped and the dialog covers it. Kept while the keys slide
+  // away; a sheet that closes takes them with it (styles/motion.css).
+  const inside = target?.closest("dialog") ?? null;
+  const [lastDialog, setLastDialog] = useState<HTMLDialogElement | null>(inside);
+  if (target && inside !== lastDialog) setLastDialog(inside);
+  const dialog = target ? inside : lastDialog;
+
   if (!open && !closing) return null;
-  return (
+  const keys = (
     <div
       ref={host}
       data-keyboard=""
@@ -157,6 +166,7 @@ export function KeyboardHost({ railSide }: { railSide: "left" | "right" }) {
       {target ? <Keys key={layout} target={target} layout={layout} /> : null}
     </div>
   );
+  return dialog?.open && dialog.isConnected ? createPortal(keys, dialog) : keys;
 }
 
 function Keys({ target, layout }: { target: HTMLInputElement; layout: KeyboardLayout }) {

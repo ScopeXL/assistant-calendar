@@ -222,6 +222,42 @@ test("the wall screen", async ({ page }) => {
   await page.getByRole("button", { name: "Change Mia" }).click();
   await expect(page.getByRole("dialog", { name: "Change Mia" })).toBeVisible();
   await shot(page, "settings-change-a-person");
+  // The keyboard inside a sheet: the sheet moves up above the keys.
+  const person = page.getByRole("dialog", { name: "Change Mia" });
+  const keys = page.getByRole("group", { name: "On-screen keyboard" });
+  await person.getByLabel("Name").click();
+  await expect(keys).toBeVisible();
+  await shot(page, "settings-change-a-person-keyboard");
+  await keys.getByRole("button", { name: "Done" }).click();
+  await person.getByRole("button", { name: "Close" }).click();
+  await expect(person).toBeHidden();
+
+  // Adding an account here: the choices with the phone shortcut, iCloud's password on the
+  // keyboard, and Google's two ways that need a phone.
+  await page
+    .getByRole("navigation", { name: "Settings" })
+    .getByRole("link", { name: "Calendars & Accounts", exact: true })
+    .click();
+  const addAccount = page.getByRole("button", { name: "Add an account" });
+  const adding = page.getByRole("dialog");
+  await addAccount.click();
+  await expect(adding.getByText("Or add it from a phone")).toBeVisible();
+  await shot(page, "settings-add-account");
+  await adding.getByRole("button", { name: /^iCloud/ }).click();
+  await adding.getByLabel("App-specific password").click();
+  await expect(keys).toBeVisible();
+  await shot(page, "settings-add-icloud-keyboard");
+  await keys.getByRole("button", { name: "Done" }).click();
+  await adding.getByRole("button", { name: "Close" }).click();
+  await expect(adding).toBeHidden();
+  await addAccount.click();
+  await adding.getByRole("button", { name: /^Google/ }).click();
+  await shot(page, "settings-add-google");
+  await adding.getByRole("button", { name: /^Share with a Sunroom helper/ }).click();
+  await expect(adding).toContainText("Do this from a phone");
+  await shot(page, "settings-add-google-phone");
+  await adding.getByRole("button", { name: "Close" }).click();
+  await expect(adding).toBeHidden();
 
   // Night: 11:30 PM inside a 10 PM to 6 AM schedule.
   await change(page, { sleep_from: "22:00", sleep_to: "06:00", sleep_mode: "dim_clock" });

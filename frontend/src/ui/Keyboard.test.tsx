@@ -70,6 +70,25 @@ describe("the on-screen keyboard (UX §1)", () => {
     expect((input as HTMLInputElement).value).toBe("Mi");
   });
 
+  it("goes inside an open sheet, because the page behind a modal dialog can't be tapped", () => {
+    render(
+      <>
+        <dialog open aria-label="Change Mia">
+          <Field />
+        </dialog>
+        <KeyboardHost railSide="left" />
+      </>,
+    );
+    const input = screen.getByLabelText("Name");
+    act(() => {
+      input.focus();
+    });
+    const keys = screen.getByRole("group", { name: "On-screen keyboard" });
+    expect(screen.getByRole("dialog", { name: "Change Mia" }).contains(keys)).toBe(true);
+    press("L");
+    expect((input as HTMLInputElement).value).toBe("L");
+  });
+
   it("Done lowers it and keeps what was typed; Enter submits the field's form", () => {
     const submitted = vi.fn();
     render(

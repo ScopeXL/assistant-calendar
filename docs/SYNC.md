@@ -1,8 +1,10 @@
 # Synced calendars
 
 How Sunroom keeps Google, iCloud, other calendar servers, calendar addresses and holidays on
-the board (PLAN §8, ADRs 0004, 0005, 0020 and 0024), and every server quirk met so far. For a
-household: Settings → Calendars & accounts → **Add an account**, on a phone.
+the board (PLAN §8, ADRs 0004, 0005, 0020, 0024 and 0028), and every server quirk met so far. For
+a household: Settings → Calendars & Accounts → **Add an account**, on a phone, a computer or the
+kitchen screen. On the kitchen screen, Google's helper (a key file) and Sign in with Google
+(Google's own page) show a code to scan and finish on a phone.
 
 ## The kinds of account
 
@@ -11,7 +13,7 @@ household: Settings → Calendars & accounts → **Add an account**, on a phone.
 | A calendar address (.ics) | Paste the link. `webcal://` works | Shows events only | Checked every 30 minutes by default (15 minutes to 6 hours), never more often than every 5 |
 | Google: the secret address | Paste "Secret address in iCal format" from Google Calendar's settings | Shows events only | Google itself updates this address slowly: see "Measured freshness" below |
 | Google: a helper | A service account in the family's own Google Cloud project; each calendar is shared with its address ("Make changes to events") and added by its ID | Both ways | Every 5 minutes, plus Refresh now |
-| Google: sign in | The household's own OAuth client, at an https:// address (or on the kitchen screen at `localhost`) | Both ways | Every 5 minutes, plus Refresh now |
+| Google: sign in | The household's own OAuth client, on a phone or computer at an https:// address (or at `localhost`) | Both ways | Every 5 minutes, plus Refresh now |
 | iCloud | The Apple ID email and an app-specific password | Both ways | Every 5 minutes, plus Refresh now |
 | A calendar server | Nextcloud, Fastmail, Radicale, Baïkal and others: the server's address, a user name and a password | Both ways | Every 5 minutes, plus Refresh now |
 | Holidays | A country, and optionally a state or region | Shows events only | Made offline, again when the year turns |
@@ -46,8 +48,12 @@ household: Settings → Calendars & accounts → **Add an account**, on a phone.
 
 ## Secrets
 
-- Passwords, keys and tokens are typed on a phone, checked against the server, and stored
+- Passwords, keys and tokens are typed on a phone, a computer or the kitchen screen (a masked
+  field on its own keyboard, behind the parent PIN), checked against the server, and stored
   encrypted (`credentials_enc`, Fernet under the plugin's key). They never come back to a browser.
+- Back from Google's sign-in page, the browser lands on Calendars & Accounts with
+  `?google=connected&account=<id>` (or `denied`, `expired`, `failed`); the page says how it went,
+  opens a new account's calendars to pick, and takes the query off the address.
 - A feed's address is a secret too (Google's secret address is the password to that calendar).
   It's stored encrypted and shown only with its secret part hidden:
   "calendar.google.com/…/private-3f9a…/basic.ics".

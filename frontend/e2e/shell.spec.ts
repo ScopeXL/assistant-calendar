@@ -1,8 +1,9 @@
 /**
  * The two shells at every size (ADR 0014, UX §3): the wall screen's rail and Today panel in
  * landscape, the Today band and bottom bar in portrait, a laptop in the display shell with its
- * own keyboard, phones with the tab bar. Nothing scrolls sideways. The evening dim on the wall,
- * and About's New versions on a phone. Synthetic data only.
+ * own keyboard, the wall's keyboard inside a sheet, phones with the tab bar. Nothing scrolls
+ * sideways. The evening dim on the wall, and About's New versions on a phone. Synthetic data
+ * only.
  */
 import type { Page } from "@playwright/test";
 
@@ -219,6 +220,36 @@ test.describe("the wall screen", () => {
     await board.getByRole("button", { name: "This week" }).click();
     await expect(title).toHaveText(thisWeek);
     await expect(board.locator("[aria-current=date]")).toHaveCount(1);
+  });
+
+  test("types into a sheet with its own keyboard, and the sheet rises above the keys", async ({
+    page,
+    request,
+  }) => {
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/settings/family");
+    await page.getByRole("button", { name: "Change Mia" }).click();
+    const sheet = page.getByRole("dialog", { name: "Change Mia" });
+    const field = sheet.getByLabel("Name");
+    await field.click();
+    await field.evaluate((node: HTMLInputElement) => {
+      node.setSelectionRange(node.value.length, node.value.length);
+    });
+    const keyboard = page.getByRole("group", { name: "On-screen keyboard" });
+    // After a space mid-name the keys are small letters; Shift makes one capital.
+    await keyboard.getByRole("button", { name: "Space" }).click();
+    for (const key of ["Shift", "R", "o", "s", "e"]) {
+      await keyboard.getByRole("button", { name: key, exact: true }).click();
+    }
+    await expect(field).toHaveValue("Mia Rose");
+    const keys = await keyboard.boundingBox();
+    const box = await sheet.boundingBox();
+    expect(keys && box && box.y + box.height <= keys.y).toBe(true);
+    await keyboard.getByRole("button", { name: "Done" }).click();
+    await expect(keyboard).toHaveCount(0);
+    await sheet.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByRole("button", { name: "Change Mia Rose" })).toBeVisible();
   });
 
   test("sleeps on schedule and wakes at a touch", async ({ page, request }) => {

@@ -289,6 +289,8 @@
   }
   [data-shell="display"] dialog.sheet {
     max-width: 640px;
+    /* Above the on-screen keyboard while it's up (ui/Keyboard docks it inside the sheet). */
+    bottom: var(--osk-h, 0px);
   }
 
   /* An on/off switch (ui/Switch): a native checkbox, so every screen reader knows it. */
@@ -369,9 +371,13 @@
     --key-h: 72px;
   }
 }
-/* A focused field stays 16 px above the keyboard (the shell scrolls it into view). */
+/* A focused field stays 16 px above the keyboard (the shell scrolls it into view). A sheet
+   already sits above the keyboard, so inside one it's just the 16 px. */
 [data-osk] {
   scroll-margin-bottom: calc(var(--osk-h, 0px) + 16px);
+}
+dialog [data-osk] {
+  scroll-margin-bottom: 16px;
 }
 
 /* Numbers that change where they stand (the clock, counts): Lexend has no tabular figures,

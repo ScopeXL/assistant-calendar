@@ -26,6 +26,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - The Today panel's button at the top of the board is now an icon, the same size as the
   arrows beside it.
 - Settings → About → Storage says "Free space".
+- Add an account works on any device: a phone, a computer, or the kitchen screen, where the
+  password is typed on its own keyboard and stays hidden. Google's helper and Sign in with
+  Google show a code to finish on a phone. Back from Google's sign-in, Calendars & Accounts
+  says how it went and opens the new account's calendars.
 
 ### Fixed
 
@@ -38,6 +42,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - On a portrait kitchen screen, a busy day's all-day events no longer spill into the next
   day's row or hide its other events: whatever doesn't fit is behind "+N more".
 - On the week board, today's now line always shows, even when the day's events don't all fit.
+- The kitchen screen's keyboard now types into sheets (changing a person, setting the PIN), and
+  the sheet moves up so the field stays above the keys.
 
 ## [0.6.0] - 2026-10-08
 
