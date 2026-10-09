@@ -19,6 +19,9 @@ export const TAP_REM = 3.5;
 export const FULL_CHIP_REM = 4.5;
 const TITLE_REM = 1.75;
 const TWO_LINES_REM = 6.5;
+/** How much of a chip a later one in its column must leave uncovered: 24 px at standard size
+ * (WCAG 2.5.8, axe's target-size). */
+const UNCOVERED_REM = 1.5;
 const LANE_GAP = 8;
 const DAY_MINUTES = 24 * 60;
 
@@ -104,8 +107,35 @@ export interface MoreLane<T> {
   lanes: number;
 }
 
-/** A day's timed events in lanes: events that overlap share the column, in start order; when a
- * group has more than the lanes hold, the last lane says "+N" for the rest. */
+/**
+ * The groups that share a column side by side: events that overlap in time, joined by any that
+ * would start less than 1.5rem below the group's last chip. A chip's button is at least a tap
+ * target tall, so the next chip may sit on its tail, but never so close that less than 24 px of
+ * it stays uncovered.
+ */
+function hourGroups<T extends Placed>(
+  timed: readonly T[],
+  day: string,
+  pph: number,
+  rem: number,
+): T[][] {
+  const groups: { items: T[]; lastTop: number }[] = [];
+  for (const cluster of clusters(timed)) {
+    const tops = cluster.items.map((occurrence) => chipBox(occurrence, day, pph, rem).top);
+    const previous = groups.at(-1);
+    if (previous && Math.min(...tops) - previous.lastTop < UNCOVERED_REM * rem) {
+      previous.items.push(...cluster.items);
+      previous.lastTop = Math.max(previous.lastTop, ...tops);
+    } else {
+      groups.push({ items: [...cluster.items], lastTop: Math.max(...tops) });
+    }
+  }
+  return groups.map((group) => group.items);
+}
+
+/** A day's timed events in lanes: events that overlap (or start too close to cover less than
+ * 24 px of the one before) share the column, in start order; when a group has more than the
+ * lanes hold, the last lane says "+N" for the rest. */
 export function placeTimed<T extends Placed>(
   timed: readonly T[],
   day: string,
@@ -115,21 +145,21 @@ export function placeTimed<T extends Placed>(
 ): (PlacedChip<T> | MoreLane<T>)[] {
   const most = laneCount(columnWidth, rem);
   const out: (PlacedChip<T> | MoreLane<T>)[] = [];
-  for (const cluster of clusters(timed)) {
-    const lanes = Math.min(cluster.items.length, most);
-    const overflow = cluster.items.length > lanes;
-    const shown = overflow ? cluster.items.slice(0, lanes - 1) : cluster.items;
+  for (const items of hourGroups(timed, day, pph, rem)) {
+    const lanes = Math.min(items.length, most);
+    const overflow = items.length > lanes;
+    const shown = overflow ? items.slice(0, lanes - 1) : items;
     shown.forEach((occurrence, lane) => {
       out.push({ kind: "chip", occurrence, box: chipBox(occurrence, day, pph, rem), lane, lanes });
     });
     if (overflow) {
-      const boxes = cluster.items.map((occurrence) => chipBox(occurrence, day, pph, rem));
+      const boxes = items.map((occurrence) => chipBox(occurrence, day, pph, rem));
       const top = Math.min(...boxes.map((box) => box.top + box.offset));
       const bottom = Math.max(...boxes.map((box) => box.top + box.offset + box.visible));
       const height = Math.max(bottom - top, TAP_REM * rem);
       out.push({
         kind: "more",
-        hidden: cluster.items.slice(lanes - 1),
+        hidden: items.slice(lanes - 1),
         top: Math.max(0, Math.min(top, 24 * pph - height)),
         height,
         lane: lanes - 1,

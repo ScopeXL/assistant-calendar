@@ -252,6 +252,46 @@ test.describe("the wall screen", () => {
     await expect(page.getByRole("button", { name: "Change Mia Rose" })).toBeVisible();
   });
 
+  test("shows a tip under the board once the household turns tips on", async ({
+    page,
+    request,
+  }) => {
+    await request.post("/api/_test/clock", {
+      headers: CSRF,
+      data: { set: "2026-10-07T14:00:00Z" },
+    });
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/display");
+    const board = page.getByRole("region", { name: "This Week" });
+    await expect(board).toBeVisible();
+    const strip = page.locator("[data-tips]");
+    // Off until someone turns it on.
+    await expect(strip).toHaveCount(0);
+    const on = await page.request.patch("/api/settings", {
+      headers: CSRF,
+      data: { show_tips: true },
+    });
+    expect(on.ok()).toBe(true);
+    await expect(strip).toBeVisible();
+    const tip = strip.locator("p");
+    const first = (await tip.textContent()) ?? "";
+    await strip.getByRole("button", { name: "Next tip" }).click();
+    await expect(tip).not.toHaveText(first);
+    // A 56 px strip under the board; the board gives it the room.
+    const box = await strip.boundingBox();
+    const above = await board.boundingBox();
+    expect(Math.round(box?.height ?? 0)).toBe(56);
+    expect((above?.y ?? 0) + (above?.height ?? 0)).toBeLessThanOrEqual((box?.y ?? 0) + 1);
+    // Hours still fits the whole day at 24h with nothing to scroll.
+    await page.getByRole("button", { name: "Hours", exact: true }).click();
+    const grid = board.locator("[data-hours]");
+    await expect(grid).toBeVisible();
+    expect(
+      await grid.evaluate((node) => node.scrollHeight - node.clientHeight),
+    ).toBeLessThanOrEqual(0);
+  });
+
   test("sleeps on schedule and wakes at a touch", async ({ page, request }) => {
     // 11:30 PM in the household's zone, inside a 10 PM to 6 AM sleep schedule. No PIN: the wall
     // screen may change settings itself.

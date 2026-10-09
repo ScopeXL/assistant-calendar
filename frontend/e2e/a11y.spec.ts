@@ -348,6 +348,19 @@ for (const scheme of ["light", "dark"] as const) {
       const board = page.getByRole("region", { name: "This Week" });
       await expect(board).toBeVisible();
       await check(page, "display: board");
+      // Tips on (a parent's phone turns them on): the strip stays under the board from here.
+      const parent = await request.post("/api/auth/login", {
+        headers: CSRF,
+        data: { password: PASSWORD },
+      });
+      expect(parent.ok()).toBe(true);
+      const tips = await request.patch("/api/settings", {
+        headers: CSRF,
+        data: { show_tips: true },
+      });
+      expect(tips.ok()).toBe(true);
+      await expect(page.locator("[data-tips]")).toBeVisible();
+      await check(page, "display: board with a tip");
       await board.getByRole("button", { name: /^Soccer practice, .*Thursday/ }).click();
       await expect(page.getByRole("dialog", { name: "Soccer practice" })).toBeVisible();
       await check(page, "display: event");
@@ -459,6 +472,7 @@ for (const scheme of ["light", "dark"] as const) {
         if (title === "Family") await sheet(page, "Change Mia", "display: change a person");
         if (title === "Calendars & Accounts") {
           await sheet(page, "Change Kids' activities", "display: change a calendar");
+          await sheet(page, "Add an account", "display: add an account");
         }
       }
     });

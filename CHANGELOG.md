@@ -11,6 +11,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - The week can show each day as hours, midnight to midnight, with longer events taller and the
   now line creeping through today: Settings → Display → Week layout → Hours, or the Hours
   button on the board. When a day is busy, zoom with 24h · 12h · 1h · 15m.
+- Tips: Settings → Display → Show tips puts one thing Sunroom can do under the board, a new one
+  every half hour.
 - The top-right corner of the board, and the phone's Calendar, show whether the screen is
   getting live updates: connected, reconnecting, checking every 30 seconds, or offline. Tap it
   to hear which. Settings → About → Connection shows the same icon.

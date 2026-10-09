@@ -150,7 +150,7 @@ export function ToastRegion({ display = false }: { display?: boolean }) {
       aria-live="polite"
       className={
         display
-          ? "pointer-events-none fixed right-[var(--panel-w)] bottom-6 left-[var(--rail-w)] z-40 flex flex-col items-center gap-2 px-6 portrait:right-0 portrait:bottom-32 portrait:left-0"
+          ? "pointer-events-none fixed right-[var(--panel-w)] bottom-[calc(1.5rem+var(--tips-h,0px))] left-[var(--rail-w)] z-40 flex flex-col items-center gap-2 px-6 portrait:right-0 portrait:bottom-[calc(8rem+var(--tips-h,0px))] portrait:left-0"
           : "pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--tabbar-h)+12px)] z-40 flex flex-col items-center gap-2 px-4 print:hidden lg:bottom-6"
       }
     >

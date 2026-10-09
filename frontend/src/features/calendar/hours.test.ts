@@ -131,6 +131,21 @@ describe("lanes", () => {
     ]);
   });
 
+  it("never lets a later chip cover all but less than 24 px of the one before (WCAG 2.5.8)", () => {
+    // An hour apart at 22 px an hour: the second chip would start 22 px down the first one's
+    // 56 px button, so they share the column side by side instead.
+    const close = [timed("a", "08:00", "08:30"), timed("b", "09:00", "09:30")];
+    expect(placeTimed(close, DAY, 22, REM, 176).map((item) => [item.lane, item.lanes])).toEqual([
+      [0, 2],
+      [1, 2],
+    ]);
+    // At 25 px an hour, 25 px of the first stays uncovered: the second sits on its tail.
+    expect(placeTimed(close, DAY, 25, REM, 176).map((item) => [item.lane, item.lanes])).toEqual([
+      [0, 1],
+      [0, 1],
+    ]);
+  });
+
   it("places a lane across its column, 8 px between", () => {
     expect(laneStyle(1, 2)).toEqual({
       left: "calc(1 * (100% + 8px) / 2)",

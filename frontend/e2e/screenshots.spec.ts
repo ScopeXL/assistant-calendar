@@ -138,7 +138,17 @@ test("the wall screen", async ({ page }) => {
   await expect(root).toHaveAttribute("data-text-size", "xl");
   await expect(board.locator("[data-now-line]")).toBeVisible();
   await shot(page, "board-hours-24h-xl");
-  await change(page, { text_size: "standard", display_week_layout: "agenda" });
+  // Tips under the board: Agenda, then the whole day in Hours above the strip.
+  await change(page, { text_size: "standard", show_tips: true });
+  await page.reload();
+  await expect(page.locator("[data-tips]")).toBeVisible();
+  await expect(board.locator("[data-now-line]")).toBeVisible();
+  await shot(page, "board-hours-24h-tips");
+  await change(page, { display_week_layout: "agenda" });
+  await page.reload();
+  await expect(page.locator("[data-tips]")).toBeVisible();
+  await shot(page, "board-tips");
+  await change(page, { show_tips: false });
   await page.reload();
   await expect(board).toBeVisible();
   await board.getByRole("button", { name: /^Soccer practice, .*Thursday/ }).click();

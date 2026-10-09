@@ -8,6 +8,7 @@ import { AddPanel } from "../features/calendar/AddPanel";
 import { useReminders } from "../features/calendar/reminders";
 import { TodayPanel } from "../features/calendar/TodayPanel";
 import { usePluginRooms, useRailBlocks, useScreenOverlays } from "../features/usePluginModules";
+import { TipsBar } from "../features/tips/TipsBar";
 import { zonedParts } from "../lib/dates";
 import {
   displayState,
@@ -276,6 +277,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
           ) : null}
           <main className="flex min-h-0 min-w-0 flex-1 flex-col pb-[var(--osk-h,0px)]">
             {children}
+            <TipsBar />
           </main>
           {showPanel ? (
             <div

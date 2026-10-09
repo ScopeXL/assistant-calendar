@@ -371,6 +371,11 @@
     --key-h: 72px;
   }
 }
+/* The tips strip under the board (features/tips): while it shows, the wall's toasts sit above it. */
+:root:has([data-tips]) {
+  --tips-h: 3.5rem;
+}
+
 /* A focused field stays 16 px above the keyboard (the shell scrolls it into view). A sheet
    already sits above the keyboard, so inside one it's just the 16 px. */
 [data-osk] {
