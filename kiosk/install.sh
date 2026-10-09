@@ -26,7 +26,7 @@
 set -euo pipefail
 set -o errtrace
 
-KIOSK_VERSION="0.5.0" # Sunroom's VERSION (`just bump` sets it), written into every file it creates
+KIOSK_VERSION="0.6.0" # Sunroom's VERSION (`just bump` sets it), written into every file it creates
 SUNROOM_REPO="ScopeXL/assistant-calendar"
 SUNROOM_IMAGE="scopexl/sunroom"
 
