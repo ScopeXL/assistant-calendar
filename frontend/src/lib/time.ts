@@ -39,6 +39,16 @@ export function resyncClock(): void {
 
 onClockMoved(resyncClock);
 
+/** Bumped when the household's zone or 12- or 24-hour choice changes, so every clock, date and
+ * time on screen redraws at once instead of at the next minute (lib/household). */
+const preferences = createStore<number>(0);
+
+/** Redraw everything that reads the time now: the household's zone or clock changed. */
+export function refreshMinute(): void {
+  preferences.set((count) => count + 1);
+}
+
 export function useMinute(): Date {
+  useStore(preferences);
   return new Date(useStore(minute));
 }

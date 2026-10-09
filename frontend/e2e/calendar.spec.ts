@@ -163,3 +163,36 @@ test("the views, the event sheet and Recently removed", async ({ page }) => {
   await page.getByRole("link", { name: "Calendar", exact: true }).click();
   await expect(board.getByRole("button", { name: /^Vet, / })).toBeVisible();
 });
+
+test("times follow the household's zone and its 12- or 24-hour clock", async ({
+  page,
+  browser,
+  watch,
+}) => {
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  // The visible now line (FitList keeps an invisible copy for measuring).
+  const nowLabel = board.locator(".now-label:visible");
+  await expect(nowLabel).toHaveText("now 10:00");
+
+  // A parent's phone moves the household to Honolulu, where 14:00 UTC is 4:00 in the morning.
+  const { page: phonePage, context } = await phone(browser, watch);
+  await signInPhone(phonePage);
+  const change = async (settings: Record<string, string>) => {
+    const response = await phonePage.request.patch("/api/settings", {
+      headers: CSRF,
+      data: settings,
+    });
+    expect(response.status()).toBe(200);
+  };
+  await change({ timezone: "Pacific/Honolulu" });
+  await expect(nowLabel).toHaveText("now 4:00", { timeout: 3_000 });
+
+  // Back home, on the 24-hour clock: Thursday's soccer practice starts at 16:00.
+  await change({ timezone: "America/New_York", time_format: "24h" });
+  const soccer = board.getByRole("button", { name: /^Soccer practice, .*Thursday October 8/ });
+  await expect(soccer).toContainText("16:00", { timeout: 3_000 });
+  await expect(nowLabel).toHaveText("now 10:00");
+  await context.close();
+});

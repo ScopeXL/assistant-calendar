@@ -3,7 +3,7 @@ import { CalendarDays, Menu, Sun, type LucideIcon } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import { usePluginRooms } from "../features/usePluginModules";
-import { useSettings } from "../lib/household";
+import { useDatePreferences, useSettings } from "../lib/household";
 import { useLiveUpdates } from "../lib/live";
 import { MotionProvider } from "../lib/motion";
 import { sunDay } from "../lib/sun";
@@ -95,6 +95,7 @@ export function TabBar() {
 export function PhoneShell({ children, tabs = true }: { children: ReactNode; tabs?: boolean }) {
   // Screens before signing in (no tabs) have no stream to open.
   useLiveUpdates(tabs);
+  useDatePreferences({ enabled: tabs });
   const { data: settings } = useSettings({ enabled: tabs });
   const now = useMinute();
   const { day, hour, minute } = zonedParts(now);

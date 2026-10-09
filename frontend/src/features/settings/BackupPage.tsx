@@ -3,15 +3,18 @@ import { useState } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
+import { formatTime, shortDate, zonedParts } from "../../lib/dates";
 import { asParent } from "../../lib/parent";
 import { showToast } from "../../lib/toast";
 import { Button } from "../../ui/Button";
 import { useShell } from "../../ui/shell";
 import { Group, Row, Text } from "./parts";
 
+/** "Wed, Oct 7, 3:00 AM", in the household's zone and clock (not the device's). */
 function when(iso: string | null): string {
   if (!iso) return "Not yet. The first runs tonight.";
-  return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  const moment = new Date(iso);
+  return `${shortDate(zonedParts(moment).day)}, ${formatTime(moment)}`;
 }
 
 /** The downloads are plain links: the browser saves the file itself, however big it is. */

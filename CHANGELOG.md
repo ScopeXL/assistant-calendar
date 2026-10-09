@@ -13,6 +13,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
   they were.
 - "Kid" is now "Child" everywhere you read it.
 
+### Fixed
+
+- Times on every screen now follow the household's time zone and 12- or 24-hour choice from
+  Settings → Household, not the device's.
+
 ## [0.6.0] - 2026-10-08
 
 ### Added

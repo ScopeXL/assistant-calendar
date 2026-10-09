@@ -16,7 +16,7 @@ import {
   resetBoard,
   updateDisplay,
 } from "../lib/displayState";
-import { useSettings } from "../lib/household";
+import { useDatePreferences, useSettings } from "../lib/household";
 import { idleFor, swallowFollowingClick, watchActivity, whenIdle } from "../lib/idle";
 import { watchKeyboardFields } from "../lib/keyboard";
 import { MotionProvider } from "../lib/motion";
@@ -88,6 +88,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const update = useAppUpdate();
   useKeepAwake(kiosk);
   useLiveUpdates();
+  useDatePreferences();
   useReminders();
 
   const { mutate: lockNow } = useMutation({
