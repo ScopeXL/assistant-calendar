@@ -167,12 +167,12 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
         }}
       />
       <Segmented
-        label="Parent or kid"
+        label="Parent or child"
         value={role}
         onChange={setRole}
         options={[
           { value: "parent", label: "Parent" },
-          { value: "kid", label: "Kid" },
+          { value: "kid", label: "Child" },
         ]}
       />
       <fieldset className="flex flex-col gap-2">

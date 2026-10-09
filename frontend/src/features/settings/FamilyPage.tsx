@@ -16,7 +16,7 @@ import { TextField } from "../../ui/TextField";
 import { MemberSheet } from "./MemberSheet";
 import { Group, Row, Text } from "./parts";
 
-/** Settings → Family (UX §4): the people, the parent PIN and Kid-safe editing. */
+/** Settings → Family (UX §4): the people, the parent PIN and Child-safe editing. */
 export function FamilyPage() {
   const display = useShell() === "display";
   const { data: members = [] } = useMembers();
@@ -45,7 +45,7 @@ export function FamilyPage() {
       <Group title="People">
         {members.length === 0 ? (
           <div className="py-4">
-            <Text soft>Add the people who live here, kids included.</Text>
+            <Text soft>Add the people who live here, children included.</Text>
           </div>
         ) : null}
         {members.map((member) => (
@@ -63,7 +63,7 @@ export function FamilyPage() {
                   display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"
                 }
               >
-                {`${member.role === "kid" ? "Kid" : "Parent"}, ${member.color_word}`}
+                {`${member.role === "kid" ? "Child" : "Parent"}, ${member.color_word}`}
               </span>
             </div>
             <Button
@@ -145,12 +145,12 @@ function AddPerson() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-56">
           <Segmented
-            label="Parent or kid"
+            label="Parent or child"
             value={role}
             onChange={setRole}
             options={[
               { value: "parent", label: "Parent" },
-              { value: "kid", label: "Kid" },
+              { value: "kid", label: "Child" },
             ]}
           />
         </div>
@@ -216,7 +216,7 @@ function ParentPin() {
       note={
         hasPin
           ? "Settings, approvals and changing events on the kitchen screen ask for it."
-          : "Set a parent PIN so kids can't open Settings on the kitchen screen."
+          : "Set a parent PIN so children can't open Settings on the kitchen screen."
       }
     >
       {editing ? (
@@ -292,7 +292,7 @@ function ParentPin() {
         </Row>
       )}
       <Switch
-        label="Kid-safe editing"
+        label="Child-safe editing"
         hint="Changing or removing events on the kitchen screen asks for the PIN. Adding and checking off never do."
         checked={settings?.kid_safe_editing ?? true}
         onChange={(value) => {

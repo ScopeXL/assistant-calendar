@@ -7,7 +7,7 @@ computer at home, with no account anywhere and no subscription.
   for now, readable from across the room.
 - **Every phone** adds and changes things, and the screen follows within a second.
 - **Made for a family:** one household password, a parent PIN for Settings on the shared screen,
-  kids with their own colors, and nothing that needs a technical grown-up every week.
+  children with their own colors, and nothing that needs a technical grown-up every week.
 - **Your data stays home,** in one Docker container with nightly backups.
 
 **Status:** working, and still growing toward 1.0. It has the calendar (with iCloud, Google and

@@ -37,14 +37,14 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.getByRole("button", { name: "Search" }).click();
   await phonePage.getByRole("button", { name: /^Sample Town/ }).click();
 
-  // Who lives here? Start with you, then a kid.
+  // Who lives here? Start with you, then a child.
   await expect(phonePage.getByRole("heading", { name: "Who lives here?" })).toBeVisible();
   await phonePage.getByLabel("Your name").fill("Ana");
   await phonePage.getByRole("button", { name: "Add me" }).click();
   await phonePage.getByLabel("Name", { exact: true }).fill("Mia");
-  await phonePage.getByRole("button", { name: "Kid" }).click();
+  await phonePage.getByRole("button", { name: "Child", exact: true }).click();
   await phonePage.getByRole("button", { name: "Add another" }).click();
-  await expect(phonePage.getByRole("listitem").filter({ hasText: "Mia" })).toContainText("Kid");
+  await expect(phonePage.getByRole("listitem").filter({ hasText: "Mia" })).toContainText("Child");
   await phonePage.getByRole("button", { name: "Next", exact: true }).click();
 
   await phonePage.getByLabel("PIN (4 to 6 digits)").fill(PIN);

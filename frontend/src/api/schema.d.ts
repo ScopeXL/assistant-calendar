@@ -383,7 +383,7 @@ export interface paths {
         /**
          * Set Pin
          * @description Set or change the PIN. Where the PIN is what made this device a parent (the wall screen, a
-         *     kid's phone), changing it asks for the current one; a parent's own phone doesn't need it, so
+         *     child's phone), changing it asks for the current one; a parent's own phone doesn't need it, so
          *     a forgotten PIN can always be reset from there.
          */
         put: operations["set_pin_api_auth_pin_put"];
@@ -4513,7 +4513,7 @@ export interface components {
         };
         /**
          * RoutineRunOut
-         * @description A kid's routine on a day: its steps, what's checked, and whether its window is open.
+         * @description A child's routine on a day: its steps, what's checked, and whether its window is open.
          */
         RoutineRunOut: {
             /** Checked */
@@ -4552,7 +4552,7 @@ export interface components {
         };
         /**
          * RoutinesOut
-         * @description GET chores/routines: the routines as made in Settings, and each kid's day of them.
+         * @description GET chores/routines: the routines as made in Settings, and each child's day of them.
          */
         RoutinesOut: {
             /** Routines */

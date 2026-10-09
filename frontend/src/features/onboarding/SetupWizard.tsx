@@ -398,7 +398,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
       <p className="text-body text-ink-soft">
         {first
           ? "Start with you. Each person gets a color, used everywhere they appear."
-          : "Add everyone, kids included."}
+          : "Add everyone, children included."}
       </p>
       {members.length > 0 ? (
         <ul className="flex flex-col gap-2">
@@ -410,7 +410,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
               <Avatar member={member} size="sm" />
               <span className="text-row font-semibold">{member.name}</span>
               <span className="ml-auto text-secondary text-ink-soft">
-                {member.role === "kid" ? "Kid" : "Parent"}
+                {member.role === "kid" ? "Child" : "Parent"}
               </span>
             </li>
           ))}
@@ -434,12 +434,12 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
           }}
         />
         <Segmented
-          label="Parent or kid"
+          label="Parent or child"
           value={role}
           onChange={setRole}
           options={[
             { value: "parent", label: "Parent" },
-            { value: "kid", label: "Kid" },
+            { value: "kid", label: "Child" },
           ]}
         />
         <Button
@@ -473,8 +473,8 @@ function PinStep({ onNext }: { onNext: () => void }) {
   return (
     <Page title="Set a Parent PIN?" step="5 of 7">
       <p className="text-body text-ink-soft">
-        It keeps kids out of Settings on the kitchen screen. Adding events and checking off chores
-        never ask for it.
+        It keeps children out of Settings on the kitchen screen. Adding events and checking off
+        chores never ask for it.
       </p>
       <form
         className="flex flex-col gap-4"

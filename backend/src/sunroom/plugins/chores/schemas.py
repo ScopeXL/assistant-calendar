@@ -132,7 +132,7 @@ class RoutineStepOut(BaseModel):
 
 
 class RoutineRunOut(BaseModel):
-    """A kid's routine on a day: its steps, what's checked, and whether its window is open."""
+    """A child's routine on a day: its steps, what's checked, and whether its window is open."""
 
     routine_id: str
     member_id: str
@@ -322,7 +322,7 @@ class FinishOut(BaseModel):
 
 
 class RoutinesOut(BaseModel):
-    """GET chores/routines: the routines as made in Settings, and each kid's day of them."""
+    """GET chores/routines: the routines as made in Settings, and each child's day of them."""
 
     routines: list[RoutineOut]
     runs: list[RoutineRunOut]

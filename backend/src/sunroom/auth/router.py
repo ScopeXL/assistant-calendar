@@ -320,7 +320,7 @@ async def revoke(state: AppState, device_ids: list[str]) -> None:
 @router.put("/pin", status_code=204)
 async def set_pin(body: PinSetIn, state: StateDep, actor: ParentDep) -> None:
     """Set or change the PIN. Where the PIN is what made this device a parent (the wall screen, a
-    kid's phone), changing it asks for the current one; a parent's own phone doesn't need it, so
+    child's phone), changing it asks for the current one; a parent's own phone doesn't need it, so
     a forgotten PIN can always be reset from there."""
     now = state.clock.now()
     async with state.db.write() as tx:

@@ -65,7 +65,7 @@ export function sourceLine(calendar: CalendarInfo, readOnly: boolean): string | 
 
 /**
  * An event's sheet (UX §4 "Event sheet"): when, how it repeats, who, where, which calendar and
- * the notes, then Change, Move and Remove. A repeating event asks which ones. With Kid-safe
+ * the notes, then Change, Move and Remove. A repeating event asks which ones. With Child-safe
  * editing on, Change and Remove on the wall screen ask for the parent PIN; Move doesn't.
  */
 export function EventSheet({

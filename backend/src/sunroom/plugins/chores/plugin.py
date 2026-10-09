@@ -29,7 +29,7 @@ MANIFEST = PluginManifest(
             "stars",
             "Stars",
             "bool",
-            help="Chores give stars, and kids see their own.",
+            help="Chores give stars, and children see their own.",
             default=True,
         ),
         ParamField(
@@ -43,7 +43,7 @@ MANIFEST = PluginManifest(
             "routines",
             "Routines",
             "bool",
-            help="Morning and bedtime checklists kids run on their own.",
+            help="Morning and bedtime checklists children run on their own.",
             default=True,
         ),
         ParamField(

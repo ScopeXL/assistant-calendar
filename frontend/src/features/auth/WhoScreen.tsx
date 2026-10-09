@@ -113,12 +113,12 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
             className="min-h-12 rounded-button border-2 border-line bg-surface px-4 text-body"
           />
           <Segmented
-            label="Parent or kid"
+            label="Parent or child"
             value={role}
             onChange={setRole}
             options={[
               { value: "parent", label: "Parent" },
-              { value: "kid", label: "Kid" },
+              { value: "kid", label: "Child" },
             ]}
           />
           <Button type="submit" block pending={addMe.isPending} disabled={!name.trim()}>

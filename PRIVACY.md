@@ -13,7 +13,7 @@ photo files.
 
 - The household's name, time zone and settings, and the place you give for the weather (a place
   name and its coordinates), which also times the screen's sunrise and sunset theme.
-- Household members' names, whether each is a parent or a kid, their color, and optionally a
+- Household members' names, whether each is a parent or a child, their color, and optionally a
   birthday and a photo.
 - What the family adds: calendars and events (with their places, notes, people and reminders),
   lists, chores, stars, rewards and routines, meals, and countdowns. Removed things wait in

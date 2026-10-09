@@ -15,7 +15,7 @@ Wireframes show structure, not styling. The display is drawn at 1920×1080 (and 
 7. [Visual direction: "Sunroom"](#7-visual-direction-sunroom)
 8. [Empty and quiet states](#8-empty-and-quiet-states)
 9. [Motion spec](#9-motion-spec)
-10. [Accessibility, kids, guests and the screenshot checklist](#10-accessibility-kids-guests-and-the-screenshot-checklist)
+10. [Accessibility, children, guests and the screenshot checklist](#10-accessibility-children-guests-and-the-screenshot-checklist)
 11. [Refinements adopted from the interaction design](#11-refinements-adopted-from-the-interaction-design)
 
 ---
@@ -137,7 +137,7 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 | Editing ease | Best: tap a day to add on it; drag chips across days | Fair: only today is in reach | Fair: no day targets |
 | Density with 6 calendars | Good: 9–12 chips a day before "+N more"; filters and per-calendar "show on this screen" | Poor beyond today | Good for today; cramped with 5+ people in week mode |
 | Portrait | Days become rows, the panel becomes the top band | Natural | Columns fall under 180 px with 6 people |
-| Who it suits | Most households | Small households, grandparents, a hallway screen | Big households; kids who want to see "mine" |
+| Who it suits | Most households | Small households, grandparents, a hallway screen | Big households; children who want to see "mine" |
 
 **Decision:** A is the default board; B is the **Today** view (selectable, and the default on screens narrower than 1280 px); C is **Who's Doing What**; Month is the fourth view. The Today panel can be hidden per screen.
 
@@ -230,7 +230,7 @@ Overlapping events sit side by side, each at least half the width; more than thr
 
 **Month view**: cells with the day number (28 px, today's in a filled circle), up to three one-line entries at 20 px with a 4 px color bar and the person's initial, then "+N more"; a countdown's day shows a small star mark; the current week is lit a step and today two. A cell is one button that opens its Day view, where every event is a full chip: three tappable entries won't fit a cell at the wall's 56 px tap size (decided in M1).
 
-**Who's Doing What**: one column per person, Everyone first, in household order; Today or This Week (rows per day inside each column, compact one-line chips). Each column: the avatar at 72 px with the name (glance-sized so a kid finds their own column), today's events, that person's chores with working checkboxes (the same celebration as the Chores room), then "Cooks tonight" if set. Up to seven columns fit; an eighth pages horizontally.
+**Who's Doing What**: one column per person, Everyone first, in household order; Today or This Week (rows per day inside each column, compact one-line chips). Each column: the avatar at 72 px with the name (glance-sized so a child finds their own column), today's events, that person's chores with working checkboxes (the same celebration as the Chores room), then "Cooks tonight" if set. Up to seven columns fit; an eighth pages horizontally.
 
 **Event sheet** (a 640 px side panel from the right in landscape, over the Today panel; a bottom sheet in portrait):
 
@@ -247,7 +247,7 @@ Overlapping events sit side by side, each at least half the width; more than thr
 +-----------------------------------------+
 ```
 
-**Change** opens the editor filled in; **Move** opens a day picker (the next 14 days as chips plus a month grid) and asks "Move Which?" for a repeating event; **Remove** removes with Undo and asks "Remove Which?" for a repeating event. A read-only synced event shows the source line in place of the buttons: "From iCloud · Work. Change it in the Calendar app." A writable synced event behaves like a Home event and says "Google · Family" quietly. With Kid-safe editing on, Change and Remove on the display ask for the parent PIN; Move does not.
+**Change** opens the editor filled in; **Move** opens a day picker (the next 14 days as chips plus a month grid) and asks "Move Which?" for a repeating event; **Remove** removes with Undo and asks "Remove Which?" for a repeating event. A read-only synced event shows the source line in place of the buttons: "From iCloud · Work. Change it in the Calendar app." A writable synced event behaves like a Home event and says "Google · Family" quietly. With Child-safe editing on, Change and Remove on the display ask for the parent PIN; Move does not.
 
 **Add and the event editor.** **Add** (the rail's plus) opens the Add panel with the type that fits the current room preselected and the quick-add field focused; tapping empty space on a day column, an hour band or a month cell opens it with Event selected and that date set. The board stays visible and accepts one kind of tap while the panel is open: a day, to set the date.
 
@@ -333,9 +333,9 @@ Rows 72 px; a 64 px checkbox at the left in a 96 px tap column; the name at body
 +----------+----------------------------------------------------------------------------+------------------------+
 ```
 
-One column per person with chores today, plus **Anyone** last; the header is glance-sized (avatar, name, "2 of 3", the star balance if stars are on); empty columns read "Nothing today". A chore row: a 64 px box, the title at body size, due time, stars and "Mia's turn" at secondary. Done rows move under a Done heading in the same column and keep their stamp; they are not hidden, because seeing them is the reward. Completing an assigned chore is one tap; an Anyone chore pops "Who did it?" beside the box. Undo on the toast reverses the stamp and the stars; tapping a done box again un-does it ("Not done yet"). **This Week** shows seven compact rows per column (day, count, a check or a dash), the fridge-chart feel. Routines appear at the bottom of their kid's column during their window with **Start**. Editing: tap the title → Change, Skip today (with Undo), Remove.
+One column per person with chores today, plus **Anyone** last; the header is glance-sized (avatar, name, "2 of 3", the star balance if stars are on); empty columns read "Nothing today". A chore row: a 64 px box, the title at body size, due time, stars and "Mia's turn" at secondary. Done rows move under a Done heading in the same column and keep their stamp; they are not hidden, because seeing them is the reward. Completing an assigned chore is one tap; an Anyone chore pops "Who did it?" beside the box. Undo on the toast reverses the stamp and the stars; tapping a done box again un-does it ("Not done yet"). **This Week** shows seven compact rows per column (day, count, a check or a dash), the fridge-chart feel. Routines appear at the bottom of their child's column during their window with **Start**. Editing: tap the title → Change, Skip today (with Undo), Remove.
 
-**Stars & Rewards** (when enabled): a balances strip per kid ("★ 42 · +12 this week · 6 days in a row"), reward tiles (title, cost, **Ask for it**), and an **Asked** list with **Approve** (PIN on the display) and **Not now**. Ask for it opens the kids-only Who picker; a reward costing more than the balance says "Mia has 18 of 30 stars" under a disabled button. Streaks reset quietly to "0 days in a row". Settings → Chores sets stars per chore, adds rewards, and turns stars, rewards or routines off, which hides every star glyph.
+**Stars & Rewards** (when enabled): a balances strip per child ("★ 42 · +12 this week · 6 days in a row"), reward tiles (title, cost, **Ask for it**), and an **Asked** list with **Approve** (PIN on the display) and **Not now**. Ask for it opens the children-only Who picker; a reward costing more than the balance says "Mia has 18 of 30 stars" under a disabled button. Streaks reset quietly to "0 days in a row". Settings → Chores sets stars per chore, adds rewards, and turns stars, rewards or routines off, which hides every star glyph.
 
 **Routine runner** (full screen; the rail and panel hide)
 
@@ -350,7 +350,7 @@ One column per person with chores today, plus **Anyone** last; the header is gla
 +-------------------------------------------------------------------------------------------------+
 ```
 
-The step title is 64 px; the icon comes from the step library (toothbrush, bed, book, shirt, backpack, sun, moon, bath, plate, dog…) chosen when the routine is made, so a pre-reader can follow. **Done** (120 px tall, 60% wide, in the kid's color) stamps and bursts, and the next step slides in from the right; skipped steps show hollow dots. The last Done shows "All done, Leo! Night night." for 6 s with the full-screen burst and "+5 stars" if the routine gives stars, then returns to Chores. **Stop** asks nothing; checked steps are kept for the day, so the column offers **Continue** while the routine's window is open.
+The step title is 64 px; the icon comes from the step library (toothbrush, bed, book, shirt, backpack, sun, moon, bath, plate, dog…) chosen when the routine is made, so a pre-reader can follow. **Done** (120 px tall, 60% wide, in the child's color) stamps and bursts, and the next step slides in from the right; skipped steps show hollow dots. The last Done shows "All done, Leo! Night night." for 6 s with the full-screen burst and "+5 stars" if the routine gives stars, then returns to Chores. **Stop** asks nothing; checked steps are kept for the day, so the column offers **Continue** while the routine's window is open.
 
 **Meals room**
 
@@ -369,7 +369,7 @@ The step title is 64 px; the icon comes from the step library (toothbrush, bed, 
 
 Rows are days (120 px), columns are the enabled meal slots (Dinner only by default); today's row is lit; a cell shows the meal name (with its emoji) at body size and who cooks, in their color. The header has the week's arrows, This Week, **Copy last week** (Undo) and **Saved Meals**. Tapping a filled cell: Change, Swap days (the week's other days as chips; whatever was there takes its place), Add ingredients to Groceries (when the saved meal has ingredients and Lists is on), Remove (Undo). **Saved Meals** is the library: every meal the family has typed, most made first, as tiles with the name, "Made 6 times", its ingredients and recipe link; New saved meal; a tile opens its name, emoji, recipe link, ingredients (with commas) and Archive. The add panel offers saved meals first (most made first, with search), then "Or type a new meal", Day, Which meal (when there's more than dinner), Who cooks, and "Add 5 items to Groceries" as a switch. A countdown's photo and a saved meal's photo wait for a later milestone (ADR 0026).
 
-**Countdowns room**: tiles 400 × 280 px sorted by date, the number at 72 px ("12 days", "Tomorrow", "Today!"), the emoji and name, the date (and "Turns 9" for a kid's birthday), and the person, in their color. Birthdays come from Family by themselves (Settings → Features can turn that off). A tile opens Change and Remove; a birthday's says it comes from Family. Add countdown asks what it counts down to, the day, whose, an emoji, a color, **Every year**, and **Show it on the kitchen screen** (off for a surprise: phones only). Past countdowns leave the next day into Recently Removed. On the day, the Today panel reads "Today: Mia's birthday!" and the first touch of the day plays the big celebration once.
+**Countdowns room**: tiles 400 × 280 px sorted by date, the number at 72 px ("12 days", "Tomorrow", "Today!"), the emoji and name, the date (and "Turns 9" for a child's birthday), and the person, in their color. Birthdays come from Family by themselves (Settings → Features can turn that off). A tile opens Change and Remove; a birthday's says it comes from Family. Add countdown asks what it counts down to, the day, whose, an emoji, a color, **Every year**, and **Show it on the kitchen screen** (off for a surprise: phones only). Past countdowns leave the next day into Recently Removed. On the day, the Today panel reads "Today: Mia's birthday!" and the first touch of the day plays the big celebration once.
 
 **Photos room**: "124 photos", **Start screensaver**, **Settings** (the screensaver part of Display settings, behind the PIN: start after 5, 10, 15, 30 minutes or Never; change photo every 15 s, 30 s, 1 or 2 min; show the clock and next event; shuffle; sources). A line "Add photos from a phone: open Sunroom → More → Photos" with a QR; then a grid of 200 px thumbnails, newest first. Tapping one opens it full screen with Previous, Next and Hide from screensaver; the display can hide photos but never deletes them (phones delete, with Undo).
 
@@ -389,13 +389,13 @@ The photo fits inside the screen (never cropped; the letterbox takes the wall's 
 
 **Night** (from Settings → Display → Sleep: from, to, and **Dim clock** or **Screen off**): Dim clock is a black screen with the clock at 200 px in a 35% ink-soft and tomorrow's first event under it, and the Pi's helper turns the panel down to 20%; Screen off is fully black, and the helper switches the screen itself off (PLAN §13.5). A tap wakes it for 2 minutes in the dark theme, at full brightness; routines and chores still work in those minutes. **Dim in the evening** (only with sleep times): from its time until sleep starts the screen is less bright, **A little**, **Half** or **Low** (60, 40 or 20%). The helper turns the panel down where it can (DDC/CI, or a backlight); anywhere else the page draws a dark veil over itself, so the two never both dim.
 
-**Parent PIN** (a centred dialog whenever the display needs a parent): four to six dots, a 3 × 4 keypad with 80 px keys, Cancel, and the line "Forgot it? Change it from a parent's phone: More → Settings → Family → Parent PIN." The dialog accepts as soon as the right length matches; a wrong PIN shakes the dots once and says "That PIN didn't match. Try again."; five wrong in a row: "Too many tries. Wait 1 minute." with a countdown. A correct PIN opens Settings for 10 minutes of activity (the rail lock shows open; **Lock** in the Settings header ends it; Settings auto-lock after 2 minutes idle). With no PIN set, the lock opens Settings directly and the Family page says "Set a parent PIN so kids can't open Settings on this screen."
+**Parent PIN** (a centred dialog whenever the display needs a parent): four to six dots, a 3 × 4 keypad with 80 px keys, Cancel, and the line "Forgot it? Change it from a parent's phone: More → Settings → Family → Parent PIN." The dialog accepts as soon as the right length matches; a wrong PIN shakes the dots once and says "That PIN didn't match. Try again."; five wrong in a row: "Too many tries. Wait 1 minute." with a countdown. A correct PIN opens Settings for 10 minutes of activity (the rail lock shows open; **Lock** in the Settings header ends it; Settings auto-lock after 2 minutes idle). With no PIN set, the lock opens Settings directly and the Family page says "Set a parent PIN so children can't open Settings on this screen."
 
 **Settings (display)**: a list-and-detail layout; the Today panel hides. Anything that needs a secret says "Do this on a phone" with a QR code to that page, because secrets are not typed on a wall.
 
 | Page | Contents |
 |---|---|
-| Family | One row per person: avatar, name, role, color word, **Change** (Name; Parent or Kid; Color, eight named colors each showing the initial; Photo via a phone QR or Remove photo; **Save changes** with Undo; **Remove Mia** confirms and offers to keep her history). **Add a person**. **Parent PIN** (Set, Change, Remove; changing asks the old one). **Kid-safe editing** on/off |
+| Family | One row per person: avatar, name, role, color word, **Change** (Name; Parent or Child; Color, eight named colors each showing the initial; Photo via a phone QR or Remove photo; **Save changes** with Undo; **Remove Mia** confirms and offers to keep her history). **Add a person**. **Parent PIN** (Set, Change, Remove; changing asks the old one). **Child-safe editing** on/off |
 | Features | One row per plugin with a switch and one line on what it adds: Synced Calendars, Lists, Chores (sub-switches Stars, Rewards, Routines), Meals (which columns), Countdowns, Photos & Screensaver, Weather. Turning one off hides its room and panel at once; its data stays. A stopped plugin shows "Retry" |
 | Calendars & Accounts | **Home calendar** (always). Then each account ("iCloud · ana@…") with its calendars under it, each with a person chip, a **Show on this screen** switch and a status line ("Updated 9:10 AM" or the quiet error). **Refresh now**. **Add an account** → "Connect accounts on a phone: it needs a password you shouldn't type here" with a QR, except **Connect Google on this screen** when the display is at `localhost`. **Disconnect** is phone-only |
 | Display | Theme Light / Dark / Auto; Text size Standard / Large / Extra large (previews live); Daylight tint on/off; Rail side Left / Right; Controls at the bottom; Today panel Show / Hide; Home view Week / Today / Who's Doing What; Return to home after 2 / 5 / 10 min / Never; Dim past events; Screensaver (as in Photos); Sleep (from, to, Dim clock / Screen off; Dim in the evening from a time, A little / Half / Low); Sounds On / Off; Orientation Auto / Landscape / Portrait; Reduce motion |
@@ -404,7 +404,7 @@ The photo fits inside the screen (never cropped; the letterbox takes the wall's 
 | Backup | The nightly backups: the last backup time, a banner if older than 7 days, **Back up now**, and on a phone or computer **Download backup** (the newest copy) and **Download everything** (a zip with every photo, to restore from; restoring is a runbook step with the server stopped, docs/RESTORE.md); **Take your data with you**: **Export everything** (one JSON file anyone can read), on a phone or computer. The wall says to download from a phone |
 | About | Version and build; **New versions** (**Check for new versions daily**, off until a parent turns it on and greyed out when the server keeps it off; then the last check, or "Sunroom 0.6.1 is available." with how to update this install; **Check now**); **Storage** (free space, the photos folder); **Connection** (live updates connected; the address this screen uses); the open-source licence; "Not affiliated with Google or Apple"; "Weather by Open-Meteo" |
 
-**The Who picker** (shared): a row of 64 px avatar circles with names under them: **Everyone** (a house mark, neutral), each member in household order (initial or photo with a 3 px ring in their color), **A guest** (dashed). Selected: a 4 px ink ring, a check in the corner and the name in bold. In a question ("Who did it?") it appears as a popover beside the thing; in editors as a chip row; kids-only pickers show only kids.
+**The Who picker** (shared): a row of 64 px avatar circles with names under them: **Everyone** (a house mark, neutral), each member in household order (initial or photo with a 3 px ring in their color), **A guest** (dashed). Selected: a 4 px ink ring, a check in the corner and the name in bold. In a question ("Who did it?") it appears as a popover beside the thing; in editors as a chip row; children-only pickers show only children.
 
 **Toasts (display)**: bottom centre of the board, 72 px tall, body text, a 64 px Undo button, 8 s, two at most; over a panel they sit at the panel's bottom; a toast never covers the now line's label or the Today panel.
 
@@ -412,7 +412,7 @@ The photo fits inside the screen (never cropped; the letterbox takes the wall's 
 
 Phones are the second screen: adding and editing on the go, connecting accounts (anything that needs a secret is phone-only), and a personal Today. The shell is Dinner Bell's: a bottom tab bar (Today, Calendar, Lists, Chores, More; plugin tabs appear only when enabled, five at most), sheets from the bottom, 16 px gutters, safe-area insets, primary actions in the thumb zone.
 
-**Install the App, Sign in, Who's Using This?** are Dinner Bell's screens with Sunroom's words: the install guide first on an iPhone in Safari; one password field with show/hide and the return key submitting; "Use a code from another phone" takes the six-character pair code; big name buttons per person with the current choice marked three ways, plus **Someone else** and **A guest**. A kid's phone (a kid chosen) asks the parent PIN for Settings and never shows Approve.
+**Install the App, Sign in, Who's Using This?** are Dinner Bell's screens with Sunroom's words: the install guide first on an iPhone in Safari; one password field with show/hide and the return key submitting; "Use a code from another phone" takes the six-character pair code; big name buttons per person with the current choice marked three ways, plus **Someone else** and **A guest**. A child's phone (a child chosen) asks the parent PIN for Settings and never shows Approve.
 
 **Today**
 
@@ -445,7 +445,7 @@ Phones are the second screen: adding and editing on the go, connecting accounts 
 +--------------------------------------+
 ```
 
-The avatar at the top right is who's using this phone; tapping it opens Who's Using This. Sections follow the display's Today panel; a kid's phone shows that kid's chores first.
+The avatar at the top right is who's using this phone; tapping it opens Who's Using This. Sections follow the display's Today panel; a child's phone shows that child's chores first.
 
 **Calendar**: a segmented control with **Week** (default: a strip of seven 44 px day cells with person-colored dots over a continuous list starting on the selected day), **Day** (the timeline with hour bands, collapsed free time and the gliding now line; "Tap a time to add"), **Agenda** (the list grouped by day; past days collapse into "Earlier"), **Month** (a grid with dots and the selected day's list under it). Person filter avatars sit under the control behind a "Show" chip and persist on a phone. A search field (title and location) lives in the month picker's header.
 
@@ -523,13 +523,13 @@ The quick-add field runs the same parser and shows the same "understood as" line
 +--------------------------------------+
 ```
 
-The phone's person comes first and open; others collapsed. Completing stamps and bursts the same way (§9), scaled to the row. Stars & Rewards and the routine runner work on a phone too (a kid can run bedtime from a tablet in their room). Parents' phones show **Asked** requests at the top of Chores and Today with Approve and Not now.
+The phone's person comes first and open; others collapsed. Completing stamps and bursts the same way (§9), scaled to the row. Stars & Rewards and the routine runner work on a phone too (a child can run bedtime from a tablet in their room). Parents' phones show **Asked** requests at the top of Chores and Today with Approve and Not now.
 
 **Meals**: a week list (day rows with the meal and who cooks; "+ Add dinner" on empty days), the add sheet with saved-meal chips and search, the library under **Saved Meals**, and the "Add 4 items to Groceries" toggle when a saved meal has ingredients.
 
 **More**: the rooms not in the tab bar (Meals, Countdowns, Photos), then Settings, Who's Using This (shows the name), Pair a Display, Install the App, About. Photos here is where photos are added (camera or library, several at once) and deleted (with Undo).
 
-**Settings (phone)**: the same pages as the display's (§4), full screen with Back; parents' phones open them directly, kids' phones ask the PIN. Two pages do more on the phone: **Calendars & Accounts** has **Add an account** (Google, iCloud, Another calendar) and Disconnect; **Backup** downloads the export and offers **Restore** with "This replaces everything on the server with the backup from Oct 1."
+**Settings (phone)**: the same pages as the display's (§4), full screen with Back; parents' phones open them directly, children's phones ask the PIN. Two pages do more on the phone: **Calendars & Accounts** has **Add an account** (Google, iCloud, Another calendar) and Disconnect; **Backup** downloads the export and offers **Restore** with "This replaces everything on the server with the backup from Oct 1."
 
 **Pair a Display**
 
@@ -552,7 +552,7 @@ A wrong code: "That code didn't work. Codes change every 10 minutes; read the on
 
 ## 6. Flows
 
-**First run (self-hoster, on a phone).** 1. The container starts; the display's browser shows **Welcome** with a QR code and the address; the self-hoster opens it on a phone. 2. "Welcome to Sunroom. Let's set it up — about three minutes." → **Start**. 3. **Set a household password** (show/hide; "Everyone at home signs in on their phone with this one password. The kitchen screen never needs it."). 4. **Name your household** (chips: "The Riveras", "Our home"); time zone from the phone with Change; week starts on Sunday or Monday. 4b. **Where's home?** "Sunroom shows your weather and turns dark at sunset. Type your town, or a town nearby." → **Search** → the town → "Home is Springfield, Illinois, United States"; **Later** skips (it gets dark at 7 PM until it's set; the step skips itself with the weather off). 5. **Who lives here?** "Start with you": name, Parent or Kid, a color picked automatically; **Add another** or **Next**; then "Set a parent PIN? Keeps kids out of Settings on the screen." **Set a PIN** or **Later**. 6. **Pair the kitchen screen**: "On the screen, Sunroom now shows a code. Type it here." → **Pair** → "Kitchen screen paired"; **Do this later** skips. 7. **Bring in your calendars**: Google, iCloud, Another calendar (.ics), **Skip for now**; each flow returns here. 8. **"You're set."** → Who's Using This phone? → Today.
+**First run (self-hoster, on a phone).** 1. The container starts; the display's browser shows **Welcome** with a QR code and the address; the self-hoster opens it on a phone. 2. "Welcome to Sunroom. Let's set it up — about three minutes." → **Start**. 3. **Set a household password** (show/hide; "Everyone at home signs in on their phone with this one password. The kitchen screen never needs it."). 4. **Name your household** (chips: "The Riveras", "Our home"); time zone from the phone with Change; week starts on Sunday or Monday. 4b. **Where's home?** "Sunroom shows your weather and turns dark at sunset. Type your town, or a town nearby." → **Search** → the town → "Home is Springfield, Illinois, United States"; **Later** skips (it gets dark at 7 PM until it's set; the step skips itself with the weather off). 5. **Who lives here?** "Start with you": name, Parent or Child, a color picked automatically; **Add another** or **Next**; then "Set a parent PIN? Keeps children out of Settings on the screen." **Set a PIN** or **Later**. 6. **Pair the kitchen screen**: "On the screen, Sunroom now shows a code. Type it here." → **Pair** → "Kitchen screen paired"; **Do this later** skips. 7. **Bring in your calendars**: Google, iCloud, Another calendar (.ics), **Skip for now**; each flow returns here. 8. **"You're set."** → Who's Using This phone? → Today.
 
 **Pairing the display (any time).** The display shows **Pair this screen** with a six-character code (or returns to it after an unpair). A signed-in phone: More → **Pair a Display** → the code → **Pair**; or on the display, **Type the household password here instead**. Then "Name this screen" chips → the week board. The same code mechanism, mirrored, is **Add a phone** (Settings → Phones & Screens): the signed-in phone shows a code and QR; the new phone types it on the sign-in screen.
 
@@ -579,9 +579,9 @@ A wrong code: "That code didn't work. Codes change every 10 minutes; read the on
 
 **Complete a chore on the display.** Mia taps the box next to **Feed the dog** in her column (no attribution tap: it is assigned to her). The signature moment (§9) plays: the box fills in her color, the stamp lands, the burst radiates, "Done by Mia · 4:12 PM" appears, the header pops to "3 of 3 · ★44", the row eases under Done. Her last chore adds "All done, Mia!" with the bigger burst. Toast "Done by Mia · Undo" for 8 s; Undo puts the row back, lifts the stamp and takes the stars back. An **Anyone** chore opens "Who did it?" with avatar chips beside the box; "Mia's turn" chores preselect Mia and leave the chips for 2 s so someone else can claim it.
 
-**A kid runs a bedtime routine.** At 7:30 PM the Today panel reads "Leo's bedtime routine · Start" and his Chores column shows **Start**. The runner takes the whole screen, one step at a time: a 240 px icon, the step name at 64 px, filled dots for progress, a 120 px **Done** button in Leo's color, a quiet **Skip this one**. Each Done stamps and bursts, and the next step slides in from the right. After the last: "All done, Leo! Night night." with the full-screen burst and "+5 stars", then back to Chores after 6 s or a tap. Stopping keeps progress for an hour ("Continue · step 3 of 5"); idle rules pause while a routine runs, up to 30 minutes.
+**A child runs a bedtime routine.** At 7:30 PM the Today panel reads "Leo's bedtime routine · Start" and his Chores column shows **Start**. The runner takes the whole screen, one step at a time: a 240 px icon, the step name at 64 px, filled dots for progress, a 120 px **Done** button in Leo's color, a quiet **Skip this one**. Each Done stamps and bursts, and the next step slides in from the right. After the last: "All done, Leo! Night night." with the full-screen burst and "+5 stars", then back to Chores after 6 s or a tap. Stopping keeps progress for an hour ("Continue · step 3 of 5"); idle rules pause while a routine runs, up to 30 minutes.
 
-**Redeem a reward.** Mia opens Chores → **Stars & Rewards** → **Ask for it** on Movie night (30 of her 42 stars) → the kids-only Who picker. "Asked for Movie night. A parent will say yes or no." with **Take it back**. The request shows under Asked on the display and at the top of parents' phones. A parent approves on their phone, or on the display with the PIN. Stars drop to 12 with a pop; "Mia got Movie night" and the big burst. **Not now** says "Not now" on the rewards page without a reason field.
+**Redeem a reward.** Mia opens Chores → **Stars & Rewards** → **Ask for it** on Movie night (30 of her 42 stars) → the children-only Who picker. "Asked for Movie night. A parent will say yes or no." with **Take it back**. The request shows under Asked on the display and at the top of parents' phones. A parent approves on their phone, or on the display with the PIN. Stars drop to 12 with a pop; "Mia got Movie night" and the big burst. **Not now** says "Not now" on the rewards page without a reason field.
 
 **Groceries from a phone to the display.** Ana adds "Milk" (or taps it in Usuals): "Added Milk · Undo", "Added by Ana". Within a second the display's Groceries list eases the row in; the Lists room tile reads "13 to get · Ana added Milk · 2:10 PM". At the store she checks items off on her phone; the display strikes them live.
 
@@ -673,7 +673,7 @@ Other motions: a press dips controls by 3% and shades rows (tap); sheets slide u
 
 | Default it avoided | What Sunroom does instead | Why |
 |---|---|---|
-| Pastel "family app" palette with a rounded display face and emoji everywhere | A cool daylight wall, one amber accent for time, one legible sans; emoji only where the family puts them (countdowns, meals) | Reads as a calm object on a kitchen wall, not a toy; kids are served by size and color, not cuteness |
+| Pastel "family app" palette with a rounded display face and emoji everywhere | A cool daylight wall, one amber accent for time, one legible sans; emoji only where the family puts them (countdowns, meals) | Reads as a calm object on a kitchen wall, not a toy; children are served by size and color, not cuteness |
 | Warm cream background with a serif display and a terracotta accent | The cool-to-warm daypart tints, and no serif | That combination is the current generated-page tell, and cream glares at night |
 | A grid of identical rounded, shadowed cards per widget (the dashboard look) | One board surface; chips are the only cards; the Today panel is stacked blocks | Glanceability needs hierarchy, not a kit of equal boxes |
 | ALL-CAPS eyebrow labels, "A · B · C" meta strings, arrows on buttons, monospace for times | Title Case only for titles, headings and navigation (§2), sentence case for the rest, stacked lines, plain verbs, tabular figures in the same family | Dinner Bell's rules, and they are easier to read from across a room |
@@ -692,7 +692,7 @@ Other motions: a press dips controls by 3% and shades rows (tap); sheets slide u
 | Chores room, none | "Chores live here. Give each person a few, and watch them get stamped." | Add chore |
 | A person with no chores today | "Nothing today" | — |
 | Stars & Rewards, no rewards | "Rewards are what stars buy. Add one — movie night, an ice cream run." | Add reward (PIN) |
-| Routines, none | "A routine is a short checklist a kid runs on their own: pajamas, teeth, book." | Add routine (PIN) |
+| Routines, none | "A routine is a short checklist a child runs on their own: pajamas, teeth, book." | Add routine (PIN) |
 | Meals, empty week | "Tonight's dinner shows here and on the Today panel. Add a dinner." | Add dinner |
 | Saved Meals, none | "Save a meal once and add it in one tap next week." | New saved meal |
 | Countdowns, none | "Count down to birthdays, trips, the last day of school." | Add countdown |
@@ -714,7 +714,7 @@ Quiet states, never error walls:
 | Phone offline | Pill "Offline · showing what we had"; a write says "Not saved — you're offline. Try again when you have signal." (an offline queue is a PLAN §19 idea) |
 | Syncing | "Syncing 3…" |
 | PIN-locked | The lock in the rail; Settings and approvals ask for the PIN; nothing else is ever locked |
-| Kid-safe editing stops an action | The PIN dialog with one line above it: "Changing events on this screen asks for the parent PIN." |
+| Child-safe editing stops an action | The PIN dialog with one line above it: "Changing events on this screen asks for the parent PIN." |
 | Read-only synced event | The sheet's source line instead of buttons |
 | A reward costs more than the balance | "Mia has 18 of 30 stars" under a disabled Ask for it, never hidden |
 | Google signed Sunroom out (OAuth) | A banner in Calendars & Accounts and a header pill: "Google signed Sunroom out." with **Sign in again** (phone) |
@@ -776,13 +776,13 @@ The principles and the signature moment are in §7. Implementation (decision 000
 
 Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safari): the dialog stays open while a keyframe slides it away, then the script closes it (Dinner Bell's pattern). Sound for the done moment exists and is off by default (a 120 ms pop).
 
-## 10. Accessibility, kids, guests and the screenshot checklist
+## 10. Accessibility, children, guests and the screenshot checklist
 
 - **Text size** (Settings → Display): Standard, Large, Extra large change the display's root font size so everything scales in rem; the structure holds (seven columns, two-line chips, "+N more" sooner; the rail and Today panel widen at Extra large). Phones follow the OS text size.
 - **Color is never the only signal**: avatars carry an initial or photo; done is a check, the stamp, "Done by Mia" and the row's place; past is dimmed and above the now line; selected is a ring, a check and a bold name; filtered-out chips fade but keep their text. The user-facing color words are plain (Red, Olive, Green, Teal, Blue, Purple, Plum, Pink), mapped to the tokens in §7; no yellow, which fails as text. The token test checks every pair in both themes and at every wall-tint stop.
 - **Focus, keyboard and screen readers**: a 4 px ink ring with 2 px offset on the display (3 px on phones), the wall color on inverse surfaces; laptops get a sensible tab order and arrow keys across the board, Escape closes, `/` focuses quick add; the on-screen keyboard never appears when a physical keyboard is in use. Names by example: a chip "Soccer practice, 4:00 to 5:00 PM, Mia, Thursday October 9, button"; a chore box "Feed the dog, Mia, 2 stars, due 5:00 PM, not done, checkbox"; the now line is `aria-hidden`; the Today panel is a landmark; toasts are live regions; sheets take focus on open and return it on close.
 - **Left-handed and placement**: Settings → Display → Rail side (Left or Right mirrors the shell), and Controls at the bottom for a screen hung high.
-- **Kids**: zero-reading paths (find your column by avatar and color, tap the big box, get the stamp; routine steps are icons first); Kid-safe editing and the parent PIN keep Settings, approvals and event changes behind a parent on the display; nothing a kid can tap is unrecoverable (Undo, Recently Removed, no "delete everything" outside Settings); no shaming copy, streaks just read "0 days in a row".
+- **Children**: zero-reading paths (find your column by avatar and color, tap the big box, get the stamp; routine steps are icons first); Child-safe editing and the parent PIN keep Settings, approvals and event changes behind a parent on the display; nothing a child can tap is unrecoverable (Undo, Recently Removed, no "delete everything" outside Settings); no shaming copy, streaks just read "0 days in a row".
 - **Guests and grandparents**: the display is open to anyone in the house, attribution defaults to Everyone, "A guest" is in every Who picker; a grandparent can read the Today panel from the doorway and add an event on 80 px keys without meeting Settings; guests' phones sign in with the household password for the week and are signed out from Phones & Screens.
 
 **Screenshot review checklist.** `just screenshots` captures the key screens in fake mode at 1920×1080 and 1080×1920 (Standard and Extra large), 390×844 and 1440×900, light and dark, at 09:40, 16:10 and 21:30 so the tint and theme stops show. Then check:
@@ -813,7 +813,7 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 | The keyboard **docks under the panel at 960 px wide**, not full width | Full-width keys under a right-hand panel put the field 900 px from the keys |
 | **One pair-code system** (six characters, 10 minutes, once) for pairing a screen and adding a phone | One mental model |
 | **Assigned chores need no attribution tap**; Anyone chores ask "Who did it?"; list adds on the display attribute nothing unless an avatar is tapped | Forcing a tap on every chore adds a step to the moment that should feel instant |
-| **Kid-safe editing** (on when a kid exists) and **Recently Removed** (7 days) | Toast Undo is not enough on a screen a child reaches |
+| **Child-safe editing** (on when a child exists) and **Recently Removed** (7 days) | Toast Undo is not enough on a screen a child reaches |
 | Secrets are **phone-only**; the display's Calendars page shows a QR instead | Typing an app-specific password on the wall is slow and visible to the room |
 | **Routines live in the Chores room and the Today panel**, not on the board | A nightly chip on the calendar is clutter |
 | **Night** is an app state (black or a dim clock); the backlight is the Pi helper's job (PLAN §13) | A browser can't switch a monitor off; the app does the part it can |

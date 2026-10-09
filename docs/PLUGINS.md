@@ -197,7 +197,7 @@ context stays, so the routes keep answering while the plugin is errored.
   whose app has only this plugin (`create_app(settings, clock=clock, plugins={"notes": Notes()})`),
   which also shows it works with every other plugin off; helpers; time from the `FakeClock`;
   sockets are disabled; the Sample Family only. Cover every route (status, body, the plain error
-  messages), parents-only actions and kids' devices, the wall screen's `X-Sunroom-Member`, the
+  messages), parents-only actions and children's devices, the wall screen's `X-Sunroom-Member`, the
   live-update event, jobs and overlays called through the plugin's context (countdowns'
   `running()` helper), and `seed_sample` adding the Sample Family's rows once (seeding twice adds
   nothing).

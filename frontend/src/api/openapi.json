@@ -6776,7 +6776,7 @@
         "type": "object"
       },
       "RoutineRunOut": {
-        "description": "A kid's routine on a day: its steps, what's checked, and whether its window is open.",
+        "description": "A child's routine on a day: its steps, what's checked, and whether its window is open.",
         "properties": {
           "checked": {
             "items": {
@@ -6888,7 +6888,7 @@
         "type": "object"
       },
       "RoutinesOut": {
-        "description": "GET chores/routines: the routines as made in Settings, and each kid's day of them.",
+        "description": "GET chores/routines: the routines as made in Settings, and each child's day of them.",
         "properties": {
           "routines": {
             "items": {
@@ -9770,7 +9770,7 @@
         ]
       },
       "put": {
-        "description": "Set or change the PIN. Where the PIN is what made this device a parent (the wall screen, a\nkid's phone), changing it asks for the current one; a parent's own phone doesn't need it, so\na forgotten PIN can always be reset from there.",
+        "description": "Set or change the PIN. Where the PIN is what made this device a parent (the wall screen, a\nchild's phone), changing it asks for the current one; a parent's own phone doesn't need it, so\na forgotten PIN can always be reset from there.",
         "operationId": "set_pin_api_auth_pin_put",
         "requestBody": {
           "content": {

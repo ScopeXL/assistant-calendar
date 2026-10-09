@@ -137,7 +137,7 @@ function RoutinesGroup() {
       {routines.length === 0 ? (
         <div className={display ? "py-4" : "py-3"}>
           <Text soft>
-            A routine is a short checklist a kid runs on their own: pajamas, teeth, book.
+            A routine is a short checklist a child runs on their own: pajamas, teeth, book.
           </Text>
         </div>
       ) : null}
@@ -151,7 +151,7 @@ function RoutinesGroup() {
             <div className="flex flex-col">
               <Text>{routine.title}</Text>
               <Text soft>
-                {`${kid ? kid.name : "Every kid"} · ${clockText(routine.window_start)} · ${String(routine.steps.length)} steps`}
+                {`${kid ? kid.name : "Every child"} · ${clockText(routine.window_start)} · ${String(routine.steps.length)} steps`}
               </Text>
             </div>
             <Button
@@ -278,11 +278,11 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
               setKid(null);
             }}
           >
-            Every kid
+            Every child
           </Chip>
         </ChipRow>
         <WhoPicker
-          label="Which kid"
+          label="Which child"
           members={members}
           kidsOnly
           everyone={false}

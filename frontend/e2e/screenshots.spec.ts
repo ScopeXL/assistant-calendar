@@ -243,7 +243,7 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByLabel("Your name").fill("Ana");
     await page.getByRole("button", { name: "Add me" }).click();
     await page.getByLabel("Name", { exact: true }).fill("Mia");
-    await page.getByRole("button", { name: "Kid" }).click();
+    await page.getByRole("button", { name: "Child", exact: true }).click();
     await page.getByRole("button", { name: "Add another" }).click();
     await expect(page.getByRole("listitem").filter({ hasText: "Mia" })).toBeVisible();
     await shot(page, `setup-people-${scheme}`);

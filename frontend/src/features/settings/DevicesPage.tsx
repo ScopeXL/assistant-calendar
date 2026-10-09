@@ -99,7 +99,7 @@ export function DevicesPage() {
         >
           {[
             device.member_name ? `Used by ${device.member_name}` : null,
-            device.is_kid_device ? "a kid’s phone" : null,
+            device.is_kid_device ? "a child’s phone" : null,
             lastUsed(device),
           ]
             .filter(Boolean)
@@ -114,7 +114,7 @@ export function DevicesPage() {
             kidPhone.mutate({ device, kid: !device.is_kid_device });
           }}
         >
-          {device.is_kid_device ? "Not a kid’s phone" : "Kid’s phone"}
+          {device.is_kid_device ? "Not a child’s phone" : "Child’s phone"}
         </Button>
       ) : null}
       <Button
@@ -153,7 +153,7 @@ export function DevicesPage() {
       </Group>
       <Group
         title="Phones"
-        note={session?.has_pin ? undefined : "Set a parent PIN in Family to mark a kid’s phone."}
+        note={session?.has_pin ? undefined : "Set a parent PIN in Family to mark a child’s phone."}
       >
         {phones.map(row)}
         <div className={display ? "py-5" : "py-4"}>

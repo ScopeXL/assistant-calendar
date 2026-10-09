@@ -28,7 +28,7 @@ PERSON_COLOR_WORDS = {
 
 class Role(StrEnum):
     PARENT = "parent"
-    KID = "kid"
+    KID = "kid"  # shown to the family as Child (M6); the stored value stays "kid"
 
 
 class Theme(StrEnum):
