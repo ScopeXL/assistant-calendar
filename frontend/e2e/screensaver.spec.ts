@@ -60,7 +60,7 @@ test("the photos fade in after the idle minutes, and a tap goes back to where th
 test("a parent's phone starts the screensaver on the wall", async ({ page, browser, watch }) => {
   await pairWall(page);
   await page.goto("/display");
-  await expect(page.getByRole("region", { name: "This week" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
   const { context, page: ana } = await phone(browser, watch);
   await signInPhone(ana, "Ana");
   await ana.goto("/photos");

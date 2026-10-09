@@ -49,7 +49,7 @@ export function MoreScreen() {
           <Link to="/who" search={{ from: "more" }} className={rowClass}>
             <UserRound aria-hidden="true" />
             <span className="flex flex-1 flex-col">
-              Who’s using this
+              Who’s Using This
               <span className="text-secondary font-normal text-ink-soft">
                 {session?.member ? session.member.name : "Nobody picked"}
               </span>
@@ -60,7 +60,7 @@ export function MoreScreen() {
         <li>
           <Link to="/pair" className={rowClass}>
             <MonitorSmartphone aria-hidden="true" />
-            <span className="flex-1">Pair a display</span>
+            <span className="flex-1">Pair a Display</span>
             <ChevronRight aria-hidden="true" className="text-ink-soft" />
           </Link>
         </li>
@@ -68,7 +68,7 @@ export function MoreScreen() {
           <li>
             <Link to="/install" search={{ from: "more" }} className={rowClass}>
               <Smartphone aria-hidden="true" />
-              <span className="flex-1">Install the app</span>
+              <span className="flex-1">Install the App</span>
               <ChevronRight aria-hidden="true" className="text-ink-soft" />
             </Link>
           </li>

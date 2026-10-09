@@ -68,7 +68,7 @@ async function mapToMia(request: APIRequestContext, account: string): Promise<vo
 async function board(page: Page) {
   await pairWall(page);
   await page.goto("/display");
-  const week = page.getByRole("region", { name: "This week" });
+  const week = page.getByRole("region", { name: "This Week" });
   await expect(week).toBeVisible();
   return week;
 }

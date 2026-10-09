@@ -955,7 +955,7 @@ async def restore_event(tx: WriteTx, event_id: str, ctx: Context) -> ChangeOut:
     """Recently removed → Put back: the series and the exceptions removed with it."""
     master = await tx.session.get(Event, event_id)
     if master is None or master.parent_event_id is not None or master.deleted_at is None:
-        raise AppError(404, "not_found", "That event isn't in Recently removed.")
+        raise AppError(404, "not_found", "That event isn't in Recently Removed.")
     await _writable_calendar(tx.session, master.calendar_id)
     before = await revisions.snapshot(tx.session, [master.id])
     removed_at = master.deleted_at

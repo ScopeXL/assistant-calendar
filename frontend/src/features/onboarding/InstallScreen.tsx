@@ -56,7 +56,7 @@ export function InstallScreen() {
   return (
     <main className="mx-auto w-full max-w-md px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-12">
       <SunMark className="mb-6 size-16" />
-      <h1 className="text-title font-bold">Put Sunroom on your home screen</h1>
+      <h1 className="text-title font-bold">Put Sunroom on Your Home Screen</h1>
       <p className="mt-2 mb-6 text-body text-ink-soft">
         It opens like an app, straight to your family’s calendar, without the browser around it.
       </p>

@@ -37,7 +37,7 @@ MANIFEST = PluginManifest(
     tables=TABLES,
     export_tables=EXPORT_TABLES,
     contributes=Contributions(
-        display_panels=(DisplayPanel("todo", "To do"),),
+        display_panels=(DisplayPanel("todo", "To Do"),),
         display_rooms=(DisplayRoom("lists", "Lists", "list", order=20),),
         phone_tabs=(PhoneTab("lists", "Lists", "list", "/lists", order=20),),
     ),

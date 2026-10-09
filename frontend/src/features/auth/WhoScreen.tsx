@@ -72,7 +72,7 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-12">
-      <h1 className="text-title font-bold">Who’s using this phone?</h1>
+      <h1 className="text-title font-bold">Who’s Using This Phone?</h1>
       <p className="mt-2 mb-6 text-body text-ink-soft">
         Pick your name so everyone can see who added or checked off what.
       </p>

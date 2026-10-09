@@ -155,10 +155,10 @@ export function SetupWizard({ step }: { step: SetupStep }) {
       );
     case "done":
       return (
-        <Page title="You’re set">
+        <Page title="You’re Set">
           <p className="text-body">
             Everyone at home can sign in with the household password, or with a code from Settings,
-            then Phones & screens.
+            then Phones & Screens.
           </p>
           <Button
             block
@@ -191,7 +191,7 @@ function PasswordStep({
   const short = !fromServer && password.length > 0 && password.length < 12;
   return (
     <Page
-      title={fromServer ? "Type the household password" : "Set a household password"}
+      title={fromServer ? "Type the Household Password" : "Set a Household Password"}
       step="1 of 7"
     >
       <p className="text-body text-ink-soft">
@@ -272,7 +272,7 @@ function HouseholdStep({
   });
   if (!password) {
     return (
-      <Page title="Name your household" step="2 of 7">
+      <Page title="Name Your Household" step="2 of 7">
         <p className="text-body">Choose the household password first.</p>
         <Button block onClick={onBack}>
           Back
@@ -281,7 +281,7 @@ function HouseholdStep({
     );
   }
   return (
-    <Page title="Name your household" step="2 of 7">
+    <Page title="Name Your Household" step="2 of 7">
       <form
         className="flex flex-col gap-5"
         onSubmit={(event) => {
@@ -394,7 +394,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
     },
   });
   return (
-    <Page title="Who lives here?" step="4 of 7">
+    <Page title="Who Lives Here?" step="4 of 7">
       <p className="text-body text-ink-soft">
         {first
           ? "Start with you. Each person gets a color, used everywhere they appear."
@@ -471,7 +471,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
     onSuccess: onNext,
   });
   return (
-    <Page title="Set a parent PIN?" step="5 of 7">
+    <Page title="Set a Parent PIN?" step="5 of 7">
       <p className="text-body text-ink-soft">
         It keeps kids out of Settings on the kitchen screen. Adding events and checking off chores
         never ask for it.
@@ -511,7 +511,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
 function PlaceStep({ onNext }: { onNext: () => void }) {
   const Setup = usePluginModules().find((m) => m.id === "weather")?.onboarding;
   return (
-    <Page title="Where’s home?" step="3 of 7">
+    <Page title="Where’s Home?" step="3 of 7">
       {Setup ? (
         <Setup onDone={onNext} />
       ) : (
@@ -528,7 +528,7 @@ function PlaceStep({ onNext }: { onNext: () => void }) {
 function CalendarsStep({ onNext }: { onNext: () => void }) {
   const Setup = usePluginModules().find((m) => m.id === "calendar_sync")?.onboarding;
   return (
-    <Page title="Bring in your calendars" step="7 of 7">
+    <Page title="Bring in Your Calendars" step="7 of 7">
       {Setup ? (
         <Setup onDone={onNext} />
       ) : (
@@ -551,7 +551,7 @@ function PairStep({ onNext }: { onNext: () => void }) {
   });
   const valid = normalizeCode(code);
   return (
-    <Page title="Pair the kitchen screen" step="6 of 7">
+    <Page title="Pair the Kitchen Screen" step="6 of 7">
       <p className="text-body text-ink-soft">
         On the screen, Sunroom now shows a code. Type it here.
       </p>

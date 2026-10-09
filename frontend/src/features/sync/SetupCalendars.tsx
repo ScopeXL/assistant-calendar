@@ -13,7 +13,7 @@ export function SetupCalendars({ onDone }: { onDone: () => void }) {
     <>
       <p className="text-body text-ink-soft">
         Google, iCloud, a school or team calendar, or your country's holidays. You can add more
-        later in Settings, then Calendars & accounts.
+        later in Settings, then Calendars & Accounts.
       </p>
       {accounts.length ? (
         <ul aria-label="Added" className="flex flex-col gap-1">

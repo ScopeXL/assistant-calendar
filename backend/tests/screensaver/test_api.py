@@ -41,7 +41,7 @@ from tests.support import BASE_URL, CSRF, state_of
 DEFAULTS = {"start_after_minutes": 10, "every_seconds": 30, "show_clock": True, "shuffle": True}
 OFF = {
     "code": "plugin_disabled",
-    "message": "Photos & screensaver is turned off. A parent can turn it on in Settings.",
+    "message": "Photos & Screensaver is turned off. A parent can turn it on in Settings.",
 }
 PARENT_PIN = {
     "code": "parent_required",

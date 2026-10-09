@@ -30,13 +30,13 @@ const NIGHT = "2026-10-08T03:30:00Z";
 const PAGES = [
   { key: "family", title: "Family" },
   { key: "features", title: "Features" },
-  { key: "calendars", title: "Calendars & accounts" },
+  { key: "calendars", title: "Calendars & Accounts" },
   { key: "chores", title: "Chores" },
   { key: "meals", title: "Meals" },
-  { key: "screensaver", title: "Photos & screensaver" },
+  { key: "screensaver", title: "Photos & Screensaver" },
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
-  { key: "devices", title: "Phones & screens" },
+  { key: "devices", title: "Phones & Screens" },
   { key: "backup", title: "Backup" },
   { key: "about", title: "About" },
 ];
@@ -90,7 +90,7 @@ test("the wall screen", async ({ page }) => {
   await shot(page, "display-name");
   await page.getByRole("button", { name: "Done" }).click();
 
-  const board = page.getByRole("region", { name: "This week" });
+  const board = page.getByRole("region", { name: "This Week" });
   for (const size of ["standard", "xl"]) {
     for (const theme of ["light", "dark"]) {
       for (const stop of STOPS) {
@@ -110,7 +110,7 @@ test("the wall screen", async ({ page }) => {
   await moveClock(page, STOPS[1]?.at ?? "");
   await page.reload();
   await expect(board).toBeVisible();
-  for (const view of ["Day", "Month", "Who's doing what"]) {
+  for (const view of ["Day", "Month", "Who's Doing What"]) {
     await page.getByRole("button", { name: view, exact: true }).click();
     await shot(page, `view-${view.split(" ")[0]?.toLowerCase() ?? view}`);
   }
@@ -329,7 +329,7 @@ test("a phone's calendar", async ({ page, isMobile }) => {
       .getByRole("button", { name: "Close" })
       .click();
   }
-  // Synced calendars: an account on Calendars & accounts, and every way to add one.
+  // Synced calendars: an account on Calendars & Accounts, and every way to add one.
   await scriptedAccount(page.request);
   for (const scheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: scheme });
@@ -418,13 +418,13 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
     await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
     await shot(page, `chores-who-did-it-${theme}`);
     await page.getByRole("button", { name: "Cancel" }).click();
-    await page.getByRole("button", { name: "This week", exact: true }).click();
+    await page.getByRole("button", { name: "This Week", exact: true }).click();
     await shot(page, `chores-week-${theme}`);
-    await page.getByRole("link", { name: "Stars & rewards" }).click();
-    await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
+    await page.getByRole("link", { name: "Stars & Rewards" }).click();
+    await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
     await shot(page, `chores-rewards-${theme}`);
     await page.goto("/display");
-    await page.getByRole("button", { name: "Who's doing what", exact: true }).click();
+    await page.getByRole("button", { name: "Who's Doing What", exact: true }).click();
     await shot(page, `chores-people-${theme}`);
     await page.getByRole("button", { name: "Add", exact: true }).click();
     const add = page.getByRole("dialog", { name: "Add" });
@@ -542,8 +542,8 @@ test("a phone's lists and chores", async ({ page, isMobile }) => {
     await page.getByRole("link", { name: "Chores" }).click();
     await expect(page.getByRole("heading", { name: "Chores", level: 1 })).toBeVisible();
     await shot(page, `chores-${scheme}`);
-    await page.getByRole("link", { name: "Stars & rewards" }).click();
-    await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
+    await page.getByRole("link", { name: "Stars & Rewards" }).click();
+    await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
     await shot(page, `chores-rewards-${scheme}`);
     await page.goto("/more");
     await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
@@ -572,7 +572,7 @@ test("a laptop", async ({ page }) => {
       await moveClock(page, stop.at);
       await change(page, { theme });
       await page.reload();
-      await expect(page.getByRole("region", { name: "This week" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
       await shot(page, `board-${theme}-${stop.name}`);
     }
   }

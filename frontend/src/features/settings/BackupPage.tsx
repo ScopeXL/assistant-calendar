@@ -106,7 +106,7 @@ export function BackupPage() {
         </div>
       </Group>
       <Group
-        title="Take your data with you"
+        title="Take Your Data with You"
         note="Everything you added, in one file anyone can read."
       >
         <div className={display ? "py-5" : "py-4"}>

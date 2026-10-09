@@ -127,7 +127,7 @@ function MealsWeek() {
             className="press inline-flex min-h-16 items-center gap-2 rounded-button border-2 border-line bg-surface px-5 text-d-body font-semibold"
           >
             <BookOpen aria-hidden="true" className="size-7" />
-            Saved meals
+            Saved Meals
           </Link>
         </div>
       </header>
@@ -275,7 +275,7 @@ export function MealSidePanel({
   const text = display ? "text-d-body" : "text-body";
   const title =
     panel?.kind === "add"
-      ? `Add ${SLOT_WORDS[panel.slot].toLowerCase()}`
+      ? `Add ${SLOT_WORDS[panel.slot]}`
       : panel?.kind === "change"
         ? "Change"
         : entry

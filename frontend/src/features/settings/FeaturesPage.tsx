@@ -51,7 +51,7 @@ export function FeaturesPage() {
 
   if (plugins.length === 0) {
     return (
-      <Group title="In this version">
+      <Group title="In This Version">
         <div className="py-5">
           <Text>
             This version has the family calendar. Synced calendars, lists, chores, meals,

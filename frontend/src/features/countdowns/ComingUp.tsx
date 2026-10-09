@@ -71,7 +71,7 @@ export function ComingUpWall({ band = false }: { band?: boolean }) {
   return (
     <section ref={anchor} aria-labelledby="today-coming-up" className="flex flex-col gap-2">
       <h2 id="today-coming-up" className="text-d-body font-bold text-ink-soft">
-        Coming up
+        Coming Up
       </h2>
       {items.map((item) => {
         const person = members.find((m) => m.id === item.member_id) ?? null;
@@ -113,7 +113,7 @@ export function ComingUpPhone() {
   return (
     <section aria-labelledby="phone-coming-up" className="flex flex-col gap-1">
       <h2 id="phone-coming-up" className="text-row font-bold text-ink-soft">
-        Coming up
+        Coming Up
       </h2>
       {items.map((item) => (
         <button

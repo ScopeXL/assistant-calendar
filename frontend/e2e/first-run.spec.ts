@@ -64,7 +64,7 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
   await page.getByRole("button", { name: "Kitchen" }).click();
   await page.getByRole("button", { name: "Done" }).click();
-  const board = page.getByRole("region", { name: "This week" });
+  const board = page.getByRole("region", { name: "This Week" });
   await expect(board).toBeVisible();
   await expect(board.locator("[aria-current=date]")).toContainText("today");
   // The board measures with an invisible copy of each column; the visible line is the one.
@@ -99,10 +99,10 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
     .getByRole("button", { name: "Cancel" })
     .click();
 
-  // The phone signs itself out from Phones & screens.
+  // The phone signs itself out from Phones & Screens.
   await phonePage.getByRole("link", { name: "More" }).click();
   await phonePage.getByRole("link", { name: "Settings" }).click();
-  await phonePage.getByRole("link", { name: "Phones & screens" }).click();
+  await phonePage.getByRole("link", { name: "Phones & Screens" }).click();
   await expect(phonePage.getByText("Kitchen screen")).toBeVisible();
   await phonePage.getByRole("button", { name: "Sign out of this phone" }).click();
   await expect(phonePage).toHaveURL(/\/sign-in/);
@@ -130,13 +130,13 @@ test("a wall screen typed in with the password, and a toast that leaves under th
   await screen.getByRole("button", { name: "Pair this screen" }).click();
   await expect(screen.getByRole("heading", { name: "Name this screen" })).toBeVisible();
   await screen.getByRole("button", { name: "Done" }).click();
-  await expect(screen.getByRole("region", { name: "This week" })).toBeVisible();
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
 
   // From here on the page is the service worker's cached index.html, whose CSP header and
   // nonce were stamped together when it was cached (ADR 0007).
   await screen.waitForFunction(() => navigator.serviceWorker.controller !== null);
   await screen.reload();
-  await expect(screen.getByRole("region", { name: "This week" })).toBeVisible();
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
   expect(await screen.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
   const nonce = await screen.locator('meta[name="csp-nonce"]').getAttribute("content");
   expect(nonce).toMatch(/^[\w+/=-]{16,}$/);

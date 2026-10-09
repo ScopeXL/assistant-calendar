@@ -46,7 +46,7 @@ test.describe("a phone", () => {
     await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
     await noSidewaysScroll(page, "More");
     await page.getByRole("link", { name: "Settings" }).click();
-    for (const title of ["Family", "Display", "Household", "Phones & screens", "About"]) {
+    for (const title of ["Family", "Display", "Household", "Phones & Screens", "About"]) {
       await page.getByRole("link", { name: title, exact: true }).click();
       await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
       await noSidewaysScroll(page, title);
@@ -90,7 +90,7 @@ test.describe("a phone", () => {
     await expect(screen.getByRole("heading", { name: "Name this screen" })).toBeVisible();
     await screen.getByRole("button", { name: "Hallway" }).click();
     await screen.getByRole("button", { name: "Done" }).click();
-    await expect(screen.getByRole("region", { name: "This week" })).toBeVisible();
+    await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
     await expect(page.getByText("Hallway screen")).toBeVisible();
     await context.close();
   });
@@ -105,7 +105,7 @@ test.describe("the wall screen", () => {
     await seed(request);
     await pairWall(page);
     await page.goto("/display");
-    const board = page.getByRole("region", { name: "This week" });
+    const board = page.getByRole("region", { name: "This Week" });
     await expect(board).toBeVisible();
     await expect(board.locator("[aria-current=date]")).toHaveCount(1);
     await noSidewaysScroll(page, "the board");
@@ -155,7 +155,7 @@ test.describe("the wall screen", () => {
     await pairWall(page);
     // The launcher says who dims: the helper on a Pi that sets the brightness, else the page.
     await page.goto("/display?dimmer=screen");
-    await expect(page.getByRole("region", { name: "This week" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     await expect(page.locator("[data-veil]")).toHaveCount(0);
     await page.goto("/display?dimmer=page");
     await expect(page.locator("[data-veil]")).toHaveClass(/opacity-45/);
@@ -165,7 +165,7 @@ test.describe("the wall screen", () => {
     await seed(request);
     await pairWall(page);
     await page.goto("/display");
-    const board = page.getByRole("region", { name: "This week" });
+    const board = page.getByRole("region", { name: "This Week" });
     const title = board.getByRole("heading", { level: 1 });
     const thisWeek = (await title.textContent()) ?? "";
     await expect(board.getByRole("button", { name: "This week" })).toBeDisabled();
@@ -197,7 +197,7 @@ test.describe("the wall screen", () => {
     await expect(night).toContainText("11:30");
     await night.click();
     await expect(night).toBeHidden();
-    await expect(page.getByRole("region", { name: "This week" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
   });
 });
 
@@ -209,7 +209,7 @@ test.describe("a laptop", () => {
   test("gets the display shell and types with its own keyboard", async ({ page, request }) => {
     await seed(request);
     await signInPhone(page);
-    await expect(page.getByRole("region", { name: "This week" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Rooms" })).toBeVisible();
     await noSidewaysScroll(page, "the board");
     // A parent's laptop: Settings opens without a PIN.

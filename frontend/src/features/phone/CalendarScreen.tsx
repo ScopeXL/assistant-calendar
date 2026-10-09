@@ -394,7 +394,7 @@ function MonthPicker({
   const { data: hits = [], isFetching } = useEventSearch(open ? query : "");
   const words = query.trim();
   return (
-    <Sheet open={open} title="Find a day" onClose={onClose}>
+    <Sheet open={open} title="Find a Day" onClose={onClose}>
       <div className="flex flex-col gap-5">
         <TextField
           label="Search"

@@ -39,7 +39,7 @@ MANIFEST = PluginManifest(
     tables=TABLES,
     export_tables=EXPORT_TABLES,
     contributes=Contributions(
-        display_panels=(DisplayPanel("coming_up", "Coming up"),),
+        display_panels=(DisplayPanel("coming_up", "Coming Up"),),
         display_rooms=(DisplayRoom("countdowns", "Countdowns", "hourglass", order=50),),
         phone_tabs=(PhoneTab("countdowns", "Countdowns", "hourglass", "/countdowns", order=50),),
     ),

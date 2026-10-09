@@ -45,7 +45,7 @@ test("quick add on the wall, seen on a phone, changed and undone, dragged and pu
 }) => {
   await pairWall(page);
   await page.goto("/display");
-  const board = page.getByRole("region", { name: "This week" });
+  const board = page.getByRole("region", { name: "This Week" });
   await expect(board.locator("[aria-current=date]")).toContainText("Wed");
 
   // A phone, open on its Calendar: Thursday is tomorrow.
@@ -120,7 +120,7 @@ test("quick add on the wall, seen on a phone, changed and undone, dragged and pu
 test("the views, the event sheet and Recently removed", async ({ page }) => {
   await pairWall(page);
   await page.goto("/display");
-  const board = page.getByRole("region", { name: "This week" });
+  const board = page.getByRole("region", { name: "This Week" });
   await expect(board).toBeVisible();
 
   // The Today panel: Up next is the piano lesson at 3:30 PM.
@@ -139,9 +139,9 @@ test("the views, the event sheet and Recently removed", async ({ page }) => {
   await month.getByRole("button", { name: /^Fri 9: .*Pajama day/ }).click();
   await expect(page.getByRole("region", { name: "Fri, Oct 9" })).toContainText("Pajama day");
 
-  // Who's doing what: a column per person, Everyone first.
-  await page.getByRole("button", { name: "Who's doing what", exact: true }).click();
-  const people = page.getByRole("region", { name: "Who's doing what" });
+  // Who's Doing What: a column per person, Everyone first.
+  await page.getByRole("button", { name: "Who's Doing What", exact: true }).click();
+  const people = page.getByRole("region", { name: "Who's Doing What" });
   await expect(people.getByRole("region", { name: "Ana" })).toContainText("Vet");
   await expect(people.getByRole("region", { name: "Leo" })).toContainText("Piano lesson");
 

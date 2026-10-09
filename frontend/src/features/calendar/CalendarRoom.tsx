@@ -113,7 +113,7 @@ export function CalendarRoom() {
     week: {
       title: monthYear(week[3] ?? today),
       subtitle: weekSpan(week),
-      homeLabel: "This week",
+      homeLabel: "This Week",
       atHome: state.weekOffset === 0,
       home: () => {
         updateDisplay({ weekOffset: 0 });
@@ -131,14 +131,14 @@ export function CalendarRoom() {
     month: {
       title: monthYear(month.first),
       subtitle: undefined,
-      homeLabel: "This month",
+      homeLabel: "This Month",
       atHome: state.monthOffset === 0,
       home: () => {
         updateDisplay({ monthOffset: 0 });
       },
     },
     people: {
-      title: "Who's doing what",
+      title: "Who's Doing What",
       subtitle: shortDate(today),
       homeLabel: "Today",
       atHome: true,
@@ -147,7 +147,7 @@ export function CalendarRoom() {
     today: {
       title: shortDate(today),
       subtitle: "today",
-      homeLabel: "This week",
+      homeLabel: "This Week",
       atHome: true,
       home: () => {
         updateDisplay({ view: "week" });
@@ -157,7 +157,7 @@ export function CalendarRoom() {
 
   return (
     <section
-      aria-label={view === "week" ? "This week" : header.title}
+      aria-label={view === "week" ? "This Week" : header.title}
       className="@container flex min-h-0 flex-1 flex-col"
     >
       <BoardHeader

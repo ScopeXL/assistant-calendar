@@ -62,7 +62,7 @@ function MealsWeekPhone() {
           className="press inline-flex min-h-11 items-center gap-2 rounded-button border-2 border-line bg-surface px-3 text-body font-semibold"
         >
           <BookOpen aria-hidden="true" className="size-5" />
-          Saved meals
+          Saved Meals
         </Link>
       </div>
       <ul className="flex flex-col divide-y divide-line rounded-chip border border-line bg-surface">

@@ -22,7 +22,7 @@ THUMB_BACKLOG_S = 10 * 60
 MANIFEST = PluginManifest(
     id="screensaver",
     version="1.0.0",
-    name="Photos & screensaver",
+    name="Photos & Screensaver",
     description="The family's photos on the kitchen screen while nobody's using it.",
     settings_spec=(
         ParamField(

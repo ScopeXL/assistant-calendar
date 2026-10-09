@@ -184,7 +184,8 @@ context stays, so the routes keep answering while the plugin is errored.
 - **Another plugin's API** only behind `usePlugins()` (that plugin enabled), and the feature
   still complete without it (ADR 0026).
 - **The screens** follow CLAUDE.md and UX: `ui/` primitives and design tokens only (no raw hex);
-  plain words in sentence case; a toast that repeats the button's verb, with Undo; a visible
+  plain words, Title Case for titles, headings and navigation and sentence case for the rest
+  (UX §2); a toast that repeats the button's verb, with Undo; a visible
   button for every action; fields from `ui/TextField`, which opens the wall's own keyboard; tap
   targets of 56 px on the wall and 44 px on phones. Rooms sit in the wall's shell, which gives
   them a way back and returns home when idle; a room that must keep the screen calls `holdIdle()`,

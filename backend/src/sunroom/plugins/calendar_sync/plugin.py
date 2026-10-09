@@ -29,7 +29,7 @@ from sunroom.plugins.spec import ParamField
 MANIFEST = PluginManifest(
     id="calendar_sync",
     version="1.0.0",
-    name="Synced calendars",
+    name="Synced Calendars",
     description="Google, iCloud and any calendar address on the board, kept up to date.",
     settings_spec=(
         ParamField(

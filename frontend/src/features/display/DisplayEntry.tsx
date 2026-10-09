@@ -129,7 +129,7 @@ function Welcome({ address }: { address: string }) {
   return (
     <>
       <Brand />
-      <h1 className="text-d-glance font-bold">Set up Sunroom on your phone</h1>
+      <h1 className="text-d-glance font-bold">Set Up Sunroom on Your Phone</h1>
       {isLoopbackAddress(address) ? (
         <p className="max-w-3xl text-d-body">
           Open Sunroom on your phone with this computer's name or network address instead of{" "}
@@ -211,7 +211,7 @@ function PairThisScreen({ onPaired }: { onPaired: () => void }) {
   return (
     <>
       <Brand />
-      <h1 className="text-d-glance font-bold">Pair this screen</h1>
+      <h1 className="text-d-glance font-bold">Pair This Screen</h1>
       {pairing ? (
         <>
           <p
@@ -222,10 +222,10 @@ function PairThisScreen({ onPaired }: { onPaired: () => void }) {
             {pairing.display}
           </p>
           <div className="flex items-center gap-10 text-left">
-            <QrCode value={pairing.pair_url} label="A code that opens Pair a display on a phone" />
+            <QrCode value={pairing.pair_url} label="A code that opens Pair a Display on a phone" />
             <div className="flex max-w-xl flex-col gap-3">
               <p className="text-d-body">
-                On your phone, open Sunroom, then More, then Pair a display, and type this code.
+                On your phone, open Sunroom, then More, then Pair a Display, and type this code.
               </p>
               <p className="text-d-secondary text-ink-soft">The code changes every 10 minutes.</p>
             </div>
@@ -281,7 +281,7 @@ function PasswordPairing({ onCancel, onPaired }: { onCancel: () => void; onPaire
       }}
     >
       <Brand />
-      <h1 className="text-d-glance font-bold">Type the household password</h1>
+      <h1 className="text-d-glance font-bold">Type the Household Password</h1>
       <TextField
         label="Household password"
         type={visible ? "text" : "password"}
@@ -342,7 +342,7 @@ function NameThisScreen({ onDone }: { onDone: () => void }) {
       }}
     >
       <Brand />
-      <h1 className="text-d-glance font-bold">Name this screen</h1>
+      <h1 className="text-d-glance font-bold">Name This Screen</h1>
       <ChipRow label="Where is this screen?" center>
         {[...NAMES, "Other"].map((option) => (
           <Chip

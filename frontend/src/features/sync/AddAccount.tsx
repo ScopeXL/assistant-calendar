@@ -40,16 +40,16 @@ type Step =
   | "pick";
 
 const TITLES: Record<Step, string> = {
-  choose: "Add an account",
+  choose: "Add an Account",
   google: "Google",
-  "google-address": "Google: the secret address",
-  "google-helper": "Google: share with a helper",
+  "google-address": "Google: The Secret Address",
+  "google-helper": "Google: Share with a Helper",
   "google-signin": "Sign in with Google",
   icloud: "iCloud",
-  server: "A calendar server",
-  address: "Another calendar",
+  server: "A Calendar Server",
+  address: "Another Calendar",
   holidays: "Holidays",
-  pick: "Pick calendars",
+  pick: "Pick Calendars",
 };
 
 /**
@@ -688,7 +688,7 @@ function SignInFlow() {
           Set the consent screen to External and publish it. If it stays in Testing, Google signs
           Sunroom out every 7 days.
         </li>
-        <li>Paste the client ID and secret under Settings → Features → Synced calendars.</li>
+        <li>Paste the client ID and secret under Settings → Features → Synced Calendars.</li>
       </Steps>
       <p className="text-secondary text-ink-soft">
         Google may say the app isn't verified: tap Advanced, then Go to Sunroom. It's your own app.
@@ -743,7 +743,7 @@ function PickCalendars({ account, onDone }: { account: Account; onDone: () => vo
   if (account.calendars.length === 0) {
     return (
       <p className="text-body">
-        No calendars there yet. Sharing can take a minute; try again from Calendars & accounts.
+        No calendars there yet. Sharing can take a minute; try again from Calendars & Accounts.
       </p>
     );
   }

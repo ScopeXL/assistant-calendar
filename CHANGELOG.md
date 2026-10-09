@@ -6,6 +6,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Titles, headings and the names of rooms, views and tabs now capitalize each word
+  ("Calendars & Accounts", "This Week", "Who's Doing What"). Buttons and messages stay as
+  they were.
+
 ## [0.6.0] - 2026-10-08
 
 ### Added

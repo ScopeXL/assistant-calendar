@@ -35,7 +35,7 @@ export function ScopeChooser({
     </Button>
   );
   return (
-    <Sheet open={open} title={`${verb} which?`} onClose={onCancel}>
+    <Sheet open={open} title={`${verb} Which?`} onClose={onCancel}>
       <div className="flex flex-col gap-4 pb-2">
         <p className={display ? "text-d-body" : "text-body"}>
           {repeatText ? `${title} repeats: ${repeatText.toLowerCase()}.` : `${title} repeats.`}

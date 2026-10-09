@@ -142,8 +142,8 @@ test("a reward asked for on the wall shows on a parent's phone; Approve on the w
 }) => {
   await seed(request, { pin: PIN });
   await choresRoom(page);
-  await page.getByRole("link", { name: "Stars & rewards" }).click();
-  await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
+  await page.getByRole("link", { name: "Stars & Rewards" }).click();
+  await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
   const tile = page.getByRole("listitem").filter({ hasText: "Ice cream run" });
   await tile.getByRole("button", { name: "Ask for it" }).click();
   const ask = page.getByRole("dialog", { name: "Ask for Ice cream run" });

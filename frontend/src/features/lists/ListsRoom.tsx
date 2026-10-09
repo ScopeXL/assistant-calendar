@@ -155,7 +155,7 @@ export function NewListPanel({ open, onClose }: { open: boolean; onClose: () => 
     );
   };
   return (
-    <SidePanel open={open} title="New list" onClose={onClose}>
+    <SidePanel open={open} title="New List" onClose={onClose}>
       <form
         className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
         onSubmit={(event) => {

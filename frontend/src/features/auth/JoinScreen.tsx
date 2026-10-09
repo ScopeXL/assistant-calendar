@@ -37,7 +37,7 @@ export function JoinScreen() {
     return (
       <main className="mx-auto w-full max-w-md px-4 pt-[calc(env(safe-area-inset-top)+48px)] pb-12">
         <SunMark className="mb-6 size-16" />
-        <h1 className="mb-3 text-title font-bold">That link is missing its code</h1>
+        <h1 className="mb-3 text-title font-bold">That Link Is Missing Its Code</h1>
         <p className="mb-6 text-body text-ink-soft">
           Scan the QR code again, or type the code on the sign-in screen.
         </p>
@@ -73,7 +73,7 @@ export function JoinScreen() {
       <SunMark className="mb-6 size-16" />
       {installFirst ? (
         <>
-          <h1 className="mb-3 text-title font-bold">Put Sunroom on your home screen first</h1>
+          <h1 className="mb-3 text-title font-bold">Put Sunroom on Your Home Screen First</h1>
           <p className="text-body text-ink-soft">
             On iPhone, the home-screen app keeps its own sign-in. Once it’s there, open it, tap{" "}
             <strong>Use a code from another phone</strong>, and type:
@@ -96,7 +96,7 @@ export function JoinScreen() {
         </>
       ) : (
         <>
-          <h1 className="mb-3 text-title font-bold">Sign in with a code</h1>
+          <h1 className="mb-3 text-title font-bold">Sign in with a Code</h1>
           <p className="text-body text-ink-soft">
             Another phone made this code to add this one to Sunroom:
           </p>

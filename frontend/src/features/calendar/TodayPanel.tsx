@@ -105,7 +105,7 @@ export function TodayPanel({
           </Section>
         ) : null}
         {parts.upNext ? (
-          <Section id="today-up-next" title="Up next">
+          <Section id="today-up-next" title="Up Next">
             <Line
               onOpen={open}
               occurrence={parts.upNext}
@@ -117,7 +117,7 @@ export function TodayPanel({
           </Section>
         ) : null}
         {parts.later.length ? (
-          <Section id="today-later" title="Later today">
+          <Section id="today-later" title="Later Today">
             {parts.later.map((occurrence) => (
               <Line
                 onOpen={open}

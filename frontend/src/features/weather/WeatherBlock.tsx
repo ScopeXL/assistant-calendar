@@ -99,10 +99,10 @@ function Forecast({
   const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
   const today = weather.daily[0]?.date;
   return (
-    <Sheet open={open} title={weather.location_label ?? "The weather"} onClose={onClose}>
+    <Sheet open={open} title={weather.location_label ?? "The Weather"} onClose={onClose}>
       <div className="flex flex-col gap-6">
-        <section aria-label="The next hours" className="flex flex-col gap-3">
-          <h3 className={`${text} font-bold`}>The next hours</h3>
+        <section aria-label="The Next Hours" className="flex flex-col gap-3">
+          <h3 className={`${text} font-bold`}>The Next Hours</h3>
           <ul className="grid grid-cols-4 gap-3 sm:grid-cols-6">
             {weather.hourly.slice(0, 12).map((hour) => {
               const { icon: Icon, words } = sky(hour.code);
@@ -123,8 +123,8 @@ function Forecast({
             })}
           </ul>
         </section>
-        <section aria-label="The week" className="flex flex-col gap-1">
-          <h3 className={`${text} font-bold`}>The week</h3>
+        <section aria-label="The Week" className="flex flex-col gap-1">
+          <h3 className={`${text} font-bold`}>The Week</h3>
           <ul className="flex flex-col divide-y divide-line">
             {weather.daily.map((day) => {
               const { icon: Icon, words } = sky(day.code);

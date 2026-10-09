@@ -11,7 +11,7 @@ const VIEWS: { value: Exclude<BoardView, "today">; label: string }[] = [
   { value: "week", label: "Week" },
   { value: "day", label: "Day" },
   { value: "month", label: "Month" },
-  { value: "people", label: "Who's doing what" },
+  { value: "people", label: "Who's Doing What" },
 ];
 
 /**

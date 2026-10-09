@@ -61,7 +61,7 @@ export function SettingsChores() {
   return (
     <>
       {plugin ? (
-        <Group title="What chores include">
+        <Group title="What Chores Include">
           <PluginSettingsForm
             pluginId="chores"
             spec={plugin.settings_spec}
@@ -178,7 +178,7 @@ function RoutinesGroup() {
       </div>
       <SidePanel
         open={editing !== null}
-        title={editing && editing !== "new" ? `Change ${editing.title}` : "Add routine"}
+        title={editing && editing !== "new" ? `Change ${editing.title}` : "Add Routine"}
         onClose={() => {
           setEditing(null);
         }}
@@ -483,7 +483,7 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
         </p>
       ) : null}
       <Button type="submit" block disabled={!ready} pending={saveRoutine.isPending}>
-        {routine ? "Save changes" : "Add routine"}
+        {routine ? "Save changes" : "Add Routine"}
       </Button>
       {routine ? (
         <Button
@@ -510,7 +510,7 @@ function AdjustGroup() {
   const [reason, setReason] = useState("");
   const chosen = personOf(members, kid);
   return (
-    <Group title="Give or take stars">
+    <Group title="Give or Take Stars">
       <div className={`flex flex-col ${display ? "gap-5 py-5" : "gap-4 py-4"}`}>
         <WhoPicker
           label="Who"

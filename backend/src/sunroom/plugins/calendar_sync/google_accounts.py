@@ -45,7 +45,7 @@ STATE_TTL = timedelta(minutes=10)
 CALLBACK_PATH = "/api/calendar-sync/google/callback"
 NEEDS_KEYS = (
     "Sign in with Google needs your Google app's client ID and secret first: Settings → "
-    "Features → Synced calendars."
+    "Features → Synced Calendars."
 )
 NEEDS_HTTPS = (
     "Google only signs in to apps at an https:// address, or on the kitchen screen itself. "

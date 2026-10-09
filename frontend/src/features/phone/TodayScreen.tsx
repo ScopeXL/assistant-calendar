@@ -116,7 +116,7 @@ export function TodayScreen() {
       ) : null}
       <section aria-labelledby="up-next" className="flex flex-col gap-1">
         <h2 id="up-next" className="text-row font-bold text-ink-soft">
-          Up next
+          Up Next
         </h2>
         {upNext ? (
           <button

@@ -37,3 +37,4 @@ Each record covers one decision: the context, what was decided, and the conseque
 | [0025](0025-chores-are-rules.md) | Chores are rules: due days, turns, credit and streaks are computed, in `domain/chores.py` (settles ADR 0019's open question) | — |
 | [0026](0026-m4-meals-countdowns-photos-weather.md) | Meals, countdowns, photos and weather: overlays answer only while on, Groceries through the Lists API, sunset worked out in the browser, the screensaver as a frontend overlay | — |
 | [0027](0027-m5-the-wall-polished.md) | The wall, polished: one screen state for the page and the Pi's helper, who dims, the opt-in update check, Download everything and a restore that checks first | — |
+| [0028](0028-m6-batch-1-the-owners-first-notes.md) | The owner's first notes (M6 batch 1): Title Case for titles, headings and navigation (supersedes the case rule in 0013) | — |

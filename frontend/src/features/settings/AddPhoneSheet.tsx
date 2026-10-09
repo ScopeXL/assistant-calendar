@@ -74,7 +74,7 @@ export function AddPhoneSheet({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Sheet
       open={open}
-      title="Add a phone"
+      title="Add a Phone"
       onClose={onClose}
       footer={
         <Button block variant="secondary" onClick={onClose}>

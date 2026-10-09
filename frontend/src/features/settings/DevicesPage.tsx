@@ -146,7 +146,7 @@ export function DevicesPage() {
               to="/pair"
               className="press inline-flex min-h-11 items-center rounded-button border-2 border-line bg-surface px-5 text-body font-semibold"
             >
-              Pair a display
+              Pair a Display
             </Link>
           </div>
         ) : null}

@@ -65,8 +65,9 @@ Keep this file under 15 KB; detail belongs in `docs/`.
    enforces this.
 5. **Exactly one process serves the API:** one uvicorn worker, one replica, a `flock` on
    `/data/.lock`. The SSE hub, the write lock, rate limiters and pairing waiters live in its memory.
-6. **Words.** Plain words, sentence case, the family's vocabulary (UX §2): a button says exactly
-   what happens and its toast repeats the verb. Never show an ID, an error code or a stack trace.
+6. **Words.** Plain words; Title Case for titles, headings and navigation, sentence case for
+   everything else (UX §2); the family's vocabulary: a button says exactly what happens and its
+   toast repeats the verb. Never show an ID, an error code or a stack trace.
 7. **Every plugin is fully functional when every other plugin is disabled.** No plugin imports
    another or reads another's tables; cross-plugin needs go through core facades and calendar
    overlays (ADR 0002). A contract test enforces the imports and tables.

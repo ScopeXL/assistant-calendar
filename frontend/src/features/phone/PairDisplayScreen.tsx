@@ -42,7 +42,7 @@ export function PairDisplayScreen() {
   const valid = normalizeCode(code);
   const screens = devices.filter((device) => device.kind === "kiosk");
   return (
-    <Screen title="Pair a display" back="/more">
+    <Screen title="Pair a Display" back="/more">
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {
@@ -72,7 +72,7 @@ export function PairDisplayScreen() {
       </form>
       {screens.length > 0 ? (
         <section className="mt-8">
-          <h2 className="mb-2 text-row font-bold">Paired screens</h2>
+          <h2 className="mb-2 text-row font-bold">Paired Screens</h2>
           <ul className="divide-y divide-line rounded-chip border border-line bg-surface px-4">
             {screens.map((screen) => (
               <li key={screen.id} className="flex min-h-14 items-center text-body font-semibold">

@@ -107,7 +107,7 @@ export function SavedMeals() {
             id="saved-title"
             className={display ? "text-d-title font-bold" : "text-title font-bold"}
           >
-            Saved meals
+            Saved Meals
           </h1>
         </div>
         <Button
@@ -142,7 +142,7 @@ function SavedPanel({
   onClose: () => void;
 }) {
   return (
-    <SidePanel open={open} title={meal ? meal.text : "New saved meal"} onClose={onClose}>
+    <SidePanel open={open} title={meal ? meal.text : "New Saved Meal"} onClose={onClose}>
       {open ? <SavedForm key={meal?.id ?? "new"} meal={meal} onDone={onClose} /> : null}
     </SidePanel>
   );

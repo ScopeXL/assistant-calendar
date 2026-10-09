@@ -519,7 +519,7 @@ export function WaitingStrip({ waiting }: { waiting: Waiting[] }) {
   const { answer } = useChoreChanges();
   if (!waiting.length || !viewer.answers) return null;
   return (
-    <Strip title="Waiting for a parent">
+    <Strip title="Waiting for a Parent">
       {waiting.map((item) => {
         const who = personOf(members, item.completion.member_id);
         return (

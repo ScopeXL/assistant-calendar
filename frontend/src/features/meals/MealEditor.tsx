@@ -120,7 +120,7 @@ export function MealEditor({
     >
       {!entry ? (
         <div className="flex flex-col gap-3">
-          <p className={heading}>Saved meals</p>
+          <p className={heading}>Saved Meals</p>
           <TextField
             label="Find a saved meal"
             hideLabel

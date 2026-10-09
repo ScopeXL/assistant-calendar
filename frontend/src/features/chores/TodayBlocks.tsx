@@ -57,7 +57,7 @@ export function ChoresTodayWall() {
   return (
     <section aria-labelledby="today-chores" className="flex flex-col gap-2">
       <h2 id="today-chores" className="text-d-body font-bold text-ink-soft">
-        Chores today
+        Chores Today
       </h2>
       {people.map((column) => {
         const person = personOf(members, column.member_id);

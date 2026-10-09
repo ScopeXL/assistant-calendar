@@ -123,7 +123,7 @@ function CodeForm({ onUsePassword }: { onUsePassword: () => void }) {
         className="min-h-12 rounded-button border-2 border-line bg-surface px-4 text-title font-bold tracking-widest uppercase"
       />
       <p id={hintId} className="text-secondary text-ink-soft">
-        On a phone that’s already signed in, open More, then Settings, then Phones & screens, then
+        On a phone that’s already signed in, open More, then Settings, then Phones & Screens, then
         Add a phone.
       </p>
       <p id={errorId} role="alert" className="min-h-7 text-secondary font-semibold text-alert">

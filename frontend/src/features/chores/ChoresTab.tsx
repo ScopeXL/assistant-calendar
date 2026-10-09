@@ -65,7 +65,7 @@ function PhoneChores() {
           value={mode}
           options={[
             { value: "today", label: "Today" },
-            { value: "week", label: "This week" },
+            { value: "week", label: "This Week" },
           ]}
           onChange={setMode}
         />
@@ -86,7 +86,7 @@ function PhoneChores() {
             params={{ room: "chores", _splat: "rewards" }}
             className="press-row flex min-h-14 items-center justify-between rounded-chip border border-line bg-surface px-4 text-row font-semibold"
           >
-            {day.rewards_on ? "Stars & rewards" : "Stars"}
+            {day.rewards_on ? "Stars & Rewards" : "Stars"}
             <ChevronRight aria-hidden="true" className="text-ink-soft" />
           </Link>
         ) : null}

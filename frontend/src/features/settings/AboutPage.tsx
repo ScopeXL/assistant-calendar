@@ -87,7 +87,7 @@ export function AboutPage() {
         ) : null}
       </Group>
       <UpdatesGroup />
-      <Group title="The small print">
+      <Group title="The Small Print">
         <div className="flex flex-col gap-2 py-4">
           <Text>Sunroom is open source, under the MIT licence.</Text>
           <Text soft>Not affiliated with Google or Apple.</Text>
@@ -125,7 +125,7 @@ function UpdatesGroup() {
         : null));
   return (
     <Group
-      title="New versions"
+      title="New Versions"
       note={
         status.locked
           ? "This server keeps update checks off."

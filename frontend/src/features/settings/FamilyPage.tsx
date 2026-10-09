@@ -80,7 +80,7 @@ export function FamilyPage() {
         <AddPerson />
       </Group>
       {removed.length > 0 ? (
-        <Group title="Removed people">
+        <Group title="Removed People">
           {removed.map((member) => (
             <Row key={member.id} label={member.name}>
               <Button

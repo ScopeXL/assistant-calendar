@@ -3,10 +3,10 @@
 export const SETTINGS_PAGES = [
   { key: "family", title: "Family" },
   { key: "features", title: "Features" },
-  { key: "calendars", title: "Calendars & accounts" },
+  { key: "calendars", title: "Calendars & Accounts" },
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
-  { key: "devices", title: "Phones & screens" },
+  { key: "devices", title: "Phones & Screens" },
   { key: "backup", title: "Backup" },
   { key: "about", title: "About" },
 ] as const;

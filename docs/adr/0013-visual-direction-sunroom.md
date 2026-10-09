@@ -1,6 +1,6 @@
 # ADR 0013: Visual direction "Sunroom": a calm wall whose light follows the day
 
-- **Status:** Accepted
+- **Status:** Accepted; the case rule ("Sentence case everywhere") is superseded by [0028](0028-m6-batch-1-the-owners-first-notes.md)
 - **Date:** 2026-10-07
 
 ## Context

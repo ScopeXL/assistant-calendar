@@ -23,7 +23,7 @@ export function TodoBlockWall({ band = false }: { band?: boolean }) {
   return (
     <section aria-labelledby="today-todo" className="flex flex-col gap-2">
       <h2 id="today-todo" className="text-d-body font-bold text-ink-soft">
-        To do
+        To Do
       </h2>
       {items.map((item) => {
         const who = members.find((m) => m.id === item.assigned_member_id);
@@ -61,7 +61,7 @@ export function TodoBlockPhone() {
   return (
     <section aria-labelledby="phone-todo" className="flex flex-col gap-1">
       <h2 id="phone-todo" className="text-row font-bold text-ink-soft">
-        To do
+        To Do
       </h2>
       <ul className="flex flex-col">
         {items.map((item) => {

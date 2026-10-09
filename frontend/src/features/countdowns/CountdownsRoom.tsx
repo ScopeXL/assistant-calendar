@@ -204,7 +204,7 @@ export function CountdownsRoom() {
       </div>
       <SidePanel
         open={adding}
-        title="Add countdown"
+        title="Add Countdown"
         onClose={() => {
           setAdding(false);
         }}
@@ -248,7 +248,7 @@ export function CountdownsTab({ path }: { path: string[] }) {
       />
       <Sheet
         open={adding}
-        title="Add countdown"
+        title="Add Countdown"
         onClose={() => {
           setAdding(false);
         }}

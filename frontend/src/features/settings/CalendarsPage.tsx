@@ -122,7 +122,7 @@ export function CalendarsPage() {
       </Group>
       {Accounts ? <Accounts /> : null}
       {removed.length ? (
-        <Group title="Removed calendars" note="Their events come back with them.">
+        <Group title="Removed Calendars" note="Their events come back with them.">
           {removed.map((calendar) => (
             <div
               key={calendar.id}
@@ -158,7 +158,7 @@ function CalendarSheet({ editing, onClose }: { editing: Editing; onClose: () => 
   return (
     <Sheet
       open={editing !== null}
-      title={calendar ? `Change ${calendar.name}` : "Add a calendar"}
+      title={calendar ? `Change ${calendar.name}` : "Add a Calendar"}
       onClose={onClose}
     >
       {editing ? (

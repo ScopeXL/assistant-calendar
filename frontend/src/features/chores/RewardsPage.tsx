@@ -30,7 +30,7 @@ export function RewardsPage() {
   const body = <RewardsBody />;
   if (!display) {
     return (
-      <Screen title="Stars & rewards" back="/chores">
+      <Screen title="Stars & Rewards" back="/chores">
         {body}
       </Screen>
     );
@@ -47,7 +47,7 @@ export function RewardsPage() {
           Chores
         </Link>
         <h1 id="rewards-title" className="text-d-title font-bold">
-          Stars & rewards
+          Stars & Rewards
         </h1>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">{body}</div>
@@ -351,7 +351,7 @@ export function RewardPanel({
   return (
     <SidePanel
       open={open}
-      title={reward ? `Change ${reward.title}` : "Add reward"}
+      title={reward ? `Change ${reward.title}` : "Add Reward"}
       onClose={onClose}
     >
       {open ? <RewardForm key={reward?.id ?? "new"} reward={reward} onClose={onClose} /> : null}
@@ -410,7 +410,7 @@ function RewardForm({ reward, onClose }: { reward: Reward | null; onClose: () =>
         </p>
       ) : null}
       <Button type="submit" block disabled={!title.trim()} pending={saveReward.isPending}>
-        {reward ? "Save changes" : "Add reward"}
+        {reward ? "Save changes" : "Add Reward"}
       </Button>
       {reward ? (
         <Button

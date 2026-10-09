@@ -20,7 +20,7 @@ export function RecentlyRemoved() {
   const nothing = removed.length === 0 && groups.every(({ id }) => (counts[id] ?? 0) === 0);
   const display = useShell() === "display";
   return (
-    <Group title="Recently removed">
+    <Group title="Recently Removed">
       {nothing ? (
         <div className={display ? "py-5" : "py-4"}>
           <Text soft>Things removed in the last 7 days show here.</Text>

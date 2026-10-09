@@ -23,13 +23,13 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const SETTINGS = [
   "Family",
   "Features",
-  "Calendars & accounts",
+  "Calendars & Accounts",
   "Chores",
   "Meals",
-  "Photos & screensaver",
+  "Photos & Screensaver",
   "Display",
   "Household",
-  "Phones & screens",
+  "Phones & Screens",
   "Backup",
 ];
 const CSRF = { "X-Sunroom": "1" };
@@ -267,8 +267,8 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Chores", level: 1 })).toBeVisible();
       await check(page, "chores");
       await sheet(page, "Add", "chores: add");
-      await page.getByRole("link", { name: "Stars & rewards" }).click();
-      await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
+      await page.getByRole("link", { name: "Stars & Rewards" }).click();
+      await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
       await check(page, "chores: stars and rewards");
       await page.getByRole("link", { name: "More" }).click();
       await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
@@ -308,8 +308,8 @@ for (const scheme of ["light", "dark"] as const) {
         await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
         await check(page, `settings: ${title}`);
         if (title === "Family") await sheet(page, "Change Mia", "change a person");
-        if (title === "Calendars & accounts") await sheet(page, "Add a calendar", "add a calendar");
-        if (title === "Phones & screens") await sheet(page, "Add a phone", "add a phone");
+        if (title === "Calendars & Accounts") await sheet(page, "Add a calendar", "add a calendar");
+        if (title === "Phones & Screens") await sheet(page, "Add a phone", "add a phone");
       }
       await page.goto("/install?from=more");
       await expect(
@@ -341,7 +341,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
       await check(page, "display: name this screen");
       await page.getByRole("button", { name: "Done" }).click();
-      const board = page.getByRole("region", { name: "This week" });
+      const board = page.getByRole("region", { name: "This Week" });
       await expect(board).toBeVisible();
       await check(page, "display: board");
       await board.getByRole("button", { name: /^Soccer practice, .*Thursday/ }).click();
@@ -359,7 +359,7 @@ for (const scheme of ["light", "dark"] as const) {
       await add.getByRole("button", { name: "Every week on Thu" }).click();
       await check(page, "display: add, the repeat picker");
       await add.getByRole("button", { name: "Close" }).click();
-      for (const view of ["Day", "Month", "Who's doing what"]) {
+      for (const view of ["Day", "Month", "Who's Doing What"]) {
         await page.getByRole("button", { name: view, exact: true }).click();
         await check(page, `display: ${view}`);
       }
@@ -377,10 +377,10 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
       await check(page, "display: who did it");
       await page.getByRole("button", { name: "Cancel" }).click();
-      await page.getByRole("button", { name: "This week", exact: true }).click();
+      await page.getByRole("button", { name: "This Week", exact: true }).click();
       await check(page, "display: chores this week");
-      await page.getByRole("link", { name: "Stars & rewards" }).click();
-      await expect(page.getByRole("heading", { name: "Stars & rewards", level: 1 })).toBeVisible();
+      await page.getByRole("link", { name: "Stars & Rewards" }).click();
+      await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
       await check(page, "display: stars and rewards");
       await page.getByRole("link", { name: "Meals" }).click();
       await expect(page.getByRole("heading", { name: /^Meals · /, level: 1 })).toBeVisible();
@@ -446,7 +446,7 @@ for (const scheme of ["light", "dark"] as const) {
         await expect(page.getByRole("heading", { name: title, level: 2 })).toBeVisible();
         await check(page, `display settings: ${title}`);
         if (title === "Family") await sheet(page, "Change Mia", "display: change a person");
-        if (title === "Calendars & accounts") {
+        if (title === "Calendars & Accounts") {
           await sheet(page, "Change Kids' activities", "display: change a calendar");
         }
       }
@@ -461,7 +461,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByLabel("Household password")).toBeVisible();
       await check(page, "laptop: sign in");
       await signInPhone(page);
-      await expect(page.getByRole("region", { name: "This week" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
       await check(page, "laptop: board");
       await page.getByRole("button", { name: "Settings" }).click();
       for (const title of [...SETTINGS, "About"]) {

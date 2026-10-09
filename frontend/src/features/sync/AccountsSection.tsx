@@ -325,14 +325,14 @@ function ConnectOnPhone({ open, onClose }: { open: boolean; onClose: () => void 
     }
   })();
   return (
-    <Sheet open={open} title="Add an account" onClose={onClose}>
+    <Sheet open={open} title="Add an Account" onClose={onClose}>
       <div className="flex flex-col items-center gap-5 text-center">
         <p className="text-d-body">
           Connect accounts on a phone: it needs a password you shouldn't type here.
         </p>
-        <QrCode value={address} label="Open Calendars & accounts on a phone" />
+        <QrCode value={address} label="Open Calendars & Accounts on a phone" />
         <p className="text-d-secondary text-ink-soft">
-          Scan this with a parent's phone, or open Settings → Calendars & accounts there.
+          Scan this with a parent's phone, or open Settings → Calendars & Accounts there.
         </p>
       </div>
     </Sheet>
@@ -352,7 +352,7 @@ function ReconnectSheet({
   const [value, setValue] = useState("");
   const feed = account.provider === "ics";
   return (
-    <Sheet open={open} title={`Connect ${sourceName(account)} again`} onClose={onClose}>
+    <Sheet open={open} title={`Connect ${sourceName(account)} Again`} onClose={onClose}>
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {

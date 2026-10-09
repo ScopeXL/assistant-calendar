@@ -43,14 +43,14 @@ function ChoresBoard() {
     <section aria-labelledby="chores-title" className="flex min-h-0 flex-1 flex-col">
       <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line px-6 py-4">
         <h1 id="chores-title" className="text-d-title font-bold">
-          {mode === "today" ? "Chores · Today" : "Chores · This week"}
+          {mode === "today" ? "Chores · Today" : "Chores · This Week"}
         </h1>
         <Segmented
           label="Show"
           value={mode}
           options={[
             { value: "today", label: "Today" },
-            { value: "week", label: "This week" },
+            { value: "week", label: "This Week" },
           ]}
           onChange={setMode}
         />
@@ -61,7 +61,7 @@ function ChoresBoard() {
             className="press ml-auto inline-flex min-h-14 items-center gap-2 rounded-button-d border-2 border-line bg-surface px-6 text-d-body font-semibold"
           >
             <Star aria-hidden="true" className="size-7 fill-sun stroke-sun-ink" />
-            {day.rewards_on ? "Stars & rewards" : "Stars"}
+            {day.rewards_on ? "Stars & Rewards" : "Stars"}
           </Link>
         ) : null}
       </header>

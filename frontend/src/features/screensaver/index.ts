@@ -22,7 +22,7 @@ const module: PluginModule = {
     },
   ],
   overlay: Saver,
-  settingsPages: [{ key: "screensaver", title: "Photos & screensaver", Page: SettingsScreensaver }],
+  settingsPages: [{ key: "screensaver", title: "Photos & Screensaver", Page: SettingsScreensaver }],
 };
 
 export default module;
