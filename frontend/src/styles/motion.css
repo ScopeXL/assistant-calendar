@@ -315,6 +315,17 @@ dialog.sheet[data-closing]::backdrop {
   animation: fade-in var(--motion-photo) linear both;
 }
 
+/* The live-updates icon while it reconnects (ui/LiveStatus): a slow turn. Reduce Motion keeps
+   it still (below). */
+.live-turn {
+  animation: live-turn 2.4s linear infinite;
+}
+@keyframes live-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Reduce Motion: everything instant. 0.01 ms rather than 0, so every animation still runs to its
    end (and a sheet's close still sees one finish). */
 @media (prefers-reduced-motion: reduce) {
@@ -331,6 +342,12 @@ dialog.sheet[data-closing]::backdrop {
   .press:active:not(:disabled) {
     transform: none;
   }
+  .live-turn {
+    animation: none !important;
+  }
+}
+:root[data-reduce-motion] .live-turn {
+  animation: none !important;
 }
 :root[data-reduce-motion] *,
 :root[data-reduce-motion] *::before,

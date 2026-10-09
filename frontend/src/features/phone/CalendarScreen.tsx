@@ -16,6 +16,7 @@ import { useMinute } from "../../lib/time";
 import { ActionBar } from "../../ui/ActionBar";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
+import { LiveStatusButton } from "../../ui/LiveStatus";
 import { Chip } from "../../ui/Chip";
 import { Segmented } from "../../ui/Segmented";
 import { Sheet } from "../../ui/Sheet";
@@ -155,7 +156,7 @@ export function CalendarScreen() {
             onClick={() => {
               setPicker(true);
             }}
-            className="press flex min-h-11 items-center gap-1 rounded-button"
+            className="press flex min-h-11 items-center gap-1 rounded-button text-left"
           >
             {monthYear(mode === "week" ? (week[3] ?? selected) : selected)}
             <ChevronDown aria-hidden="true" className="size-6" />
@@ -200,7 +201,8 @@ export function CalendarScreen() {
       </header>
       <Segmented label="View" options={MODES} value={mode} onChange={setMode} />
       <div className="flex flex-col gap-2">
-        <div>
+        {/* The live-updates icon at the right: the header has no room beside the arrows. */}
+        <div className="flex items-center justify-between gap-2">
           <Chip
             on={showPeople}
             onClick={() => {
@@ -209,6 +211,7 @@ export function CalendarScreen() {
           >
             Show: {chosenPeople.length ? chosenPeople.map((m) => m.name).join(", ") : "everyone"}
           </Chip>
+          <LiveStatusButton />
         </div>
         {showPeople ? (
           <div role="group" aria-label="Show" className="flex flex-wrap gap-2">

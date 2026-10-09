@@ -5,6 +5,7 @@ import type { BoardView } from "../../lib/displayState";
 import type { Member } from "../../lib/household";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
+import { LiveStatusButton } from "../../ui/LiveStatus";
 import { Segmented } from "../../ui/Segmented";
 
 const VIEWS: { value: Exclude<BoardView, "today">; label: string }[] = [
@@ -15,9 +16,9 @@ const VIEWS: { value: Exclude<BoardView, "today">; label: string }[] = [
 ];
 
 /**
- * The board's header on every view (UX §3): the title, the arrows and "This week" (or Today,
- * This month), the view switch, the person filter ("Show" and avatars, several at once) and
- * the Today panel toggle.
+ * The board's header on every view (UX §3): the title, the arrows and "This Week" (or Today,
+ * This Month), the view switch, the person filter ("Show" and avatars, several at once), the
+ * Today panel toggle and, in the top-right corner, the live-updates icon.
  */
 export function BoardHeader({
   title,
@@ -54,11 +55,6 @@ export function BoardHeader({
   /** Quiet one-line states from plugins ("Google hasn't answered since 9:10 AM"). */
   pills?: ReactNode;
 }) {
-  const panelIcon = panelShown ? (
-    <PanelRightClose aria-hidden="true" className="size-7" />
-  ) : (
-    <PanelRightOpen aria-hidden="true" className="size-7" />
-  );
   const toggle = (id: string) => {
     onPeople(people.includes(id) ? people.filter((p) => p !== id) : [...people, id]);
   };
@@ -111,28 +107,22 @@ export function BoardHeader({
               <Segmented label="View" value={view} onChange={onView} options={VIEWS} />
             </div>
           ) : null}
-          <span className="hidden @min-[60rem]:block portrait:hidden">
+          <span className="portrait:hidden">
             <Button
-              variant="quiet"
-              aria-pressed={panelShown}
-              onClick={onTogglePanel}
-              aria-label={panelShown ? "Hide the Today panel" : "Show the Today panel"}
-            >
-              {panelIcon}
-              Today panel
-            </Button>
-          </span>
-          <span className="block @min-[60rem]:hidden portrait:hidden">
-            <Button
-              variant="quiet"
+              variant="secondary"
               icon
               aria-pressed={panelShown}
               onClick={onTogglePanel}
               aria-label={panelShown ? "Hide the Today panel" : "Show the Today panel"}
             >
-              {panelIcon}
+              {panelShown ? (
+                <PanelRightClose aria-hidden="true" className="size-8" />
+              ) : (
+                <PanelRightOpen aria-hidden="true" className="size-8" />
+              )}
             </Button>
           </span>
+          <LiveStatusButton />
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">

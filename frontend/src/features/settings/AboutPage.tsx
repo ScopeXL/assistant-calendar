@@ -3,22 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { formatTime } from "../../lib/dates";
-import { liveStatus } from "../../lib/events";
 import { useSettings, useUpdateSettings } from "../../lib/household";
 import { asParent } from "../../lib/parent";
-import { useStore } from "../../lib/store";
 import { Button } from "../../ui/Button";
+import { LiveStatusIcon } from "../../ui/LiveStatus";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { Group, Row, Text } from "./parts";
-
-const LIVE: Record<string, string> = {
-  live: "connected",
-  connecting: "connecting",
-  polling: "checking every 30 seconds",
-  offline: "offline",
-  "signed-out": "signed out",
-};
 
 function gigabytes(bytes: number): string {
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
@@ -26,7 +17,6 @@ function gigabytes(bytes: number): string {
 
 /** Settings → About (UX §4): version, storage, how this device reaches Sunroom, and the rest. */
 export function AboutPage() {
-  const live = useStore(liveStatus);
   const { data: diagnostics } = useQuery({
     queryKey: qk.diagnostics(),
     queryFn: () => asParent(async () => unwrap(await api.GET("/api/admin/diagnostics"))),
@@ -47,14 +37,14 @@ export function AboutPage() {
       </Group>
       {diagnostics ? (
         <Group title="Storage">
-          <Row label="Free on the server">
+          <Row label="Free space">
             <Text>{`${gigabytes(diagnostics.storage.free_bytes)} of ${gigabytes(diagnostics.storage.total_bytes)}`}</Text>
           </Row>
         </Group>
       ) : null}
       <Group title="Connection">
         <Row label="Live updates">
-          <Text>{LIVE[live] ?? live}</Text>
+          <LiveStatusIcon />
         </Row>
         {diagnostics ? (
           <>

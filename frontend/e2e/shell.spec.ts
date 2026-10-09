@@ -41,6 +41,8 @@ test.describe("a phone", () => {
     await expect(page.getByRole("link", { name: "Using this phone: Ana" })).toBeVisible();
     await page.getByRole("link", { name: "Calendar" }).click();
     await expect(page.getByRole("group", { name: "Days" })).toBeVisible();
+    // The live-updates icon at the right of the Calendar's header.
+    await expect(page.getByRole("img", { name: "Live updates: connected" })).toBeVisible();
     await noSidewaysScroll(page, "Calendar");
     await page.getByRole("link", { name: "More" }).click();
     await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
@@ -65,6 +67,9 @@ test.describe("a phone", () => {
     await page.getByRole("link", { name: "More" }).click();
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "About", exact: true }).click();
+    // Connection shows the live-updates icon, named in words; Storage says Free space.
+    await expect(page.getByRole("img", { name: "Live updates: connected" })).toBeVisible();
+    await expect(page.getByText("Free space", { exact: true })).toBeVisible();
     const daily = page.getByRole("switch", { name: "Check for new versions daily" });
     await expect(daily).not.toBeChecked();
     await expect(page.getByRole("button", { name: "Check now" })).toBeHidden();
@@ -130,6 +135,45 @@ test.describe("the wall screen", () => {
       await page.getByRole("button", { name: "Show the Today panel" }).click();
       await expect(today).toBeVisible();
     }
+  });
+
+  test("says in its top-right corner that it hears live updates, and keeps hearing them", async ({
+    page,
+    request,
+  }) => {
+    await request.post("/api/_test/clock", {
+      headers: CSRF,
+      data: { set: "2026-10-07T14:00:00Z" },
+    });
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/display");
+    const board = page.getByRole("region", { name: "This Week" });
+    const header = board.locator("header");
+    const icon = header.getByRole("img", { name: "Live updates: connected" });
+    await expect(icon).toBeVisible();
+    // The board's top-right corner: the last thing on the header's first line.
+    const corner = await icon.boundingBox();
+    const box = await header.boundingBox();
+    expect((corner?.x ?? 0) + (corner?.width ?? 0)).toBeGreaterThan(
+      (box?.x ?? 0) + (box?.width ?? 0) - 80,
+    );
+    // The server drops every stream: the screen reconnects by itself, too quickly to say so.
+    const dropped = await page.request.post("/api/_test/drop-streams", { headers: CSRF });
+    expect(dropped.status()).toBe(204);
+    for (let sample = 0; sample < 15; sample++) {
+      await expect(header.locator("[data-live]")).toHaveAttribute("data-live", "live");
+      await page.waitForTimeout(200);
+    }
+    // And it hears changes again.
+    const added = await page.request.post("/api/calendar/events", {
+      headers: CSRF,
+      data: { title: "Library day", start_date: "2026-10-08" },
+    });
+    expect(added.status()).toBe(201);
+    await expect(board.getByRole("button", { name: /^Library day/ })).toBeVisible({
+      timeout: 3_000,
+    });
   });
 
   test("dims in the evening with a veil, unless the Pi's helper turns the screen down", async ({

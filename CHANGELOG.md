@@ -12,6 +12,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
   ("Calendars & Accounts", "This Week", "Who's Doing What"). Buttons and messages stay as
   they were.
 - "Kid" is now "Child" everywhere you read it.
+- The top-right corner of the board, and the phone's Calendar, show whether the screen is
+  getting live updates: connected, reconnecting, checking every 30 seconds, or offline. Tap it
+  to hear which. Settings → About → Connection shows the same icon.
+- The Today panel's button at the top of the board is now an icon, the same size as the
+  arrows beside it.
+- Settings → About → Storage says "Free space".
 
 ### Fixed
 
