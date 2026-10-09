@@ -12,17 +12,20 @@ import { shortWeekday } from "../../lib/dates";
 import { asParent } from "../../lib/parent";
 import { showToast } from "../../lib/toast";
 import { useCalendarOverlays } from "../usePluginModules";
+import { CORE_OVERLAYS } from "./overlays";
 import type { CalendarEvent, Change, EventFields, Scope } from "./types";
 
-/** Occurrences in [from, to). The board asks for `overlays` too: what the plugins that are on
- * add to its days (meals, countdowns). */
+/** Occurrences in [from, to). The board asks for `overlays` too: the core's birthdays, and what
+ * the plugins that are on add to its days (meals, countdowns). */
 export function useOccurrences(
   from: string,
   to: string,
   { enabled = true, overlays = false }: { enabled?: boolean; overlays?: boolean } = {},
 ) {
   const added = useCalendarOverlays();
-  const keys = overlays ? added.map((overlay) => overlay.key) : [];
+  const keys = overlays
+    ? [...CORE_OVERLAYS.map((overlay) => overlay.key), ...added.map((overlay) => overlay.key)]
+    : [];
   return useQuery({
     queryKey: qk.occurrences(from, to, keys),
     queryFn: async () =>

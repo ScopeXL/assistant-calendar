@@ -21,8 +21,10 @@ import type { Occurrence } from "./types";
 
 const LONG_PRESS_MS = 400;
 // Portrait (UX §3): days are rows, chips 224 px wide in lines across, the now line a divider.
-const PORTRAIT_ROW = "portrait:flex-row portrait:flex-wrap portrait:content-start";
-const PORTRAIT_CELL = "portrait:w-56";
+// Lines are spaced by each cell's margin, not a row gap, so the all-day band's line break adds
+// no height of its own.
+const PORTRAIT_ROW = "portrait:flex-row portrait:flex-wrap portrait:content-start portrait:gap-y-0";
+const PORTRAIT_CELL = "portrait:w-56 portrait:mb-2";
 
 export interface WeekViewProps {
   days: string[];
@@ -153,9 +155,21 @@ function DayColumn({
   const allDay = column?.allDay ?? [];
   const slot = isToday ? nowSlot(timed, now) : -1;
   const filter = new Set(people);
-  type Row = { kind: "chip"; entry: DayEntry<Occurrence> } | { kind: "now" };
-  const rows: Row[] = timed.map((entry) => ({ kind: "chip", entry }));
-  if (isToday) rows.splice(slot, 0, { kind: "now" });
+  // One list, so whatever doesn't fit becomes "+N more" and nothing is lost off the end (UX §4):
+  // the all-day band on top in compact chips, then the timed ones, with today's now line under
+  // the last finished one. In portrait the band keeps a line of its own.
+  type Row =
+    | { kind: "chip"; entry: DayEntry<Occurrence>; allDay: boolean }
+    | { kind: "now" }
+    | { kind: "break" };
+  const rows: Row[] = allDay.map((entry): Row => ({ kind: "chip", entry, allDay: true }));
+  if (allDay.length && (timed.length || isToday)) rows.push({ kind: "break" });
+  const firstTimed = rows.length;
+  rows.push(...timed.map((entry): Row => ({ kind: "chip", entry, allDay: false })));
+  if (isToday) rows.splice(firstTimed + slot, 0, { kind: "now" });
+  // "+N more" counts events, not the band's line break or the now line.
+  const hiddenEvents = (hidden: number) =>
+    rows.slice(rows.length - hidden).filter((row) => row.kind === "chip").length;
 
   const chip = (entry: DayEntry<Occurrence>, compact: boolean, measuring: boolean) => {
     const faded = !shownFor(entry.occurrence, filter);
@@ -217,30 +231,30 @@ function DayColumn({
           if (!(event.target as HTMLElement).closest("button, [data-chip]")) onAdd(day);
         }}
       >
-        {allDay.length ? (
-          <div className={`flex flex-col gap-2 ${PORTRAIT_ROW}`}>
-            {allDay.slice(0, 3).map((entry) => (
-              <div key={entry.occurrence.key} className={PORTRAIT_CELL}>
-                {chip(entry, true, false)}
-              </div>
-            ))}
-            {allDay.length > 3 ? (
-              <div className={PORTRAIT_CELL}>
-                <MoreButton count={allDay.length - 3} day={day} onMore={onMore} />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
         <FitList
           items={rows}
-          itemKey={(row) => (row.kind === "now" ? "now" : row.entry.occurrence.key)}
+          itemKey={(row) => (row.kind === "chip" ? row.entry.occurrence.key : row.kind)}
           render={(row, _index, measuring) =>
-            row.kind === "now" ? <NowLine now={now} /> : chip(row.entry, false, measuring)
+            row.kind === "now" ? (
+              <NowLine now={now} />
+            ) : row.kind === "chip" ? (
+              chip(row.entry, row.allDay, measuring)
+            ) : null
           }
-          renderMore={(hidden) => <MoreButton count={hidden} day={day} onMore={onMore} />}
+          renderMore={(hidden) =>
+            hiddenEvents(hidden) ? (
+              <MoreButton count={hiddenEvents(hidden)} day={day} onMore={onMore} />
+            ) : null
+          }
           listClassName={`flex flex-col gap-2 ${PORTRAIT_ROW}`}
-          itemClassName={(row) => (row.kind === "now" ? "portrait:self-stretch" : PORTRAIT_CELL)}
-          moreClassName={PORTRAIT_CELL}
+          itemClassName={(row) =>
+            row.kind === "now"
+              ? "portrait:mb-2 portrait:self-stretch"
+              : row.kind === "break"
+                ? "hidden portrait:block portrait:basis-full"
+                : PORTRAIT_CELL
+          }
+          moreClassName="portrait:mb-2"
         />
       </div>
     </div>
@@ -272,10 +286,13 @@ function Draggable({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      // The chip inside is the control: dnd-kit's attributes would make this box a second one,
+      // and its aria-disabled (on what can't move) would mark the chip itself unavailable.
       role={undefined}
       tabIndex={undefined}
       aria-roledescription={undefined}
       aria-describedby={undefined}
+      aria-disabled={undefined}
       className={`rounded-chip-d ${faded ? "opacity-30" : ""} ${
         origin ? "opacity-50 outline-2 outline-ink-soft outline-dashed" : ""
       }`}
@@ -300,7 +317,8 @@ function MoreButton({
       onClick={() => {
         onMore(day);
       }}
-      className="press min-h-14 w-full rounded-chip-d text-left px-3 text-d-secondary font-semibold text-ink-soft"
+      // In portrait's rows it's only as wide as its words, so another chip fits on its line.
+      className="press min-h-14 w-full rounded-chip-d px-3 text-left text-d-secondary font-semibold whitespace-nowrap text-ink-soft portrait:w-auto portrait:px-5"
     >
       {`+${String(count)} more`}
     </button>

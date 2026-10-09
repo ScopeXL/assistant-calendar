@@ -10,7 +10,7 @@ import { expect, pairWall, phone, seed, signInPhone, test } from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 const WEDNESDAY_10AM = "2026-10-07T14:00:00Z";
-const MIAS_BIRTHDAY_10AM = "2026-10-19T14:00:00Z";
+const MIAS_BIRTHDAY_10AM = "2026-10-09T14:00:00Z";
 
 function toast(page: Page, message: string): Locator {
   return page.locator("[data-toast]").filter({ hasText: message });
@@ -34,7 +34,7 @@ test("Coming up counts down to a birthday from Family", async ({ page, request }
   await page.goto("/display");
   const comingUp = page.getByRole("region", { name: "Coming up" });
   await expect(comingUp).toContainText("Grandma visits · 5 days");
-  await expect(comingUp).toContainText("Mia's birthday · 12 days");
+  await expect(comingUp).toContainText("Mia's birthday · 2 days");
   await comingUp.getByRole("button", { name: /Mia's birthday/ }).click();
   await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
   await expect(

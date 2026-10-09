@@ -5,7 +5,7 @@ import type { Member } from "../../lib/household";
 import { Avatar } from "../../ui/Avatar";
 import { useShell } from "../../ui/shell";
 import { isOn, isPast } from "./layout";
-import { useOverlayOf } from "./overlays";
+import { coreOverlayOf, useOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
 
 /** "Soccer practice, 4:00 to 5:00 PM, Mia, Thursday October 9" (UX §10). */
@@ -96,11 +96,14 @@ export function EventChip({
         : "bg-line/60 text-ink";
   const time =
     !occurrence.all_day && occurrence.start_local ? formatWallTime(occurrence.start_local) : null;
+  // A core overlay's mark before the title: a birthday's cake (ADR 0028).
+  const Mark = coreOverlayOf(occurrence)?.icon;
   return (
     <button
       type="button"
       data-person={on && !color ? "everyone" : (color ?? "everyone")}
       data-chip=""
+      data-overlay={occurrence.overlay ?? undefined}
       data-key={occurrence.key}
       aria-label={occurrenceLabel(occurrence, people, day)}
       tabIndex={measuring ? -1 : undefined}
@@ -120,13 +123,21 @@ export function EventChip({
               {time}
             </span>
           ) : null}
+          {Mark ? (
+            <Mark
+              aria-hidden="true"
+              className={`${display ? "size-6" : "size-5"} shrink-0`}
+              strokeWidth={2.25}
+            />
+          ) : null}
           <span
             className={`line-clamp-2 min-w-0 flex-1 break-words ${display ? "text-d-body" : "text-body"} font-semibold`}
           >
             {occurrence.title}
           </span>
           {continues ? <ArrowRight aria-hidden="true" className="size-6 shrink-0" /> : null}
-          <PeopleMarks people={people} />
+          {/* A birthday's title names its person ("Mia's birthday"): no avatar, so it fits. */}
+          {Mark ? null : <PeopleMarks people={people} />}
         </span>
       ) : (
         <>

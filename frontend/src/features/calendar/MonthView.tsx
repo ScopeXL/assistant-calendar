@@ -1,7 +1,7 @@
 import { addDays, dayNumber, formatWallTime, shortWeekday, weekOf } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { byDay, shownFor } from "./layout";
-import { useOverlayOf } from "./overlays";
+import { coreOverlayOf, useOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
 
 export interface MonthGrid {
@@ -136,14 +136,17 @@ function MonthEntry({ occurrence, members }: { occurrence: Occurrence; members: 
       ? formatWallTime(occurrence.start_local, { compact: true })
       : null;
   const initial = people.length === 1 ? (people[0]?.name.charAt(0) ?? "") : "";
+  const Mark = coreOverlayOf(occurrence)?.icon;
   return (
     <span
       aria-hidden="true"
       data-person={color}
+      data-overlay={occurrence.overlay ?? undefined}
       className="flex min-w-0 items-center gap-1.5 rounded-sm border-l-4 border-p bg-p-tint px-1.5 text-d-caption"
     >
       {initial ? <span className="font-bold text-p-text">{initial}</span> : null}
       {time ? <span className="font-semibold whitespace-nowrap">{time}</span> : null}
+      {Mark ? <Mark className="size-4 shrink-0" strokeWidth={2.25} /> : null}
       <span className="min-w-0 truncate">{occurrence.title}</span>
     </span>
   );

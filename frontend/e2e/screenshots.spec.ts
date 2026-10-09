@@ -99,7 +99,12 @@ test("the wall screen", async ({ page }) => {
         await page.reload();
         await expect(board).toBeVisible();
         // The Today panel's plugin blocks arrive a moment after the board.
-        await expect(page.getByRole("heading", { name: "Chores today" }).first()).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Chores Today" }).first()).toBeVisible();
+        // Mia's birthday, the core's own chip, on Friday (at Extra large, portrait's short rows
+        // keep it behind "+3 more").
+        if (size === "standard") {
+          await expect(board.locator("[data-overlay=birthdays]:visible")).toHaveCount(1);
+        }
         await shot(page, `board-${size}-${theme}-${stop.name}`);
       }
     }

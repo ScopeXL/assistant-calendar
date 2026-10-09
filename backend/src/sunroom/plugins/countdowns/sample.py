@@ -1,7 +1,7 @@
 """The Sample Family's countdowns (test mode only: ``just seed``, screenshots, end-to-end runs).
 
 Grandma visits in 5 days, the camping trip in 17, Halloween every year (Mia's), and Ana's
-surprise party in 40 days, kept off the wall. Mia's birthday (October 19) comes up in 12 days by
+surprise party in 40 days, kept off the wall. Mia's birthday (October 9) comes up in 2 days by
 itself, from Family. Synthetic only.
 """
 

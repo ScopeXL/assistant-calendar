@@ -1,9 +1,9 @@
 """The countdowns plugin on the calendar, in its hourly job and as a plugin (PLAN §6.4, §7.6,
-§11.4, §15 M4): countdowns and birthdays as all-day read-only overlay chips, never before their
-first date and never a surprise; the tidy that moves past countdowns to Recently removed and
-forgets them a week later; switched off, every route answers 404 plugin_disabled and the data
-waits; the Sample Family's countdowns. Wednesday 2026-10-07 is today (10:00 in New York). The
-Sample Family only."""
+§11.4, §15 M4): countdowns as all-day read-only overlay chips, never before their first date and
+never a surprise (birthdays are the core's own overlay since M6, ADR 0028); the tidy that moves
+past countdowns to Recently removed and forgets them a week later; switched off, every route
+answers 404 plugin_disabled and the data waits; the Sample Family's countdowns. Wednesday
+2026-10-07 is today (10:00 in New York). The Sample Family only."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ async def stored(app: FastAPI) -> set[str]:
 # ---- the calendar ------------------------------------------------------------------------------
 
 
-async def test_the_calendar_shows_countdowns_and_birthdays(
+async def test_the_calendar_shows_countdowns_but_leaves_birthdays_to_the_core(
     parent: httpx.AsyncClient, family: Family
 ) -> None:
     fair = await add_countdown(parent, "Fall fair", day(3), member_id=family.mia, color="clay")
@@ -72,7 +72,6 @@ async def test_the_calendar_shows_countdowns_and_birthdays(
     found = await overlaid(parent, "2026-10-04", "2026-11-01")
     assert [(o["title"], o["start_date"], o["member_ids"]) for o in found] == [
         ("Fall fair", "2026-10-10", [family.mia]),
-        ("Mia's birthday", "2026-10-19", [family.mia]),
         ("Halloween", "2026-10-31", []),
     ]
     assert found[0] == {
@@ -102,21 +101,27 @@ async def test_the_calendar_shows_countdowns_and_birthdays(
         "reminders": [],
         "version": 0,
     }
-    assert (found[1]["key"], found[1]["color"]) == (
-        f"countdowns|birthday:{family.mia}|2026-10-19",
-        None,
-    )
     # Unasked, the calendar is events only.
     plain = await parent.get(
         "/api/calendar/occurrences", params={"from": "2026-10-04", "to": "2026-11-01"}
     )
     assert plain.json()["occurrences"] == []
-    # Birthdays switched off leave the calendar too.
+
+    # Mia's birthday is the core's chip, whatever Countdowns' own birthdays setting says.
+    async def core_birthdays() -> list[tuple[str, str]]:
+        response = await parent.get(
+            "/api/calendar/occurrences",
+            params={"from": "2026-10-04", "to": "2026-11-01", "overlays": "birthdays"},
+        )
+        return [(o["title"], o["start_date"]) for o in response.json()["occurrences"]]
+
+    assert await core_birthdays() == [("Mia's birthday", "2026-10-19")]
     switched = await parent.put(
         "/api/plugins/countdowns/settings", json={"values": {"birthdays": False}}, headers=CSRF
     )
     assert switched.status_code == 200, switched.text
     assert titles(await overlaid(parent, "2026-10-04", "2026-11-01")) == ["Fall fair", "Halloween"]
+    assert await core_birthdays() == [("Mia's birthday", "2026-10-19")]
 
 
 async def test_a_yearly_day_comes_round_each_year_from_its_first(
@@ -124,10 +129,7 @@ async def test_a_yearly_day_comes_round_each_year_from_its_first(
 ) -> None:
     await add_countdown(parent, "New Year's Eve", "2026-12-31", repeat_yearly=True)
     await add_countdown(parent, "Winter break", "2027-01-04", repeat_yearly=True)
-    leap = await parent.patch(
-        f"/api/members/{family.leo}", json={"birthday": "2016-02-29"}, headers=CSRF
-    )
-    assert leap.status_code == 200, leap.text
+    await add_countdown(parent, "Leap day party", "2016-02-29", repeat_yearly=True)
 
     async def winter(start: str, end: str) -> list[tuple[str, str]]:
         return [(o["title"], o["start_date"]) for o in await overlaid(parent, start, end)]
@@ -135,15 +137,15 @@ async def test_a_yearly_day_comes_round_each_year_from_its_first(
     assert await winter("2026-12-01", "2027-03-01") == [
         ("New Year's Eve", "2026-12-31"),
         ("Winter break", "2027-01-04"),
-        ("Leo's birthday", "2027-02-28"),
+        ("Leap day party", "2027-02-28"),
     ]
     assert await winter("2027-12-01", "2028-03-01") == [
         ("New Year's Eve", "2027-12-31"),
         ("Winter break", "2028-01-04"),
-        ("Leo's birthday", "2028-02-29"),
+        ("Leap day party", "2028-02-29"),
     ]
     # A year before their first, neither had started.
-    assert await winter("2025-12-01", "2026-03-01") == [("Leo's birthday", "2026-02-28")]
+    assert await winter("2025-12-01", "2026-03-01") == [("Leap day party", "2026-02-28")]
 
 
 async def test_the_overlay_counts_from_the_first_day_up_to_the_last(
@@ -157,8 +159,7 @@ async def test_the_overlay_counts_from_the_first_day_up_to_the_last(
 
     assert await span(10, 11) == ["Fall fair"]
     assert await span(9, 10) == []  # the last day isn't in it
-    assert await span(11, 19) == []  # nor Mia's birthday on the 19th
-    assert await span(11, 20) == ["Mia's birthday"]
+    assert await span(11, 20) == []  # Mia's birthday on the 19th is the core's chip now
 
 
 # ---- the hourly tidy ---------------------------------------------------------------------------
@@ -245,10 +246,7 @@ async def test_off_every_route_is_404_and_on_again_the_data_is_there(
     manager = state_of(app).plugins
     await eventually(lambda: manager.status("countdowns") is PluginStatus.RUNNING)
     assert titles(await listed(parent)) == ["Fall fair"]
-    assert titles(await overlaid(parent, "2026-10-04", "2026-11-01")) == [
-        "Fall fair",
-        "Mia's birthday",
-    ]
+    assert titles(await overlaid(parent, "2026-10-04", "2026-11-01")) == ["Fall fair"]
 
 
 # ---- the Sample Family -------------------------------------------------------------------------
@@ -278,8 +276,8 @@ async def seeded(data_dir: Path, clock: FakeClock) -> AsyncIterator[httpx.AsyncC
 async def test_the_sample_family_counts_down(seeded: httpx.AsyncClient) -> None:
     found = await upcoming(seeded)
     assert [(i["kind"], i["title"], i["emoji"], i["date"], i["days"]) for i in found["items"]] == [
+        ("birthday", "Mia's birthday", None, "2026-10-09", 2),
         ("countdown", "Grandma visits", "👵", "2026-10-12", 5),
-        ("birthday", "Mia's birthday", None, "2026-10-19", 12),
         ("countdown", "Camping trip", "⛺", "2026-10-24", 17),
         ("countdown", "Halloween", "🎃", "2026-10-31", 24),
         ("countdown", "Ana's surprise party", "🎉", "2026-11-16", 40),

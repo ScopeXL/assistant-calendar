@@ -17,6 +17,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - Times on every screen now follow the household's time zone and 12- or 24-hour choice from
   Settings → Household, not the device's.
+- A person's birthday now shows on the calendar as a chip in their color, with Countdowns on or
+  off. Before, it was a grey star that depended on Countdowns.
+- Events on the kitchen screen that can't be moved (from a read-only calendar, a dinner, a
+  birthday) no longer read as unavailable to a screen reader.
+- On a portrait kitchen screen, a busy day's all-day events no longer spill into the next
+  day's row or hide its other events: whatever doesn't fit is behind "+N more".
 
 ## [0.6.0] - 2026-10-08
 

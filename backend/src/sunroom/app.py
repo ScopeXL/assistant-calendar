@@ -19,6 +19,7 @@ from sunroom.auth.ratelimit import FailureLimiter
 from sunroom.auth.router import router as auth_router
 from sunroom.auth.service import load_devices
 from sunroom.auth.sessions import AuthState, GrantCodec, SessionCodec, pin_epoch_of
+from sunroom.calendar import birthdays as calendar_birthdays
 from sunroom.calendar import service as calendar_service
 from sunroom.calendar.occurrences import CalendarRuntime
 from sunroom.calendar.router import router as calendar_router
@@ -159,6 +160,8 @@ def create_app(
         redactor = Redactor([*settings.secret_literals(), secret_key])
         holder: dict[str, AppState] = {}
         calendar_runtime = CalendarRuntime()
+        # The core's own overlay, on whatever plugins are on (ADR 0028).
+        calendar_runtime.overlays[calendar_birthdays.OVERLAY] = calendar_birthdays.provider(db)
 
         def context_factory(
             plugin_id: str, runner: PluginRunner, settings_of: Callable[[], dict[str, Any]]

@@ -196,3 +196,39 @@ test("times follow the household's zone and its 12- or 24-hour clock", async ({
   await expect(nowLabel).toHaveText("now 10:00");
   await context.close();
 });
+
+test("a birthday from Family is a chip in its person's color, and moves when it's changed", async ({
+  page,
+  browser,
+  watch,
+}) => {
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  const thursday = board.locator('[data-day="2026-10-08"]');
+  const friday = board.locator('[data-day="2026-10-09"]');
+  // The seed's: Mia's birthday is on Friday, in her color, with no plugin needed.
+  const onFriday = friday.getByRole("button", { name: /^Mia's birthday, all day, Mia/ });
+  await expect(onFriday).toHaveAttribute("data-overlay", "birthdays");
+  await expect(onFriday).toHaveAttribute("data-person", "rose");
+
+  // A parent's phone moves it to Thursday: the wall follows within 3 seconds.
+  const { page: phonePage, context } = await phone(browser, watch);
+  await signInPhone(phonePage);
+  await phonePage.goto("/settings/family");
+  await phonePage.getByRole("button", { name: "Change Mia" }).click();
+  await phonePage.getByLabel("Birthday (optional)").fill("2017-10-08");
+  await phonePage.getByRole("button", { name: "Save changes" }).click();
+  await expect(toast(phonePage, "Changes saved")).toBeVisible();
+  const onThursday = thursday.getByRole("button", { name: /^Mia's birthday/ });
+  await expect(onThursday).toBeVisible({ timeout: 3_000 });
+  await expect(friday.getByRole("button", { name: /^Mia's birthday/ })).toHaveCount(0);
+
+  // A tap opens its sheet, read only, saying where it comes from.
+  await onThursday.click();
+  const sheet = page.getByRole("dialog", { name: "Mia's birthday" });
+  await expect(sheet).toContainText("Thu, Oct 8 · all day");
+  await expect(sheet).toContainText("From Mia's birthday in Settings → Family.");
+  await expect(sheet.getByRole("button", { name: "Change" })).toHaveCount(0);
+  await context.close();
+});

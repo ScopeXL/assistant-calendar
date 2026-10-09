@@ -15,6 +15,7 @@ import { SidePanel } from "../../ui/SidePanel";
 import { useShell } from "../../ui/shell";
 import { useEventActions } from "../usePluginModules";
 import { useCalendars, useEvent, useEventChanges } from "./data";
+import { coreOverlayOf } from "./overlays";
 import { ScopeChooser } from "./ScopeChooser";
 import type { CalendarInfo, Occurrence, Scope } from "./types";
 
@@ -48,6 +49,12 @@ export function whenText(occurrence: Occurrence): string {
       : `${shortDate(day)} – ${shortDate(endDay)} · ${range}`;
   }
   return "";
+}
+
+/** A birthday's sheet says where it comes from (ADR 0028): "From Mia's birthday in Settings →
+ * Family." */
+export function birthdaySource(name: string | undefined): string {
+  return name ? `From ${name}'s birthday in Settings → Family.` : "From Settings → Family.";
 }
 
 /** Where a synced event comes from, and where to change it (UX §4 "Event sheet"). */
@@ -97,7 +104,10 @@ export function EventSheet({
   const calendar = calendars.find((c) => c.id === (occurrence?.calendar_id ?? event?.calendar_id));
   const repeats = occurrence?.is_recurring ?? Boolean(event?.rrule);
   const readOnly = occurrence?.read_only ?? event?.read_only ?? false;
-  const target = panel ? { eventId: panel.eventId, recurrenceId: panel.recurrenceId } : null;
+  const birthday = occurrence !== null && coreOverlayOf(occurrence)?.key === "birthdays";
+  const target = panel?.eventId
+    ? { eventId: panel.eventId, recurrenceId: panel.recurrenceId }
+    : null;
   const guarded =
     display &&
     session?.device_kind === "kiosk" &&
@@ -121,15 +131,20 @@ export function EventSheet({
 
   const text = display ? "text-d-body" : "text-body";
   const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
-  const source = calendar ? sourceLine(calendar, readOnly) : null;
+  const source = birthday
+    ? birthdaySource(people[0]?.name)
+    : calendar
+      ? sourceLine(calendar, readOnly)
+      : null;
   const pending = occurrence?.pending ?? event?.pending ?? false;
   // What the plugins add ("Add a countdown"): they don't change the event, so a read-only one
-  // gets them too.
-  const extras = occurrence
-    ? eventActions.map((Action, index) => (
-        <Action key={index} occurrence={occurrence} onDone={close} />
-      ))
-    : [];
+  // gets them too. Not a birthday: Countdowns counts those down by itself.
+  const extras =
+    occurrence && !birthday
+      ? eventActions.map((Action, index) => (
+          <Action key={index} occurrence={occurrence} onDone={close} />
+        ))
+      : [];
   const actions = readOnly ? (
     <div className="flex flex-col gap-3">
       <p className={soft}>{source ?? "This calendar comes from an account. Change it there."}</p>
@@ -144,7 +159,7 @@ export function EventSheet({
             if (guarded && !(await askForPin("Changing events on this screen asks for the PIN."))) {
               return;
             }
-            if (panel) onChange(panel.eventId, panel.recurrenceId);
+            if (panel?.eventId) onChange(panel.eventId, panel.recurrenceId);
           })();
         }}
       >

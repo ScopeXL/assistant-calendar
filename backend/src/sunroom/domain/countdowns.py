@@ -18,6 +18,13 @@ def in_year(on: date, year: int) -> date:
         return date(year, 2, 28)
 
 
+def yearly_days(first: date, start: date, end: date) -> list[date]:
+    """The days in [start, end) a yearly date comes round on, never before ``first`` itself
+    (February 29 → February 28 in the years without one)."""
+    each_year = (in_year(first, year) for year in range(start.year, end.year + 1))
+    return [on for on in each_year if start <= on < end and on >= first]
+
+
 def next_date(on: date, *, yearly: bool, today: date) -> date | None:
     """When a countdown next comes round: its own date, or None once that has passed; a yearly
     one comes round this year, or next year once this year's has passed."""

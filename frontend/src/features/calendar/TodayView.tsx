@@ -2,6 +2,7 @@ import { addDays, formatWallTime, shortWeekday } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { Avatar } from "../../ui/Avatar";
 import { byDay, isOn, isPast } from "./layout";
+import { coreOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
 
 /**
@@ -36,6 +37,7 @@ export function TodayView({
             const people = members.filter((m) => occurrence.member_ids.includes(m.id));
             const on = isOn(occurrence, now);
             const past = isPast(occurrence, now);
+            const Mark = coreOverlayOf(occurrence)?.icon;
             return (
               <button
                 key={occurrence.key}
@@ -55,6 +57,9 @@ export function TodayView({
                     ? "All day"
                     : formatWallTime(occurrence.start_local)}
                 </span>
+                {Mark ? (
+                  <Mark aria-hidden="true" className="size-10 shrink-0" strokeWidth={2.25} />
+                ) : null}
                 <span className="min-w-0 flex-1 text-d-glance font-bold break-words">
                   {occurrence.title}
                 </span>

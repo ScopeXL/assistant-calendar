@@ -125,10 +125,10 @@ export function CalendarScreen() {
   const openOverlay = useOpenOverlay();
 
   const open = (occurrence: Occurrence) => {
-    if (openOverlay(occurrence) || !occurrence.event_id) return;
+    if (openOverlay(occurrence)) return;
     setPanel({
       kind: "event",
-      eventId: occurrence.event_id,
+      eventId: occurrence.event_id ?? null,
       recurrenceId: occurrence.recurrence_id ?? null,
       key: occurrence.key,
     });

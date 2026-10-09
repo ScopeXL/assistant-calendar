@@ -158,7 +158,7 @@ class SeedIn(BaseModel):
 SAMPLE_FAMILY: tuple[tuple[str, str, str, date | None], ...] = (
     ("Ana", "parent", "sea", date(1988, 4, 12)),
     ("Sam", "parent", "sky", None),
-    ("Mia", "kid", "rose", date(2017, 10, 19)),
+    ("Mia", "kid", "rose", date(2017, 10, 9)),  # in the seeded week, so the board shows it
     ("Leo", "kid", "moss", date(2020, 2, 3)),
 )
 

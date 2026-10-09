@@ -28,7 +28,7 @@ export const COLORS: { value: Color; word: string }[] = [
 ];
 
 /**
- * Change a person (UX §4 Settings → Family): name, parent or kid, color, birthday and photo.
+ * Change a person (UX §4 Settings → Family): name, parent or child, color, birthday and photo.
  * Removing someone asks first, because a toast's Undo isn't enough for a whole person; their
  * history stays (they're archived, and Put back is in Family).
  */

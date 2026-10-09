@@ -24,7 +24,7 @@ from sunroom.auth.deps import Actor
 from sunroom.calendar.schemas import OccurrenceOut
 from sunroom.core.errors import AppError
 from sunroom.db.types import new_id
-from sunroom.domain.countdowns import days_until, in_year, next_birthday, next_date, turning
+from sunroom.domain.countdowns import days_until, next_birthday, next_date, turning, yearly_days
 from sunroom.domain.timeparts import to_local
 from sunroom.plugins.context import MemberView, PluginContext
 from sunroom.plugins.countdowns.models import Countdown
@@ -86,8 +86,7 @@ def days_in(first: date, *, yearly: bool, start: date, end: date) -> list[date]:
     year's, never before its first."""
     if not yearly:
         return [first] if start <= first < end else []
-    each_year = (in_year(first, year) for year in range(start.year, end.year + 1))
-    return [on for on in each_year if start <= on < end and on >= first]
+    return yearly_days(first, start, end)
 
 
 def _shown_to(actor: Actor) -> ColumnElement[bool]:
@@ -367,7 +366,8 @@ async def overlay(
     ctx: PluginContext, start: date, end: date, zone: ZoneInfo
 ) -> list[OccurrenceOut]:
     """The calendar's countdowns (PLAN §7.6), all day and read only: each one not kept off the
-    wall, on its days in [start, end), and each person's birthday while the setting is on."""
+    wall, on its days in [start, end). Birthdays are the core's own overlay (calendar/birthdays.py,
+    ADR 0028): Countdowns counts them down but doesn't draw them, so nothing shows twice."""
     async with ctx.read() as session:
         rows = (
             await session.scalars(
@@ -379,21 +379,11 @@ async def overlay(
                 )
             )
         ).all()
-    found = [
+    return [
         _occurrence(row.id, on, row.title, row.member_id, row.color)
         for row in rows
         for on in days_in(row.date, yearly=row.repeat_yearly, start=start, end=end)
     ]
-    if birthdays_on(ctx):
-        for member in await ctx.members.active():
-            if member.birthday is None:
-                continue
-            title = birthday_title(member.name)
-            found += [
-                _occurrence(f"birthday:{member.id}", on, title, member.id, None)
-                for on in days_in(member.birthday, yearly=True, start=start, end=end)
-            ]
-    return found
 
 
 async def tidy(ctx: PluginContext) -> None:
