@@ -213,3 +213,5 @@ Add one line each time something surprising costs time: the symptom, the cause, 
   flips to the test server's 10 AM, and headless Chromium draws no frame until asked, so Reduce
   Motion's 0.01 ms transitions held the old colors, one level of the page per frame. `settled()`
   asks for frames until nothing runs; set the server's clock in any test that needs "Up next".
+- The first migration after a release failed its migration test: the release had no fixture
+  database. A release's `tests/fixtures/db/<revision>.sql` must exist before the next migration.
