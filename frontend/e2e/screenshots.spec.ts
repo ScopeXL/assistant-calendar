@@ -270,7 +270,7 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByRole("button", { name: "Add me" }).click();
     await page.getByLabel("Name", { exact: true }).fill("Mia");
     await page.getByRole("button", { name: "Child", exact: true }).click();
-    await page.getByRole("button", { name: "Add another" }).click();
+    await page.getByRole("button", { name: "Add", exact: true }).click();
     await expect(page.getByRole("listitem").filter({ hasText: "Mia" })).toBeVisible();
     await shot(page, `setup-people-${scheme}`);
     await page.getByRole("button", { name: "Next", exact: true }).click();

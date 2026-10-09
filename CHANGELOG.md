@@ -21,6 +21,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   ("Calendars & Accounts", "This Week", "Who's Doing What"). Buttons and messages stay as
   they were.
 - "Kid" is now "Child" everywhere you read it.
+- Adding a person is one row, their name, Parent or Child, and Add, in setup, Settings →
+  Family and Who's Using This. Child stays picked for the next one.
 - The Today panel's button at the top of the board is now an icon, the same size as the
   arrows beside it.
 - Settings → About → Storage says "Free space".

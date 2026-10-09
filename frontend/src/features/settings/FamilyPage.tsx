@@ -9,10 +9,10 @@ import { fetchSession } from "../../lib/session";
 import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
-import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
+import { AddPersonRow, type RoleChoice } from "./AddPersonRow";
 import { MemberSheet } from "./MemberSheet";
 import { Group, Row, Text } from "./parts";
 
@@ -110,55 +110,26 @@ export function FamilyPage() {
 function AddPerson() {
   const display = useShell() === "display";
   const queryClient = useQueryClient();
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<"parent" | "kid">("parent");
   const add = useMutation({
-    mutationFn: () =>
-      asParent(async () =>
-        unwrap(await api.POST("/api/members", { body: { name: name.trim(), role } })),
-      ),
+    mutationFn: ({ name, role }: { name: string; role: RoleChoice }) =>
+      asParent(async () => unwrap(await api.POST("/api/members", { body: { name, role } }))),
     onSuccess: async (member) => {
-      setName("");
       await queryClient.invalidateQueries({ queryKey: ["members"] });
       await queryClient.invalidateQueries({ queryKey: qk.session() });
       showToast(`Added ${member.name}`);
     },
   });
   return (
-    <form
-      className={`flex flex-col gap-4 ${display ? "py-6" : "py-4"}`}
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (name.trim()) add.mutate();
-      }}
-    >
-      <TextField
+    <div className={display ? "py-6" : "py-4"}>
+      <AddPersonRow
         label="Add a person"
-        value={name}
-        maxLength={40}
-        autoComplete="off"
+        placeholder="Name"
+        action="Add"
+        pending={add.isPending}
         error={add.isError ? errorMessage(add.error) : null}
-        onChange={(event) => {
-          setName(event.target.value);
-        }}
+        onAdd={(name, role) => add.mutateAsync({ name, role })}
       />
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="min-w-56">
-          <Segmented
-            label="Parent or child"
-            value={role}
-            onChange={setRole}
-            options={[
-              { value: "parent", label: "Parent" },
-              { value: "kid", label: "Child" },
-            ]}
-          />
-        </div>
-        <Button type="submit" pending={add.isPending} disabled={!name.trim()}>
-          Add
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }
 

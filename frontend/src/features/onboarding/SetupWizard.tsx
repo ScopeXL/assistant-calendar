@@ -9,6 +9,7 @@ import { useMembers } from "../../lib/household";
 import { normalizeCode } from "../../lib/joinCode";
 import { rememberSignedIn } from "../../lib/session";
 import { Avatar } from "../../ui/Avatar";
+import { AddPersonRow, type RoleChoice } from "../settings/AddPersonRow";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { Segmented } from "../../ui/Segmented";
@@ -48,9 +49,24 @@ function zones(): string[] {
   }
 }
 
-function Page({ title, children, step }: { title: string; children: ReactNode; step?: string }) {
+function Page({
+  title,
+  children,
+  step,
+  wide = false,
+}: {
+  title: string;
+  children: ReactNode;
+  step?: string;
+  /** A step whose row of controls wants more room (the people). */
+  wide?: boolean;
+}) {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-12">
+    <main
+      className={`mx-auto flex min-h-dvh w-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-12 ${
+        wide ? "max-w-lg" : "max-w-md"
+      }`}
+    >
       <div className="mb-8 flex items-center gap-3">
         <SunMark className="size-10" />
         <span className="text-row font-bold">Sunroom</span>
@@ -372,12 +388,10 @@ function HouseholdStep({
 function PeopleStep({ onNext }: { onNext: () => void }) {
   const queryClient = useQueryClient();
   const { data: members = [] } = useMembers();
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<"parent" | "kid">("parent");
   const first = members.length === 0;
   const add = useMutation({
-    mutationFn: async () => {
-      const member = unwrap(await api.POST("/api/members", { body: { name: name.trim(), role } }));
+    mutationFn: async ({ name, role }: { name: string; role: RoleChoice }) => {
+      const member = unwrap(await api.POST("/api/members", { body: { name, role } }));
       if (first) {
         // The first person is whoever is setting up: this phone is theirs.
         const session = unwrap(
@@ -388,13 +402,11 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
       return member;
     },
     onSuccess: async () => {
-      setName("");
-      setRole("parent");
       await queryClient.invalidateQueries({ queryKey: ["members"] });
     },
   });
   return (
-    <Page title="Who Lives Here?" step="4 of 7">
+    <Page title="Who Lives Here?" step="4 of 7" wide>
       <p className="text-body text-ink-soft">
         {first
           ? "Start with you. Each person gets a color, used everywhere they appear."
@@ -416,42 +428,15 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
           ))}
         </ul>
       ) : null}
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (name.trim()) add.mutate();
-        }}
-      >
-        <TextField
-          label={first ? "Your name" : "Name"}
-          value={name}
-          maxLength={40}
-          autoComplete={first ? "given-name" : "off"}
-          error={add.isError ? errorMessage(add.error) : null}
-          onChange={(event) => {
-            setName(event.target.value);
-          }}
-        />
-        <Segmented
-          label="Parent or child"
-          value={role}
-          onChange={setRole}
-          options={[
-            { value: "parent", label: "Parent" },
-            { value: "kid", label: "Child" },
-          ]}
-        />
-        <Button
-          type="submit"
-          variant={first ? "primary" : "secondary"}
-          block
-          pending={add.isPending}
-          disabled={!name.trim()}
-        >
-          {first ? "Add me" : "Add another"}
-        </Button>
-      </form>
+      <AddPersonRow
+        label={first ? "Your name" : "Name"}
+        action={first ? "Add me" : "Add"}
+        primary={first}
+        autoComplete={first ? "given-name" : "off"}
+        pending={add.isPending}
+        error={add.isError ? errorMessage(add.error) : null}
+        onAdd={(name, role) => add.mutateAsync({ name, role })}
+      />
       {!first ? (
         <Button block onClick={onNext}>
           Next

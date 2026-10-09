@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { UserPlus, UserRound } from "lucide-react";
-import { useId, useState } from "react";
+import { useState } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { fetchSession, type Session } from "../../lib/session";
 import { Button } from "../../ui/Button";
-import { Segmented } from "../../ui/Segmented";
+import { AddPersonRow, type RoleChoice } from "../settings/AddPersonRow";
 import { MemberButton } from "./MemberButton";
 
 /** Where Who's using this phone was opened from, so it can go back there. */
@@ -26,10 +26,7 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
   const queryClient = useQueryClient();
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
   const [adding, setAdding] = useState(false);
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<"parent" | "kid">("parent");
   const [error, setError] = useState<string | null>(null);
-  const nameId = useId();
 
   const leave = async () => {
     if (from && canGoBack) {
@@ -55,8 +52,8 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
   });
 
   const addMe = useMutation({
-    mutationFn: async (value: string) => {
-      const member = unwrap(await api.POST("/api/members", { body: { name: value, role } }));
+    mutationFn: async ({ name, role }: { name: string; role: RoleChoice }) => {
+      const member = unwrap(await api.POST("/api/members", { body: { name, role } }));
       return unwrap(await api.PUT("/api/auth/member", { body: { member_id: member.id } }));
     },
     onSuccess: finish,
@@ -92,51 +89,28 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
         ))}
       </ul>
       {showForm ? (
-        <form
-          className="mt-6 flex flex-col gap-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (name.trim()) addMe.mutate(name.trim());
-          }}
-        >
-          <label htmlFor={nameId} className="text-body font-semibold">
-            Your name
-          </label>
-          <input
-            id={nameId}
-            value={name}
-            maxLength={40}
+        <div className="mt-6 flex flex-col gap-3">
+          <AddPersonRow
+            label="Your name"
+            action="Add me"
+            primary
             autoComplete="given-name"
-            onChange={(event) => {
-              setName(event.target.value);
-            }}
-            className="min-h-12 rounded-button border-2 border-line bg-surface px-4 text-body"
+            pending={addMe.isPending}
+            error={null}
+            onAdd={(name, role) => addMe.mutateAsync({ name, role })}
           />
-          <Segmented
-            label="Parent or child"
-            value={role}
-            onChange={setRole}
-            options={[
-              { value: "parent", label: "Parent" },
-              { value: "kid", label: "Child" },
-            ]}
-          />
-          <Button type="submit" block pending={addMe.isPending} disabled={!name.trim()}>
-            Add me
-          </Button>
           {members.length > 0 ? (
             <Button
               variant="quiet"
               block
               onClick={() => {
                 setAdding(false);
-                setName("");
               }}
             >
               Cancel
             </Button>
           ) : null}
-        </form>
+        </div>
       ) : (
         <div className="mt-4 flex flex-col gap-3">
           {canAdd ? (

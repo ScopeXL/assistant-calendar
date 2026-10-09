@@ -43,8 +43,15 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.getByRole("button", { name: "Add me" }).click();
   await phonePage.getByLabel("Name", { exact: true }).fill("Mia");
   await phonePage.getByRole("button", { name: "Child", exact: true }).click();
-  await phonePage.getByRole("button", { name: "Add another" }).click();
+  // One row: the name, Child, Add. The name clears for the next person; Child stays chosen.
+  await phonePage.getByRole("button", { name: "Add", exact: true }).click();
   await expect(phonePage.getByRole("listitem").filter({ hasText: "Mia" })).toContainText("Child");
+  await expect(phonePage.getByLabel("Name", { exact: true })).toHaveValue("");
+  await expect(phonePage.getByRole("button", { name: "Child", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(phonePage.getByRole("button", { name: "Add another" })).toHaveCount(0);
   await phonePage.getByRole("button", { name: "Next", exact: true }).click();
 
   await phonePage.getByLabel("PIN (4 to 6 digits)").fill(PIN);

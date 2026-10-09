@@ -203,7 +203,7 @@ for (const scheme of ["light", "dark"] as const) {
       await check(page, "setup: people");
       await page.getByLabel("Your name").fill("Ana");
       await page.getByRole("button", { name: "Add me" }).click();
-      await expect(page.getByRole("button", { name: "Add another" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Add", exact: true })).toBeVisible();
       await check(page, "setup: people, one added");
       await page.getByRole("button", { name: "Next", exact: true }).click();
       await expect(page.getByRole("heading", { name: "Set a parent PIN?" })).toBeVisible();
