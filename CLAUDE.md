@@ -11,16 +11,10 @@ It is built and maintained entirely by AI sessions, and copied from Dinner Bell'
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
 length from a wall screen.
 
-**Status:** M0 to M5 are built (docs/PLAN.md §15):
-- M0 the foundation; M1 the calendar core (our own recurrence engine, ADR 0023).
-- M2 synced calendars: `calendar_sync` on our own clients behind the guard (ADR 0024),
-  docs/SYNC.md.
-- M3 lists and chores (chores as rules, ADR 0025; the done moment's `ui/Celebration`).
-- M4 meals, countdowns, photos and weather (ADR 0026).
-- M5 the wall, polished (ADR 0027): the display state and the Pi's `kiosk/sunroom-screen`, the
-  evening dim, the opt-in update check, Download everything and `sunroom restore`.
-
-Next is M6: polish from the first weeks of use (docs/PLAN.md §15).
+**Status:** M0 to M5 are built (docs/PLAN.md §15): the foundation; the calendar core (our own
+recurrence engine, ADR 0023); synced calendars (ADR 0024, docs/SYNC.md); lists and chores
+(ADR 0025); meals, countdowns, photos and weather (ADR 0026); the wall, polished (ADR 0027).
+M6 batch 1 (the owner's notes: docs/M6.md, ADR 0028) is built for 0.7.0; more M6 comes from use.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -97,7 +91,7 @@ Keep this file under 15 KB; detail belongs in `docs/`.
 | `just db-revision "msg"` | Create a new migration |
 | `just scan` | gitleaks plus the private-terms scan (tree and history) |
 | `just smoke-image [REF]` | Build the image from git, boot it with no settings, set it up through the API, probe it |
-| `just smoke-caldav` | The CalDAV client against a real Radicale server in Docker, with the ICS fixtures (opt-in; needs network) |
+| `just smoke-caldav` | The CalDAV client against Radicale in Docker, with the ICS fixtures (opt-in; network) |
 | `just preflight` | The full release gate. The deploy skill runs it |
 
 ## Architecture map
@@ -167,17 +161,9 @@ kiosk/           install.sh, the launcher, sunroom-screen (sleep and brightness)
 
 ## Deploy (summary; the skill holds the full runbook)
 
-1. If the working tree has changes the owner hasn't seen, summarize them and ask.
-2. `just preflight`: check → e2e → scan → smoke-test the image → Docker gate. Any failure stops.
-3. Bump: patch by default, minor for something the family can see, major only if asked. The
-   CHANGELOG entry is plain English. The bump also sets the Pi installer's `KIOSK_VERSION`.
-4. `just release-tag "Co-Authored-By: …"`: commit, annotated tag `vX.Y.Z`, atomic push of branch
-   and tag. If only the push fails, run it again: it resumes.
-5. `just smoke-image vX.Y.Z` then `just image`: multi-arch from `git archive` of the tag, pushed
-   as `X.Y.Z`, `X.Y` and `latest`.
-6. `just image-verify`: both architectures, tags agree, probes and setup pass, private scan clean.
-7. Report the version, SHA and digest, what changed, whether the database changed, the server
-   steps (`docker compose pull && docker compose up -d`), and the phone and wall-screen checklist.
+Ask about changes the owner hasn't seen; `just preflight` stops at any failure; bump (patch;
+minor for what the family sees); `just release-tag`, `smoke-image`, `image`, `image-verify`;
+report the version, SHA, digest, changes, database changes, server steps and the checklist.
 
 ## Gotchas that already bit
 
@@ -192,27 +178,46 @@ Add one line each time something surprising costs time: the symptom, the cause, 
 - The wall clock ignored the server's time until the next minute: the minute store didn't hear
   about new clock samples. `lib/clock` tells listeners when the offset moves (`onClockMoved`).
 - Tap-target checks flagged the page behind an open sheet: a modal `<dialog>` makes the rest
-  inert without an `inert` attribute. The check looks only inside `dialog:modal`.
+  inert with no `inert` attribute. The check looks only inside `dialog:modal`.
 - WebKit screenshot runs report inline-style CSP violations: Playwright's WebKit screenshot code
   injects a `<style>`. Only the screenshot spec turns `cspGuard` off.
 - `python3` on the build Mac is old and OrbStack's `docker` isn't always on PATH: repo scripts run
   through the justfile's `py` (uv, Python 3.14), and the justfile prepends `~/.orbstack/bin`.
 - A sticky Save bar in the wall's side panel covered the chips above the keyboard: a sticky box
   stops at its scroller's padding, which already holds `--osk-h`. Stick it at `bottom-0`.
-- `tsc --noEmit -p .` in `frontend/` passed while the code had type errors: the root tsconfig has
-  no files of its own, only references. Type-check with `pnpm exec tsc -b` (what `just check` runs).
-- Two plugins' pydantic shapes with one class name (`WeekOut`, `RemovedOut`) came out of OpenAPI
-  as `sunroom__plugins__…` names the frontend can't use. Give each shape a name unique across the
-  app (`MealWeekOut`), and check `schema.d.ts` after `just api-types`.
-- Imports broke while a plugin was half-written: `db/models.py` imports each plugin's models, so
-  a plugin package's `__init__.py` that imports its modules drags them all in. Keep it a docstring.
+- `tsc --noEmit -p .` in `frontend/` passed with type errors: the root tsconfig has only
+  references. Type-check with `pnpm exec tsc -b` (what `just check` runs).
+- Two plugins' pydantic shapes sharing a class name (`WeekOut`) came out of OpenAPI as
+  `sunroom__plugins__…` names. Name each shape uniquely across the app (`MealWeekOut`), and
+  check `schema.d.ts` after `just api-types`.
+- Imports broke mid-plugin: `db/models.py` imports each plugin's models, so a plugin's
+  `__init__.py` that imports its modules drags them all in. Keep it a docstring.
 - The image smoke test pins the plugin list and the export's tables (`scripts/image_common.sh`):
   a new plugin updates both, and `backend/tests/test_export.py`.
 - A route test silently checked nothing: since FastAPI 0.142 `app.routes` holds included
   routers, not their routes. Walk `app.openapi()["paths"]` instead, and assert a count.
-- An a11y check failed only in the evening: the unpaired wall starts on the browser's clock and
-  flips to the test server's 10 AM, and headless Chromium draws no frame until asked, so Reduce
-  Motion's 0.01 ms transitions held the old colors, one level of the page per frame. `settled()`
-  asks for frames until nothing runs; set the server's clock in any test that needs "Up next".
+- An a11y check failed only in the evening: the unpaired wall flips from the browser's clock to
+  the server's 10 AM, and headless Chromium draws no frame until asked, so 0.01 ms transitions
+  held old colors. `settled()` asks for frames; set the server's clock when a test needs "Up next".
 - The first migration after a release failed its migration test: the release had no fixture
   database. A release's `tests/fixtures/db/<revision>.sql` must exist before the next migration.
+- The wall's keyboard couldn't type into a sheet: a modal `<dialog>` makes the rest inert.
+  `ui/Keyboard` mounts in the open dialog; a backdrop tap closes a sheet only if the press began
+  there (the sheet rises with the keys, so a release can land on the backdrop).
+- A wall password field offered capitals: the keyboard's layout comes from TextField's `layout`,
+  not `type`. Pass `layout="password"`, and `autoCapitalize="none"` for addresses.
+- `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answers
+  navigations (and `location.reload()`) from its precached `index.html`. Test routes on a page
+  never loaded before; `lib/update.reloadFresh()` drops the worker and its caches first.
+- The wall's live icon blinked on every room switch: the kiosk remounts the shell, so the stream
+  reconnects. `ui/LiveStatus` shows anything but connected only after 2 s.
+- `settled()` hung on the Hours board: the now line glides in a 60 s transition. It ignores
+  animations longer than 10 s.
+- Hours' day columns stopped lining up: `container-type` adds layout containment, and a contained
+  box can't be a subgrid. The head and body are the containers, not the column.
+- A click just after a dnd-kit drop did nothing: dnd-kit swallows clicks for 50 ms after a drop.
+  Tests wait 100 ms.
+- An Hours chip's block sat mid-button: a `<button>` centres its content vertically. Make it
+  `flex flex-col`.
+- The wall stayed shifted up after typing: an `overflow: hidden` box still scrolls from script
+  (focus, `scrollIntoView`) once its content overflows. The shell is `overflow: clip`.

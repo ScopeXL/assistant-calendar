@@ -773,6 +773,8 @@ The `meals` plugin (week grid, saved meals, copy last week, the calendar overlay
 
 The owner's notes after living with it: sizes, colors, what the children tap, what grandparents ask. A performance pass on the Pi 4 if one is in use, an accessibility pass with a screen reader on the phone, the first v1.1 items from §19 that proved urgent (notes and timers, per-display layouts). 1.0.0 is the owner's call.
 
+Batch 1 (the owner's notes of 2026-10-09) is in `docs/M6.md`, built in 0.7.0 (ADR 0028): Title Case for titles, Child for Kid, times in the household's zone, birthdays as the core's own chips, the live-updates icon, the Hours layout with its zoom, one row to add a person, adding an account and photos from any device, screens that refresh themselves after an update, and tips under the board.
+
 *Verify:* the definition of done per task (§14.7); the screenshot checklist (UX §10) at every size; a fresh install from the README by someone who has not seen the project, timed against the success test in §1.
 
 ## 16. UX
