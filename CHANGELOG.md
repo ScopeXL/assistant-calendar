@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-09
+
 ### Added
 
 - The week can show each day as hours, midnight to midnight, with longer events taller and the
@@ -36,6 +38,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   person's photo in Settings → Family.
 - After you update Sunroom, every kitchen screen and phone that's open says so and refreshes
   itself.
+- Behind the scenes: the upgrade tests start from 0.6.0's database, and the test server can act
+  as a newer version to check that every screen refreshes.
 
 ### Fixed
 
@@ -285,5 +289,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.5.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.4.0...v0.5.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.6.0...HEAD
 [0.6.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.5.0...v0.6.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.6.0...v0.7.0
