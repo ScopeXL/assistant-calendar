@@ -71,3 +71,18 @@
   ("Tasks Today", "Meals Oct 4–10"); a room's `<section>` is named by `aria-label`.
 - The Photos room's Start screensaver is an ordinary button on the kitchen screen now, like its
   neighbours: a 64 px primary button would have made the header's row uneven.
+- Meals' manifest is 1.1.0. A plugin whose setting changes shape bumps its version and carries
+  the old value over in `upgrade_settings`; a household that had dinner on its calendar keeps it.
+- `POST /api/admin/erase` exists, and `backups/pre-erase/` holds a copy that nothing tidies away:
+  whoever runs the server deletes it when they're sure (docs/RESTORE.md, PRIVACY.md). The test
+  server's reset and the erase share `meta/erase.py`'s two halves.
+- A new plugin adds its query keys to `PLUGIN_KEYS` in `lib/eventRouter.ts`, or a change to its
+  settings refreshes everything on every screen.
+- New shared pieces a later task should reach for before writing its own: `ui/ListRow`,
+  `ui/ColorPicker`, `ui/DayField`, `ui/TimeField`, `ui/WhoPicker`, `ui/Pop`, `ui/Leaves`,
+  `lib/arrivals`, `usePageTurn`, `usePluginSettings`.
+- `CLAUDE.md`'s gotchas about one screen or one widget moved to `docs/GOTCHAS.md`, so the file
+  stays under its 15 KB.
+- Not built, and why, is in `docs/M6-batch-2.md` under each task's "As built" and its
+  follow-ups: the week following the finger, chips that glide to close a gap, a dropped chip's
+  spring, per-screen calendar visibility, a pinch on the touch panel for the Hours zoom.

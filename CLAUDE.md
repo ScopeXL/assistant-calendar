@@ -14,7 +14,8 @@ length from a wall screen.
 **Status:** M0 to M5 are built (docs/PLAN.md §15): the foundation; the calendar core (our own
 recurrence engine, ADR 0023); synced calendars (ADR 0024, docs/SYNC.md); lists and chores
 (ADR 0025); meals, countdowns, photos and weather (ADR 0026); the wall, polished (ADR 0027).
-M6 batch 1 (the owner's notes: docs/M6.md, ADR 0028) is built for 0.7.0; more M6 comes from use.
+M6 batch 1 (the owner's notes: docs/M6.md, ADR 0028) is built in 0.7.0, and batch 2
+(docs/M6-batch-2.md, ADR 0029) for 0.8.0; more M6 comes from use.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -113,7 +114,7 @@ frontend/src/
   api/           generated schema.d.ts + openapi-fetch client (X-Sunroom, clock samples) + keys
   lib/           store, events + eventRouter, clock and time, dates, theme, keyboard, idle, parent
   ui/            primitives styled only with tokens; sized by ShellContext (display or phone)
-  shell/         DisplayShell (rail, Today panel, idle, Night, keyboard, PIN), PhoneShell
+  shell/         DisplayShell (rail, Header.tsx, Today panel, idle, Night, keyboard), PhoneShell
   features/      display (pairing), onboarding, auth, calendar, phone, settings; registry.ts
 kiosk/           install.sh, the launcher, sunroom-screen (sleep and brightness), systemd units,
                  labwc-rule.py, update.sh, uninstall.sh
@@ -168,23 +169,11 @@ report the version, SHA, digest, changes, database changes, server steps and the
 ## Gotchas that already bit
 
 Add one line each time something surprising costs time: the symptom, the cause, and the fix.
+The ones about one screen or one widget are in [`docs/GOTCHAS.md`](docs/GOTCHAS.md): read the
+part your task touches, and move lines there when this file nears its limit.
 
-- A tap on a wall-screen button missed: the field lost focus, the keyboard lowered, and the page
-  moved under the finger. The keyboard's padding (`--osk-h`) outlasts it by 400 ms.
-- An e2e helper moved on before sign-in finished on a laptop: the Today panel's "Up next" shows
-  beside Who's using this there. Wait for the URL, not a heading that two screens share.
-- A select stayed 27 px tall in Safari: WebKit ignores `min-height` on a native select. Use
-  `ui/Select` (appearance reset, its own chevron).
-- The wall clock ignored the server's time until the next minute: the minute store didn't hear
-  about new clock samples. `lib/clock` tells listeners when the offset moves (`onClockMoved`).
-- Tap-target checks flagged the page behind an open sheet: a modal `<dialog>` makes the rest
-  inert with no `inert` attribute. The check looks only inside `dialog:modal`.
-- WebKit screenshot runs report inline-style CSP violations: Playwright's WebKit screenshot code
-  injects a `<style>`. Only the screenshot spec turns `cspGuard` off.
 - `python3` on the build Mac is old and OrbStack's `docker` isn't always on PATH: repo scripts run
   through the justfile's `py` (uv, Python 3.14), and the justfile prepends `~/.orbstack/bin`.
-- A sticky Save bar in the wall's side panel covered the chips above the keyboard: a sticky box
-  stops at its scroller's padding, which already holds `--osk-h`. Stick it at `bottom-0`.
 - `tsc --noEmit -p .` in `frontend/` passed with type errors: the root tsconfig has only
   references. Type-check with `pnpm exec tsc -b` (what `just check` runs).
 - Two plugins' pydantic shapes sharing a class name (`WeekOut`) came out of OpenAPI as
@@ -196,28 +185,34 @@ Add one line each time something surprising costs time: the symptom, the cause, 
   a new plugin updates both, and `backend/tests/test_export.py`.
 - A route test silently checked nothing: since FastAPI 0.142 `app.routes` holds included
   routers, not their routes. Walk `app.openapi()["paths"]` instead, and assert a count.
+- The first migration after a release failed its migration test: the release had no fixture
+  database. A release's `tests/fixtures/db/<revision>.sql` must exist before the next migration.
+- Tap-target checks flagged the page behind an open sheet: a modal `<dialog>` makes the rest
+  inert with no `inert` attribute. The check looks only inside `dialog:modal`.
 - An a11y check failed only in the evening: the unpaired wall flips from the browser's clock to
   the server's 10 AM, and headless Chromium draws no frame until asked, so 0.01 ms transitions
   held old colors. `settled()` asks for frames; set the server's clock when a test needs "Up next".
-- The first migration after a release failed its migration test: the release had no fixture
-  database. A release's `tests/fixtures/db/<revision>.sql` must exist before the next migration.
-- The wall's keyboard couldn't type into a sheet: a modal `<dialog>` makes the rest inert.
-  `ui/Keyboard` mounts in the open dialog; a backdrop tap closes a sheet only if the press began
-  there (the sheet rises with the keys, so a release can land on the backdrop).
-- A wall password field offered capitals: the keyboard's layout comes from TextField's `layout`,
-  not `type`. Pass `layout="password"`, and `autoCapitalize="none"` for addresses.
 - `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answers
   navigations (and `location.reload()`) from its precached `index.html`. Test routes on a page
   never loaded before; `lib/update.reloadFresh()` drops the worker and its caches first.
-- The wall's live icon blinked on every room switch: the kiosk remounts the shell, so the stream
-  reconnects. `ui/LiveStatus` shows anything but connected only after 2 s.
-- `settled()` hung on the Hours board: the now line glides in a 60 s transition. It ignores
-  animations longer than 10 s.
-- Hours' day columns stopped lining up: `container-type` adds layout containment, and a contained
-  box can't be a subgrid. The head and body are the containers, not the column.
 - A click just after a dnd-kit drop did nothing: dnd-kit swallows clicks for 50 ms after a drop.
   Tests wait 100 ms.
-- An Hours chip's block sat mid-button: a `<button>` centres its content vertically. Make it
-  `flex flex-col`.
-- The wall stayed shifted up after typing: an `overflow: hidden` box still scrolls from script
-  (focus, `scrollIntoView`) once its content overflows. The shell is `overflow: clip`.
+- A `createLink` component lost its styles: the router passes its own `className`. Merge it
+  after the spread (`shell/HeaderLinks`, `ui/ListRow`).
+- At Small text, 8 px gaps became 7 and failed the tap check: rem shrinks. `--spacing-2` is
+  `max(0.5rem, 8px)`; Hours chips size by `tapPx(rem)`.
+- A heading locator matched twice in Settings: the Today panel shows beside it. Use `exact`.
+- A plugin's setting reached the wall minutes late: `plugins.changed` refreshed only the plugin
+  list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
+- The test server keeps plugin settings between tests (`/api/_test/reset` leaves
+  `plugin_state`): a test that changes one puts it back in `finally`.
+- After Erase everything the wall sat on a pair code: its cached setup status said complete.
+  `handleSignedOut` invalidates it.
+- An exiting `AnimatePresence` child stayed tappable, and cleared a shared ref as it left:
+  `ui/Leaves` makes it inert (`useIsPresent`); such a ref is set, never nulled.
+- A role locator's `toHaveCount(0)` passed before a chip had faded: leaving, it's `aria-hidden`
+  at once. Poll for what the test means.
+- `motion` still fades under Reduce Motion, and an endless CSS animation at 0.01 ms flickers:
+  leave `exit` out (`useMotionReduced`), and give the loop `animation: none`.
+- The update e2e flaked with the new version named on one hello: a later hello naming the
+  page's own cancels the refresh. Name it on every hello.

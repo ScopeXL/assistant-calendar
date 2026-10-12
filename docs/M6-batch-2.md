@@ -1242,7 +1242,11 @@ Done, the week slides when you page, counts pop. Reduce motion turns all of it o
 
 ### T15 Wrap up the batch
 
-- [ ] Done (commit: )
+- [x] Done (commit: `docs: M6 batch 2 wrapped up`)
+
+**As built.** `CLAUDE.md` was 2 bytes under its 15 KB before this batch's gotchas, so the ones
+about one screen or one widget moved to `docs/GOTCHAS.md`. The screenshot review's fixes, if
+any, are in this commit's message.
 
 1. ADR 0029 ("M6 batch 2: the owner's second notes": Status, Date, Context, a Decision table with
    one row per decision above, Consequences) is complete and listed in `docs/adr/README.md`;

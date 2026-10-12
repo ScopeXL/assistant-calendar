@@ -769,11 +769,13 @@ The `meals` plugin (week grid, saved meals, copy last week, the calendar overlay
 
 *Verify:* `just preflight` green; `shellcheck kiosk/*.sh` clean; the helper turns the owner's monitor off at the scheduled time and a tap brings it back; `update.sh` upgrades 0.5.0 → 0.6.0 on the Pi with the display paired throughout; a restore from "Download everything" on a fresh volume brings back events, photos and lists and shows the pairing code; `grep -rn "httpx.AsyncClient(" backend/src | grep -v core/http.py` is empty.
 
-### M6 Polish from the first weeks of use → 0.7.0
+### M6 Polish from the first weeks of use → 0.7.0, 0.8.0
 
 The owner's notes after living with it: sizes, colors, what the children tap, what grandparents ask. A performance pass on the Pi 4 if one is in use, an accessibility pass with a screen reader on the phone, the first v1.1 items from §19 that proved urgent (notes and timers, per-display layouts). 1.0.0 is the owner's call.
 
 Batch 1 (the owner's notes of 2026-10-09) is in `docs/M6.md`, built in 0.7.0 (ADR 0028): Title Case for titles, Child for Kid, times in the household's zone, birthdays as the core's own chips, the live-updates icon, the Hours layout with its zoom, one row to add a person, adding an account and photos from any device, screens that refresh themselves after an update, and tips under the board.
+
+Batch 2 (the owner's notes of 2026-10-12) is in `docs/M6-batch-2.md`, built in 0.8.0 (ADR 0029): Tasks for Chores and People for Who's Doing What, a Small text size with tap targets that never shrink, one header across the top of the wall with each room's buttons in it, the rail's brand and fold, the Hours zoom as buttons, Add as touch forms with a week of days, a time picker and custom repeats, settings that save themselves, rows you tap and an account's sheet, Erase everything, settings that reach every screen at once, and motion that answers what someone did.
 
 *Verify:* the definition of done per task (§14.7); the screenshot checklist (UX §10) at every size; a fresh install from the README by someone who has not seen the project, timed against the success test in §1.
 

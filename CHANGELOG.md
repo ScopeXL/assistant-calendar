@@ -38,8 +38,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   Countdown), then a form for it with every choice on its own row. Who is always one line, the
   days follow your week (Sunday or Monday first), and the button stays above the keyboard.
 - A new task is for Anyone until you pick someone.
-- Settings save as you change them. The Save changes buttons are gone; a person's, a
-  calendar's and an account's sheets still have Save.
+- Settings save as you change them. The Save changes buttons are gone; a person's and a
+  calendar's sheets still have Save.
 - Features is shorter: Tasks, Meals and Photos & Screensaver each show a row that opens their
   own page, and Sign in with Google's keys sit behind a Set up button.
 - Meals has a switch for each meal you plan, "Show breakfast on the calendar" and so on, where
