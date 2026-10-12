@@ -38,7 +38,8 @@ export function Segmented<T extends string>({
   const display = useShell() === "display";
   const [ref, overflow] = useOverflow<HTMLDivElement>(options, stacked);
   const group = stacked
-    ? `fade-x flex-nowrap snap-x overflow-x-auto [scrollbar-width:none] rounded-panel ${
+    ? // scroll-px-1: the snap point is inside the padding, or the row rests 4 px scrolled.
+      `fade-x flex-nowrap snap-x scroll-px-1 overflow-x-auto [scrollbar-width:none] rounded-panel ${
         display ? "text-d-secondary" : "text-caption"
       }`
     : // A cell's own radius plus the padding and the border around it.

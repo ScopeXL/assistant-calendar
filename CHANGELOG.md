@@ -10,6 +10,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - Settings → Display → Text size has a Small choice for screens around 1920×1080. Buttons stay
   finger-sized at every text size.
+- Custom repeats for events and tasks: every few days, weeks, months or years, on the days you
+  pick, ending never, on a date or after a number of times.
+- A week of days to tap and a month to pick from wherever you choose a day, and a time picker
+  wherever you choose a time, a task's Due included.
+- A task has a start day.
 - Hide the rail from the button at its top for a wider board: it folds to its icons, and comes
   back after two minutes, or stays small with Settings → Display → Compact rail.
 
@@ -23,8 +28,18 @@ Everything that changes in Sunroom, written in plain English. The format follows
   out.
 - Hours zooms with Zoom in and Zoom out buttons, as far in as you like; Fit the day shows the
   whole day again. They replace 24h · 12h · 1h · 15m.
+- Add is laid out for a finger: one row for what you're adding (Event, Item, Task, Meal,
+  Countdown), then a form for it with every choice on its own row. Who is always one line, the
+  days follow your week (Sunday or Monday first), and the button stays above the keyboard.
+- A new task is for Anyone until you pick someone.
 - The Sunroom mark sits at the top of the rail, and Settings is a gear now. The padlock shows
   only while a paired screen's Settings are locked behind the PIN.
+
+### Fixed
+
+- Changing an event that repeats in a way Sunroom's form can't show (from another calendar, say)
+  no longer drops its repeat when you save. It shows as "As it is" and stays untouched.
+- The Add panel on the kitchen screen opens at its top, with what you can add in view.
 
 ## [0.7.0] - 2026-10-09
 

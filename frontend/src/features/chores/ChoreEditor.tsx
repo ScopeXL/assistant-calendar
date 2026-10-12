@@ -2,43 +2,42 @@ import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
 import { zonedParts } from "../../lib/dates";
-import { useMembers } from "../../lib/household";
+import { useMembers, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { DayField } from "../../ui/DayField";
+import { PanelActions } from "../../ui/PanelActions";
 import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
-import { Avatar } from "../../ui/Avatar";
-import { firstDayOf } from "../calendar/EventEditor";
-import { repeatPresets, repeatToRRule } from "../calendar/repeat";
+import { TimeField } from "../../ui/TimeField";
+import { WhoPicker } from "../../ui/WhoPicker";
+import { firstDayOf, type KeptRule } from "../calendar/EventEditor";
+import { RepeatField } from "../calendar/RepeatField";
+import { repeatToRRule, rruleToRepeat, type Repeat, type RepeatEnd } from "../calendar/repeat";
+import { useBoardDay } from "../calendar/useBoardDay";
 import type { AddEditorProps } from "../registry";
 import { useChoreChanges, useChoreSettings, type Chore, type ChoreIn } from "./data";
 import { clockText } from "./words";
 
 const TIMES = ["07:00", "08:00", "12:00", "15:00", "17:00", "19:00", "20:00"];
 const STARS = [0, 1, 2, 3, 4, 5];
+// A task repeats the simple ways; anything else is Custom.
+const PRESETS = ["none", "daily", "weekdays", "weekly", "biweekly", "monthly-date"];
+const DAILY: Repeat = { freq: "daily", interval: 1 };
 
-type Whose = { anyone: true } | { anyone: false; members: string[]; turns: boolean };
-
-function whoseOf(chore: Chore): Whose {
-  if (chore.assignee_mode === "any") return { anyone: true };
-  return {
-    anyone: false,
-    members: chore.assignee_member_ids,
-    turns: chore.assignee_mode === "rotate",
-  };
-}
-
-/** Add → Chore (UX §4 "The Add panel for other things"). */
+/** Add → Task (UX §4 "The Add panel for other things"). */
 export function AddChore({ day, onDone }: AddEditorProps) {
   return <ChoreEditor onDone={onDone} startDay={day} />;
 }
 
 /**
- * A chore's fields (UX §4): what; whose (each person's own, taking turns, or anyone's); due by
- * a time or not; how it repeats; and its stars, when stars are on. Adding never asks for the
- * PIN; changing an existing chore does on the wall screen.
+ * A task's fields (UX §4, ADR 0029; stored as a chore): what; who does it (anyone, or the people
+ * picked, each doing it or taking turns); the day it starts; due by a time or any time; how it
+ * repeats, Custom included; and its stars, when stars are on. Each on its own row, the button
+ * pinned above the keyboard. Adding never asks for the PIN; changing an existing task does on
+ * the wall screen.
  */
 export function ChoreEditor({
   chore,
@@ -52,45 +51,46 @@ export function ChoreEditor({
   const display = useShell() === "display";
   const today = zonedParts(useMinute()).day;
   const { data: members = [] } = useMembers();
+  const { data: settings } = useSettings();
+  const weekStartsOn = settings?.week_starts_on ?? 6;
   const { stars: starsOn } = useChoreSettings();
   const changes = useChoreChanges();
-  const day = startDay ?? today;
-  const presets = repeatPresets(day).filter((preset) =>
-    ["none", "daily", "weekdays", "weekly", "biweekly", "monthly-date"].includes(preset.key),
-  );
-  const initialPreset = chore
-    ? (presets.find(
-        (preset) =>
-          (preset.repeat ? repeatToRRule(preset.repeat, chore.start_date) : null) === chore.rrule,
-      )?.key ?? (chore.rrule ? "keep" : "none"))
-    : "daily";
+  // An existing task's rule as one of the editor's shapes, or kept exactly as it is.
+  const parsed = chore?.rrule ? rruleToRepeat(chore.rrule, chore.start_date, weekStartsOn) : null;
   const [title, setTitle] = useState(chore?.title ?? "");
-  const [whose, setWhose] = useState<Whose>(
-    chore ? whoseOf(chore) : { anyone: false, members: [], turns: false },
+  // No one picked is Anyone: whoever does it gets the credit.
+  const [who, setWho] = useState<string[]>(
+    chore && chore.assignee_mode !== "any" ? chore.assignee_member_ids : [],
   );
+  const [turns, setTurns] = useState(chore?.assignee_mode === "rotate");
+  const [day, setDay] = useState(chore?.start_date ?? startDay ?? today);
   const [time, setTime] = useState<string | null>(chore?.due_time ?? null);
-  const [repeatKey, setRepeatKey] = useState(initialPreset);
+  const [repeat, setRepeat] = useState<Repeat | null>(chore ? (parsed?.repeat ?? null) : DAILY);
+  const [repeatEnd, setRepeatEnd] = useState<RepeatEnd>(parsed?.end ?? {});
+  const [kept, setKept] = useState<KeptRule | null>(
+    chore?.rrule && !parsed ? { rrule: chore.rrule, text: chore.repeat_text } : null,
+  );
+  // The rule and the day go back to the server only when one of them was changed here.
+  const [whenTouched, setWhenTouched] = useState(false);
   const [points, setPoints] = useState(chore?.points ?? 1);
-  const preset = presets.find((p) => p.key === repeatKey);
-  const ready = title.trim() !== "" && (whose.anyone || whose.members.length > 0);
+  // A day tapped on the board while Add is open is the day a new task starts.
+  useBoardDay(startDay, (tapped) => {
+    if (!chore) setDay(tapped);
+  });
+  const ready = title.trim() !== "";
   const gap = display ? "gap-6" : "gap-5";
   const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
 
   const fields = (): ChoreIn => {
-    const repeat = preset?.repeat ?? null;
     const first = firstDayOf(repeat, day);
     return {
       title: title.trim(),
       points: starsOn ? points : (chore?.points ?? 0),
-      rrule: repeat ? repeatToRRule(repeat, first) : null,
+      rrule: repeat ? repeatToRRule(repeat, first, repeatEnd, weekStartsOn) : (kept?.rrule ?? null),
       start_date: first,
       due_time: time,
-      assignee_mode: whose.anyone
-        ? "any"
-        : whose.turns && whose.members.length > 1
-          ? "rotate"
-          : "fixed",
-      assignee_member_ids: whose.anyone ? [] : whose.members,
+      assignee_mode: who.length === 0 ? "any" : turns && who.length > 1 ? "rotate" : "fixed",
+      assignee_member_ids: who,
       rotation_index: chore?.rotation_index ?? 0,
     };
   };
@@ -102,7 +102,8 @@ export function ChoreEditor({
       return;
     }
     const next = fields();
-    const repeatChanged = repeatKey !== initialPreset && repeatKey !== "keep";
+    const ruleChanged = whenTouched && (next.rrule ?? null) !== (chore.rrule ?? null);
+    const dayChanged = whenTouched && next.start_date !== chore.start_date;
     changes.changeChore.mutate(
       {
         chore,
@@ -112,11 +113,8 @@ export function ChoreEditor({
           ...(next.due_time ? { due_time: next.due_time } : { clear_due_time: true }),
           assignee_mode: next.assignee_mode,
           assignee_member_ids: next.assignee_member_ids ?? [],
-          ...(repeatChanged
-            ? next.rrule
-              ? { rrule: next.rrule, start_date: next.start_date ?? day }
-              : { clear_rrule: true, start_date: next.start_date ?? day }
-            : {}),
+          ...(ruleChanged ? (next.rrule ? { rrule: next.rrule } : { clear_rrule: true }) : {}),
+          ...(ruleChanged || dayChanged ? { start_date: next.start_date ?? day } : {}),
         },
       },
       { onSuccess: onDone },
@@ -144,130 +142,62 @@ export function ChoreEditor({
         }}
       />
       <div className="flex flex-col gap-2">
-        <p className={heading}>Whose</p>
-        <div
-          role="group"
-          aria-label="Whose"
-          className={`flex flex-wrap ${display ? "gap-3" : "gap-2"}`}
-        >
-          <button
-            type="button"
-            aria-pressed={whose.anyone}
-            data-person="everyone"
-            onClick={() => {
-              setWhose({ anyone: true });
-            }}
-            className={`press select-fill flex flex-col items-center gap-1 rounded-button p-2 aria-pressed:bg-p-tint aria-pressed:ring-[3px] aria-pressed:ring-ink ${
-              display ? "min-w-24" : "min-w-16"
-            }`}
-          >
-            <Avatar member={null} size={display ? "lg" : "md"} />
-            <span
-              className={
-                display ? "text-d-secondary font-semibold" : "text-secondary font-semibold"
-              }
-            >
-              Anyone
-            </span>
-          </button>
-          {members.map((member) => {
-            const on = !whose.anyone && whose.members.includes(member.id);
-            return (
-              <button
-                key={member.id}
-                type="button"
-                aria-pressed={on}
-                data-person={member.color}
-                onClick={() => {
-                  const current = whose.anyone ? [] : whose.members;
-                  const next = on
-                    ? current.filter((id) => id !== member.id)
-                    : [...current, member.id];
-                  setWhose({ anyone: false, members: next, turns: !whose.anyone && whose.turns });
-                }}
-                className={`press select-fill flex flex-col items-center gap-1 rounded-button p-2 aria-pressed:bg-p-tint aria-pressed:ring-[3px] aria-pressed:ring-ink ${
-                  display ? "min-w-24" : "min-w-16"
-                }`}
-              >
-                <Avatar member={member} size={display ? "lg" : "md"} />
-                <span
-                  className={
-                    display ? "text-d-secondary font-semibold" : "text-secondary font-semibold"
-                  }
-                >
-                  {member.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        {!whose.anyone && whose.members.length > 1 ? (
+        <p className={heading}>Who</p>
+        <WhoPicker
+          label="Who"
+          everyoneLabel="Anyone"
+          members={members}
+          value={who}
+          multiple
+          onChange={setWho}
+        />
+        {who.length > 1 ? (
           <Segmented
             label="How they share it"
-            value={whose.turns ? "turns" : "each"}
+            value={turns ? "turns" : "each"}
             options={[
               { value: "each", label: "Each does it" },
               { value: "turns", label: "They take turns" },
             ]}
             onChange={(value) => {
-              setWhose({ ...whose, turns: value === "turns" });
+              setTurns(value === "turns");
             }}
           />
         ) : null}
       </div>
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Due</p>
-        <ChipRow label="Due">
-          <Chip
-            on={time === null}
-            onClick={() => {
-              setTime(null);
-            }}
-          >
-            Any time
-          </Chip>
-          {TIMES.map((hhmm) => (
-            <Chip
-              key={hhmm}
-              on={time === hhmm}
-              onClick={() => {
-                setTime(hhmm);
-              }}
-            >
-              {`by ${clockText(hhmm)}`}
-            </Chip>
-          ))}
-          {time && !TIMES.includes(time) ? (
-            <Chip on onClick={() => undefined}>{`by ${clockText(time)}`}</Chip>
-          ) : null}
-        </ChipRow>
-      </div>
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Repeats</p>
-        <ChipRow label="Repeats">
-          {initialPreset === "keep" ? (
-            <Chip
-              on={repeatKey === "keep"}
-              onClick={() => {
-                setRepeatKey("keep");
-              }}
-            >
-              {chore?.repeat_text ?? "As it is"}
-            </Chip>
-          ) : null}
-          {presets.map((option) => (
-            <Chip
-              key={option.key}
-              on={repeatKey === option.key}
-              onClick={() => {
-                setRepeatKey(option.key);
-              }}
-            >
-              {option.label}
-            </Chip>
-          ))}
-        </ChipRow>
-      </div>
+      <DayField
+        value={day}
+        today={today}
+        weekStartsOn={weekStartsOn}
+        hint={repeat || kept ? "The day it starts." : undefined}
+        onChange={(next) => {
+          setDay(next);
+          setWhenTouched(true);
+        }}
+      />
+      <TimeField
+        label="Due"
+        value={time}
+        none={{ label: "Any time" }}
+        suggestions={TIMES}
+        words={(hhmm) => `by ${clockText(hhmm)}`}
+        onChange={setTime}
+      />
+      <RepeatField
+        day={day}
+        today={today}
+        value={repeat}
+        repeatEnd={repeatEnd}
+        kept={kept}
+        weekStartsOn={weekStartsOn}
+        presetKeys={PRESETS}
+        onChange={(change) => {
+          setRepeat(change.repeat);
+          setRepeatEnd(change.repeatEnd);
+          setKept(change.kept);
+          setWhenTouched(true);
+        }}
+      />
       {starsOn ? (
         <div className="flex flex-col gap-2">
           <p className={heading}>Stars</p>
@@ -292,9 +222,11 @@ export function ChoreEditor({
           {errorMessage(error)}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!ready} pending={pending}>
-        {chore ? "Save changes" : "Add task"}
-      </Button>
+      <PanelActions>
+        <Button type="submit" block disabled={!ready} pending={pending}>
+          {chore ? "Save changes" : "Add task"}
+        </Button>
+      </PanelActions>
     </form>
   );
 }

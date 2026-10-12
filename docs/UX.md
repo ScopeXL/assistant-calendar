@@ -89,7 +89,7 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 
 **Time and date words.** "4:00 PM" or "16:00"; minutes always shown except in month cells and phone week strips ("4 PM"); "Today", "Tomorrow", "Yesterday" within a day in sheets and the Today panel, otherwise "Thu, Oct 9"; board headers always "Thu 9"; full weekday names only in the Day view title. Lengths: "30 min", "1 hour", "1½ hours", "all day", "until 5:30 PM". Counts: "2 of 3", "12 to get", "+2 more", never "2/3". Relative: "in 20 min", "12 days", "Updated 9:10 AM", "hasn't answered since 9:10 AM".
 
-**Buttons and their toasts** (Undo unless noted): Add event → "Added Dentist"; Save changes → "Changes saved"; Remove event → "Removed Dentist"; Move to Thu or a drop → "Moved Soccer practice to Thu"; Done (task) → "Done by Mia"; Add to list → "Added Milk"; Clear done → "Cleared 8 done items"; Add dinner → "Added Tacos for Tuesday"; Ask for it → "Asked for Movie night. A parent will say yes or no." (no Undo; **Take it back**); Approve → "Mia got Movie night"; Not now → "Told Mia not now"; Finish routine → "Bedtime routine done"; Pair → "Kitchen screen paired"; Connect iCloud → "Connected iCloud · 3 calendars"; Disconnect → "Disconnected iCloud" (**Connect again**); Put back → "Put back Dentist"; Set PIN → "PIN set".
+**Buttons and their toasts** (Undo unless noted): Add event → "Added Dentist"; Add task → "Added Feed the dog"; Save changes → "Changes saved"; Remove event → "Removed Dentist"; Move to Thu or a drop → "Moved Soccer practice to Thu"; Done (task) → "Done by Mia"; Add to list → "Added Milk"; Clear done → "Cleared 8 done items"; Add dinner → "Added Tacos for Tuesday"; Ask for it → "Asked for Movie night. A parent will say yes or no." (no Undo; **Take it back**); Approve → "Mia got Movie night"; Not now → "Told Mia not now"; Finish routine → "Bedtime routine done"; Pair → "Kitchen screen paired"; Connect iCloud → "Connected iCloud · 3 calendars"; Disconnect → "Disconnected iCloud" (**Connect again**); Put back → "Put back Dentist"; Set PIN → "PIN set".
 
 **Error copy** says what happened and what to do, in the app's voice, without apology or codes: "That PIN didn't match. Try again." · "Too many tries. Wait 1 minute." · "That password didn't match. Try again." · "That code didn't work. A code works once, for 10 minutes. Make a new one on the phone." · "Not saved — the screen can't reach Sunroom. It will try again." · "Not saved — you're offline. Try again when you have signal." · "Google hasn't answered since 9:10 AM. Showing what we had." · "iCloud said that password isn't right. Make a new app-specific password and try again." · "That address didn't give us a calendar. Check it ends in .ics, or try another way." · "This event comes from iCloud · Work and can't be changed here. Change it in the Calendar app." · "Only a parent can approve rewards. Ask one, or enter the PIN." · "That name is already in use. Pick another." · "Photos need room: 2 GB free. Remove some, or move photos to a bigger disk (About → Storage)."
 
@@ -269,31 +269,50 @@ Overlapping events sit side by side, each at least half the width; more than thr
 
 **Change** opens the editor filled in; **Move** opens a day picker (the next 14 days as chips plus a month grid) and asks "Move Which?" for a repeating event; **Remove** removes with Undo and asks "Remove Which?" for a repeating event. A read-only synced event shows the source line in place of the buttons: "From iCloud · Work. Change it in the Calendar app." A writable synced event behaves like a Home event and says "Google · Family" quietly. With Child-safe editing on, Change and Remove on the display ask for the parent PIN; Move does not.
 
-**Add and the event editor.** **Add** (the rail's plus) opens the Add panel with the type that fits the current room preselected and the quick-add field focused; tapping empty space on a day column, an hour band or a month cell opens it with Event selected and that date set. The board stays visible and accepts one kind of tap while the panel is open: a day, to set the date.
+**Add and the event editor** (ADR 0029). **Add** (the rail's plus) opens the Add panel with the kind that fits the current room chosen and the first field focused; tapping empty space on a day column, an hour band or a month cell opens it with Event chosen and that date set. The board stays visible and accepts one kind of tap while the panel is open: a day, to set the date, whatever kind of thing is being added (the panel keeps its kind and its title).
 
 ```
-+----------+-----------------------------------------------------------+------------------------------------------+
-| rail     | October 2026   (board, lit; tap a day to set the date)    | Add                              [Close] |
-|          |  Sun 5 | Mon 6 | TUE 7 | Wed 8 | Thu 9 | Fri 10 | Sat 11  | [Event] [Item] [Task] [Meal] [Countdown] |
-|          |        |       |       |       | ▲ set |        |         |                                          |
-|          |        |       |       |       |       |        |         | [ Dentist Thu 2:30pm Mia              ] |
-|          |        |       |       |       |       |        |         | Understood as:                           |
-|          |        |       |       |       |       |        |         | Dentist                                  |
-|          |        |       |       |       |       |        |         | [Thu, Oct 9] [2:30 PM] [1 hour] [(M) Mia]|
-|          |        |       |       |       |       |        |         | [Doesn't repeat] [Home calendar] [More…] |
-|          |        |       |       |       |       |        |         | [              Add event              ] |
-|----------+-----------------------------------------------------------+------------------------------------------|
-|                                                 | Recent: [Dentist] [Soccer practice] [Piano lesson]     [Done] |
-|                                                 |  q   w   e   r   t   y   u   i   o   p                        |
-|                                                 |   a   s   d   f   g   h   j   k   l                           |
-|                                                 |  ⇧   z   x   c   v   b   n   m   ⌫                            |
-|                                                 |  123        space              ↵                              |
-+-------------------------------------------------+---------------------------------------------------------------+
++----------+----------------------------------------------+------------------------------------------+
+| rail     | header                                       | Add                              [Close] |
+|          |----------------------------------------------| [▦ Event][☰ Item][☑ Task][🍴 Meal][⌛ Countdown]
+|          | board, lit; tap a day to set the date        | What, when, who                          |
+|          |  Sun 5 | Mon 6 | TUE 7 | Wed 8 | Thu 9 | …   | [ Dentist Thu 2:30pm Mia              ] |
+|          |        |       |       |       | ▲ set |     | Saved as "Dentist"                       |
+|          |        |       |       |       |       |     | Who                                      |
+|          |        |       |       |       |       |     | (All)  (A)   (S)   (M)   (L)             |
+|          |        |       |       |       |       |     | Everyone Ana  Sam  [Mia]  Leo            |
+|          |        |       |       |       |       |     | Day                            Oct 5–11  |
+|          |        |       |       |       |       |     | [Sun][Mon][Tue][Wed][THU][Fri][Sat]      |
+|          |        |       |       |       |       |     |  5    6    7    8    9    10   11        |
+|          |        |       |       |       |       |     | [<] [Today] [>] [Pick a date]            |
+|          |        |       |       |       |       |     | Time                                     |
+|          |        |       |       |       |       |     | [All day][9:00 AM][12:00 PM][2:30 PM]…   |
+|          |        |       |       |       |       |     | [              Add event              ] |
+|----------+----------------------------------------------+------------------------------------------|
+|                                    | Recent: [Dentist] [Soccer practice]                    [Done] |
+|                                    |  q   w   e   r   t   y   u   i   o   p                        |
+|                                    |  123        space              ↵                              |
++------------------------------------+---------------------------------------------------------------+
 ```
 
-Quick add parses as you type, locally (chrono-node plus a small grammar for people and repeats): the title; a day word (today, tomorrow, Mon…Sun, "next Tue", "Oct 9", "9/10" by locale); a time ("2:30pm", "14:30", "noon", "2-3pm" sets both); a length ("for 2h", "30 min"); a person's name or nickname; a repeat word ("every Tue", "daily", "weekdays", "monthly"); "all day". The chips under the field show what was understood; each is a button that opens its picker, so anything misread is one tap to fix; nothing parsed means a title-only draft on the selected day, all day; the words the parser used stay in the field. The chips: **Day** (Today, Tomorrow, the next five weekdays, Pick a date; or tap a day on the board), **Time** (All day toggle; hours 6 AM–10 PM as chips with Earlier and Later; minutes :00 :15 :30 :45), **How long** (30 min, 1 hour, 1½ hours, 2 hours, 3 hours, Until), **Who** (the Who picker, multi-select), **Repeats** (Doesn't repeat, Every day, Every weekday, Every week on Thu, Every 2 weeks on Thu, Every month on the 9th, Every year on Oct 9, Custom with every N days/weeks/months, weekdays, ends never / on a date / after N times), **Calendar** (Home first, then every writable synced calendar; read-only ones don't appear; the last-used calendar for this person preselected), **Color** (defaults to the person's color; "Choose a color" for shared things), **More…** (Location with recent places as chips, Notes, Remind on the kitchen screen: none, 10 min, 1 hour, 1 day before).
+**The kinds of thing to add** are one row at the top of the panel: Event, then Item, Task, Meal and Countdown for the features that are on, each cell the room's own icon over its word, the chosen one filled. Always one row: on a phone, where five cells don't fit, the row scrolls sideways with a fade at its edge. Each kind has its own form below, built the same way: every choice on its own row, nothing behind a chip that has to be opened first, and the primary button pinned at the bottom of the panel, above the keyboard.
 
-**The Add panel for other things.** Item, Task, Meal and Countdown use the same side panel as Event, with their own chips: an item has Which list (chips of lists; the open list preselected), Who (optional), Day (optional), and commas make several items ("Milk, eggs, bread" adds three); a task has Who or Anyone, Due (a time or none), Repeats, Stars (0–5 as chips, if stars are on); a meal has Day, Which meal (Breakfast, Lunch, Dinner if enabled), Who cooks; a countdown has Day, Who and an optional color. The primary button says **Add event** / **Add item** / **Add task** / **Add dinner** / **Add countdown** (or **Save changes**) and is pinned above the keyboard; ↵ in the field is the same as the button. After saving, the panel closes (exit), the new chip eases in, and the toast offers Undo.
+**The event form**, top to bottom:
+
+- **What, when, who** (the quick-add field; "Title" when changing an event). It parses as you type, locally (chrono-node plus a small grammar for people and repeats): the title; a day word (today, tomorrow, Mon…Sun, "next Tue", "Oct 9", "9/10" by locale); a time ("2:30pm", "14:30", "noon", "2-3pm" sets both); a length ("for 2h", "30 min"); a person's name or nickname; a repeat word ("every Tue", "daily", "weekdays", "monthly"); "all day". What it understands fills the rows below, and the line under the field says what's left as the title: `Saved as "Dentist"`. Nothing parsed means a title-only draft on the chosen day. The words the parser used stay in the field. **A row set by hand keeps winning over later typing**; anything the parser filled is one tap to change.
+- **Who**: the Who picker, several at once.
+- **Day**: the week as seven cells in the household's order (Sunday or Monday first), the weekday's name over the day's number, today's on a sun disc; under it **Previous week**, **Today**, **Next week** and **Pick a date**, which opens a month grid in place (Previous and Next month; cells 56 px on the wall, 44 on phones). The strip follows the chosen day when it leaves the week on show. Neither the wall nor a phone ever meets the native date input: one look, one set of names (a strip cell is "Thu, Oct 8", a grid cell "October 8"), and nothing the kitchen screen can't work without a keyboard. For an all-day event a small **Last day** row follows: Same day, or Another day from a month grid.
+- **Time**: **All day**, the likely times (9:00 AM, 12:00 PM, 3:00 PM, 6:00 PM) and **Pick a time**, which opens the hours (6 AM to 11 PM, with Earlier hours) and the minutes (:00 :15 :30 :45) in place. A time that isn't one of the chips (one that was typed, or tapped on the Hours grid) shows among them, pressed, in clock order.
+- **How long** (not for all day): 30 min, 1 hour, 1½ hours, 2 hours, 3 hours.
+- **Repeats**: Doesn't repeat, Every day, Every weekday, Every week on Thu, Every 2 weeks on Thu, Every month on the 9th, Every month on the second Thursday, Every year on Oct 9, and **Custom…**, which opens every N (a stepper, no typing) days, weeks, months or years; for weeks, the seven weekdays in the household's order, any number of them; for months, "On the 9th" or "On the second Thursday". Whenever it repeats, **Ends**: Never, On a date (a month grid), After N times (a stepper). The rule is said in words under it. A rule from another calendar that these shapes can't hold shows as a pressed **As it is: every month on the 15th** chip and is left exactly as it was until another choice is made.
+- **Calendar**, only with two or more that can be written to (Home first; read-only ones don't appear).
+- **Color**: the person's color, or one of the eight.
+- **More…**: Where, Notes, Remind on the kitchen screen (none, 10 min, 1 hour, 1 day before); open already when changing an event that has any of them.
+- **Add event** (or **Save changes**), pinned. ↵ in the field is the same as the button. After saving, the panel closes (exit), the new chip eases in, and the toast offers Undo.
+
+A picker that opens low in the panel scrolls into view, so it never appears under the pinned button. The panel opens at its top every time.
+
+**The other forms.** **Item**: What (commas make several: "Milk, eggs, bread" adds three), Which list (chips; the open list first), Who (one person, optional), Day with **No day** first. **Task**: What; Who, where the first cell is **Anyone** and several people can be picked, with "Each does it" or "They take turns" once there are two; Day (the day it starts); Due (**Any time**, the likely times as "by 5:00 PM", Pick a time); Repeats (the simple presets and Custom…; a new task repeats every day until told otherwise); Stars (0–5 as chips, if stars are on). **Meal**: saved meals first (with a search), or a new one typed; Day, on the week the board shows; Which meal (when the household plans more than dinner); Who cooks; and "Add 5 items to Groceries" as a switch. **Countdown**: what it counts down to; Day, with the month grid open from the start (it is rarely this week); Whose; an emoji from one scrolling row; a color; Every year; Show it on the kitchen screen. The primary button says **Add item** / **Add task** / **Add dinner** / **Add countdown** (or **Save changes**).
 
 **Lists room**
 
@@ -424,7 +443,7 @@ The photo fits inside the screen (never cropped; the letterbox takes the wall's 
 | Backup | The nightly backups: the last backup time, a banner if older than 7 days, **Back up now**, and on a phone or computer **Download backup** (the newest copy) and **Download everything** (a zip with every photo, to restore from; restoring is a runbook step with the server stopped, docs/RESTORE.md); **Take your data with you**: **Export everything** (one JSON file anyone can read), on a phone or computer. The wall says to download from a phone |
 | About | Version and build; **New versions** (**Check for new versions daily**, off until a parent turns it on and greyed out when the server keeps it off; then the last check, or "Sunroom 0.6.1 is available." with how to update this install; **Check now**); **Storage** (**Free space**, the photos folder); **Connection** (**Live updates** as the live-updates icon; the address this screen uses); the open-source licence; "Not affiliated with Google or Apple"; "Weather by Open-Meteo" |
 
-**The Who picker** (shared): a row of 64 px avatar circles with names under them: **Everyone** (a house mark, neutral), each member in household order (initial or photo with a 3 px ring in their color), **A guest** (dashed). Selected: a 4 px ink ring, a check in the corner and the name in bold. In a question ("Who did it?") it appears as a popover beside the thing; in editors as a chip row; children-only pickers show only children.
+**The Who picker** (shared; ADR 0029): avatar circles with names under them: **Everyone** (a house mark, neutral; **Anyone** for a task), then each member in household order (initial or photo in their color). Selected: an ink ring, the person's tint and the name in bold. **It is always one row.** The cells share the row's width: 64 px avatars while the people fit (Everyone and five people do in the wall's panel), 56 px for everyone once a seventh cell would need more room, and when even those don't fit the row scrolls sideways with a fade at its edge (48 and 40 px on phones, by the same rule). A name too long for its cell is cut with an ellipsis on screen only; a screen reader hears all of it. The one exception is "Who did it?" beside a task's box, in a narrow board column, where the picker wraps onto more lines rather than hide people off the side. Children-only pickers show only children.
 
 **Toasts (display)**: bottom centre of the board, 72 px tall, body text, a 64 px Undo button, 8 s, two at most; over a panel they sit at the panel's bottom; a toast never covers the now line's label or the Today panel.
 
@@ -491,32 +510,32 @@ The avatar at the top right is who's using this phone; tapping it opens Who's Us
 +--------------------------------------+
 ```
 
-**Event sheet and editor**: the sheet shows the title, time, people, calendar source line ("From iCloud · Ana"), location and notes, with **Change**, **Move**, **Add a countdown** and **Remove** (read-only synced events show the source line instead of buttons). The editor is the same panel as the display's (§4) with the phone's native keyboard:
+**Event sheet and editor**: the sheet shows the title, time, people, calendar source line ("From iCloud · Ana"), location and notes, with **Change**, **Move**, **Add a countdown** and **Remove** (read-only synced events show the source line instead of buttons). The editor is the same form as the display's (§4), in a sheet, with the phone's native keyboard:
 
 ```
 +--------------------------------------+
-| Cancel          New event       Save |
+| Add                            Close |
+| [▦ Event][☰ Item][☑ Task][🍴 Meal][⌛ |  (scrolls sideways)
+| What, when, who                      |
 | [ Dentist Thu 2:30pm Mia           ] |
-| Dentist                              |
-| Thu, Oct 9 · 2:30 PM · 1 hour · Mia  |
-|                                      |
-| Who      (All) (M) (L) (A) (S) (?)   |
-| Day      [Today][Tomorrow][Thu 9]    |
-|          [Fri 10][Sat 11][Pick…]     |
-| Time     [All day]                   |
-|          [8][9][10][11][12][1][2][3] |
-|          [:00][:15][:30][:45] [AM|PM]|
-| How long [30 min][1 hr][1½ hr][2 hr] |
-|          [Until…]                    |
-| Repeats  [No][Every week on Thu]     |
-|          [Every day][Weekdays][More…]|
-| Calendar [Home][Google · Family]     |
-| More     Location · Notes · Remind   |
+| Saved as "Dentist"                   |
+| Who                                  |
+| (All)   (A)   (S)   (M)   (L)        |
+| Everyone Ana  Sam  [Mia]  Leo        |
+| Day                         Oct 5–11 |
+| [Sun][Mon][Tue][Wed][THU][Fri][Sat]  |
+| [<] [Today] [>] [Pick a date]        |
+| Time                                 |
+| [All day][9:00 AM][12:00 PM]         |
+| [2:30 PM][3:00 PM][6:00 PM]          |
+| [Pick a time]                        |
+| How long  ·  Repeats  ·  Color  ·  … |
+|--------------------------------------|
 | [           Add event             ]  |
 +--------------------------------------+
 ```
 
-The quick-add field runs the same parser and shows the same "understood as" line; chips are 44 px. **Add several** (under More) takes pasted lines, one draft per line, with a review list and **Add all**, for school newsletters. **Remind** shows a toast on the kitchen screen 10 minutes, 1 hour or 1 day before; phone notifications are a later idea (PLAN §19).
+The quick-add field runs the same parser and fills the same rows; chips and cells are 44 px; the month grid stands in for the native date input here too; the button is pinned in the thumb zone while the sheet scrolls. **Add several** (under More) takes pasted lines, one draft per line, with a review list and **Add all**, for school newsletters. **Remind** shows a toast on the kitchen screen 10 minutes, 1 hour or 1 day before; phone notifications are a later idea (PLAN §19).
 
 **Lists**: a list of lists (name, count, last change) and the list detail: 48 px checkboxes in 72 × 80 px tap areas, the marker strike, a collapsed Done group, the add field pinned above the tab bar with a Usuals strip above it, attribution silent ("Added by Mia").
 
@@ -576,9 +595,9 @@ A wrong code: "That code didn't work. Codes change every 10 minutes; read the on
 
 **Pairing the display (any time).** The display shows **Pair this screen** with a six-character code (or returns to it after an unpair). A signed-in phone: More → **Pair a Display** → the code → **Pair**; or on the display, **Type the household password here instead**. Then "Name this screen" chips → the week board. The same code mechanism, mirrored, is **Add a phone** (Settings → Phones & Screens): the signed-in phone shows a code and QR; the new phone types it on the sign-in screen.
 
-**Add an event from the display (quick add).** 1. Tap **Add** in the rail, or empty space in Thursday's column (which skips the day chip). 2. The Add panel opens with Event selected and the field focused; the keyboard rises. 3. Type "Dentist Thu 2:30pm Mia"; the understood-as line fills as you type: Dentist · Thu, Oct 9 · 2:30 PM · 1 hour · Mia, and Thursday's column lights behind. 4. Fix anything with a chip. 5. **Add event** (or ↵): the panel slides away, the chip eases into Thursday, toast "Added Dentist · Undo".
+**Add an event from the display (quick add).** 1. Tap **Add** in the rail, or empty space in Thursday's column (which skips the day chip). 2. The Add panel opens with Event selected and the field focused; the keyboard rises. 3. Type "Dentist Thu 2:30pm Mia"; the rows fill as you type (Thu in the Day strip, 2:30 PM among the times, 1 hour, Mia), the line under the field reads `Saved as "Dentist"`, and Thursday's column lights behind. 4. Fix anything by tapping its row. 5. **Add event** (or ↵): the panel slides away, the chip eases into Thursday, toast "Added Dentist · Undo".
 
-**Add from a phone.** Calendar → **+ Add** (or tap a time in Day view) → type or tap chips → **Add event** → the display shows it within a second, easing into its column; nothing else moves.
+**Add from a phone.** Calendar → **+ Add** (or tap a time in Day view) → type, or tap the rows → **Add event** → the display shows it within a second, easing into its column; nothing else moves.
 
 **Change one occurrence of a repeating event.** Tap the chip → event sheet → **Change** → edit → **Save changes** → the chooser:
 
@@ -822,7 +841,7 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 - [ ] A person's birthday shows on its day as an all-day chip in their color with the cake mark (the seed's Mia, on Friday), on the Week, Day, Month and People views and in the phone's Calendar lists.
 - [ ] With six calendars in fake mode no column overflows without "+N more", the person filter fades the rest without hiding it, and the Today panel has at most nine lines.
 - [ ] Avatars always show an initial or photo; Everyone is neutral; names accompany colors on every arm's-length surface.
-- [ ] The Add panel shows the board behind it; the keyboard docks under the panel; the field and the primary button are visible above the keys.
+- [ ] The Add panel shows the board behind it; the keyboard docks under the panel; the row of kinds, the field and the primary button are visible above the keys; the kinds are one row (scrolling on a phone, never wrapping); the Who row never wraps (six cells at 64 px on the wall); the Day strip starts on the household's day; Pick a date, Pick a time and Custom… open in place and in view; nothing shows under the pinned button.
 - [ ] No `title=` attributes, no hover-only controls, no all-caps, no IDs or feed URLs, no emoji in the app's own copy.
 - [ ] Empty states say what goes there and offer one button; quiet pills are one line.
 - [ ] The screensaver's photo is uncropped and the clock band is the only overlay; Night is black with the dim clock; the evening dim darkens the whole page evenly and nothing else changes.

@@ -552,7 +552,7 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
     await page.getByRole("button", { name: "Add", exact: true }).click();
     const add = page.getByRole("dialog", { name: "Add" });
     await add.getByRole("button", { name: "Task", exact: true }).click();
-    await shot(page, `add-chore-${theme}`);
+    await shot(page, `add-task-${theme}`);
     await add.getByRole("button", { name: "Item", exact: true }).click();
     await shot(page, `add-item-${theme}`);
     await add.getByRole("button", { name: "Close" }).click();

@@ -574,7 +574,9 @@ with Zoom in and Zoom out buttons, as far in as you like; Fit the day shows the 
 
 ### T7 Add: the fields built for touch
 
-- [ ] Done (commit: )
+- [x] Done (commits: "dates: ordered weekdays and the month grid in lib", "calendar: custom repeats
+  round-trip, and a rule we can't read is kept", "ui: touch primitives for the editors", "ui: the
+  Who picker is one row", "calendar: the Repeats field, with Custom…")
 
 **Owner's note.** "Redesign the 'Add' workflow. Ensure each item they can choose is a single row
 (perhaps a button group). The textbox that parses into the correct what, when, who is nice to
@@ -712,7 +714,26 @@ seeded at +90 days) · After N times (a `Stepper`, seeded 10). The sentence unde
 
 ### T8 Add: one form per type
 
-- [ ] Done (commit: )
+- [x] Done (commits: "calendar: the Add panel's type row and the event form as rows", "lists,
+  meals, countdowns: their Add forms as touch rows", "chores: the Task form, with a day, a time
+  picker and custom repeats")
+
+**As built (T7 and T8).**
+- `WKST`: written and read by `weekStartMatters` (the weekdays straddle the household's first
+  day), not "two or more weekdays": the plan's rule would have made "every 2 weeks on Tue and Thu"
+  unreadable in a Sunday-first household.
+- `COLORS` is in `lib/colors.ts` (the plan named both `lib/` and `ui/`); every picker imports it.
+- The Who picker keeps wrapping in one place, "Who did it?" on the Tasks board (`wrap`): in a
+  board column a sideways row hid people. Its names are 18 px so "Everyone" fits a shared cell.
+- `DayField`'s "No day" is `optional={{ label, onChoose }}`. The event sheet's Move uses it too.
+- Ends reads "Never · On a date · After 10 times" (the count in the label, a stepper under it).
+- Found by the screenshots and fixed in T8a: a field in the wall's panel counted the keyboard
+  twice when scrolling into view (the row of kinds was pushed off the top on focus); the panel
+  kept the scroll position of whatever it showed before; a sliver of form showed under the
+  pinned button; a picker opened under the pinned button (`lib/reveal` scrolls it into view).
+- A new task defaults to **Anyone** (the plan's "Anyone is a real default"); it needed a pick
+  before. A task's rule and start day go back to the server only when touched.
+- Native inputs left: a person's birthday (Family) and the sleep and dim times (Display).
 
 **Build, in three commits.**
 

@@ -169,3 +169,111 @@ test("a reward asked for on the wall shows on a parent's phone; Approve on the w
   await expect(toast(page, "Mia got Ice cream run")).toBeVisible();
   await expect(page.getByRole("region", { name: "Asked" })).toHaveCount(0);
 });
+
+test("a task every two weeks on two days, with all five people on one line of Who", async ({
+  page,
+  request,
+}) => {
+  await seed(request);
+  // A fifth person, added by a parent's phone: the owner's household has five.
+  const parent = await request.post("/api/auth/login", {
+    headers: CSRF,
+    data: { password: PASSWORD },
+  });
+  expect(parent.ok()).toBe(true);
+  const zoe = await request.post("/api/members", {
+    headers: CSRF,
+    data: { name: "Zoe", role: "kid" },
+  });
+  expect(zoe.status()).toBe(201);
+  await choresRoom(page);
+
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  const add = page.getByRole("dialog", { name: "Add" });
+  // The Tasks room opens Add on Task, in the one row of kinds.
+  await expect(
+    add.getByRole("group", { name: "What to add" }).getByRole("button", { name: "Task" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await add.getByLabel("What", { exact: true }).fill("Water the garden");
+
+  // Who: Anyone and five people, one line, 64 px avatars.
+  const who = add.getByRole("group", { name: "Who", exact: true });
+  const cells = who.getByRole("button");
+  await expect(cells).toHaveCount(6);
+  await expect(cells.first()).toHaveAccessibleName("Anyone");
+  const boxes = await cells.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      const avatar = node.querySelector("span")?.getBoundingClientRect();
+      return { y: Math.round(box.y), avatar: Math.round(avatar?.width ?? 0) };
+    }),
+  );
+  expect(new Set(boxes.map((box) => box.y)).size).toBe(1);
+  expect(boxes.map((box) => box.avatar)).toEqual([64, 64, 64, 64, 64, 64]);
+  await who.getByRole("button", { name: "Zoe" }).click();
+
+  // Due: a time that isn't one of the chips, from Pick a time.
+  const due = add.getByRole("group", { name: "Due", exact: true });
+  await due.getByRole("button", { name: "Pick a time" }).click();
+  await add.getByRole("group", { name: "Due: hour" }).getByRole("button", { name: "4 PM" }).click();
+  await add
+    .getByRole("group", { name: "Due: minutes" })
+    .getByRole("button", { name: ":30" })
+    .click();
+  await expect(due.getByRole("button", { name: "by 4:30 PM" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
+  // Repeats: Custom, every 2 weeks on Tuesday and Thursday; the days start on Sunday here.
+  // A new task repeats every day until told otherwise, so Custom opens on days.
+  await add.getByRole("button", { name: "Custom…" }).click();
+  await add.getByRole("button", { name: "Every: more" }).click();
+  await add.getByRole("button", { name: "Weeks", exact: true }).click();
+  const on = add.getByRole("group", { name: "On", exact: true });
+  await expect(on.getByRole("button")).toHaveText([
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+  ]);
+  // Weeks start on the start day's weekday (Wednesday): swap it for Tuesday and Thursday.
+  await on.getByRole("button", { name: "Tuesday" }).click();
+  await on.getByRole("button", { name: "Thursday" }).click();
+  await on.getByRole("button", { name: "Wednesday" }).click();
+  await expect(add).toContainText("Every 2 weeks on Tue and Thu");
+  await add.getByRole("button", { name: "Add task" }).click();
+  await expect(add).toBeHidden();
+  await expect(toast(page, "Added Water the garden")).toBeVisible();
+
+  // The rule reached the server and came back: it starts on its first day, Thursday the 8th,
+  // is due again the Tuesday and Thursday two weeks on, and not in the week between.
+  const tasks = (await (await request.get("/api/chores")).json()) as {
+    title: string;
+    rrule: string | null;
+    start_date: string;
+    due_time: string | null;
+    repeat_text: string;
+  }[];
+  const garden = tasks.find((task) => task.title === "Water the garden");
+  expect(garden).toMatchObject({
+    rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH",
+    start_date: "2026-10-08",
+    due_time: "16:30",
+  });
+  const dueOn = async (day: string) => {
+    const response = await request.get(`/api/chores/today?date=${day}`);
+    const body = (await response.json()) as { columns: { boxes: { title: string }[] }[] };
+    return body.columns.some((column) =>
+      column.boxes.some((box) => box.title === "Water the garden"),
+    );
+  };
+  expect(await dueOn("2026-10-08")).toBe(true);
+  expect(await dueOn("2026-10-13")).toBe(false);
+  expect(await dueOn("2026-10-15")).toBe(false);
+  expect(await dueOn("2026-10-20")).toBe(true);
+  expect(await dueOn("2026-10-22")).toBe(true);
+});

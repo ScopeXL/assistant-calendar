@@ -70,7 +70,7 @@ export function WhoPicker({
   const [scrollRef, overflow] = useOverflow<HTMLDivElement>(count, fit.scroll);
 
   const option =
-    "press select-fill flex min-w-0 flex-col items-center gap-1 rounded-button p-1 aria-pressed:bg-p-tint aria-pressed:ring-[3px] aria-pressed:ring-ink aria-pressed:ring-inset";
+    "press select-fill flex min-w-0 flex-col items-center gap-1 rounded-button px-0.5 py-1 aria-pressed:bg-p-tint aria-pressed:ring-[3px] aria-pressed:ring-ink aria-pressed:ring-inset";
   // Wrapping, a cell is as wide as it was before the row became one line; in the row, the cells
   // share the width from the fitted size up (or keep it exactly, when the row scrolls).
   const cell = wrap ? (display ? "min-w-24" : "min-w-16") : "";

@@ -3,13 +3,14 @@ import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
 import { zonedParts } from "../../lib/dates";
-import { useMembers, usePlugins } from "../../lib/household";
+import { useMembers, usePlugins, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
+import { WeekdayPicker } from "../../ui/WeekStrip";
 import { WhoPicker } from "../../ui/WhoPicker";
 import { Group, Text } from "../settings/parts";
 import { PluginSettingsForm } from "../settings/PluginSettingsForm";
@@ -33,7 +34,6 @@ const LASTS: [string, number][] = [
   ["1 hour", 60],
   ["2 hours", 120],
 ];
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const SUGGESTED_STEPS: { icon: string; title: string }[] = [
   { icon: "toothbrush", title: "Brush teeth" },
   { icon: "shirt", title: "Pajamas on" },
@@ -207,6 +207,7 @@ const hhmmOf = (minutes: number) => {
 function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: () => void }) {
   const display = useShell() === "display";
   const { data: members = [] } = useMembers();
+  const weekStartsOn = useSettings().data?.week_starts_on ?? 6;
   const { stars: starsOn } = useChoreSettings();
   const { saveRoutine, removeRoutine } = useChoreChanges();
   const [title, setTitle] = useState(routine?.title ?? "Bedtime routine");
@@ -294,21 +295,13 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
       </div>
       <div className="flex flex-col gap-2">
         <p className={heading}>Days</p>
-        <ChipRow label="Days">
-          {DAYS.map((name, index) => (
-            <Chip
-              key={name}
-              on={days.includes(index)}
-              onClick={() => {
-                setDays(
-                  days.includes(index) ? days.filter((d) => d !== index) : [...days, index].sort(),
-                );
-              }}
-            >
-              {name}
-            </Chip>
-          ))}
-        </ChipRow>
+        <WeekdayPicker
+          label="Days"
+          weekStartsOn={weekStartsOn}
+          value={days}
+          onChange={setDays}
+          minOne={false}
+        />
       </div>
       <div className="flex flex-col gap-2">
         <p className={heading}>Starts</p>
