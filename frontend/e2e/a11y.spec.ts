@@ -381,6 +381,31 @@ for (const scheme of ["light", "dark"] as const) {
         await check(page, `display: ${view}`);
       }
       await page.getByRole("button", { name: "Week", exact: true }).click();
+      if (testInfo.project.name === "display-portrait") {
+        // At Extra large the header has no room for four icons: the views fold into a menu.
+        const xl = await request.patch("/api/settings", {
+          headers: CSRF,
+          data: { text_size: "xl" },
+        });
+        expect(xl.ok()).toBe(true);
+        await expect(page.locator("html")).toHaveAttribute("data-text-size", "xl");
+        await page.getByRole("button", { name: "View: Week" }).click();
+        await expect(page.getByRole("menu", { name: "View" })).toBeVisible();
+        await expect(page.getByRole("menuitemradio", { name: "Week" })).toBeFocused();
+        await check(page, "display: the View menu");
+        await page.getByRole("menuitemradio", { name: "Day" }).click();
+        await expect(page.getByRole("menu", { name: "View" })).toHaveCount(0);
+        await page.getByRole("button", { name: "View: Day" }).click();
+        await page.getByRole("menuitemradio", { name: "Week" }).click();
+        await expect(page.getByRole("button", { name: "View: Week" })).toBeFocused();
+        const standard = await request.patch("/api/settings", {
+          headers: CSRF,
+          data: { text_size: "standard" },
+        });
+        expect(standard.ok()).toBe(true);
+        await expect(page.getByRole("button", { name: "Hours", exact: true })).toBeVisible();
+        await expect(page.locator("html")).not.toHaveAttribute("data-text-size", "xl");
+      }
       // The Hours layout, the whole day and zoomed in all the way.
       await page.getByRole("button", { name: "Hours", exact: true }).click();
       await expect(page.locator("[data-hours] [data-now-line]")).toBeVisible();
@@ -467,7 +492,10 @@ for (const scheme of ["light", "dark"] as const) {
           .getByRole("navigation", { name: "Settings" })
           .getByRole("link", { name: title, exact: true })
           .click();
-        await expect(page.getByRole("heading", { name: title, level: 2 })).toBeVisible();
+        // Exact: the Today panel beside Settings has headings of its own ("Tasks Today").
+        await expect(
+          page.getByRole("heading", { name: title, level: 2, exact: true }),
+        ).toBeVisible();
         await check(page, `display settings: ${title}`);
         if (title === "Family") await sheet(page, "Change Mia", "display: change a person");
         if (title === "Calendars & Accounts") {
@@ -539,7 +567,9 @@ for (const scheme of ["light", "dark"] as const) {
           .getByRole("navigation", { name: "Settings" })
           .getByRole("link", { name: title, exact: true })
           .click();
-        await expect(page.getByRole("heading", { name: title, level: 2 })).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: title, level: 2, exact: true }),
+        ).toBeVisible();
         await check(page, `laptop settings: ${title}`);
       }
     });

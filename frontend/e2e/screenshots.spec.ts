@@ -140,6 +140,13 @@ test("the wall screen", async ({ page }) => {
   await expect(root).toHaveAttribute("data-text-size", "xl");
   await expect(board.locator("[data-now-line]")).toBeVisible();
   await shot(page, "board-hours-24h-xl");
+  if (test.info().project.name === "display-portrait") {
+    // Portrait at Extra large: the header's views fold into the View menu.
+    await page.getByRole("button", { name: "View: Week" }).click();
+    await expect(page.getByRole("menu", { name: "View" })).toBeVisible();
+    await shot(page, "view-menu");
+    await page.keyboard.press("Escape");
+  }
   // At Small the whole day still fits, and every chip stays a 56 px target.
   await change(page, { text_size: "small" });
   await page.reload();
@@ -237,7 +244,7 @@ test("the wall screen", async ({ page }) => {
       .getByRole("navigation", { name: "Settings" })
       .getByRole("link", { name: title, exact: true })
       .click();
-    await expect(page.getByRole("heading", { name: title, level: 2 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);
   }
   await page
@@ -670,7 +677,7 @@ test("a laptop", async ({ page }) => {
       .getByRole("navigation", { name: "Settings" })
       .getByRole("link", { name: title, exact: true })
       .click();
-    await expect(page.getByRole("heading", { name: title, level: 2 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);
   }
   // A computer adds photos itself: the room's Add photos, and a person's Add a photo.

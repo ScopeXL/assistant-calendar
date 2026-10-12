@@ -16,9 +16,9 @@ function staleText(weather: Weather): string | null {
 }
 
 /**
- * The weather by the clock (UX §3): the sky's icon and the temperature, the day's high and low
- * under them; a tap opens the day's hours and the week. In portrait's band it sits beside the
- * clock on one line, and on a phone it heads Today. Nothing shows until there's a forecast.
+ * The weather by the clock (UX §3): the sky's icon and the temperature, with the day's high over
+ * its low beside them in the wall's header, or under them at the top of a phone's Today. A tap
+ * opens the day's hours and the week. Nothing shows until there's a forecast.
  */
 export function WeatherBlock({ place }: { place: RailPlace }) {
   const { data } = useWeather();
@@ -35,12 +35,10 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
   ]
     .filter(Boolean)
     .join(". ");
-  const button =
-    place === "rail"
-      ? "press flex min-h-tap flex-col items-start justify-center gap-1 rounded-chip-d text-left"
-      : place === "band"
-        ? "press flex min-h-tap items-center gap-4 rounded-chip-d px-2 text-left"
-        : "press flex min-h-11 items-center gap-3 self-start rounded-chip px-1 text-left";
+  const header = place === "header";
+  const button = header
+    ? "press flex min-h-tap shrink-0 items-center gap-3 rounded-chip-d px-2 text-left"
+    : "press flex min-h-11 items-center gap-3 self-start rounded-chip px-1 text-left";
   return (
     <>
       <button
@@ -52,21 +50,27 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
         className={button}
       >
         <span className="flex items-center gap-2">
-          <Icon
-            aria-hidden="true"
-            className={place === "phone" ? "size-7" : "size-9"}
-            strokeWidth={2}
-          />
-          <span
-            className={`${place === "phone" ? "text-title" : "text-d-title"} font-bold whitespace-nowrap`}
-          >
+          <Icon aria-hidden="true" className={header ? "size-8" : "size-7"} strokeWidth={2} />
+          <span className={`${header ? "text-d-title" : "text-title"} font-bold whitespace-nowrap`}>
             {degrees(data.current.temperature)}
           </span>
         </span>
-        {day || stale ? (
-          <span
-            className={`${place === "phone" ? "text-secondary" : "text-d-caption"} font-semibold whitespace-nowrap text-ink-soft`}
-          >
+        {header ? (
+          day || stale ? (
+            // The high over the low; an old forecast says when it's from instead.
+            <span className="flex flex-col text-d-caption leading-tight font-semibold whitespace-nowrap text-ink-soft">
+              {stale ? (
+                <span>{stale}</span>
+              ) : (
+                <>
+                  <span>{day ? degrees(day.high) : null}</span>
+                  <span>{day ? degrees(day.low) : null}</span>
+                </>
+              )}
+            </span>
+          ) : null
+        ) : day || stale ? (
+          <span className="text-secondary font-semibold whitespace-nowrap text-ink-soft">
             {day ? `${degrees(day.high)} / ${degrees(day.low)}` : null}
             {day && stale ? " · " : null}
             {stale}
@@ -84,7 +88,7 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
   );
 }
 
-/** The day's hours and the week, from the rail's weather. */
+/** The day's hours and the week, from the header's weather. */
 function Forecast({
   weather,
   open,
@@ -157,7 +161,7 @@ function Forecast({
 }
 
 /** A day's sky, as an icon in the board's day header (UX §3; only for days the forecast
- * reaches). The forecast itself is a tap on the rail's weather away. */
+ * reaches). The forecast itself is a tap on the header's weather away. */
 export function WeatherDayMark({ day }: { day: string }) {
   const forecast = useWeatherDay(day);
   if (!forecast) return null;

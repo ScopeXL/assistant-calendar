@@ -14,8 +14,9 @@ import { useMembers, useSettings } from "../../lib/household";
 import { usePluginModules } from "../usePluginModules";
 import { useStore } from "../../lib/store";
 import { useMinute } from "../../lib/time";
+import { useRoomHeader } from "../../shell/roomHeader";
 import { AddPanel } from "./AddPanel";
-import { BoardHeader } from "./BoardHeader";
+import { BoardControls, BoardToolbar } from "./BoardControls";
 import { useEventChanges, useOccurrences } from "./data";
 import { DayView } from "./DayView";
 import { EventSheet } from "./EventSheet";
@@ -35,9 +36,10 @@ function homeView(setting: string | undefined): BoardView {
 }
 
 /**
- * The Calendar room on the wall screen (UX §3, §4): the board in its current view, its header,
- * and the side panel (an event, or Add). What it shows lives in the display's shared state, so
- * the idle machine can put it back to this week (lib/displayState).
+ * The Calendar room on the wall screen (UX §3, §4): the board in its current view, its title and
+ * controls in the wall's header, its own toolbar (Show, the Week's tools), and the side panel
+ * (an event, or Add). What it shows lives in the display's shared state, so the idle machine can
+ * put it back to this week (lib/displayState).
  */
 export function CalendarRoom() {
   const state = useStore(displayState);
@@ -48,7 +50,6 @@ export function CalendarRoom() {
   const today = zonedParts(minute).day;
   const weekStartsOn = settings?.week_starts_on ?? 6;
   const view = state.view ?? homeView(settings?.display_home_view);
-  const panelShown = state.panelShown ?? settings?.display_show_today_panel ?? true;
   const layout = state.weekLayout ?? settings?.display_week_layout ?? "agenda";
   const dimPast = settings?.display_dim_past ?? true;
   const changes = useEventChanges();
@@ -157,14 +158,12 @@ export function CalendarRoom() {
     },
   }[view];
 
-  return (
-    <section
-      aria-label={view === "week" ? "This Week" : header.title}
-      className="@container flex min-h-0 flex-1 flex-col"
-    >
-      <BoardHeader
-        title={header.title}
-        subtitle={header.subtitle}
+  useRoomHeader({
+    title: header.title,
+    subtitle: header.subtitle,
+    notice: dragging ? "Drop on a day" : null,
+    controls: (
+      <BoardControls
         view={view}
         onView={(next) => {
           updateDisplay({ view: next });
@@ -173,16 +172,21 @@ export function CalendarRoom() {
         atHome={header.atHome}
         onPage={page}
         onHome={header.home}
+      />
+    ),
+  });
+
+  return (
+    <section
+      aria-label={view === "week" ? "This Week" : header.title}
+      className="@container flex min-h-0 flex-1 flex-col"
+    >
+      <BoardToolbar
         members={members}
         people={state.people}
         onPeople={(people) => {
           updateDisplay({ people });
         }}
-        panelShown={panelShown}
-        onTogglePanel={() => {
-          updateDisplay({ panelShown: !panelShown });
-        }}
-        notice={dragging ? "Drop on a day" : null}
         pills={pills.map(({ id, Pill }) => (
           <Pill key={id} />
         ))}

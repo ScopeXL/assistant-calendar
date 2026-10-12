@@ -7,7 +7,7 @@ import { qk } from "../api/keys";
 import { AddPanel } from "../features/calendar/AddPanel";
 import { useReminders } from "../features/calendar/reminders";
 import { TodayPanel } from "../features/calendar/TodayPanel";
-import { usePluginRooms, useRailBlocks, useScreenOverlays } from "../features/usePluginModules";
+import { usePluginRooms, useScreenOverlays } from "../features/usePluginModules";
 import { TipsBar } from "../features/tips/TipsBar";
 import { zonedParts } from "../lib/dates";
 import {
@@ -39,9 +39,10 @@ import { KeyboardHost } from "../ui/Keyboard";
 import { PinDialog } from "../ui/PinDialog";
 import { ShellContext } from "../ui/shell";
 import { OfflinePill, ToastRegion, useAppUpdate } from "../ui/StatusLayer";
+import { Header } from "./Header";
 import { kioskCommands } from "./kioskCommands";
 import { Night } from "./Night";
-import { ClockBlock, Rail } from "./Rail";
+import { Rail } from "./Rail";
 
 const RESET_BOARD_MS = 2 * 60_000;
 const EDITOR_IDLE_MS = 10 * 60_000;
@@ -58,8 +59,9 @@ function tellServerAwake(): void {
 const UPDATE_IDLE_MS = 10 * 60_000;
 
 /**
- * The wall display's shell (UX §3): the rail, the board and the Today panel in landscape; the
- * Today band on top, the board and a bottom bar in portrait. It keeps the shared screen in its
+ * The wall display's shell (UX §3): the rail at one side, and beside it the header over the
+ * board and the Today panel in landscape; the header, the Today band, the board and a bottom bar
+ * in portrait. It keeps the shared screen in its
  * shared state (UX §1 "Idle, wake and reset"), sleeps on schedule (Night), acts on commands from
  * a parent's phone, takes a new version at night, and holds the on-screen keyboard and PIN pad.
  *
@@ -71,7 +73,6 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const rooms = usePluginRooms();
-  const railBlocks = useRailBlocks();
   const screenOverlays = useScreenOverlays();
   const segment = pathname.split("/")[1] ?? "";
   const room = pathname.startsWith("/settings")
@@ -230,18 +231,17 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     await navigate({ to: "/settings/$page", params: { page: "family" } });
   };
 
-  const showPanel =
-    room !== "settings" && (panelShown ?? settings?.display_show_today_panel ?? true);
+  // In every room, Settings included: its pages are capped at a reading width anyway.
+  const showPanel = panelShown ?? settings?.display_show_today_panel ?? true;
   const railSide = settings?.display_rail_side ?? "left";
+  const mirrored = railSide === "right" ? "landscape:flex-row-reverse" : "";
 
   return (
     <ShellContext.Provider value="display">
       <MotionProvider reduceMotion={settings?.display_reduce_motion ?? false}>
         <div
           data-shell="display"
-          className={`flex h-dvh overflow-clip bg-wall text-ink landscape:flex-row portrait:flex-col ${
-            railSide === "right" ? "landscape:flex-row-reverse" : ""
-          }`}
+          className={`flex h-dvh overflow-clip bg-wall text-ink landscape:flex-row portrait:flex-col ${mirrored}`}
         >
           <div className="contents portrait:order-last portrait:block">
             <Rail
@@ -264,29 +264,39 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
               }}
             />
           </div>
-          {showPanel ? (
-            <div className="hidden portrait:flex portrait:h-[var(--band-h)] portrait:shrink-0 portrait:flex-col portrait:overflow-clip portrait:border-b portrait:border-line portrait:bg-surface">
-              <div className="flex items-center justify-between gap-6 px-6 pt-4">
-                <ClockBlock compact />
-                {railBlocks.map((Block, index) => (
-                  <Block key={index} place="band" />
-                ))}
+          {/* The <header> stays under plain divs: inside main, section, aside or nav it would
+              stop being the page's banner. */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <Header
+              panelShown={showPanel}
+              onTogglePanel={() => {
+                updateDisplay({ panelShown: !showPanel });
+              }}
+            />
+            {showPanel ? (
+              <div className="hidden portrait:flex portrait:h-[var(--band-h)] portrait:shrink-0 portrait:flex-col portrait:overflow-clip portrait:border-b portrait:border-line portrait:bg-surface">
+                <TodayPanel home={home} band />
               </div>
-              <TodayPanel home={home} band />
-            </div>
-          ) : null}
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col pb-[var(--osk-h,0px)]">
-            {children}
-            <TipsBar />
-          </main>
-          {showPanel ? (
+            ) : null}
             <div
-              data-surface=""
-              className="flex w-[var(--panel-w)] shrink-0 flex-col border-l border-line bg-surface portrait:hidden"
+              className={`flex min-h-0 min-w-0 flex-1 landscape:flex-row portrait:flex-col ${mirrored}`}
             >
-              <TodayPanel home={home} />
+              <main className="flex min-h-0 min-w-0 flex-1 flex-col pb-[var(--osk-h,0px)]">
+                {children}
+                <TipsBar />
+              </main>
+              {showPanel ? (
+                <div
+                  data-surface=""
+                  className={`flex w-[var(--panel-w)] shrink-0 flex-col border-line bg-surface portrait:hidden ${
+                    railSide === "right" ? "border-r" : "border-l"
+                  }`}
+                >
+                  <TodayPanel home={home} />
+                </div>
+              ) : null}
             </div>
-          ) : null}
+          </div>
         </div>
         {inPluginRoom ? (
           <AddPanel

@@ -65,7 +65,8 @@
      wide figures need it for a glance-sized clock (ADR 0021). */
   --rail-w: 12rem;
   --panel-w: 25rem;
-  --band-h: 28rem; /* portrait's Today band: room for every block in three columns */
+  --header-h: 5rem; /* the wall's header at its least: one row of tap targets and its padding */
+  --band-h: 24rem; /* portrait's Today band: room for every block in three columns */
   --keyboard-w: 960px;
   --tabbar-h: 3.5rem;
   /* The wall's tap targets (UX §1): 56 px, 64 for a primary button. They grow with the text
@@ -204,8 +205,6 @@
   --text-d-title--line-height: 2.5rem;
   --text-d-glance: 2.5rem;
   --text-d-glance--line-height: 3rem;
-  --text-d-clock: 3.5rem;
-  --text-d-clock--line-height: 3.5rem;
   --text-d-step: 4rem;
   --text-d-step--line-height: 4.5rem;
   --text-d-big: 4.5rem;
@@ -428,15 +427,6 @@ dialog [data-osk] {
 
 /* Numbers that change where they stand (the clock, counts): Lexend has no tabular figures,
    so each digit gets a box as wide as its widest digit (ADR 0021; ui/Digits). */
-/* The rail's clock: as large as the rail allows, up to the glance size (UX §1). "10:08" in
-   digit boxes is about 3.1 times the font size wide at weight 800. */
-.rail-clock {
-  container-type: inline-size;
-}
-.rail-clock-time {
-  font-size: min(var(--text-d-clock), 31cqi);
-  line-height: 1;
-}
 
 /* A day's column on the board sizes its heading and the now label to its own width, so seven
    columns hold at Extra large on one line each (UX §10). Never under the display's 18 px

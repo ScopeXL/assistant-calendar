@@ -67,9 +67,9 @@ export interface CalendarOverlay {
   room: string;
 }
 
-/** Where a rail block shows: under the rail's clock, beside the clock in portrait's band, or
- * at the top of a phone's Today. */
-export type RailPlace = "rail" | "band" | "phone";
+/** Where a rail block shows: beside the clock in the wall's header (it sat under the rail's
+ * clock until the header became global, ADR 0029), or at the top of a phone's Today. */
+export type RailPlace = "header" | "phone";
 
 /** A page of its own in Settings, after Calendars & accounts. */
 export interface SettingsPage {
@@ -97,7 +97,7 @@ export interface PluginModule {
   overlay?: ComponentType<{ asleep: boolean; home: "/display" | "/" }>;
   /** What it adds to the board's days. */
   calendarOverlays?: CalendarOverlay[];
-  /** A small block by the clock (the weather). */
+  /** A small block by the clock, in the wall's header (the weather). */
   railBlock?: ComponentType<{ place: RailPlace }>;
   /** A small mark in a board day's header (the day's weather). */
   dayHeader?: ComponentType<{ day: string }>;

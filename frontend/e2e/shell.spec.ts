@@ -21,7 +21,7 @@ async function noSidewaysScroll(page: Page, where: string): Promise<void> {
 /** Every digit of the clock sits in a box of one width, so the time never jiggles (ADR 0021). */
 async function steadyDigits(page: Page): Promise<void> {
   const widths = await page
-    .getByRole("navigation", { name: "Rooms" })
+    .getByRole("banner")
     .locator(".digit")
     .evaluateAll((digits) =>
       digits.map((digit) => Math.round(digit.getBoundingClientRect().width)),
@@ -120,17 +120,27 @@ test.describe("the wall screen", () => {
     const today = page.getByRole("complementary", { name: "Today" });
     await expect(today).toBeVisible();
     const panel = await today.boundingBox();
+    const header = await page.getByRole("banner").boundingBox();
+    await steadyDigits(page);
     if (size.height > size.width) {
-      // Portrait: the Today band on top, the bar at the bottom, full width.
+      // Portrait: the header across the top, the Today band under it, the bar at the bottom.
+      expect(header).toMatchObject({ x: 0, y: 0, width: size.width });
       expect(rooms?.y && rooms.y + rooms.height).toBeCloseTo(size.height, 0);
       expect(rooms?.width).toBeCloseTo(size.width, 0);
+      expect(panel?.y ?? 0).toBeGreaterThanOrEqual((header?.y ?? 0) + (header?.height ?? 0));
       expect(panel?.y ?? Infinity).toBeLessThan((await board.boundingBox())?.y ?? 0);
     } else {
-      // Landscape: the 192 px rail on the left, the 400 px Today panel on the right.
+      // Landscape: the 192 px rail on the left; beside it the header, over the board and the
+      // 400 px Today panel on the right.
       expect(rooms?.x).toBe(0);
       expect(rooms?.width).toBeCloseTo(192, 0);
+      expect(header?.x).toBeCloseTo(192, 0);
+      expect(header?.y).toBe(0);
+      expect(header?.width).toBeCloseTo(size.width - 192, 0);
       expect((panel?.x ?? 0) + (panel?.width ?? 0)).toBeCloseTo(size.width, 0);
-      await steadyDigits(page);
+      expect(panel?.y ?? 0).toBeGreaterThanOrEqual((header?.y ?? 0) + (header?.height ?? 0));
+      // At Standard on 1920 px it's one row: today, the room's title and controls, the corner.
+      if (size.width >= 1920) expect(header?.height ?? 0).toBeLessThanOrEqual(84);
       await page.getByRole("button", { name: "Hide the Today panel" }).click();
       await expect(today).toBeHidden();
       await page.getByRole("button", { name: "Show the Today panel" }).click();
@@ -150,10 +160,10 @@ test.describe("the wall screen", () => {
     await pairWall(page);
     await page.goto("/display");
     const board = page.getByRole("region", { name: "This Week" });
-    const header = board.locator("header");
+    const header = page.getByRole("banner");
     const icon = header.getByRole("img", { name: "Live updates: connected" });
     await expect(icon).toBeVisible();
-    // The board's top-right corner: the last thing on the header's first line.
+    // The screen's top-right corner: the last thing on the header's first line.
     const corner = await icon.boundingBox();
     const box = await header.boundingBox();
     expect((corner?.x ?? 0) + (corner?.width ?? 0)).toBeGreaterThan(
@@ -211,15 +221,38 @@ test.describe("the wall screen", () => {
     await pairWall(page);
     await page.goto("/display");
     const board = page.getByRole("region", { name: "This Week" });
-    const title = board.getByRole("heading", { level: 1 });
+    // The room's title and its arrows live in the wall's header.
+    const header = page.getByRole("banner");
+    const title = header.getByRole("heading", { level: 1 });
+    await expect(title).toContainText("2026");
     const thisWeek = (await title.textContent()) ?? "";
-    await expect(board.getByRole("button", { name: "This week" })).toBeDisabled();
-    await board.getByRole("button", { name: "Next week" }).click();
+    await expect(header.getByRole("button", { name: "This week" })).toBeDisabled();
+    await header.getByRole("button", { name: "Next week" }).click();
     await expect(title).not.toHaveText(thisWeek);
     await expect(board.locator("[aria-current=date]")).toHaveCount(0);
-    await board.getByRole("button", { name: "This week" }).click();
+    await header.getByRole("button", { name: "This week" }).click();
     await expect(title).toHaveText(thisWeek);
     await expect(board.locator("[aria-current=date]")).toHaveCount(1);
+  });
+
+  test("toggles the Today panel from any room, Settings included", async ({ page, request }) => {
+    test.skip(test.info().project.name !== "display-1080p", "landscape: portrait has the band");
+    await seed(request);
+    await pairWall(page);
+    // No PIN in this household: the wall opens Settings itself.
+    await page.goto("/settings/display");
+    await expect(page.getByRole("heading", { name: "Display", level: 2 })).toBeVisible();
+    const header = page.getByRole("banner");
+    const today = page.getByRole("complementary", { name: "Today" });
+    await expect(today).toBeVisible();
+    await header.getByRole("button", { name: "Hide the Today panel" }).click();
+    await expect(today).toBeHidden();
+    // It stays hidden from room to room, until someone shows it or the screen sits idle.
+    await page.getByRole("link", { name: "Lists" }).click();
+    await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await expect(today).toBeHidden();
+    await header.getByRole("button", { name: "Show the Today panel" }).click();
+    await expect(today).toBeVisible();
   });
 
   test("types into a sheet with its own keyboard, and the sheet rises above the keys", async ({

@@ -1,55 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, Lock, LockOpen, Plus, type LucideIcon } from "lucide-react";
 
-import {
-  clockSuffix,
-  formatClock,
-  longWeekday,
-  monthDay,
-  shortWeekday,
-  zonedParts,
-} from "../lib/dates";
-import { useRailBlocks } from "../features/usePluginModules";
-import { useMinute } from "../lib/time";
-import { Digits } from "../ui/Digits";
-
-/**
- * The clock and date at the top of the rail, glance-sized (UX §1): weight 800, digits in fixed
- * boxes so it never jiggles, as large as the rail allows. The rail shows no AM/PM, like a wall
- * clock (UX §3); screen readers still hear it. In portrait's Today band (compact) it has room
- * for AM/PM and the full weekday.
- */
-export function ClockBlock({ compact = false }: { compact?: boolean }) {
-  const now = useMinute();
-  const day = zonedParts(now).day;
-  const time = formatClock(now);
-  const suffix = clockSuffix(now);
-  if (compact) {
-    return (
-      <div className="flex items-baseline gap-4">
-        <p className="text-d-clock font-extrabold whitespace-nowrap">
-          <Digits value={time} />
-          {suffix ? <span className="ml-1 text-d-secondary font-bold">{suffix}</span> : null}
-        </p>
-        <p className="text-d-secondary font-semibold">
-          {longWeekday(day)} {monthDay(day)}
-        </p>
-      </div>
-    );
-  }
-  return (
-    <div className="rail-clock flex flex-col gap-1">
-      <p className="rail-clock-time font-extrabold whitespace-nowrap">
-        <Digits value={time} spoken={suffix ? `${time} ${suffix}` : time} />
-      </p>
-      <p className="text-d-secondary font-semibold">
-        <span className="block">{shortWeekday(day)}</span>
-        <span>{monthDay(day)}</span>
-      </p>
-    </div>
-  );
-}
-
 export interface RailRoom {
   key: string;
   label: string;
@@ -64,9 +15,9 @@ const ROOM_ITEM =
   "portrait:max-w-40 portrait:min-w-0 portrait:flex-1 landscape:flex landscape:min-h-tap landscape:flex-[0_1_6rem] landscape:flex-col";
 
 /**
- * The display's rail (UX §3): clock and date, the Calendar room then each enabled plugin's
- * (Lists, Chores…), Add, and the lock, which opens Settings (behind the PIN when there is one).
- * In portrait it's the bottom bar.
+ * The display's rail (UX §3): the Calendar room then each enabled plugin's (Lists, Tasks…), Add,
+ * and the lock, which opens Settings (behind the PIN when there is one). The clock, date and
+ * weather are in the header (shell/Header). In portrait it's the bottom bar.
  */
 export function Rail({
   home,
@@ -85,7 +36,6 @@ export function Rail({
   onAdd: () => void;
   onLock: () => void;
 }) {
-  const blocks = useRailBlocks();
   return (
     <nav
       aria-label="Rooms"
@@ -93,13 +43,7 @@ export function Rail({
       data-segmented=""
       className="flex flex-col bg-surface landscape:h-full landscape:w-[var(--rail-w)] landscape:border-r landscape:border-line portrait:h-28 portrait:flex-row portrait:items-center portrait:border-t portrait:border-line"
     >
-      <div className="flex flex-col gap-4 px-5 pt-6 pb-5 portrait:hidden">
-        <ClockBlock />
-        {blocks.map((Block, index) => (
-          <Block key={index} place="rail" />
-        ))}
-      </div>
-      <ul className="flex flex-col landscape:min-h-0 landscape:border-t landscape:border-line portrait:flex-1 portrait:flex-row">
+      <ul className="flex flex-col landscape:min-h-0 portrait:flex-1 portrait:flex-row">
         <li className={ROOM_ITEM}>
           <Link
             to={home}
