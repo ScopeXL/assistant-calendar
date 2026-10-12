@@ -836,7 +836,7 @@ choice on its own row, Who always on one line, the button always above the keybo
 
 ### T9 Settings save themselves; Features declutters
 
-- [ ] Done (commit: )
+- [x] Done (commit: "settings: they save themselves; Features declutters; Google's keys in a sheet")
 
 **Owner's notes.** "Settings: Many cards have their own independent 'Save Changes' button. Can we
 remove all the Save Changes buttons and save as the user is making changes to the app instantly?"
@@ -882,6 +882,14 @@ change. Sheets keep their buttons (Decisions).
   Time zone select saves on change; both show `SavedMark`. `DisplayPage.tsx` Sleep: "From" and
   "Until" save together when both hold valid times, on blur of either; with one empty, the hint
   reads "Set both times."; "Dim from" saves on blur. Remove the four buttons.
+
+**As built.** The backend already cleared a secret sent as `""` (`coerce_params` turns an empty
+value into null before the mask check); only the frontend kept it by sending the mask, so the
+spec needed a test, not a change. Core settings are optimistic too (`useUpdateSettings`), so every
+switch on every page moves at once and reverts with the same "Not saved — …" toast; the pages'
+own error lines are gone. The module names the spec groups it draws (`ownSettingGroups`) beside
+its `settings.features` slot. The export gives a plugin the build doesn't know empty settings.
+Sleep's hint reads "Set both times." or "Pick two different times.".
 
 **Tests.** e2e `shell.spec.ts` (a phone changes Lists' Clear completed items and the wall's
 `GET /api/plugins` shows it within 3 s with no button; Household's name saved on blur);

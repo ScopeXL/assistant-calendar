@@ -2,8 +2,8 @@
 fields, and every read and write is coerced against them.
 
 ``ParamField`` and ``coerce_params`` follow an earlier project's strategy settings, with more
-types. A ``secret`` is write-only: it reads back as ``***``, and writing ``***`` back keeps
-the stored value.
+types. A ``secret`` is write-only: it reads back as ``***``, writing ``***`` back keeps the
+stored value, and writing an empty string (or null) clears it.
 """
 
 from __future__ import annotations

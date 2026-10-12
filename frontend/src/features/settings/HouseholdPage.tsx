@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import { errorMessage } from "../../api/client";
 import type { components } from "../../api/schema";
 import { useSettings, useUpdateSettings } from "../../lib/household";
-import { Button } from "../../ui/Button";
+import { useSavedFlash } from "../../lib/savedFlash";
+import { SavedMark } from "../../ui/SavedMark";
 import { Segmented } from "../../ui/Segmented";
 import { Select } from "../../ui/Select";
 import { useShell } from "../../ui/shell";
@@ -37,53 +37,63 @@ function HouseholdForm({ settings }: { settings: Settings }) {
   const sections = usePluginModules().flatMap((module) =>
     module.settings?.household ? [module.settings.household] : [],
   );
-  const [name, setName] = useState(settings.household_name);
-  const [zone, setZone] = useState(settings.timezone);
+  // The name is typed, so it keeps a draft while it has focus and saves when it's left or on
+  // ↵; the time zone is a pick, so it saves as it changes. Neither has a button (ADR 0029).
+  const [name, setName] = useState<string | null>(null);
+  const nameSaved = useSavedFlash();
+  const zoneSaved = useSavedFlash();
   const allZones = zones();
+  const zone = settings.timezone;
+  const saveName = () => {
+    const typed = name?.trim() ?? "";
+    // Unchanged, or emptied: nothing to save, and the saved name comes back.
+    if (name === null || typed === "" || typed === settings.household_name) {
+      setName(null);
+      return;
+    }
+    update.mutate(
+      { household_name: typed },
+      {
+        onSuccess: () => {
+          setName(null);
+          nameSaved.flash();
+        },
+      },
+    );
+  };
   return (
     <>
       <Group title="Household">
-        <form
-          className={`flex flex-wrap items-end gap-4 ${display ? "py-5" : "py-4"}`}
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (name.trim()) update.mutate({ household_name: name.trim() });
-          }}
-        >
-          <div className="min-w-64 flex-1">
-            <TextField
-              label="Name"
-              value={name}
-              maxLength={80}
-              autoComplete="off"
-              onChange={(event) => {
-                setName(event.target.value);
-              }}
-            />
-          </div>
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={!name.trim() || name.trim() === settings.household_name}
-          >
-            Save name
-          </Button>
-        </form>
-        <form
-          className={`flex flex-wrap items-end gap-4 ${display ? "py-5" : "py-4"}`}
-          onSubmit={(event) => {
-            event.preventDefault();
-            update.mutate({ timezone: zone });
-          }}
-        >
-          <label className="flex min-w-64 flex-1 flex-col gap-2">
+        <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
+          <TextField
+            label="Name"
+            value={name ?? settings.household_name}
+            maxLength={80}
+            autoComplete="off"
+            onChange={(event) => {
+              setName(event.target.value);
+            }}
+            onBlur={saveName}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveName();
+              }
+            }}
+          />
+          <SavedMark show={nameSaved.saved} />
+        </div>
+        <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
+          <label className="flex flex-col gap-2">
             <span className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>
               Time zone
             </span>
             <Select
               value={zone}
               onChange={(event) => {
-                setZone(event.target.value);
+                const picked = event.target.value;
+                if (!picked || picked === zone) return;
+                update.mutate({ timezone: picked }, { onSuccess: zoneSaved.flash });
               }}
             >
               {(allZones.includes(zone) ? allZones : [zone, ...allZones]).map((name) => (
@@ -93,10 +103,8 @@ function HouseholdForm({ settings }: { settings: Settings }) {
               ))}
             </Select>
           </label>
-          <Button type="submit" variant="secondary" disabled={!zone || zone === settings.timezone}>
-            Save time zone
-          </Button>
-        </form>
+          <SavedMark show={zoneSaved.saved} />
+        </div>
         <Row label="Week starts on">
           <Segmented
             label="Week starts on"
@@ -128,11 +136,6 @@ function HouseholdForm({ settings }: { settings: Settings }) {
         <Section key={index} />
       ))}
       <RecentlyRemoved />
-      {update.isError ? (
-        <p role="alert" className="font-semibold text-alert">
-          {errorMessage(update.error)}
-        </p>
-      ) : null}
     </>
   );
 }

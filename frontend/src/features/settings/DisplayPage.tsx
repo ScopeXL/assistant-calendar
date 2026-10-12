@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { errorMessage } from "../../api/client";
 import { useSettings, useUpdateSettings } from "../../lib/household";
-import { Button } from "../../ui/Button";
+import { useSavedFlash } from "../../lib/savedFlash";
+import { SavedMark } from "../../ui/SavedMark";
 import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
@@ -160,11 +160,6 @@ export function DisplayPage() {
         </Row>
       </Group>
       <SleepGroup />
-      {update.isError ? (
-        <p role="alert" className="font-semibold text-alert">
-          {errorMessage(update.error)}
-        </p>
-      ) : null}
     </>
   );
 }
@@ -176,9 +171,27 @@ function SleepGroup() {
   const [from, setFrom] = useState(settings?.sleep_from ?? "22:00");
   const [to, setTo] = useState(settings?.sleep_to ?? "06:30");
   const [dimFrom, setDimFrom] = useState(settings?.dim_from ?? "20:00");
+  const timesSaved = useSavedFlash();
+  const dimSaved = useSavedFlash();
   if (!settings) return null;
   const on = settings.sleep_from !== null && settings.sleep_to !== null;
-  const valid = /^\d{2}:\d{2}$/.test(from) && /^\d{2}:\d{2}$/.test(to) && from !== to;
+  const isTime = (value: string) => /^\d{2}:\d{2}$/.test(value);
+  const valid = isTime(from) && isTime(to) && from !== to;
+  // The two times save together, when either field is left with both set (ADR 0029).
+  const saveTimes = () => {
+    if (!valid || (from === settings.sleep_from && to === settings.sleep_to)) return;
+    update.mutate({ sleep_from: from, sleep_to: to }, { onSuccess: timesSaved.flash });
+  };
+  const saveDim = () => {
+    if (!isTime(dimFrom) || dimFrom === settings.dim_from) return;
+    update.mutate({ dim_from: dimFrom }, { onSuccess: dimSaved.flash });
+  };
+  const timesHint =
+    !isTime(from) || !isTime(to)
+      ? "Set both times."
+      : from === to
+        ? "Pick two different times."
+        : null;
   return (
     <Group
       title="Sleep"
@@ -195,39 +208,47 @@ function SleepGroup() {
       />
       {on ? (
         <>
-          <form
-            className={`flex flex-wrap items-end gap-4 ${display ? "py-5" : "py-4"}`}
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (valid) update.mutate({ sleep_from: from, sleep_to: to });
-            }}
-          >
-            <TextField
-              label="From"
-              type="time"
-              layout="numeric"
-              value={from}
-              onChange={(event) => {
-                setFrom(event.target.value);
+          <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
+            <form
+              className="flex flex-wrap items-end gap-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                saveTimes();
               }}
-            />
-            <TextField
-              label="Until"
-              type="time"
-              layout="numeric"
-              value={to}
-              onChange={(event) => {
-                setTo(event.target.value);
-              }}
-            />
-            <Button
-              type="submit"
-              variant="secondary"
-              disabled={!valid || (from === settings.sleep_from && to === settings.sleep_to)}
             >
-              Save times
-            </Button>
-          </form>
+              <TextField
+                label="From"
+                type="time"
+                layout="numeric"
+                value={from}
+                onChange={(event) => {
+                  setFrom(event.target.value);
+                }}
+                onBlur={saveTimes}
+              />
+              <TextField
+                label="Until"
+                type="time"
+                layout="numeric"
+                value={to}
+                onChange={(event) => {
+                  setTo(event.target.value);
+                }}
+                onBlur={saveTimes}
+              />
+            </form>
+            {timesHint ? (
+              <p
+                className={
+                  display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"
+                }
+              >
+                {timesHint}
+              </p>
+            ) : (
+              <SavedMark show={timesSaved.saved} />
+            )}
+          </div>
           <Row label="While asleep">
             <Segmented
               label="While asleep"
@@ -252,28 +273,25 @@ function SleepGroup() {
           {settings.dim_from !== null ? (
             <>
               <form
-                className={`flex flex-wrap items-end gap-4 ${display ? "py-5" : "py-4"}`}
+                className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (/^\d{2}:\d{2}$/.test(dimFrom)) update.mutate({ dim_from: dimFrom });
+                  saveDim();
                 }}
               >
-                <TextField
-                  label="Dim from"
-                  type="time"
-                  layout="numeric"
-                  value={dimFrom}
-                  onChange={(event) => {
-                    setDimFrom(event.target.value);
-                  }}
-                />
-                <Button
-                  type="submit"
-                  variant="secondary"
-                  disabled={!/^\d{2}:\d{2}$/.test(dimFrom) || dimFrom === settings.dim_from}
-                >
-                  Save time
-                </Button>
+                <div className="flex">
+                  <TextField
+                    label="Dim from"
+                    type="time"
+                    layout="numeric"
+                    value={dimFrom}
+                    onChange={(event) => {
+                      setDimFrom(event.target.value);
+                    }}
+                    onBlur={saveDim}
+                  />
+                </div>
+                <SavedMark show={dimSaved.saved} />
               </form>
               <Row label="How dim">
                 <Segmented

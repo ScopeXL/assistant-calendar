@@ -91,8 +91,13 @@ export interface PluginModule {
    * RemovedRow), saying how many it shows so the empty line only shows when nothing does. */
   removed?: ComponentType<{ onCount: (count: number) => void }>;
   settingsPages?: SettingsPage[];
-  /** Custom sections inside core settings pages, by key (calendar_sync: Calendars & accounts). */
+  /** Custom sections inside core settings pages, by key: `accounts` (calendar_sync: Calendars &
+   * Accounts), `household` (the weather's Location), `features` (under the plugin's own switch
+   * on the Features page: Google's keys). */
   settings?: Record<string, ComponentType>;
+  /** Groups of its settings spec the module draws itself in `settings.features`; the generic
+   * form on Features leaves their fields out. */
+  ownSettingGroups?: readonly string[];
   /** Drawn over everything on the wall, for the plugin to show when it should (the
    * screensaver, when the wall has been left alone). `asleep`: Night is showing, which wins;
    * `home`: where the wall goes back to. */

@@ -85,6 +85,15 @@ export function errorMessage(error: unknown): string {
   return OFFLINE_MESSAGE;
 }
 
+/** "Not saved — you're offline. Try again when you have signal." (UX §2): what a setting that
+ * saves itself says when the save is refused, with the server's own sentence after the dash. */
+export function notSaved(error: unknown): string {
+  const why = errorMessage(error);
+  // A sentence's first letter drops to lower case after the dash; "PIN…" and "I…" don't.
+  const lower = /^[A-Z][a-z']/.test(why) && !why.startsWith("I ");
+  return `Not saved — ${lower ? why.charAt(0).toLowerCase() + why.slice(1) : why}`;
+}
+
 /**
  * Who tapped, on the wall screen (PLAN §12.3): the person whose avatar or column it was. Spread
  * into a request's options; the server ignores it from phones, which act as their own person.

@@ -3,21 +3,24 @@
 Every table must be listed exactly once: here for core, or in a plugin's manifest (its
 ``export_tables``; the rest of its ``tables`` are excluded). A test fails otherwise, which forces
 a decision whenever a table is added. Columns that hold secrets (``*_enc``, ``*_hash``, ``*_fp``)
-never leave, whichever table they're in.
+never leave, whichever table they're in; nor does a plugin's ``secret`` setting, which sits
+inside ``plugin_state.settings_json`` (Google's client secret) and leaves as ``***``.
 """
 
 from __future__ import annotations
 
 import base64
+import json
 from collections.abc import Mapping
 from datetime import date, datetime
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sunroom.db.models import Base
 from sunroom.plugins.base import Plugin
+from sunroom.plugins.spec import masked
 
 CORE_EXPORT_TABLES: tuple[str, ...] = (
     "household",
@@ -65,6 +68,22 @@ def export_plan(plugins: Mapping[str, Plugin]) -> tuple[list[str], dict[str, fro
     return tables, excluded
 
 
+def _masked_settings(plugins: Mapping[str, Plugin], plugin_id: Any, settings_json: Any) -> str:
+    """A plugin's stored settings with its secrets masked. Settings of a plugin this build
+    doesn't have can't be told apart from secrets, so they leave empty."""
+    plugin = plugins.get(plugin_id) if isinstance(plugin_id, str) else None
+    if plugin is None or not isinstance(settings_json, str):
+        return "{}"
+    try:
+        stored: object = json.loads(settings_json)
+    except ValueError:
+        return "{}"
+    if not isinstance(stored, dict):
+        return "{}"
+    values = cast("dict[str, Any]", stored)
+    return json.dumps(masked(plugin.manifest.settings_spec, values))
+
+
 async def export_data(
     session: AsyncSession,
     *,
@@ -87,6 +106,11 @@ async def export_data(
             }
             for row in rows.mappings()
         ]
+        if name == "plugin_state":
+            for row in data[name]:
+                row["settings_json"] = _masked_settings(
+                    plugins, row.get("plugin_id"), row.get("settings_json")
+                )
     return {
         "format": FORMAT,
         "format_version": FORMAT_VERSION,

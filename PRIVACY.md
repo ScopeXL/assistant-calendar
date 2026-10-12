@@ -66,6 +66,8 @@ when someone signs in. Tailscale doesn't: it's encrypted from end to end
 ## Your control
 
 - **Export everything** as JSON: Settings → Backup → Export everything, on a phone or computer.
+  It leaves out every password and key: the household password, the PIN, calendar passwords,
+  and Google's client secret, which shows only as set (`***`).
 - **Download everything** (the database and every photo, to restore from): Settings → Backup.
   Keep it somewhere safe: it holds everything the family added.
 - **Remove a person:** Settings → Family → Change → Remove (with Undo).

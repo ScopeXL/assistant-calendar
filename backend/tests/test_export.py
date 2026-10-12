@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import httpx
 
 from sunroom.db.export import CORE_EXPORT_TABLES
@@ -48,3 +50,32 @@ async def test_the_export_is_for_parents(
         "/api/auth/kiosk/pair-with-password", json={"password": PASSWORD}, headers=CSRF
     )
     assert (await other.get("/api/export")).status_code == 403
+
+
+async def test_a_plugins_secret_setting_never_leaves_in_the_export(
+    parent: httpx.AsyncClient,
+) -> None:
+    """Google's client secret is a plugin setting, kept in plugin_state.settings_json."""
+    saved = await parent.put(
+        "/api/plugins/calendar_sync/settings",
+        json={
+            "values": {
+                "google_client_id": "sample-client-id.apps.example.com",
+                "google_client_secret": "sample-client-secret-0001",
+            }
+        },
+        headers=CSRF,
+    )
+    assert saved.status_code == 200, saved.text
+    response = await parent.get("/api/export")
+    assert response.status_code == 200
+    assert "sample-client-secret-0001" not in response.text
+    rows = {row["plugin_id"]: row for row in response.json()["data"]["plugin_state"]}
+    settings = json.loads(rows["calendar_sync"]["settings_json"])
+    # The ID isn't a secret and stays; the secret says only that one is set.
+    assert settings == {
+        "google_client_id": "sample-client-id.apps.example.com",
+        "google_client_secret": "***",
+    }
+    # Every other plugin's settings still leave as they are.
+    assert json.loads(rows["lists"]["settings_json"]) == {"auto_clear_days": "never"}

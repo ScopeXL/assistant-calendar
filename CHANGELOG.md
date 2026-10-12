@@ -32,6 +32,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
   Countdown), then a form for it with every choice on its own row. Who is always one line, the
   days follow your week (Sunday or Monday first), and the button stays above the keyboard.
 - A new task is for Anyone until you pick someone.
+- Settings save as you change them. The Save changes buttons are gone; a person's, a
+  calendar's and an account's sheets still have Save.
+- Features is shorter: Tasks, Meals and Photos & Screensaver each show a row that opens their
+  own page, and Sign in with Google's keys sit behind a Set up button.
 - The Sunroom mark sits at the top of the rail, and Settings is a gear now. The padlock shows
   only while a paired screen's Settings are locked behind the PIN.
 
@@ -40,6 +44,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Changing an event that repeats in a way Sunroom's form can't show (from another calendar, say)
   no longer drops its repeat when you save. It shows as "As it is" and stays untouched.
 - The Add panel on the kitchen screen opens at its top, with what you can add in view.
+- Export everything no longer includes Google's client secret.
 
 ## [0.7.0] - 2026-10-09
 

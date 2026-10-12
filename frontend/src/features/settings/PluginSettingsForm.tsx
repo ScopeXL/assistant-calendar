@@ -1,98 +1,173 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { api, ApiError, errorMessage, unwrap } from "../../api/client";
+import { api, ApiError, notSaved, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import type { components } from "../../api/schema";
+import { COLORS } from "../../lib/colors";
 import { useMembers } from "../../lib/household";
 import { asParent } from "../../lib/parent";
+import { useSavedFlash } from "../../lib/savedFlash";
 import { showToast } from "../../lib/toast";
-import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { SavedMark } from "../../ui/SavedMark";
 import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
-import { COLORS } from "../../lib/colors";
 
 type Field = components["schemas"]["FieldOut"];
+type PluginInfo = components["schemas"]["PluginOut"];
 type Values = Record<string, unknown>;
 const MASK = "***";
 
+/** Save a plugin's settings as they change (UX §1 "Undo, drafts, confirmations", ADR 0029):
+ * the whole values object goes to the server, what's on screen changes at once, and a refusal
+ * puts it back. A 422's problems come back for the form to list; anything else is a toast. */
+export function usePluginSettings(pluginId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: Values) =>
+      asParent(async () =>
+        unwrap(
+          await api.PUT("/api/plugins/{plugin_id}/settings", {
+            params: { path: { plugin_id: pluginId } },
+            body: { values },
+          }),
+        ),
+      ),
+    onMutate: async (values) => {
+      await queryClient.cancelQueries({ queryKey: qk.plugins() });
+      const before = queryClient.getQueryData<PluginInfo[]>(qk.plugins());
+      queryClient.setQueryData<PluginInfo[]>(qk.plugins(), (plugins) =>
+        plugins?.map((plugin) =>
+          plugin.id === pluginId
+            ? { ...plugin, settings: { ...plugin.settings, ...values } }
+            : plugin,
+        ),
+      );
+      return { before };
+    },
+    onError: (error, _values, context) => {
+      if (context?.before) queryClient.setQueryData(qk.plugins(), context.before);
+      const listed = error instanceof ApiError && error.problems.length > 0;
+      if (!listed) showToast(notSaved(error));
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: qk.plugins() });
+    },
+  });
+}
+
 /**
  * A plugin's settings, drawn from its spec (PLAN §6.2): the generic form every plugin gets unless
- * it brings its own section. Secrets are write-only: a set one shows as dots and stays as it is
- * unless typed over.
+ * it brings its own section. There is no Save button and no draft: switches, choices and chips
+ * save the moment they change, and a typed field saves when it's left or on ↵, with a quiet
+ * "Saved" under it. The values shown are the server's, so two phones never fight over a form.
+ * Secrets are write-only: a set one shows as dots and stays as it is unless typed over.
+ * `skipGroups` leaves out the fields a plugin draws itself (Google's keys).
  */
 export function PluginSettingsForm({
   pluginId,
   spec,
   values,
+  skipGroups = [],
 }: {
   pluginId: string;
   spec: Field[];
   values: Values;
+  skipGroups?: readonly string[];
 }) {
   const display = useShell() === "display";
-  const queryClient = useQueryClient();
-  const [draft, setDraft] = useState<Values>(values);
-  const save = useMutation({
-    mutationFn: () =>
-      asParent(async () =>
-        unwrap(
-          await api.PUT("/api/plugins/{plugin_id}/settings", {
-            params: { path: { plugin_id: pluginId } },
-            body: { values: draft },
-          }),
-        ),
-      ),
-    onSuccess: async (saved) => {
-      setDraft(saved);
-      await queryClient.invalidateQueries({ queryKey: qk.plugins() });
-      showToast("Changes saved");
-    },
-  });
+  const save = usePluginSettings(pluginId);
   const problems = save.error instanceof ApiError ? save.error.problems : [];
-  const set = (key: string, value: unknown) => {
-    setDraft((current) => ({ ...current, [key]: value }));
+  const fields = spec.filter((field) => !skipGroups.includes(field.group));
+  /** Save one field; resolves to whether the server took it. */
+  const change = async (key: string, value: unknown): Promise<boolean> => {
+    try {
+      await save.mutateAsync({ ...values, [key]: value });
+      return true;
+    } catch {
+      return false;
+    }
   };
+  if (fields.length === 0) return null;
   return (
-    <form
-      className={`flex flex-col ${display ? "gap-6 py-6" : "gap-4 py-4"}`}
-      onSubmit={(event) => {
-        event.preventDefault();
-        save.mutate();
-      }}
-    >
-      {spec.map((field) => (
+    <div className={`flex flex-col ${display ? "gap-6 py-6" : "gap-4 py-4"}`}>
+      {fields.map((field) => (
         <FieldInput
           key={field.key}
           field={field}
-          value={draft[field.key]}
-          onChange={(value) => {
-            set(field.key, value);
-          }}
+          value={values[field.key]}
+          onChange={(value) => change(field.key, value)}
         />
       ))}
-      {save.isError ? (
+      {save.isError && problems.length ? (
         <div role="alert" className="font-semibold text-alert">
-          {problems.length ? (
-            <ul className="list-disc pl-6">
-              {problems.map((problem) => (
-                <li key={problem}>{problem}</li>
-              ))}
-            </ul>
-          ) : (
-            errorMessage(save.error)
-          )}
+          <ul className="list-disc pl-6">
+            {problems.map((problem) => (
+              <li key={problem}>{problem}</li>
+            ))}
+          </ul>
         </div>
       ) : null}
-      <div>
-        <Button type="submit" pending={save.isPending}>
-          Save changes
-        </Button>
-      </div>
-    </form>
+    </div>
+  );
+}
+
+/** A typed field: its own draft while it has focus, saved when it's left or on ↵ if it changed. */
+function TypedField({
+  field,
+  shown,
+  parse,
+  onChange,
+  ...input
+}: {
+  field: Field;
+  /** The saved value as text. */
+  shown: string;
+  /** What's typed, as the value to save. */
+  parse: (text: string) => unknown;
+  onChange: (value: unknown) => Promise<boolean>;
+} & Pick<
+  React.ComponentProps<typeof TextField>,
+  "type" | "layout" | "inputMode" | "maxLength" | "placeholder" | "autoComplete" | "hint" | "label"
+>) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const { saved, flash } = useSavedFlash();
+  const commit = () => {
+    if (draft === null) return;
+    const typed = draft;
+    if (typed === shown) {
+      setDraft(null);
+      return;
+    }
+    void onChange(parse(typed)).then((ok) => {
+      // Kept as typed when the server refused it, so it can be put right.
+      if (!ok) return;
+      setDraft(null);
+      flash();
+    });
+  };
+  return (
+    <div className="flex flex-col gap-1">
+      <TextField
+        {...input}
+        value={draft ?? shown}
+        data-setting={field.key}
+        onChange={(event) => {
+          setDraft(event.target.value);
+        }}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commit();
+          }
+        }}
+      />
+      <SavedMark show={saved} />
+    </div>
   );
 }
 
@@ -103,13 +178,16 @@ function FieldInput({
 }: {
   field: Field;
   value: unknown;
-  onChange: (value: unknown) => void;
+  onChange: (value: unknown) => Promise<boolean>;
 }) {
   const { data: members = [] } = useMembers();
   const display = useShell() === "display";
   // A group's name reads like a field's label (ui/TextField): the shell's body size.
   const groupLabel = `${display ? "text-d-body" : "text-body"} font-semibold`;
   const hint = field.help || null;
+  const now = (next: unknown) => {
+    void onChange(next);
+  };
   const text =
     typeof value === "string"
       ? value
@@ -119,41 +197,36 @@ function FieldInput({
   switch (field.type) {
     case "bool":
       return (
-        <Switch
-          label={field.label}
-          hint={field.help}
-          checked={value === true}
-          onChange={onChange}
-        />
+        <Switch label={field.label} hint={field.help} checked={value === true} onChange={now} />
       );
     case "int":
     case "float":
     case "percent":
       return (
-        <TextField
+        <TypedField
+          field={field}
           label={field.unit ? `${field.label} (${field.unit})` : field.label}
           hint={hint}
           inputMode="decimal"
           layout="numeric"
-          value={text}
-          onChange={(event) => {
-            onChange(event.target.value === "" ? null : event.target.value);
-          }}
+          shown={text}
+          parse={(typed) => (typed === "" ? null : typed)}
+          onChange={onChange}
         />
       );
     case "secret":
       return (
-        <TextField
+        <TypedField
+          field={field}
           label={field.label}
           hint={value === MASK ? "Saved. Type a new one to replace it." : hint}
           type="password"
           layout="password"
           autoComplete="off"
-          value={value === MASK ? "" : text}
           placeholder={value === MASK ? "••••••••" : undefined}
-          onChange={(event) => {
-            onChange(event.target.value === "" ? MASK : event.target.value);
-          }}
+          shown=""
+          parse={(typed) => typed}
+          onChange={onChange}
         />
       );
     case "choice": {
@@ -172,12 +245,13 @@ function FieldInput({
             <Segmented
               label={field.label}
               value={text}
-              onChange={onChange}
+              onChange={now}
               options={choices.map((choice, index) => ({
                 value: choice,
                 label: labels[index] ?? choice,
               }))}
             />
+            {hint ? <FieldHint>{hint}</FieldHint> : null}
           </div>
         );
       }
@@ -190,13 +264,14 @@ function FieldInput({
                 key={choice}
                 on={text === choice}
                 onClick={() => {
-                  onChange(choice);
+                  now(choice);
                 }}
               >
                 {labels[index] ?? choice}
               </Chip>
             ))}
           </ChipRow>
+          {hint ? <FieldHint>{hint}</FieldHint> : null}
         </div>
       );
     }
@@ -213,7 +288,7 @@ function FieldInput({
                 key={choice}
                 on={chosen.includes(choice)}
                 onClick={() => {
-                  onChange(
+                  now(
                     chosen.includes(choice)
                       ? chosen.filter((c) => c !== choice)
                       : [...chosen, choice],
@@ -224,6 +299,7 @@ function FieldInput({
               </Chip>
             ))}
           </ChipRow>
+          {hint ? <FieldHint>{hint}</FieldHint> : null}
         </div>
       );
     }
@@ -237,7 +313,7 @@ function FieldInput({
                 key={color.value}
                 on={text === color.value}
                 onClick={() => {
-                  onChange(color.value);
+                  now(color.value);
                 }}
               >
                 {color.word}
@@ -256,7 +332,7 @@ function FieldInput({
                 key={member.id}
                 on={text === member.id}
                 onClick={() => {
-                  onChange(member.id);
+                  now(member.id);
                 }}
               >
                 {member.name}
@@ -268,39 +344,48 @@ function FieldInput({
     case "time":
     case "date":
       return (
-        <TextField
+        <TypedField
+          field={field}
           label={field.label}
           hint={hint}
           type={field.type}
-          value={text}
-          onChange={(event) => {
-            onChange(event.target.value || null);
-          }}
+          shown={text}
+          parse={(typed) => typed || null}
+          onChange={onChange}
         />
       );
     case "text":
     case "json":
       return (
-        <TextField
+        <TypedField
+          field={field}
           label={field.label}
           hint={hint}
-          value={field.type === "json" && typeof value === "object" ? JSON.stringify(value) : text}
-          onChange={(event) => {
-            onChange(event.target.value);
-          }}
+          shown={field.type === "json" && typeof value === "object" ? JSON.stringify(value) : text}
+          parse={(typed) => typed}
+          onChange={onChange}
         />
       );
     default:
       return (
-        <TextField
+        <TypedField
+          field={field}
           label={field.label}
           hint={hint}
-          value={text}
           maxLength={field.max_length ?? undefined}
-          onChange={(event) => {
-            onChange(event.target.value);
-          }}
+          shown={text}
+          parse={(typed) => typed}
+          onChange={onChange}
         />
       );
   }
+}
+
+function FieldHint({ children }: { children: string }) {
+  const display = useShell() === "display";
+  return (
+    <p className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}>
+      {children}
+    </p>
+  );
 }

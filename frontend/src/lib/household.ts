@@ -2,12 +2,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLayoutEffect, useRef } from "react";
 
-import { api, unwrap } from "../api/client";
+import { api, notSaved, unwrap } from "../api/client";
 import { qk } from "../api/keys";
 import type { components } from "../api/schema";
 import { setDatePreferences } from "./dates";
 import { asParent } from "./parent";
 import { refreshMinute } from "./time";
+import { showToast } from "./toast";
 
 export type HouseholdSettings = components["schemas"]["SettingsOut"];
 export type SettingsChange = components["schemas"]["SettingsUpdate"];
@@ -45,16 +46,41 @@ export function useDatePreferences({ enabled = true }: { enabled?: boolean } = {
   }, [timezone, timeFormat, queryClient]);
 }
 
-/** Change household settings (parent-only; the wall screen asks for the PIN first). */
+/**
+ * Change household settings (parent-only; the wall screen asks for the PIN first). Settings save
+ * themselves (ADR 0029): what's on screen changes at once, and a refusal puts it back and says
+ * "Not saved — …" in a toast. No page keeps a Save button or an error line of its own.
+ */
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (change: SettingsChange) =>
       asParent(async () => unwrap(await api.PATCH("/api/settings", { body: change }))),
+    onMutate: async (change) => {
+      await queryClient.cancelQueries({ queryKey: qk.settings() });
+      const before = queryClient.getQueryData<HouseholdSettings>(qk.settings());
+      if (before) {
+        queryClient.setQueryData<HouseholdSettings>(qk.settings(), {
+          ...before,
+          ...optimistic(change),
+        });
+      }
+      return { before };
+    },
+    onError: (error, _change, context) => {
+      if (context?.before) queryClient.setQueryData(qk.settings(), context.before);
+      showToast(notSaved(error));
+    },
     onSuccess: (settings) => {
       queryClient.setQueryData(qk.settings(), settings);
     },
   });
+}
+
+/** A change as it will read back, for the moment before the server answers. Callers send only
+ * the fields they change; null (sleep turned off) is a value the settings can hold. */
+function optimistic(change: SettingsChange): Partial<HouseholdSettings> {
+  return change as unknown as Partial<HouseholdSettings>;
 }
 
 export function useMembers(archived = false) {

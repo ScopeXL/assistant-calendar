@@ -156,6 +156,15 @@ async def test_settings_are_coerced_validated_and_secrets_masked(
     )
     assert again.status_code == 200
     assert state_of(plugin_app).plugins.settings("sample")["api_key"] == "sk-sample-0000"
+    # An empty secret clears it (Remove keys): nothing is stored, and nothing reads as set.
+    cleared = await home.put(
+        "/api/plugins/sample/settings",
+        json={"values": {"interval": 45, "api_key": "", "mode": "busy"}},
+        headers=CSRF,
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["api_key"] is None
+    assert state_of(plugin_app).plugins.settings("sample")["api_key"] is None
     for bad, problem in (
         ({"interval": 0}, "How often must be at least 1"),
         ({"mode": "wild"}, "Mode: isn't one of the choices"),

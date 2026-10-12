@@ -266,3 +266,50 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
   await page.mouse.click(40, 540);
   await expect(signIn).toBeHidden();
 });
+
+test("Google's keys sit behind Set up on Features: saved masked, kept out of the export, removable", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a computer");
+  await signInPhone(page);
+  await page.goto("/settings/features");
+  const keys = async () => {
+    const plugins = (await (await page.request.get("/api/plugins")).json()) as {
+      id: string;
+      settings: { google_client_id: string | null; google_client_secret: string | null };
+    }[];
+    return plugins.find((plugin) => plugin.id === "calendar_sync")?.settings;
+  };
+  // The two fields aren't on the page: one row says whether they're set.
+  await expect(page.getByLabel("Google app's client ID")).toHaveCount(0);
+  await expect(page.getByText("Not set up")).toBeVisible();
+  await page.getByRole("button", { name: "Set up Sign in with Google" }).click();
+  const sheet = page.getByRole("dialog", { name: "Google App Keys" });
+  await expect(sheet.getByRole("button", { name: "Save keys" })).toBeDisabled();
+  await sheet.getByLabel("Google app's client ID").fill("sample-id.apps.example.com");
+  await sheet.getByLabel("Google app's client secret").fill("sample-secret-0001");
+  await sheet.getByRole("button", { name: "Save keys" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(toast(page, "Keys saved")).toBeVisible();
+  expect(await keys()).toEqual({
+    google_client_id: "sample-id.apps.example.com",
+    google_client_secret: "***",
+  });
+  // Export everything says a secret is set, never what it is.
+  const exported = await (await page.request.get("/api/export")).text();
+  expect(exported).toContain("sample-id.apps.example.com");
+  expect(exported).not.toContain("sample-secret-0001");
+
+  // Change: the ID is there to edit, the secret never comes back; Remove keys clears both.
+  await page.getByRole("button", { name: "Change Google's keys" }).click();
+  await expect(sheet.getByLabel("Google app's client ID")).toHaveValue(
+    "sample-id.apps.example.com",
+  );
+  await expect(sheet.getByLabel("Google app's client secret")).toHaveValue("");
+  await expect(sheet.getByText("Saved. Type a new one to replace it.")).toBeVisible();
+  await sheet.getByRole("button", { name: "Remove keys" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(toast(page, "Removed Google's keys")).toBeVisible();
+  await expect(page.getByText("Not set up")).toBeVisible();
+  expect(await keys()).toEqual({ google_client_id: null, google_client_secret: null });
+});

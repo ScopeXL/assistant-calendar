@@ -827,7 +827,10 @@ function SignInFlow() {
           Set the consent screen to External and publish it. If it stays in Testing, Google signs
           Sunroom out every 7 days.
         </li>
-        <li>Paste the client ID and secret under Settings → Features → Synced Calendars.</li>
+        <li>
+          Paste the client ID and secret under Settings → Features → Synced Calendars → Sign in with
+          Google → Set up.
+        </li>
       </Steps>
       <p className={`${text.secondary} text-ink-soft`}>
         Google may say the app isn't verified: tap Advanced, then Go to Sunroom. It's your own app.

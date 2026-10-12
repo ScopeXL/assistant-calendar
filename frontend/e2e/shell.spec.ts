@@ -82,6 +82,74 @@ test.describe("a phone", () => {
     );
   });
 
+  test("saves a setting the moment it changes, with no Save button, and the wall hears", async ({
+    page,
+    request,
+    browser,
+    watch,
+  }) => {
+    await seed(request);
+    const { page: screen, context } = await wall(browser, watch);
+    await pairWall(screen);
+    await screen.goto("/display");
+    await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
+    await signInPhone(page);
+    await page.goto("/settings/features");
+    await expect(page.getByRole("heading", { name: "Lists", exact: true })).toBeVisible();
+    // No Save button anywhere on the page (ADR 0029).
+    await expect(page.getByRole("button", { name: /^Save/ })).toHaveCount(0);
+    // A feature with a page of its own shows a row that opens it, not a second copy of its form.
+    await expect(page.getByRole("link", { name: "Tasks settings" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Meals settings" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: /^Stars/ })).toHaveCount(0);
+
+    // Lists keeps its one setting here: a tap on a choice saves it, and the wall asks again.
+    const lists = () =>
+      page.request
+        .get("/api/plugins")
+        .then(
+          (response) =>
+            response.json() as Promise<{ id: string; settings: { auto_clear_days?: string } }[]>,
+        )
+        .then(
+          (plugins) => plugins.find((plugin) => plugin.id === "lists")?.settings.auto_clear_days,
+        );
+    const clear = page.getByRole("group", { name: "Clear done items by themselves" });
+    const heard = screen.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === "/api/plugins" &&
+        response.request().method() === "GET",
+      { timeout: 3_000 },
+    );
+    await clear.getByRole("button", { name: "After 3 days" }).click();
+    await expect(clear.getByRole("button", { name: "After 3 days" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await heard;
+    await expect.poll(lists).toBe("3");
+    // Put it back, the same way (the test server keeps plugin settings between tests).
+    await clear.getByRole("button", { name: "Never" }).click();
+    await expect.poll(lists).toBe("never");
+
+    // Household: the name saves when the field is left, and says so quietly.
+    await page.goto("/settings/household");
+    const name = page.getByLabel("Name", { exact: true });
+    await expect(name).toHaveValue("Sample Family");
+    await name.fill("Sample Household");
+    await name.blur();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+    const saved = (await (await page.request.get("/api/settings")).json()) as {
+      household_name: string;
+    };
+    expect(saved.household_name).toBe("Sample Household");
+    // An emptied name isn't saved: the old one comes back.
+    await name.fill("");
+    await name.blur();
+    await expect(name).toHaveValue("Sample Household");
+    await context.close();
+  });
+
   test("pairs a wall screen from More", async ({ page, request, browser, watch }) => {
     await seed(request);
     const { page: screen, context } = await wall(browser, watch);
