@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { addDays } from "../../lib/dates";
 import type { BoardPanel } from "../../lib/displayState";
+import { useSettings } from "../../lib/household";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { SidePanel } from "../../ui/SidePanel";
 import { useAddTypes } from "../usePluginModules";
@@ -42,8 +43,9 @@ export function fieldsFor(
   scope: Scope,
   event: CalendarEvent,
   occurrence: Occurrence | null,
+  weekStartsOn = 0,
 ): EventFields & { title: string; clear_rrule?: boolean } {
-  const fields = draftToFields(draft, { align: scope !== "this" });
+  const fields = draftToFields(draft, { align: scope !== "this", weekStartsOn });
   if (scope === "this") {
     const one = { ...fields };
     delete one.rrule;
@@ -55,11 +57,14 @@ export function fieldsFor(
   const shift = dayDiff(occurrenceDay, draft.day);
   const seriesDay = event.start_date ?? event.start?.slice(0, 10) ?? draft.day;
   const day = addDays(seriesDay, shift);
-  const moved = draftToFields({
-    ...draft,
-    day,
-    lastDay: draft.lastDay ? addDays(draft.lastDay, dayDiff(draft.day, day)) : null,
-  });
+  const moved = draftToFields(
+    {
+      ...draft,
+      day,
+      lastDay: draft.lastDay ? addDays(draft.lastDay, dayDiff(draft.day, day)) : null,
+    },
+    { weekStartsOn },
+  );
   return { ...moved, clear_rrule: clear };
 }
 
@@ -86,6 +91,7 @@ export function AddPanel({
   room?: string;
 }) {
   const types = useAddTypes();
+  const weekStartsOn = useSettings().data?.week_starts_on ?? 6;
   const adding = panel?.kind === "add" ? panel : null;
   const chosen = adding?.type ?? types.find((type) => type.room === room)?.key ?? "event";
   const plugin = adding ? types.find((type) => type.key === chosen) : undefined;
@@ -102,7 +108,7 @@ export function AddPanel({
       {
         target: { eventId: editing.eventId, recurrenceId: editing.recurrenceId },
         scope,
-        fields: fieldsFor(draft, scope, event, occurrence),
+        fields: fieldsFor(draft, scope, event, occurrence, weekStartsOn),
       },
       { onSuccess: onClose },
     );
@@ -139,7 +145,7 @@ export function AddPanel({
         ) : panel && ready ? (
           <EventEditor
             key={editing ? `${editing.eventId}|${editing.recurrenceId ?? ""}` : "new"}
-            initial={editing && event ? draftFromEvent(event, occurrence) : null}
+            initial={editing && event ? draftFromEvent(event, occurrence, weekStartsOn) : null}
             editing={editing !== null}
             defaultDay={panel.kind === "add" ? (panel.day ?? today) : today}
             defaultHour={panel.kind === "add" ? panel.hour : null}
@@ -149,7 +155,7 @@ export function AddPanel({
             error={changes.add.error ?? changes.save.error}
             onSave={(draft) => {
               if (!editing) {
-                changes.add.mutate(draftToFields(draft), { onSuccess: onClose });
+                changes.add.mutate(draftToFields(draft, { weekStartsOn }), { onSuccess: onClose });
               } else if (repeats && editing.recurrenceId) {
                 setAsking(draft);
               } else {

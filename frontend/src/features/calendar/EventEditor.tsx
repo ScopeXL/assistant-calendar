@@ -60,11 +60,19 @@ export interface Draft {
   memberIds: string[];
   repeat: Repeat | null;
   repeatEnd: RepeatEnd;
+  /** A rule the editor's shapes can't hold ("the 15th" on an event that starts on the 9th):
+   * kept exactly as it is, with the server's words for it, until a repeat is picked. */
+  kept: KeptRule | null;
   calendarId: string | null;
   color: PersonColor | null;
   location: string;
   notes: string;
   reminder: number | null;
+}
+
+export interface KeptRule {
+  rrule: string;
+  text: string;
 }
 
 function lengthWords(minutes: number): string {
@@ -101,10 +109,11 @@ export function firstDayOf(repeat: Repeat | null, day: string): string {
 }
 
 /** The API body for this draft. `align` moves a weekly repeat's start onto one of its days;
- * one occurrence changed on its own stays where it was put. */
+ * one occurrence changed on its own stays where it was put. `weekStartsOn` is the household's,
+ * for a rule whose days depend on it. A kept rule goes back as it came. */
 export function draftToFields(
   original: Draft,
-  { align = true }: { align?: boolean } = {},
+  { align = true, weekStartsOn = 0 }: { align?: boolean; weekStartsOn?: number } = {},
 ): EventFields & { title: string } {
   const day = align ? firstDayOf(original.repeat, original.day) : original.day;
   const draft: Draft =
@@ -115,7 +124,9 @@ export function draftToFields(
           day,
           lastDay: original.lastDay ? addDays(original.lastDay, dayDiff(original.day, day)) : null,
         };
-  const rrule = draft.repeat ? repeatToRRule(draft.repeat, draft.day, draft.repeatEnd) : null;
+  const rrule = draft.repeat
+    ? repeatToRRule(draft.repeat, draft.day, draft.repeatEnd, weekStartsOn)
+    : (draft.kept?.rrule ?? null);
   const common = {
     title: draft.title.trim(),
     member_ids: draft.memberIds,
@@ -143,12 +154,16 @@ export function draftToFields(
 }
 
 /** A draft for an existing event, at the occurrence it was opened from. */
-export function draftFromEvent(event: CalendarEvent, occurrence: Occurrence | null): Draft {
+export function draftFromEvent(
+  event: CalendarEvent,
+  occurrence: Occurrence | null,
+  weekStartsOn = 0,
+): Draft {
   const startLocal = occurrence?.start_local ?? event.start ?? null;
   const endLocal = occurrence?.end_local ?? event.end ?? null;
   const day = occurrence?.start_date ?? startLocal?.slice(0, 10) ?? event.start_date ?? "";
   const endDate = occurrence?.end_date ?? event.end_date;
-  const parsed = event.rrule ? rruleToRepeat(event.rrule, day) : null;
+  const parsed = event.rrule ? rruleToRepeat(event.rrule, day, weekStartsOn) : null;
   let minutes = 60;
   if (startLocal && endLocal) {
     minutes = Math.max(
@@ -166,6 +181,8 @@ export function draftFromEvent(event: CalendarEvent, occurrence: Occurrence | nu
     memberIds: occurrence?.member_ids ?? event.member_ids,
     repeat: parsed?.repeat ?? null,
     repeatEnd: parsed?.end ?? {},
+    kept:
+      event.rrule && !parsed ? { rrule: event.rrule, text: event.repeat_text ?? "As it is" } : null,
     calendarId: event.calendar_id,
     color: event.color ?? null,
     location: event.location,
@@ -247,6 +264,7 @@ export function EventEditor({
     memberIds: manual.memberIds ?? parsed?.memberIds ?? [],
     repeat: manual.repeat !== undefined ? manual.repeat : (parsed?.repeat ?? null),
     repeatEnd: manual.repeatEnd ?? {},
+    kept: manual.kept ?? null,
     calendarId: manual.calendarId ?? defaultCalendar,
     color: manual.color !== undefined ? manual.color : null,
     location: manual.location ?? "",

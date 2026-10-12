@@ -2,11 +2,18 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { setDatePreferences } from "../../lib/dates";
 import {
+  customToRepeat,
   describeRepeat,
+  isPreset,
+  monthDateWords,
+  monthWeekdayWords,
   repeatPresets,
+  repeatToCustom,
   repeatToRRule,
   rruleToRepeat,
   sameRepeat,
+  weekStartMatters,
+  type CustomRepeat,
   type Repeat,
   type RepeatEnd,
 } from "./repeat";
@@ -227,5 +234,114 @@ describe("comparing", () => {
     expect(sameRepeat(daily(1), weekly(1, [0, 1, 2, 3, 4, 5, 6]))).toBe(false);
     expect(sameRepeat(null, null)).toBe(true);
     expect(sameRepeat(null, daily(1))).toBe(false);
+  });
+});
+
+describe("the Custom form (ADR 0029)", () => {
+  const FREQS = ["daily", "weekly", "monthly", "yearly"] as const;
+  const SETS = [[3], [1, 3], [0, 2, 4], [5, 6], [0, 1, 2, 3, 4, 5, 6]];
+  const ENDS: RepeatEnd[] = [{}, { until: "2026-03-31" }, { count: 12 }];
+
+  it("round-trips every shape it can make, through the rule and back", () => {
+    let checked = 0;
+    for (const freq of FREQS) {
+      for (const interval of [1, 2, 3]) {
+        for (const weekdays of freq === "weekly" ? SETS : [[3]]) {
+          for (const monthlyBy of freq === "monthly"
+            ? (["date", "weekday"] as const)
+            : (["date"] as const)) {
+            for (const end of ENDS) {
+              for (const weekStartsOn of [0, 6]) {
+                const custom: CustomRepeat = { freq, interval, weekdays, monthlyBy };
+                const repeat = customToRepeat(custom, THURSDAY);
+                const rule = repeatToRRule(repeat, THURSDAY, end, weekStartsOn);
+                const back = rruleToRepeat(rule, THURSDAY, weekStartsOn);
+                expect(back, rule).toEqual({ repeat, end });
+                expect(repeatToCustom(back?.repeat ?? null, THURSDAY)).toEqual(custom);
+                checked += 1;
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(checked).toBe(162);
+  });
+
+  it("starts as every week on the start day, and keeps at least one weekday", () => {
+    expect(repeatToCustom(null, THURSDAY)).toEqual({
+      freq: "weekly",
+      interval: 1,
+      weekdays: [3],
+      monthlyBy: "date",
+    });
+    const none: CustomRepeat = { freq: "weekly", interval: 2, weekdays: [], monthlyBy: "date" };
+    expect(customToRepeat(none, THURSDAY)).toEqual(weekly(2, [3]));
+    expect(customToRepeat({ ...none, interval: 0 }, THURSDAY)).toEqual(weekly(1, [3]));
+  });
+
+  it("knows which repeats a preset chip already says", () => {
+    expect(isPreset(null, THURSDAY)).toBe(true);
+    expect(isPreset(weekly(1, [3]), THURSDAY)).toBe(true);
+    expect(isPreset(weekly(2, [3]), THURSDAY)).toBe(true);
+    expect(isPreset(weekly(1, [4, 3, 2, 1, 0]), THURSDAY)).toBe(true); // Every weekday
+    expect(isPreset(weekly(2, [1, 3]), THURSDAY)).toBe(false);
+    expect(isPreset(weekly(1, [2]), THURSDAY)).toBe(false); // another day than the start's
+    expect(isPreset(daily(3), THURSDAY)).toBe(false);
+    expect(isPreset(yearly(1), THURSDAY)).toBe(true);
+  });
+
+  it("words the month choices from the start day", () => {
+    expect(monthDateWords(THURSDAY)).toBe("the 9th");
+    expect(monthWeekdayWords(THURSDAY)).toBe("the second Thursday");
+    expect(monthWeekdayWords("2026-11-26")).toBe("the last Thursday");
+    expect(monthDateWords("2026-10-22")).toBe("the 22nd");
+  });
+});
+
+describe("the week's first day (WKST)", () => {
+  it("matters only every few weeks, on days either side of it", () => {
+    expect(weekStartMatters(2, [0, 6], 6)).toBe(true); // Mon and Sun, Sunday first
+    expect(weekStartMatters(2, [5, 6], 6)).toBe(true); // Sat and Sun
+    expect(weekStartMatters(2, [1, 3], 6)).toBe(false); // Tue and Thu: the same week either way
+    expect(weekStartMatters(2, [6], 6)).toBe(false); // one day
+    expect(weekStartMatters(1, [0, 6], 6)).toBe(false); // every week
+    expect(weekStartMatters(2, [0, 6], 0)).toBe(false); // Monday first is the rule's default
+    expect(weekStartMatters(3, [4, 5], 5)).toBe(true); // Saturday first: Fri and Sat
+  });
+
+  it("is written only then, and read back under the same rule", () => {
+    expect(repeatToRRule(weekly(2, [0, 6]), THURSDAY, undefined, 6)).toBe(
+      "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,SU;WKST=SU",
+    );
+    expect(repeatToRRule(weekly(2, [1, 3]), THURSDAY, undefined, 6)).toBe(
+      "FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH",
+    );
+    expect(repeatToRRule(weekly(2, [0, 6]), THURSDAY, { count: 4 }, 6)).toBe(
+      "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,SU;WKST=SU;COUNT=4",
+    );
+    const read = (rule: string, weekStartsOn: number) =>
+      rruleToRepeat(rule, THURSDAY, weekStartsOn)?.repeat ?? null;
+    // A Sunday-first household reads its own rule, and one whose days don't depend on it.
+    expect(read("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,SU;WKST=SU", 6)).toEqual(weekly(2, [0, 6]));
+    expect(read("FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH", 6)).toEqual(weekly(2, [1, 3]));
+    expect(read("FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH;WKST=SU", 0)).toEqual(weekly(2, [1, 3]));
+    // But not a rule that means other days under its own first day: that one is kept as it is.
+    expect(read("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,SU", 6)).toBeNull();
+    expect(read("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,SU;WKST=SU", 0)).toBeNull();
+    expect(read("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,SU;WKST=XX", 6)).toBeNull();
+  });
+
+  it("lists the days in the household's order", () => {
+    expect(describeRepeat(weekly(2, [0, 6]), THURSDAY, undefined, 6)).toBe(
+      "Every 2 weeks on Sun and Mon",
+    );
+    expect(describeRepeat(weekly(2, [0, 6]), THURSDAY)).toBe("Every 2 weeks on Mon and Sun");
+    expect(describeRepeat(weekly(1, [0, 1, 2, 3, 4]), THURSDAY, undefined, 6)).toBe(
+      "Every weekday",
+    );
+    expect(describeRepeat(weekly(1, [1, 3, 5]), THURSDAY, { count: 6 }, 6)).toBe(
+      "Every week on Tue, Thu and Sat, 6 times",
+    );
   });
 });
