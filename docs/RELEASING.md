@@ -65,3 +65,11 @@ Preflight checks this with a dry-run push before anything is tagged.
 
 Migrations are forward-only: a released migration is listed with its checksum in
 `backend/src/sunroom/migrations/released.lock`, and a test fails if one changes.
+
+## The fixture database
+
+A release whose newest migration is new needs `backend/tests/fixtures/db/<revision>.sql` for
+that revision, or the first migration written after the release fails its test. Build it in the
+task that adds the migration, before the release: add the revision's synthetic rows to `SEEDS` in
+`backend/tests/fixtures/db/build.py`, run
+`cd backend && uv run python -m tests.fixtures.db.build <revision>`, and commit the file.

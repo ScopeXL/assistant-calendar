@@ -335,6 +335,14 @@ def _v0_6_0() -> list[Statement]:
     ]
 
 
+def _v0_7_0() -> list[Statement]:
+    """0.7.0: 0.6.0's household with the Week board on Hours and the tips strip turned on."""
+    return [
+        *_v0_6_0(),
+        "UPDATE household SET display_week_layout = 'hours', show_tips = 1",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
@@ -343,6 +351,7 @@ SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610081921": _v0_4_0,
     "202610082056": _v0_5_0,
     "202610082231": _v0_6_0,
+    "202610091752": _v0_7_0,
 }
 
 
