@@ -220,7 +220,7 @@ screens around 1920×1080." and the Compact rail line comes with T5.
 
 ### T3 Primitives: roomier button groups, the brand, rows you tap, one-line rows
 
-- [ ] Done (commit: )
+- [x] Done (commit: "ui: roomier button groups, the brand, rows you tap, one-line rows")
 
 **Owner's note.** "Most button groups seem spaced a little close. Adding a little more left/right
 padding might help."
@@ -255,6 +255,14 @@ padding might help."
 with their names (jsdom can't measure widths); `ListRow` renders the name and chevron;
 `PluginSettingsForm.test.tsx` (a 5-option choice renders as a Segmented). e2e: the a11y tap-target check still passes on the
 Display settings page (the wrapped group's cells keep 56/44 px).
+
+**As built.** The wall's group radius is `calc(var(--tap)/2 + 6px)` (a cell's own radius plus
+the padding and border), so it follows the tap token; phones use the fixed 1.75rem. `IconSegmented`
+has `showChosen` (the chosen option's word beside its icon) for T4's view switch. `ListRow` has a
+twin, `ListRowLink`, made with the router's `createLink`, for rows that open a page; its subtitle
+is the row's `aria-describedby`, so "Edit Mia" is followed by "Child · Pink". `Brand` takes
+`size: "line" | "stacked" | "entry"` (T5 adds `rail`) and `heading` for sign-in's h1; the mark is
+`decorative` beside the name. `ScrollRow`'s `.fade-x` is in `tokens.css`.
 
 **Docs.** UX §1 (segmented padding; the wrap rule), §7. CHANGELOG: "Button groups have more room
 around each word."

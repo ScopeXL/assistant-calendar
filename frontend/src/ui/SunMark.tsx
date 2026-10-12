@@ -1,10 +1,23 @@
 /**
  * The Sunroom mark (UX §7 "Icons and the app icon"): a window, with the sun's light filling its
- * lower-left pane. Keep the shapes in sync with scripts/build-icons.mjs.
+ * lower-left pane. Keep the shapes in sync with scripts/build-icons.mjs. `decorative` hides it
+ * from screen readers where the name is written beside it (ui/Brand).
  */
-export function SunMark({ className, label = "Sunroom" }: { className?: string; label?: string }) {
+export function SunMark({
+  className,
+  label = "Sunroom",
+  decorative = false,
+}: {
+  className?: string;
+  label?: string;
+  decorative?: boolean;
+}) {
   return (
-    <svg viewBox="0 0 512 512" className={className} role="img" aria-label={label}>
+    <svg
+      viewBox="0 0 512 512"
+      className={className}
+      {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": label })}
+    >
       <rect width="512" height="512" rx="112" className="fill-wall" />
       <rect x="112" y="256" width="144" height="144" className="fill-sun" />
       <g className="stroke-ink" fill="none" strokeWidth="28" strokeLinejoin="round">

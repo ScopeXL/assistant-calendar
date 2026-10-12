@@ -14,7 +14,7 @@ import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { Segmented } from "../../ui/Segmented";
 import { Select } from "../../ui/Select";
-import { SunMark } from "../../ui/SunMark";
+import { Brand } from "../../ui/Brand";
 import { TextField } from "../../ui/TextField";
 import { usePluginModules } from "../usePluginModules";
 
@@ -68,8 +68,7 @@ function Page({
       }`}
     >
       <div className="mb-8 flex items-center gap-3">
-        <SunMark className="size-10" />
-        <span className="text-row font-bold">Sunroom</span>
+        <Brand size="line" />
         {step ? <span className="ml-auto text-secondary text-ink-soft">{step}</span> : null}
       </div>
       <h1 className="mb-4 text-title font-bold">{title}</h1>

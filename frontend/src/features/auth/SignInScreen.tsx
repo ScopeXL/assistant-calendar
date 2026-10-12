@@ -8,7 +8,7 @@ import { qk } from "../../api/keys";
 import { normalizeCode } from "../../lib/joinCode";
 import { rememberSignedIn } from "../../lib/session";
 import { Button } from "../../ui/Button";
-import { SunMark } from "../../ui/SunMark";
+import { Brand } from "../../ui/Brand";
 import { useJoinWithCode } from "./useJoin";
 
 function PasswordForm({ onUseCode }: { onUseCode: () => void }) {
@@ -143,9 +143,8 @@ export function SignInScreen() {
   const [mode, setMode] = useState<"password" | "code">("password");
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10">
-      <div className="mb-10 flex flex-col items-center gap-4">
-        <SunMark className="size-24" />
-        <h1 className="text-title font-bold">Sunroom</h1>
+      <div className="mb-10">
+        <Brand size="stacked" heading />
       </div>
       {mode === "password" ? (
         <PasswordForm

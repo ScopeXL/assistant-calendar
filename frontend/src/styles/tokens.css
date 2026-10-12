@@ -408,6 +408,24 @@ dialog [data-osk] {
   scroll-margin-bottom: 6rem;
 }
 
+/* A one-line row that scrolls sideways (ui/ScrollRow): a soft fade at each edge that has more
+   behind it, so a cut-off cell reads as "there's more", not as a mistake. */
+.fade-x[data-overflow="end"] {
+  mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+}
+.fade-x[data-overflow="start"] {
+  mask-image: linear-gradient(to left, black calc(100% - 2.5rem), transparent);
+}
+.fade-x[data-overflow="both"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 2.5rem,
+    black calc(100% - 2.5rem),
+    transparent
+  );
+}
+
 /* Numbers that change where they stand (the clock, counts): Lexend has no tabular figures,
    so each digit gets a box as wide as its widest digit (ADR 0021; ui/Digits). */
 /* The rail's clock: as large as the rail allows, up to the glance size (UX §1). "10:08" in

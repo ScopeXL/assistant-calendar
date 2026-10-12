@@ -1,12 +1,12 @@
 import { Clock3, List } from "lucide-react";
 
 import type { HoursZoom, WeekLayout } from "../../lib/displayState";
-import { Segmented } from "../../ui/Segmented";
+import { IconSegmented, Segmented, type IconSegmentOption } from "../../ui/Segmented";
 import { ZOOMS } from "./hours";
 
-const LAYOUTS: { value: WeekLayout; label: string }[] = [
-  { value: "agenda", label: "Agenda" },
-  { value: "hours", label: "Hours" },
+const LAYOUTS: IconSegmentOption<WeekLayout>[] = [
+  { value: "agenda", label: "Agenda", icon: List },
+  { value: "hours", label: "Hours", icon: Clock3 },
 ];
 
 /**
@@ -39,29 +39,8 @@ export function WeekTools({
       <div className="hidden @min-[56rem]:block">
         <Segmented label="Week layout" value={layout} onChange={onLayout} options={LAYOUTS} />
       </div>
-      <div
-        role="group"
-        aria-label="Week layout"
-        data-segmented=""
-        className="flex gap-1 rounded-full border-2 border-line bg-surface p-1 @min-[56rem]:hidden"
-      >
-        {LAYOUTS.map(({ value, label }) => {
-          const Icon = value === "agenda" ? List : Clock3;
-          return (
-            <button
-              key={value}
-              type="button"
-              aria-label={label}
-              aria-pressed={value === layout}
-              onClick={() => {
-                onLayout(value);
-              }}
-              className="press select-fill flex size-tap items-center justify-center rounded-full aria-pressed:bg-ink aria-pressed:text-on-ink"
-            >
-              <Icon aria-hidden="true" className="size-8" />
-            </button>
-          );
-        })}
+      <div className="@min-[56rem]:hidden">
+        <IconSegmented label="Week layout" value={layout} onChange={onLayout} options={LAYOUTS} />
       </div>
     </div>
   );

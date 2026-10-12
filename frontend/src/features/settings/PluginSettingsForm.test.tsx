@@ -56,4 +56,25 @@ describe("the generic plugin settings form (PLAN §6.2)", () => {
     expect(screen.getByText("Saved. Type a new one to replace it.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Busy" }).getAttribute("aria-pressed")).toBe("true");
   });
+
+  it("draws up to six short choices side by side, and more or longer ones as chips", () => {
+    const times = ["Never", "5 min", "15 min", "30 min", "1 hour"];
+    const long = ["After a very long while", "After an even longer while"];
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <PluginSettingsForm
+          pluginId="sample"
+          spec={[
+            field({ key: "after", label: "Start after", type: "choice", choices: times }),
+            field({ key: "when", label: "Clear", type: "choice", choices: long }),
+          ]}
+          values={{ after: "15 min", when: long[0] }}
+        />
+      </QueryClientProvider>,
+    );
+    const side = screen.getByRole("group", { name: "Start after" });
+    expect(side.hasAttribute("data-segmented")).toBe(true);
+    expect(side.querySelectorAll("button")).toHaveLength(5);
+    expect(screen.getByRole("group", { name: "Clear" }).hasAttribute("data-segmented")).toBe(false);
+  });
 });

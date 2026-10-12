@@ -159,13 +159,13 @@ function FieldInput({
     case "choice": {
       const choices = field.choices ?? [];
       const labels = field.choice_labels ?? choices;
-      // Side by side only when the words are short enough to fit a phone ("Light, Dark,
-      // Auto"); longer ones ("After 3 days", "30 seconds") wrap as chips.
+      // Side by side while the words are short ("Never, 5 min, 15 min, 30 min, 1 hour"): the
+      // group wraps onto a second row on a phone. Longer or more of them are chips.
       const words = choices.reduce(
         (sum, choice, index) => sum + (labels[index] ?? choice).length,
         0,
       );
-      if (choices.length <= 4 && words <= 24) {
+      if (choices.length <= 6 && words <= 40) {
         return (
           <div className="flex flex-col gap-2">
             <span className={groupLabel}>{field.label}</span>

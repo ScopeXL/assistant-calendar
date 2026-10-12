@@ -18,7 +18,7 @@ import { Chip, ChipRow } from "../../ui/Chip";
 import { KeyboardHost } from "../../ui/Keyboard";
 import { QrCode } from "../../ui/QrCode";
 import { ShellContext } from "../../ui/shell";
-import { SunMark } from "../../ui/SunMark";
+import { Brand } from "../../ui/Brand";
 import { TextField } from "../../ui/TextField";
 import { CalendarRoom } from "../calendar/CalendarRoom";
 
@@ -116,19 +116,10 @@ function Frame({ children }: { children: ReactNode }) {
   );
 }
 
-function Brand() {
-  return (
-    <div className="flex items-center gap-4">
-      <SunMark className="size-16" />
-      <p className="text-d-title font-bold">Sunroom</p>
-    </div>
-  );
-}
-
 function Welcome({ address }: { address: string }) {
   return (
     <>
-      <Brand />
+      <Brand size="entry" />
       <h1 className="text-d-glance font-bold">Set Up Sunroom on Your Phone</h1>
       {isLoopbackAddress(address) ? (
         <p className="max-w-3xl text-d-body">
@@ -210,7 +201,7 @@ function PairThisScreen({ onPaired }: { onPaired: () => void }) {
   }
   return (
     <>
-      <Brand />
+      <Brand size="entry" />
       <h1 className="text-d-glance font-bold">Pair This Screen</h1>
       {pairing ? (
         <>
@@ -280,7 +271,7 @@ function PasswordPairing({ onCancel, onPaired }: { onCancel: () => void; onPaire
         if (password) pair.mutate();
       }}
     >
-      <Brand />
+      <Brand size="entry" />
       <h1 className="text-d-glance font-bold">Type the Household Password</h1>
       <TextField
         label="Household password"
@@ -341,7 +332,7 @@ function NameThisScreen({ onDone }: { onDone: () => void }) {
         if (label) rename.mutate(label);
       }}
     >
-      <Brand />
+      <Brand size="entry" />
       <h1 className="text-d-glance font-bold">Name This Screen</h1>
       <ChipRow label="Where is this screen?" center>
         {[...NAMES, "Other"].map((option) => (

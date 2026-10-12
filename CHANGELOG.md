@@ -14,6 +14,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 ### Changed
 
 - Chores are now Tasks everywhere you read it, and Who's Doing What is now People.
+- Button groups have more room around each word.
 
 ## [0.7.0] - 2026-10-09
 
