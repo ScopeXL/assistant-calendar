@@ -162,7 +162,7 @@ Every request is pinned to the address that was checked, and each redirect is ch
   local times so repeats keep their hour across daylight saving.
 - **An address that stops working** (401, 403, 404 or 410: a feed taken down, or Google's secret
   address after a reset) asks to be connected again, like a refused password. The pill says so,
-  the events stay, and Connect again takes the new address. The calendar keeps its person and
+  the events stay, and Connect again (in the account's sheet) takes the new address. The calendar keeps its person and
   color, because its row follows the new address.
 - **Public or secret:** Google's public address works only once the calendar is made public to
   everyone; the secret address doesn't need that, so it's the one the steps ask for. A calendar

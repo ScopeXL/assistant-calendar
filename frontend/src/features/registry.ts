@@ -87,7 +87,7 @@ export interface PluginModule {
   add?: AddType[];
   /** Under each person's events in Who's doing what (null: Everyone's column). */
   personColumn?: ComponentType<{ memberId: string | null; day: string }>;
-  /** Its rows in Settings → Household → Recently removed (ui: settings/RecentlyRemoved's
+  /** Its rows in Settings → Recently Removed (ui: settings/RecentlyRemoved's
    * RemovedRow), saying how many it shows so the empty line only shows when nothing does. */
   removed?: ComponentType<{ onCount: (count: number) => void }>;
   settingsPages?: SettingsPage[];

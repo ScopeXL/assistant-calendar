@@ -70,9 +70,9 @@ when someone signs in. Tailscale doesn't: it's encrypted from end to end
   and Google's client secret, which shows only as set (`***`).
 - **Download everything** (the database and every photo, to restore from): Settings → Backup.
   Keep it somewhere safe: it holds everything the family added.
-- **Remove a person:** Settings → Family → Change → Remove (with Undo).
-- **Disconnect a calendar:** Settings → Calendars & accounts → Disconnect. Its sign-in is deleted
-  at once.
+- **Remove a person:** Settings → Family → the person's row → Remove (with Undo).
+- **Remove a synced account:** Settings → Calendars & Accounts → the account's row → Remove
+  account. Its sign-in is deleted at once.
 - **Sign out a phone or unpair a screen:** Settings → Phones & screens.
 - **Delete all data:** whoever runs the server removes the `sunroom_data` volume.
 

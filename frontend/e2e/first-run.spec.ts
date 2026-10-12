@@ -95,7 +95,7 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
   await expect(pin).toBeHidden();
   await expect(page.getByRole("heading", { name: "Family", level: 2 })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Change Mia" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit Mia" })).toBeVisible();
   await page.getByRole("button", { name: "Lock" }).click();
   await expect(board).toBeVisible();
   // Locked again: Settings asks for the PIN once more.
@@ -153,14 +153,14 @@ test("a wall screen typed in with the password, and a toast that leaves under th
   await screen.getByRole("button", { name: "Settings" }).click();
   const pin = screen.getByRole("dialog", { name: "Parent PIN" });
   for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
-  await screen.getByRole("button", { name: "Change Mia" }).click();
-  const sheet = screen.getByRole("dialog", { name: "Change Mia" });
+  await screen.getByRole("button", { name: "Edit Mia" }).click();
+  const sheet = screen.getByRole("dialog", { name: "Edit Mia" });
   await sheet.getByRole("button", { name: "Remove Mia" }).click();
   await sheet.getByRole("button", { name: "Remove Mia" }).click();
   const toast = screen.locator("[data-toast]").filter({ hasText: "Removed Mia" });
   await expect(toast).toBeVisible();
   await toast.getByRole("button", { name: "Undo" }).click();
   await expect(toast).toHaveCount(0);
-  await expect(screen.getByRole("button", { name: "Change Mia" })).toBeVisible();
+  await expect(screen.getByRole("button", { name: "Edit Mia" })).toBeVisible();
   await context.close();
 });

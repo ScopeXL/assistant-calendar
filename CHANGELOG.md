@@ -45,6 +45,13 @@ Everything that changes in Sunroom, written in plain English. The format follows
   or 20%. "Return to the calendar after" starts with Never.
 - Settings → Display says what Daylight tint does, and Theme's hint mentions 7 PM only until
   your location is set.
+- In Settings you tap the row to edit it: a person, a calendar, an account, a reward or a
+  routine. The Change buttons beside them are gone.
+- An account opens a sheet of its own: Refresh now, a Sync switch for each of its calendars, a
+  "Show on" switch for each synced calendar once a screen is paired, and Remove account. A
+  synced calendar's name opens whose it is and its color.
+- Picking a color shows the ones nobody uses first, and says whose the others are.
+- Recently Removed is its own page in Settings, not the end of Household.
 - The Sunroom mark sits at the top of the rail, and Settings is a gear now. The padlock shows
   only while a paired screen's Settings are locked behind the PIN.
 

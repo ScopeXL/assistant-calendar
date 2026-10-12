@@ -9,6 +9,7 @@ import { fetchSession } from "../../lib/session";
 import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
+import { ListRow } from "../../ui/ListRow";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
@@ -49,33 +50,16 @@ export function FamilyPage() {
           </div>
         ) : null}
         {members.map((member) => (
-          <div
+          <ListRow
             key={member.id}
-            className={`flex items-center gap-4 ${display ? "min-h-20 py-3" : "min-h-16 py-2"}`}
-          >
-            <Avatar member={member} size={display ? "lg" : "md"} />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className={display ? "text-d-body font-semibold" : "text-row font-semibold"}>
-                {member.name}
-              </span>
-              <span
-                className={
-                  display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"
-                }
-              >
-                {`${member.role === "kid" ? "Child" : "Parent"}, ${member.color_word}`}
-              </span>
-            </div>
-            <Button
-              variant="secondary"
-              aria-label={`Change ${member.name}`}
-              onClick={() => {
-                setChanging(member);
-              }}
-            >
-              Change
-            </Button>
-          </div>
+            label={`Edit ${member.name}`}
+            leading={<Avatar member={member} size={display ? "lg" : "md"} />}
+            title={member.name}
+            subtitle={`${member.role === "kid" ? "Child" : "Parent"}, ${member.color_word}`}
+            onClick={() => {
+              setChanging(member);
+            }}
+          />
         ))}
         <AddPerson />
       </Group>

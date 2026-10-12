@@ -135,7 +135,7 @@ test("quick add on the wall, seen on a phone, changed and undone, dragged and pu
   await context.close();
 });
 
-test("the views, the event sheet and Recently removed", async ({ page }) => {
+test("the views, the event sheet and Recently Removed", async ({ page }) => {
   await pairWall(page);
   await page.goto("/display");
   const board = page.getByRole("region", { name: "This Week" });
@@ -174,8 +174,9 @@ test("the views, the event sheet and Recently removed", async ({ page }) => {
   await page.getByRole("button", { name: "Settings" }).click();
   await page
     .getByRole("navigation", { name: "Settings" })
-    .getByRole("link", { name: "Household", exact: true })
+    .getByRole("link", { name: "Recently Removed", exact: true })
     .click();
+  await expect(page.getByRole("heading", { name: "Recently Removed", level: 2 })).toBeVisible();
   await page.getByRole("button", { name: "Put back Vet" }).click();
   await expect(toast(page, "Put back Vet")).toBeVisible();
   await page.getByRole("link", { name: "Calendar", exact: true }).click();
@@ -234,7 +235,7 @@ test("a birthday from Family is a chip in its person's color, and moves when it'
   const { page: phonePage, context } = await phone(browser, watch);
   await signInPhone(phonePage);
   await phonePage.goto("/settings/family");
-  await phonePage.getByRole("button", { name: "Change Mia" }).click();
+  await phonePage.getByRole("button", { name: "Edit Mia" }).click();
   await phonePage.getByLabel("Birthday (optional)").fill("2017-10-08");
   await phonePage.getByRole("button", { name: "Save changes" }).click();
   await expect(toast(phonePage, "Changes saved")).toBeVisible();

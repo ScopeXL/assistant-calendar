@@ -49,7 +49,14 @@ test.describe("a phone", () => {
     await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
     await noSidewaysScroll(page, "More");
     await page.getByRole("link", { name: "Settings" }).click();
-    for (const title of ["Family", "Display", "Household", "Phones & Screens", "About"]) {
+    for (const title of [
+      "Family",
+      "Display",
+      "Household",
+      "Phones & Screens",
+      "Recently Removed",
+      "About",
+    ]) {
       await page.getByRole("link", { name: title, exact: true }).click();
       await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
       await noSidewaysScroll(page, title);
@@ -426,8 +433,8 @@ test.describe("the wall screen", () => {
     await seed(request);
     await pairWall(page);
     await page.goto("/settings/family");
-    await page.getByRole("button", { name: "Change Mia" }).click();
-    const sheet = page.getByRole("dialog", { name: "Change Mia" });
+    await page.getByRole("button", { name: "Edit Mia" }).click();
+    const sheet = page.getByRole("dialog", { name: "Edit Mia" });
     const field = sheet.getByLabel("Name");
     await field.click();
     await field.evaluate((node: HTMLInputElement) => {
@@ -446,7 +453,7 @@ test.describe("the wall screen", () => {
     await keyboard.getByRole("button", { name: "Done" }).click();
     await expect(keyboard).toHaveCount(0);
     await sheet.getByRole("button", { name: "Save changes" }).click();
-    await expect(page.getByRole("button", { name: "Change Mia Rose" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit Mia Rose" })).toBeVisible();
   });
 
   test("shows a tip under the board once the household turns tips on", async ({
@@ -566,7 +573,7 @@ test.describe("a laptop", () => {
     await expect(field).toHaveValue("Zoe");
     await expect(page.getByRole("group", { name: "On-screen keyboard" })).toHaveCount(0);
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("button", { name: "Change Zoe" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit Zoe" })).toBeVisible();
   });
 });
 

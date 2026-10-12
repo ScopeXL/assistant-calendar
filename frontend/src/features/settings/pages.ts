@@ -7,6 +7,7 @@ export const SETTINGS_PAGES = [
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
   { key: "devices", title: "Phones & Screens" },
+  { key: "removed", title: "Recently Removed" },
   { key: "backup", title: "Backup" },
   { key: "about", title: "About" },
 ] as const;

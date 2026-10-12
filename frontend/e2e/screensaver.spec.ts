@@ -112,7 +112,7 @@ test("a computer adds photos itself, where the wall shows a code for a phone", a
   page,
 }, testInfo) => {
   const code = page.getByRole("img", { name: "A code that opens Photos on a phone" });
-  const mia = page.getByRole("dialog", { name: "Change Mia" });
+  const mia = page.getByRole("dialog", { name: "Edit Mia" });
   if (testInfo.project.name === "display-1080p") {
     await pairWall(page);
     await page.goto("/photos");
@@ -120,7 +120,7 @@ test("a computer adds photos itself, where the wall shows a code for a phone", a
     await expect(page.getByLabel("Add photos")).toHaveCount(0);
     // A person's photo comes from a phone too.
     await page.goto("/settings/family");
-    await page.getByRole("button", { name: "Change Mia" }).click();
+    await page.getByRole("button", { name: "Edit Mia" }).click();
     await expect(mia).toContainText("Add a photo from a phone");
     await expect(mia.getByLabel("Add a photo", { exact: true })).toHaveCount(0);
     return;
@@ -139,6 +139,6 @@ test("a computer adds photos itself, where the wall shows a code for a phone", a
   await expect(photos).toHaveCount(9);
   // And a person's photo.
   await page.goto("/settings/family");
-  await page.getByRole("button", { name: "Change Mia" }).click();
+  await page.getByRole("button", { name: "Edit Mia" }).click();
   await expect(mia.getByLabel("Add a photo", { exact: true })).toBeAttached();
 });

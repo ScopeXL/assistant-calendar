@@ -10,7 +10,6 @@ import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
 import { usePluginModules } from "../usePluginModules";
 import { Group, Row } from "./parts";
-import { RecentlyRemoved } from "./RecentlyRemoved";
 
 function zones(): string[] {
   try {
@@ -135,7 +134,6 @@ function HouseholdForm({ settings }: { settings: Settings }) {
       {sections.map((Section, index) => (
         <Section key={index} />
       ))}
-      <RecentlyRemoved />
     </>
   );
 }

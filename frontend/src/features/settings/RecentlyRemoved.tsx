@@ -8,9 +8,9 @@ import { useRemovedGroups } from "../usePluginModules";
 import { Group, Text } from "./parts";
 
 /**
- * Recently removed (UX §4 Settings → Household, PLAN §8.4): what was removed in the last 7 days
- * (events, and each plugin's own: lists, items, chores), each with Put back, because a toast's
- * Undo is gone before a parent sees what a kid did.
+ * Settings → Recently Removed (UX §4, PLAN §8.4), a page of its own: what was removed in the
+ * last 7 days (events, and each plugin's own: lists, items, chores), each with Put back, because
+ * a toast's Undo is gone before a parent sees what a kid did.
  */
 export function RecentlyRemoved() {
   const { data: removed = [] } = useRemovedEvents();
@@ -20,7 +20,7 @@ export function RecentlyRemoved() {
   const nothing = removed.length === 0 && groups.every(({ id }) => (counts[id] ?? 0) === 0);
   const display = useShell() === "display";
   return (
-    <Group title="Recently Removed">
+    <Group>
       {nothing ? (
         <div className={display ? "py-5" : "py-4"}>
           <Text soft>Things removed in the last 7 days show here.</Text>

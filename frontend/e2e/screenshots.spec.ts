@@ -37,6 +37,7 @@ const PAGES = [
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
   { key: "devices", title: "Phones & Screens" },
+  { key: "removed", title: "Recently Removed" },
   { key: "backup", title: "Backup" },
   { key: "about", title: "About" },
 ];
@@ -280,11 +281,11 @@ test("the wall screen", async ({ page }) => {
     .getByRole("navigation", { name: "Settings" })
     .getByRole("link", { name: "Family", exact: true })
     .click();
-  await page.getByRole("button", { name: "Change Mia" }).click();
-  await expect(page.getByRole("dialog", { name: "Change Mia" })).toBeVisible();
+  await page.getByRole("button", { name: "Edit Mia" }).click();
+  await expect(page.getByRole("dialog", { name: "Edit Mia" })).toBeVisible();
   await shot(page, "settings-change-a-person");
   // The keyboard inside a sheet: the sheet moves up above the keys.
-  const person = page.getByRole("dialog", { name: "Change Mia" });
+  const person = page.getByRole("dialog", { name: "Edit Mia" });
   const keys = page.getByRole("group", { name: "On-screen keyboard" });
   await person.getByLabel("Name").click();
   await expect(keys).toBeVisible();
@@ -292,6 +293,21 @@ test("the wall screen", async ({ page }) => {
   await keys.getByRole("button", { name: "Done" }).click();
   await person.getByRole("button", { name: "Close" }).click();
   await expect(person).toBeHidden();
+
+  // An account's sheet (its server stopped answering above), and its calendar's page.
+  await page
+    .getByRole("navigation", { name: "Settings" })
+    .getByRole("link", { name: "Calendars & Accounts", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Edit Test server" }).click();
+  await expect(page.getByRole("dialog", { name: "Edit Test server" })).toBeVisible();
+  await shot(page, "settings-account");
+  await page.getByRole("button", { name: "Edit School" }).click();
+  const school = page.getByRole("dialog", { name: "Edit School" });
+  await expect(school).toBeVisible();
+  await shot(page, "settings-account-calendar");
+  await school.getByRole("button", { name: "Close" }).click();
+  await expect(school).toBeHidden();
 
   // Adding an account here: the choices with the phone shortcut, iCloud's password on the
   // keyboard, and Google's two ways that need a phone.
@@ -397,8 +413,8 @@ test("a phone", async ({ page, isMobile }) => {
       await shot(page, `settings-${key}-${scheme}`);
     }
     await page.goto("/settings/family");
-    await page.getByRole("button", { name: "Change Mia" }).click();
-    await expect(page.getByRole("dialog", { name: "Change Mia" })).toBeVisible();
+    await page.getByRole("button", { name: "Edit Mia" }).click();
+    await expect(page.getByRole("dialog", { name: "Edit Mia" })).toBeVisible();
     await shot(page, `settings-change-a-person-${scheme}`);
     await page.goto("/settings/devices");
     await page.getByRole("button", { name: "Add a phone" }).click();
@@ -458,7 +474,17 @@ test("a phone's calendar", async ({ page, isMobile }) => {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto("/settings/calendars");
     await expect(page.getByRole("heading", { name: "Accounts", exact: true })).toBeVisible();
+    await shot(page, `settings-calendars-accounts-${scheme}`);
+    // An account's sheet, and its calendar's page inside it.
+    await page.getByRole("button", { name: "Edit Test server" }).click();
+    await expect(page.getByRole("dialog", { name: "Edit Test server" })).toBeVisible();
     await shot(page, `settings-calendars-account-${scheme}`);
+    await page.getByRole("button", { name: "Edit School" }).click();
+    const school = page.getByRole("dialog", { name: "Edit School" });
+    await expect(school).toBeVisible();
+    await shot(page, `settings-calendars-account-calendar-${scheme}`);
+    await school.getByRole("button", { name: "Close" }).click();
+    await expect(school).toBeHidden();
     const flows: [string, string][] = [
       ["iCloud", "icloud"],
       ["Another calendar", "address"],
@@ -714,8 +740,8 @@ test("a laptop", async ({ page }) => {
     .getByRole("navigation", { name: "Settings" })
     .getByRole("link", { name: "Family", exact: true })
     .click();
-  await page.getByRole("button", { name: "Change Mia" }).click();
-  await expect(page.getByRole("dialog", { name: "Change Mia" })).toBeVisible();
+  await page.getByRole("button", { name: "Edit Mia" }).click();
+  await expect(page.getByRole("dialog", { name: "Edit Mia" })).toBeVisible();
   await shot(page, "settings-change-a-person");
   await page.goto("/photos");
   await expect(page.getByRole("list", { name: "Photos" })).toBeVisible();

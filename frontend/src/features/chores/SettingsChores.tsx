@@ -7,6 +7,7 @@ import { useMembers, usePlugins, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { ListRow } from "../../ui/ListRow";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
@@ -88,21 +89,15 @@ function RewardsGroup() {
         </div>
       ) : null}
       {(data?.rewards ?? []).map((reward) => (
-        <div
+        <ListRow
           key={reward.id}
-          className={`flex items-center justify-between gap-4 ${display ? "min-h-20 py-3" : "min-h-14 py-2"}`}
-        >
-          <Text>{`${reward.title} · ★${String(reward.cost_points)}`}</Text>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setEditing(reward);
-            }}
-          >
-            Change
-            <span className="sr-only"> {reward.title}</span>
-          </Button>
-        </div>
+          label={`Edit ${reward.title}`}
+          title={reward.title}
+          value={`★${String(reward.cost_points)}`}
+          onClick={() => {
+            setEditing(reward);
+          }}
+        />
       ))}
       <div className={display ? "py-4" : "py-3"}>
         <Button
@@ -144,26 +139,15 @@ function RoutinesGroup() {
       {routines.map((routine) => {
         const kid = personOf(members, routine.member_id);
         return (
-          <div
+          <ListRow
             key={routine.id}
-            className={`flex items-center justify-between gap-4 ${display ? "min-h-20 py-3" : "min-h-14 py-2"}`}
-          >
-            <div className="flex flex-col">
-              <Text>{routine.title}</Text>
-              <Text soft>
-                {`${kid ? kid.name : "Every child"} · ${clockText(routine.window_start)} · ${String(routine.steps.length)} steps`}
-              </Text>
-            </div>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setEditing(routine);
-              }}
-            >
-              Change
-              <span className="sr-only"> {routine.title}</span>
-            </Button>
-          </div>
+            label={`Edit ${routine.title}`}
+            title={routine.title}
+            subtitle={`${kid ? kid.name : "Every child"} · ${clockText(routine.window_start)} · ${String(routine.steps.length)} steps`}
+            onClick={() => {
+              setEditing(routine);
+            }}
+          />
         );
       })}
       <div className={display ? "py-4" : "py-3"}>
@@ -178,7 +162,7 @@ function RoutinesGroup() {
       </div>
       <SidePanel
         open={editing !== null}
-        title={editing && editing !== "new" ? `Change ${editing.title}` : "Add Routine"}
+        title={editing && editing !== "new" ? `Edit ${editing.title}` : "Add Routine"}
         onClose={() => {
           setEditing(null);
         }}

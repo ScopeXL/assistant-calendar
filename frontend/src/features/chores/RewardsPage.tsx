@@ -345,11 +345,7 @@ export function RewardPanel({
   onClose: () => void;
 }) {
   return (
-    <SidePanel
-      open={open}
-      title={reward ? `Change ${reward.title}` : "Add Reward"}
-      onClose={onClose}
-    >
+    <SidePanel open={open} title={reward ? `Edit ${reward.title}` : "Add Reward"} onClose={onClose}>
       {open ? <RewardForm key={reward?.id ?? "new"} reward={reward} onClose={onClose} /> : null}
     </SidePanel>
   );

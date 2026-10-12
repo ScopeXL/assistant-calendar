@@ -962,7 +962,16 @@ by default now; a screen set to 10 minutes starts after 15 until you pick anothe
 
 ### T11 Settings: rows you tap, the account sheet, Recently Removed's own page
 
-- [ ] Done (commit: )
+- [x] Done (commit: `settings: rows you tap, an account's sheet, Recently Removed's page`)
+
+**As built.** The account sheet is one sheet with pages (the account, a calendar, connect again,
+the Remove question) through `Sheet`'s `step`, not a sheet over a sheet. `ColorPicker` writes
+whose a taken color is under its word ("Mia's"), since the cells are narrow, and serves the three
+sheets; `CountdownEditor` and the event form keep their one-row chips from T8, where a taken color
+means nothing. Synced calendars were never listed under Calendars (only the household's own are),
+so no "From iCloud" row was needed there. A helper account whose key stopped working says to
+remove it and add it again: the server has no route to replace a key in place. `COLORS` stays in
+`lib/colors.ts` (T8).
 
 **Owner's notes.** "Settings->Family: Rename 'Change' to 'Edit' with an icon for the People. Or
 remove the button and make the item clickable to edit them." "Settings->Calendar &

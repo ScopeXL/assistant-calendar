@@ -7,6 +7,8 @@ import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { ColorPicker, usedBy } from "../../ui/ColorPicker";
+import { ListRow } from "../../ui/ListRow";
 import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
@@ -14,7 +16,6 @@ import { TextField } from "../../ui/TextField";
 import { useCalendars } from "../calendar/data";
 import { usePluginModules } from "../usePluginModules";
 import type { CalendarInfo, PersonColor } from "../calendar/types";
-import { COLORS } from "../../lib/colors";
 import { Group, Text } from "./parts";
 
 type Editing = { kind: "new" } | { kind: "change"; calendar: CalendarInfo } | null;
@@ -30,9 +31,10 @@ function useRefreshCalendars() {
 }
 
 /**
- * Settings → Calendars & accounts (UX §4): the Home calendar and any other local calendars, each
- * with a color, an owner and "Show on this screen"; which one new events go to; removing one
- * (with Put back). Accounts and their synced calendars follow, from the calendar_sync plugin.
+ * Settings → Calendars & Accounts (UX §4): the Home calendar and any other local calendars, a
+ * row each that opens its sheet (a color, an owner, "Show on the wall screen", which one new
+ * events go to, removing it, with Put back). Accounts and their synced calendars follow, from
+ * the calendar_sync plugin.
  */
 export function CalendarsPage() {
   const display = useShell() === "display";
@@ -65,18 +67,28 @@ export function CalendarsPage() {
       >
         {calendars.map((calendar) => {
           const owner = members.find((m) => m.id === calendar.owner_member_id) ?? null;
-          return (
+          const notes = [
+            calendar.is_default ? "New events go here" : null,
+            owner ? `${owner.name}'s` : "Everyone's",
+            calendar.visible_on_display ? null : "Hidden on the wall screen",
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          const dot = (
+            <span
+              aria-hidden="true"
+              data-person={calendar.color}
+              className={`shrink-0 rounded-full bg-p ${display ? "size-8" : "size-6"}`}
+            />
+          );
+          return calendar.read_only ? (
             <div
               key={calendar.id}
-              className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${display ? "min-h-20 py-4" : "min-h-14 py-3"}`}
+              className={`flex items-center gap-4 py-2 ${display ? "min-h-tap-primary" : "min-h-14"}`}
             >
-              <span
-                aria-hidden="true"
-                data-person={calendar.color}
-                className={`shrink-0 rounded-full bg-p ${display ? "size-8" : "size-6"}`}
-              />
+              {dot}
               <div className="flex min-w-0 flex-1 flex-col">
-                <span className={`${display ? "text-d-body" : "text-body"} font-semibold`}>
+                <span className={`${display ? "text-d-body" : "text-row"} font-semibold`}>
                   {calendar.name}
                 </span>
                 <span
@@ -84,29 +96,21 @@ export function CalendarsPage() {
                     display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"
                   }
                 >
-                  {[
-                    calendar.is_default ? "New events go here" : null,
-                    owner ? `${owner.name}'s` : "Everyone's",
-                    calendar.visible_on_display ? null : "Hidden on the wall screen",
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  {`${notes} · From an account`}
                 </span>
               </div>
-              {calendar.read_only ? (
-                <Text soft>From an account</Text>
-              ) : (
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setEditing({ kind: "change", calendar });
-                  }}
-                >
-                  Change
-                  <span className="sr-only"> {calendar.name}</span>
-                </Button>
-              )}
             </div>
+          ) : (
+            <ListRow
+              key={calendar.id}
+              label={`Edit ${calendar.name}`}
+              leading={dot}
+              title={calendar.name}
+              subtitle={notes}
+              onClick={() => {
+                setEditing({ kind: "change", calendar });
+              }}
+            />
           );
         })}
         <div className={display ? "py-4" : "py-3"}>
@@ -158,7 +162,7 @@ function CalendarSheet({ editing, onClose }: { editing: Editing; onClose: () => 
   return (
     <Sheet
       open={editing !== null}
-      title={calendar ? `Change ${calendar.name}` : "Add a Calendar"}
+      title={calendar ? `Edit ${calendar.name}` : "Add a Calendar"}
       onClose={onClose}
     >
       {editing ? (
@@ -243,33 +247,7 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
           setName(event.target.value);
         }}
       />
-      <fieldset className="flex flex-col gap-2">
-        <legend className={`mb-2 ${label}`}>Color</legend>
-        <div className={`grid gap-2 ${display ? "grid-cols-4" : "grid-cols-2"}`}>
-          {COLORS.map((option) => (
-            <label
-              key={option.value}
-              data-person={option.value}
-              className={`press flex cursor-pointer items-center gap-2 rounded-button border-2 border-line bg-surface px-2 has-checked:border-ink has-checked:ring-2 has-checked:ring-ink ${
-                display ? "min-h-16 text-d-secondary" : "min-h-12 text-secondary"
-              }`}
-            >
-              <input
-                type="radio"
-                name="calendar-color"
-                value={option.value}
-                checked={color === option.value}
-                onChange={() => {
-                  setColor(option.value);
-                }}
-                className="sr-only"
-              />
-              <span aria-hidden="true" className="size-6 shrink-0 rounded-full bg-p" />
-              <span className="font-semibold">{option.word}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <ColorPicker name="calendar-color" value={color} onChange={setColor} used={usedBy(members)} />
       <div className="flex flex-col gap-2">
         <p className={label}>Whose calendar</p>
         <ChipRow label="Whose calendar">

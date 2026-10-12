@@ -30,6 +30,7 @@ const SETTINGS = [
   "Display",
   "Household",
   "Phones & Screens",
+  "Recently Removed",
   "Backup",
 ];
 const CSRF = { "X-Sunroom": "1" };
@@ -311,8 +312,11 @@ for (const scheme of ["light", "dark"] as const) {
         await page.getByRole("main").getByRole("link", { name: title, exact: true }).click();
         await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
         await check(page, `settings: ${title}`);
-        if (title === "Family") await sheet(page, "Change Mia", "change a person");
-        if (title === "Calendars & Accounts") await sheet(page, "Add a calendar", "add a calendar");
+        if (title === "Family") await sheet(page, "Edit Mia", "change a person");
+        if (title === "Calendars & Accounts") {
+          await sheet(page, "Add a calendar", "add a calendar");
+          await sheet(page, "Edit Test server", "an account");
+        }
         if (title === "Phones & Screens") await sheet(page, "Add a phone", "add a phone");
       }
       await page.goto("/install?from=more");
@@ -519,10 +523,11 @@ for (const scheme of ["light", "dark"] as const) {
           page.getByRole("heading", { name: title, level: 2, exact: true }),
         ).toBeVisible();
         await check(page, `display settings: ${title}`);
-        if (title === "Family") await sheet(page, "Change Mia", "display: change a person");
+        if (title === "Family") await sheet(page, "Edit Mia", "display: change a person");
         if (title === "Calendars & Accounts") {
-          await sheet(page, "Change Kids' activities", "display: change a calendar");
+          await sheet(page, "Edit Kids' activities", "display: change a calendar");
           await sheet(page, "Add an account", "display: add an account");
+          await sheet(page, "Edit Test server", "display: an account");
         }
       }
     });

@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "../../api/client";
 import type { components } from "../../api/schema";
 import { qk } from "../../api/keys";
+import { formatTime } from "../../lib/dates";
 import { asParent } from "../../lib/parent";
 import { showToast } from "../../lib/toast";
 
@@ -47,6 +48,19 @@ export function sourceName(account: Account): string {
   if (address.includes("icloud.com")) return "iCloud";
   if (address.includes("google.com")) return "Google";
   return account.label;
+}
+
+/** "Updated 9:10 AM", "Syncing…", or the quiet error (UX §8: never an error wall). */
+export function statusLine(account: Account): string {
+  if (account.syncing) return "Syncing…";
+  if (account.status === "paused") return "Paused";
+  if (account.status === "needs_reconnect" || account.status === "error") {
+    return account.last_error ?? `${sourceName(account)} hasn't answered.`;
+  }
+  const slow = account.provider === "ics" && sourceName(account) === "Google";
+  if (!account.last_success_at) return "Not synced yet";
+  const updated = `Updated ${formatTime(new Date(account.last_success_at))}`;
+  return slow ? `${updated} · Google updates this slowly` : updated;
 }
 
 export function useSyncChanges() {
@@ -155,7 +169,7 @@ export function useSyncChanges() {
     },
     onSuccess: async (account) => {
       await refresh();
-      showToast(`Disconnected ${sourceName(account)}`);
+      showToast(`Removed ${account.label}`);
     },
   });
 

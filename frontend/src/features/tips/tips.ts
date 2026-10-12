@@ -28,7 +28,7 @@ export const TIPS: readonly Tip[] = [
   { id: "undo", text: "Removed something by mistake? Tap Undo on the message before it goes." },
   {
     id: "recently-removed",
-    text: "Removed it last week? Settings → Household → Recently Removed keeps it for 7 days.",
+    text: "Removed it last week? Settings → Recently Removed keeps it for 7 days.",
   },
   { id: "lock", text: "The lock in the rail opens Settings. A parent PIN keeps children out." },
   { id: "text-size", text: "Text too small from across the room? Settings → Display → Text size." },
