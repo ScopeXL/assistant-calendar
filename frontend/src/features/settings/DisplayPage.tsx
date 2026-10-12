@@ -68,7 +68,7 @@ export function DisplayPage() {
         />
       </Group>
       <Group title="Layout">
-        <Row label="Rail side" hint="Where the clock and rooms sit, for a screen hung to one side.">
+        <Row label="Rail side" hint="Where the rooms and Add sit, for a screen hung to one side.">
           <Segmented
             label="Rail side"
             value={settings.display_rail_side}
@@ -81,6 +81,14 @@ export function DisplayPage() {
             ]}
           />
         </Row>
+        <Switch
+          label="Compact rail"
+          hint="Only the rooms' icons, so the board gets more room. Anyone can open it back out from the rail."
+          checked={settings.display_rail_compact}
+          onChange={(display_rail_compact) => {
+            update.mutate({ display_rail_compact });
+          }}
+        />
         <Row label="Home view" hint="What the screen shows when nobody is using it.">
           <Segmented
             label="Home view"

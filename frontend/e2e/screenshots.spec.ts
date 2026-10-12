@@ -140,6 +140,18 @@ test("the wall screen", async ({ page }) => {
   await expect(root).toHaveAttribute("data-text-size", "xl");
   await expect(board.locator("[data-now-line]")).toBeVisible();
   await shot(page, "board-hours-24h-xl");
+  if (test.info().project.name === "display-1080p") {
+    // The rail folded to its icons, at Standard: the board takes the room.
+    await change(page, { text_size: "standard", display_week_layout: "agenda" });
+    await page.reload();
+    await expect(board).toBeVisible();
+    await page.getByRole("button", { name: "Hide the rail" }).click();
+    await shot(page, "rail-compact");
+    await page.getByRole("button", { name: "Show the rail" }).click();
+    await change(page, { text_size: "xl", display_week_layout: "hours" });
+    await page.reload();
+    await expect(root).toHaveAttribute("data-text-size", "xl");
+  }
   if (test.info().project.name === "display-portrait") {
     // Portrait at Extra large: the header's views fold into the View menu.
     await page.getByRole("button", { name: "View: Week" }).click();

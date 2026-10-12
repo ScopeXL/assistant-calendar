@@ -101,7 +101,29 @@ export function UpdatePrompt() {
  * They rise in and ease out with `motion`; the others close the gap (UX §9). AnimatePresence's
  * popLayout adds a <style> as a toast leaves, under the page's CSP nonce (ADR 0007).
  */
-export function ToastRegion({ display = false }: { display?: boolean }) {
+// Where the wall's toasts sit: over the board, between the rail and the Today panel, whichever
+// side the rail is on and whether or not the panel shows. Static strings, so Tailwind sees them.
+const BOARD = {
+  left: {
+    shown: "left-[var(--rail-w)] right-[var(--panel-w)]",
+    hidden: "left-[var(--rail-w)] right-0",
+  },
+  right: {
+    shown: "left-[var(--panel-w)] right-[var(--rail-w)]",
+    hidden: "left-0 right-[var(--rail-w)]",
+  },
+} as const;
+
+export function ToastRegion({
+  display = false,
+  railSide = "left",
+  panelShown = true,
+}: {
+  display?: boolean;
+  /** The wall: which side its rail is on, and whether its Today panel shows. */
+  railSide?: "left" | "right";
+  panelShown?: boolean;
+}) {
   const list = useStore(toasts);
   const anchor = useStore(toastAnchor);
   const items = (
@@ -150,7 +172,7 @@ export function ToastRegion({ display = false }: { display?: boolean }) {
       aria-live="polite"
       className={
         display
-          ? "pointer-events-none fixed right-[var(--panel-w)] bottom-[calc(1.5rem+var(--tips-h,0px))] left-[var(--rail-w)] z-40 flex flex-col items-center gap-2 px-6 portrait:right-0 portrait:bottom-[calc(8rem+var(--tips-h,0px))] portrait:left-0"
+          ? `pointer-events-none fixed bottom-[calc(1.5rem+var(--tips-h,0px))] z-40 flex flex-col items-center gap-2 px-6 portrait:right-0 portrait:bottom-[calc(8rem+var(--tips-h,0px))] portrait:left-0 ${BOARD[railSide][panelShown ? "shown" : "hidden"]}`
           : "pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--tabbar-h)+12px)] z-40 flex flex-col items-center gap-2 px-4 print:hidden lg:bottom-6"
       }
     >

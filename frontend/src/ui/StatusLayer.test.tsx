@@ -66,4 +66,19 @@ describe("toasts", () => {
     screen.getByRole("button", { name: "Undo" }).click();
     expect(undo).toHaveBeenCalledOnce();
   });
+
+  it("sit over the wall's board, whichever side the rail is on and with the panel hidden", () => {
+    const region = () => screen.getByRole("status").className;
+    const left = render(<ToastRegion display />);
+    expect(region()).toContain("left-[var(--rail-w)] right-[var(--panel-w)]");
+    left.unmount();
+    const right = render(<ToastRegion display railSide="right" />);
+    expect(region()).toContain("left-[var(--panel-w)] right-[var(--rail-w)]");
+    right.unmount();
+    const alone = render(<ToastRegion display railSide="right" panelShown={false} />);
+    expect(region()).toContain("left-0 right-[var(--rail-w)]");
+    alone.unmount();
+    render(<ToastRegion display panelShown={false} />);
+    expect(region()).toContain("left-[var(--rail-w)] right-0");
+  });
 });

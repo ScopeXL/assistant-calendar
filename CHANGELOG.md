@@ -10,6 +10,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - Settings → Display → Text size has a Small choice for screens around 1920×1080. Buttons stay
   finger-sized at every text size.
+- Hide the rail from the button at its top for a wider board: it folds to its icons, and comes
+  back after two minutes, or stays small with Settings → Display → Compact rail.
 
 ### Changed
 
@@ -19,6 +21,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   buttons at the right, and the Today panel's button in every room, Settings included. The
   calendar's views (Week, Day, Month, People) are icons there, with the one you're on written
   out.
+- The Sunroom mark sits at the top of the rail, and Settings is a gear now. The padlock shows
+  only while a paired screen's Settings are locked behind the PIN.
 
 ## [0.7.0] - 2026-10-09
 

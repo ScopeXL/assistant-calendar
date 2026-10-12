@@ -34,6 +34,12 @@
     color var(--motion-crossfade) linear;
 }
 
+/* The rail folding to its icons and back (shell/Rail): its width eases, and the board takes or
+   gives the room. The attribute arrives a frame after the settings do, never on first paint. */
+nav[data-rail-motion] {
+  transition: width var(--motion-enter) var(--ease-standard);
+}
+
 /* A press: controls dip slightly while a finger is on them and their colors ease. */
 .press {
   transition-property: transform, background-color, border-color, color, opacity;

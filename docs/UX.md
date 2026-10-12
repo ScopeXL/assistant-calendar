@@ -99,23 +99,23 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 
 ```
 +----------+-----------------------------------------------------------------------------------------------------+
-| [cal]    | Tue, Oct 7  9:41 AM  ☼ 64° 72°/55° | October 2026  [<] [This Week] [>]    [▦ Week][1][▤][☺]  [⇥] (≈) |
-| Calendar |                                    | Oct 5–11                                                       |
-|          |----------------------------------------------------------------------------+------------------------|
-| [list]   | Show (All) (M) (L) (A) (S)                             [Agenda] [Hours]    | Up Next                |
-| Lists    |----------------------------------------------------------------------------|                        |
+| [▦]  [⇤] | Tue, Oct 7  9:41 AM  ☼ 64° 72°/55° | October 2026  [<] [This Week] [>]    [▦ Week][1][▤][☺]  [⇥] (≈) |
+| Sunroom  |                                    | Oct 5–11                                                       |
+|----------|----------------------------------------------------------------------------+------------------------|
+| [cal]    | Show (All) (M) (L) (A) (S)                             [Agenda] [Hours]    | Up Next                |
+| Calendar |----------------------------------------------------------------------------|                        |
 |          |  Sun 5   |  Mon 6   |  TUE 7   |  Wed 8   |  Thu 9   |  Fri 10  |  Sat 11  | 4:00 PM                |
-| [check]  |          |          |  today   |          |          |          |          | Soccer practice        |
-| Tasks    |----------|----------|----------|----------|----------|----------|----------| (M) Mia · Field 3      |
+| [list]   |          |          |  today   |          |          |          |          | Soccer practice        |
+| Lists    |----------|----------|----------|----------|----------|----------|----------| (M) Mia · Field 3      |
 |          | Columbus |          | Pajama   |          |          |          | Hike     |                        |
-| [meal]   | Day (All)|          | day (L)  |          |          |          | (All)    |------------------------|
-| Meals    |----------|----------|----------|----------|----------|----------|----------| Later Today            |
+| [check]  | Day (All)|          | day (L)  |          |          |          | (All)    |------------------------|
+| Tasks    |----------|----------|----------|----------|----------|----------|----------| Later Today            |
 |          | 10:00 AM | 8:00 AM  | 8:00 AM  | 9:00 AM  | 2:30 PM  | 3:30 PM  | 9:00 AM  | 6:30 PM  Dinner at     |
-| [photo]  | Church   | Dentist  | School   | Vet      | Dentist  | Pickup   | Soccer   |          Grandma's     |
-| Photos   | (All)    | (S)      | drop-off | (A)      | (M)      | (L)      | game (M) |          (All)         |
+| [meal]   | Church   | Dentist  | School   | Vet      | Dentist  | Pickup   | Soccer   |          Grandma's     |
+| Meals    | (All)    | (S)      | drop-off | (A)      | (M)      | (L)      | game (M) |          (All)         |
 |          |          |          | (A)      |          |          |          |          | 7:30 PM  Leo's bedtime |
-|          | 2:00 PM  | 4:00 PM  |· now 9:41|          | 4:00 PM  | 6:00 PM  | 12:00 PM |          routine       |
-|          | Grandma  | Piano    | 4:00 PM  |          | Soccer   | Pizza    | Lunch at |------------------------|
+| [photo]  | 2:00 PM  | 4:00 PM  |· now 9:41|          | 4:00 PM  | 6:00 PM  | 12:00 PM |          routine       |
+| Photos   | Grandma  | Piano    | 4:00 PM  |          | Soccer   | Pizza    | Lunch at |------------------------|
 |          | visit    | (L)      | Soccer   |          | practice | night    | Nana's   | Tasks Today            |
 |          | (All)    |          | practice |          | (M)      | (All)    | (All)    | (M) Mia   2 of 3       |
 |          |          | 6:30 PM  | (M)      |          |          |          |          | (L) Leo   1 of 1 done  |
@@ -126,7 +126,7 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 |  ( + )   |          |          | (All)    |          |          |          |          |------------------------|
 |  Add     |          |          | 7:30 PM  |          |          |          |          | Coming Up              |
 |          |          |          | Bedtime  |          |          |          |          | 12 days  Mia's birthday|
-| [lock]   |          |          | routine  |          |          |          |          | 31 days  Beach trip    |
+| [gear]   |          |          | routine  |          |          |          |          | 31 days  Beach trip    |
 +----------+----------+----------+----------+----------+----------+----------+----------+------------------------+
 ```
 
@@ -138,7 +138,9 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 
 **The board's toolbar**, above its days: the person filter ("Show" and avatars, multi-select, clears after 2 min idle), the plugins' quiet pills ("Google hasn't answered since 9:10 AM"), and at the right the Week's own tools: the zoom (**24h · 12h · 1h · 15m**, while Hours is on) and the layout switch (**Agenda · Hours**, two icons in a narrow board), both back to the household's after 2 min idle.
 
-**The rail**, top to bottom: the rooms in the household's order (36 px icon, 20 px label, 96 px tall each; at most six, the rest fold into More), a flexible gap, **Add** (a 64 px circle with a plus), the lock (its screen-reader name is "Settings"). The clock and the weather left it for the header.
+**The rail** (ADR 0029), top to bottom: the brand (the Sunroom mark over the name) with **Hide the rail** beside it, the rooms in the household's order (36 px icon, 20 px label, 96 px tall each; at most six, the rest fold into More), a flexible gap, **Add** (a 64 px circle with a plus), and **Settings**: a gear, or a padlock while Settings are locked behind the PIN on a paired screen (with a grant open the word under it reads "Unlocked"; a parent's laptop, and a household with no PIN, always see the gear). The clock and the weather left it for the header.
+
+**The mini rail.** Hide the rail folds it to its icons, 72 px wide: the mark, **Show the rail**, each room's icon, the Add circle and the gear, every one still named for a screen reader. It is never fully hidden, unlike the Today panel: the rooms stay one tap away. The board and the header take the room, and the toasts follow. On this screen it lasts until the screen has sat idle for 2 minutes, like the Today panel's button; Settings → Display → **Compact rail** keeps it folded for good, and then Show the rail opens it out until the next idle reset. The width eases (§9). Portrait's bottom bar is always whole.
 
 **The Today panel**, top to bottom, each section only with content and its plugin on: **Now** (an event in progress, "until 5:00 PM"), **Up Next** (time at 24 px, title at 40, person and location at 20), **Later Today**, **Tomorrow** (only after 6 PM), **Tasks Today** (a line per person with a small progress ring), **Tonight**, **To Do** (list items due today), **Coming Up** (the two nearest countdowns). Tapping any line opens its thing. It shows beside every room, Settings included, until its button in the header hides it on this screen.
 
@@ -186,7 +188,7 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 | Wed 8  | [9:00 AM Vet (A)]                                       |
 |  …     |                                                         |
 |------------------------------------------------------------------|
-|  [cal]      [list]     [check]     [meal]     [photo]   (+)  [lock]
+|  [cal]      [list]     [check]     [meal]     [photo]   (+)  [gear]
 |  Calendar   Lists      Tasks       Meals      Photos    Add      |
 +------------------------------------------------------------------+
 ```
@@ -407,7 +409,7 @@ The photo fits inside the screen (never cropped; the letterbox takes the wall's 
 
 **Night** (from Settings → Display → Sleep: from, to, and **Dim clock** or **Screen off**): Dim clock is a black screen with the clock at 200 px in a 35% ink-soft and tomorrow's first event under it, and the Pi's helper turns the panel down to 20%; Screen off is fully black, and the helper switches the screen itself off (PLAN §13.5). A tap wakes it for 2 minutes in the dark theme, at full brightness; routines and tasks still work in those minutes. **Dim in the evening** (only with sleep times): from its time until sleep starts the screen is less bright, **A little**, **Half** or **Low** (60, 40 or 20%). The helper turns the panel down where it can (DDC/CI, or a backlight); anywhere else the page draws a dark veil over itself, so the two never both dim.
 
-**Parent PIN** (a centred dialog whenever the display needs a parent): four to six dots, a 3 × 4 keypad with 80 px keys, Cancel, and the line "Forgot it? Change it from a parent's phone: More → Settings → Family → Parent PIN." The dialog accepts as soon as the right length matches; a wrong PIN shakes the dots once and says "That PIN didn't match. Try again."; five wrong in a row: "Too many tries. Wait 1 minute." with a countdown. A correct PIN opens Settings for 10 minutes of activity (the rail lock shows open; **Lock**, Settings' own button in the header, ends it; Settings auto-lock after 2 minutes idle). With no PIN set, the lock opens Settings directly and the Family page says "Set a parent PIN so children can't open Settings on this screen."
+**Parent PIN** (a centred dialog whenever the display needs a parent): four to six dots, a 3 × 4 keypad with 80 px keys, Cancel, and the line "Forgot it? Change it from a parent's phone: More → Settings → Family → Parent PIN." The dialog accepts as soon as the right length matches; a wrong PIN shakes the dots once and says "That PIN didn't match. Try again."; five wrong in a row: "Too many tries. Wait 1 minute." with a countdown. A correct PIN opens Settings for 10 minutes of activity (the rail's padlock becomes the gear, with "Unlocked" under it; **Lock**, Settings' own button in the header, ends it; Settings auto-lock after 2 minutes idle). With no PIN set, the gear opens Settings directly and the Family page says "Set a parent PIN so children can't open Settings on this screen."
 
 **Settings (display)**: a list-and-detail layout under the header, which reads "Settings"; the Today panel stays beside it until its button hides it (the pages are capped at a reading width anyway; ADR 0029). Passwords and calendar addresses are typed here on the on-screen keyboard, masked, behind the PIN (ADR 0028); only what needs a file or Google's own page says "Do this from a phone" with a QR code to that page.
 
@@ -416,7 +418,7 @@ The photo fits inside the screen (never cropped; the letterbox takes the wall's 
 | Family | One row per person: avatar, name, role, color word, **Change** (Name; Parent or Child; Color, eight named colors each showing the initial; Photo: **Add a photo** on a phone or computer, a line pointing to a phone on the kitchen screen, and Remove photo; **Save changes** with Undo; **Remove Mia** confirms and offers to keep her history). **Add a person** in one row: the name, Parent or Child, **Add** (in a card narrower than 20rem, on the smallest phones, the name takes its own line with Parent or Child beside Add under it). **Parent PIN** (Set, Change, Remove; changing asks the old one). **Child-safe editing** on/off |
 | Features | One row per plugin with a switch and one line on what it adds: Synced Calendars, Lists, Tasks (sub-switches Stars, Rewards, Routines), Meals (which columns), Countdowns, Photos & Screensaver, Weather. Turning one off hides its room and panel at once; its data stays. A stopped plugin shows "Retry" |
 | Calendars & Accounts | **Home calendar** (always). Then each account ("iCloud · ana@…") with its calendars under it, each with a person chip, a **Show on this screen** switch and a status line ("Updated 9:10 AM" or the quiet error). **Refresh now**, **Connect again** and **Disconnect**. **Add an account** opens the same steps as on a phone (§6), typed on the on-screen keyboard, with "Or add it from a phone" and a QR under the choices. Google's **Share with a Sunroom helper** (a key file) and **Sign in with Google** (Google's own page) say "From a phone" and open a QR with "Do this from a phone" |
-| Display | Theme Light / Dark / Auto; Text size Small / Standard / Large / Extra large (previews live); Daylight tint on/off; Rail side Left / Right; Controls at the bottom; Today panel Show / Hide; Home view Week / Today / People; Week layout Agenda / Hours (Agenda stacks each day's events; Hours draws them on a 24-hour grid); Show tips (off by default: one thing Sunroom can do under the board, a new one every half hour, not on phones); Return to home after 2 / 5 / 10 min / Never; Dim past events; Screensaver (as in Photos); Sleep (from, to, Dim clock / Screen off; Dim in the evening from a time, A little / Half / Low); Sounds On / Off; Orientation Auto / Landscape / Portrait; Reduce motion |
+| Display | Theme Light / Dark / Auto; Text size Small / Standard / Large / Extra large (previews live); Daylight tint on/off; Rail side Left / Right; Compact rail (only the rooms' icons, for a wider board; anyone can open it back out from the rail); Controls at the bottom; Today panel Show / Hide; Home view Week / Today / People; Week layout Agenda / Hours (Agenda stacks each day's events; Hours draws them on a 24-hour grid); Show tips (off by default: one thing Sunroom can do under the board, a new one every half hour, not on phones); Return to home after 2 / 5 / 10 min / Never; Dim past events; Screensaver (as in Photos); Sleep (from, to, Dim clock / Screen off; Dim in the evening from a time, A little / Half / Low); Sounds On / Off; Orientation Auto / Landscape / Portrait; Reduce motion |
 | Household | Name; Time zone; Week starts on Sunday / Monday; Time format 12-hour / 24-hour; Location for weather and sunset (a town name search; phone recommended); **Recently Removed** (7 days, Put back) |
 | Phones & Screens | This screen (name, Rename, Unpair); other screens; phones with "Mia's phone · last used today"; **Add a phone** (a code and QR); **Sign out a phone** |
 | Backup | The nightly backups: the last backup time, a banner if older than 7 days, **Back up now**, and on a phone or computer **Download backup** (the newest copy) and **Download everything** (a zip with every photo, to restore from; restoring is a runbook step with the server stopped, docs/RESTORE.md); **Take your data with you**: **Export everything** (one JSON file anyone can read), on a phone or computer. The wall says to download from a phone |
@@ -732,7 +734,7 @@ Quiet states, never error walls:
 | Display can't reach the server | Header pill "Can't reach Sunroom · showing 9:10 AM"; a write says "Not saved — the screen can't reach Sunroom. It will try again." and retries every 10 s |
 | Phone offline | Pill "Offline · showing what we had"; a write says "Not saved — you're offline. Try again when you have signal." (an offline queue is a PLAN §19 idea) |
 | Syncing | "Syncing 3…" |
-| PIN-locked | The lock in the rail; Settings and approvals ask for the PIN; nothing else is ever locked |
+| PIN-locked | A padlock in place of the rail's gear; Settings and approvals ask for the PIN; nothing else is ever locked |
 | Child-safe editing stops an action | The PIN dialog with one line above it: "Changing events on this screen asks for the parent PIN." |
 | Read-only synced event | The sheet's source line instead of buttons |
 | A reward costs more than the balance | "Mia has 18 of 30 stars" under a disabled Ask for it, never hidden |
@@ -773,6 +775,7 @@ The principles and the signature moment are in §7. Implementation (decision 000
 | Panel or sheet close | Close, Save, Cancel | exit: slide back; the page takes taps 180 ms later | disappears |
 | Keyboard | a field focused or blurred | enter / exit: slides up and down; the field scrolls into view in the same 220 ms | appears / disappears |
 | Toast | after an action | enter: rise 16 px and fade; exit: ease out | appears / disappears |
+| Rail fold | Hide the rail, Show the rail, the Compact rail setting | enter: the rail's width eases between 192 and 72 px and the board follows; never on first paint (a rail that starts folded is drawn folded) | instant |
 | Chip arrives | saved here or on another device | enter: fade and grow from 96% in place; neighbours close the gap in quick | appears |
 | Chip leaves | removed, moved, undone | exit: fade and shrink; the gap closes in quick | disappears |
 | Count pop | "2 of 3", "12 to get", a star balance | quick: scale 1 → 1.15 → 1 | no scale |
@@ -802,7 +805,7 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 - **Text size** (Settings → Display): Small, Standard, Large, Extra large change the display's root font size so everything scales in rem; the structure holds (seven columns, two-line chips, "+N more" sooner; the rail and Today panel widen at Extra large and narrow at Small). Small shrinks text and spacing, never a tap target or the 8 px between two of them. Phones follow the OS text size.
 - **Color is never the only signal**: avatars carry an initial or photo; done is a check, the stamp, "Done by Mia" and the row's place; past is dimmed and above the now line; selected is a ring, a check and a bold name; filtered-out chips fade but keep their text. The user-facing color words are plain (Red, Olive, Green, Teal, Blue, Purple, Plum, Pink), mapped to the tokens in §7; no yellow, which fails as text. The token test checks every pair in both themes and at every wall-tint stop.
 - **Focus, keyboard and screen readers**: a 4 px ink ring with 2 px offset on the display (3 px on phones), the wall color on inverse surfaces; laptops get a sensible tab order and arrow keys across the board, Escape closes, `/` focuses quick add; the on-screen keyboard never appears when a physical keyboard is in use. Names by example: a chip "Soccer practice, 4:00 to 5:00 PM, Mia, Thursday October 9, button"; a task box "Feed the dog, Mia, 2 stars, due 5:00 PM, not done, checkbox"; the now line is `aria-hidden`; the Today panel is a landmark; toasts are live regions; sheets take focus on open and return it on close.
-- **Left-handed and placement**: Settings → Display → Rail side (Left or Right mirrors the shell), and Controls at the bottom for a screen hung high.
+- **Left-handed and placement**: Settings → Display → Rail side (Left or Right mirrors the shell: the rail, the Today panel, the keyboard's dock and the toasts' place over the board), and Controls at the bottom for a screen hung high.
 - **Children**: zero-reading paths (find your column by avatar and color, tap the big box, get the stamp; routine steps are icons first); Child-safe editing and the parent PIN keep Settings, approvals and event changes behind a parent on the display; nothing a child can tap is unrecoverable (Undo, Recently Removed, no "delete everything" outside Settings); no shaming copy, streaks just read "0 days in a row".
 - **Guests and grandparents**: the display is open to anyone in the house, attribution defaults to Everyone, "A guest" is in every Who picker; a grandparent can read the Today panel from the doorway and add an event on 80 px keys without meeting Settings; guests' phones sign in with the household password for the week and are signed out from Phones & Screens.
 
@@ -812,6 +815,7 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 - [ ] Display body text is 24 px, secondary 20, captions 18, nothing smaller than 18; phone body 16, inputs at least 16.
 - [ ] Every display tap target is at least 56 px (checkboxes and primary buttons 64, keys 80×64) with 8 px between neighbours; phone targets at least 44 (primary 48, checkboxes 48 in 72×80); the axe checks pass.
 - [ ] The header (ADR 0029): at 1920×1080 Standard and Small it is one row (today, a thin rule, the room's title over its quiet line, the room's buttons, the Today panel's button, the live icon in the corner), in late September too; at Large, Extra large, on a laptop and in portrait it is two rows with the corner unmoved; the Calendar's views are four icons with the chosen one's word, or the View menu in portrait at Extra large; every room's title is in it (Lists, a list with its way back, Tasks, Stars & Rewards, Meals, Saved Meals, Countdowns, Photos, Settings) and no room draws a second title row; the Today panel's button works from Settings.
+- [ ] The rail (ADR 0029): the brand and Hide the rail at its top, the gear at its bottom (a padlock only with a PIN set and no grant open); folded it is 72 px of icons with the mark, Show the rail, every room, the Add circle and the gear, nothing clipped, and the header and board start where it ends.
 - [ ] Today's column is lit, the now line sits between the right chips with its time label, past chips are dimmed, an in-progress chip is solid.
 - [ ] Hours (both display sizes, light and dark): at 24h the whole day fits with nothing to scroll and the gutter's hours line up with the grid; chips sit at their times with tap-sized buttons; the now line's label reads over a solid in-progress chip; at 15m a 15-minute event has a full chip; the board's toolbar (Show, the zoom, the layout switch) is one line in landscape and wraps to two in portrait at Extra large.
 - [ ] With Show tips on, the strip sits under the board between the rail and the Today panel (above the bottom bar in portrait), its tip on one line with an ellipsis and Next tip at 56 px; toasts sit above it; Hours at 24h still fits with nothing to scroll, and no chip in a column is covered to less than 24 px.

@@ -392,6 +392,14 @@ input[type="search"]::-webkit-search-decoration {
   appearance: none;
 }
 
+/* The wall's rail folded to its icons (shell/Rail, ADR 0029): everything that reads the rail's
+   width, the toasts included, follows. Landscape only: portrait's bar is always whole. */
+@media (orientation: landscape) {
+  :root:has([data-rail="compact"]) {
+    --rail-w: 4.5rem;
+  }
+}
+
 /* The tips strip under the board (features/tips): while it shows, the wall's toasts sit above it. */
 :root:has([data-tips]) {
   --tips-h: var(--tap);

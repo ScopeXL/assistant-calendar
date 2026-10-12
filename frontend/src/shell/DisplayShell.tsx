@@ -84,7 +84,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const { data: settings } = useSettings();
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
   const now = useMinute();
-  const { panelShown, panel } = useStore(displayState);
+  const { panelShown, railCollapsed, panel } = useStore(displayState);
   // Woken at night (a tap, or a parent's Wake): awake for 2 minutes from the latest wake.
   const [awake, setAwake] = useState(false);
   const [wakes, setWakes] = useState(0);
@@ -234,6 +234,8 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   // In every room, Settings included: its pages are capped at a reading width anyway.
   const showPanel = panelShown ?? settings?.display_show_today_panel ?? true;
   const railSide = settings?.display_rail_side ?? "left";
+  // Folded to its icons on this screen (until it sits idle), or by the household's setting.
+  const railCompact = railCollapsed ?? settings?.display_rail_compact ?? false;
   const mirrored = railSide === "right" ? "landscape:flex-row-reverse" : "";
 
   return (
@@ -241,6 +243,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
       <MotionProvider reduceMotion={settings?.display_reduce_motion ?? false}>
         <div
           data-shell="display"
+          data-rail={railCompact ? "compact" : "full"}
           className={`flex h-dvh overflow-clip bg-wall text-ink landscape:flex-row portrait:flex-col ${mirrored}`}
         >
           <div className="contents portrait:order-last portrait:block">
@@ -255,6 +258,12 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
                     ? "open"
                     : "locked"
               }
+              compact={railCompact}
+              side={railSide}
+              settled={settings !== undefined}
+              onFold={(compact) => {
+                updateDisplay({ railCollapsed: compact });
+              }}
               onAdd={() => {
                 if (room === "settings") void navigate({ to: home });
                 updateDisplay({ panel: { kind: "add", day: null, hour: null } });
@@ -312,7 +321,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
           />
         ) : null}
         <CelebrationLayer />
-        <ToastRegion display />
+        <ToastRegion display railSide={railSide} panelShown={showPanel} />
         <OfflinePill display />
         {kiosk ? <KeyboardHost railSide={railSide} /> : null}
         <PinDialog />

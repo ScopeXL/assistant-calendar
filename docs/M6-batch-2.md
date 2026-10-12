@@ -443,7 +443,7 @@ the left, the page's buttons at the right, and the Today panel's button in every
 
 ### T5 The rail: the brand, the mini rail, the gear
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: the rail folds to its icons")
 
 **Owner's notes.** "After the header is changed the left navigation area would shift everything
 up. Include at the top the Sunroom logo. Also add a way to 'hide' the navigation for a true full
@@ -490,6 +490,12 @@ on a paired display."
   the hook); the word under it stays ("Unlocked" while a grant is open, else "Settings").
   `DisplayShell.tsx:251-257` already yields `locked` only with a PIN and no grant, `open` for a
   laptop parent or no PIN: unchanged. The Settings header's **Lock** button keeps its padlock.
+
+**As built.** The `--rail-w` rule sits inside `@media (orientation: landscape)`, and the folded
+form's `sr-only` words are `landscape:sr-only`, so portrait's bar never changes. A folded room is
+a 4.5rem square (`flex-[0_1_4.5rem]`), not 6rem tall. The Compact rail switch moves when the
+server answers (settings aren't optimistic), so the e2e clicks it and waits rather than
+`check()`.
 
 **Tests.** e2e `shell.spec.ts`, new: "folds its rail to icons and opens it again after two
 minutes idle" (`page.clock.install()` before `goto("/display")`, since `whenIdle` uses

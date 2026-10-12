@@ -7,7 +7,7 @@
  */
 import type { Page } from "@playwright/test";
 
-import { expect, pairWall, PASSWORD, seed, signInPhone, test, wall } from "./fixtures";
+import { expect, pairWall, PASSWORD, PIN, seed, signInPhone, test, wall } from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 
@@ -257,6 +257,100 @@ test.describe("the wall screen", () => {
     await expect(today).toBeVisible();
   });
 
+  test("folds its rail to icons, and opens it again after two minutes idle", async ({
+    page,
+    request,
+  }) => {
+    test.skip(test.info().project.name !== "display-1080p", "landscape: portrait's bar is whole");
+    await seed(request);
+    await pairWall(page);
+    // The idle timers run on the page's clock, so two minutes take no time.
+    await page.clock.install();
+    await page.goto("/display");
+    const board = page.getByRole("region", { name: "This Week" });
+    await expect(board).toBeVisible();
+    const rail = page.getByRole("navigation", { name: "Rooms" });
+    const width = async () => Math.round((await rail.boundingBox())?.width ?? 0);
+    const boardWidth = async () => Math.round((await board.boundingBox())?.width ?? 0);
+    expect(await width()).toBe(192);
+    const wide = await boardWidth();
+    await expect(rail.getByRole("img", { name: "Sunroom" })).toHaveCount(0); // the name is written
+    await expect(rail).toContainText("Sunroom");
+
+    await rail.getByRole("button", { name: "Hide the rail" }).click();
+    await expect.poll(width).toBe(72);
+    // Never fully hidden: every room, Add and Settings are still one tap away, by name.
+    for (const name of ["Calendar", "Lists", "Tasks", "Meals", "Countdowns", "Photos"]) {
+      await expect(rail.getByRole("link", { name, exact: true })).toBeVisible();
+    }
+    await expect(rail.getByRole("button", { name: "Add", exact: true })).toBeVisible();
+    await expect(rail.getByRole("button", { name: "Settings" })).toBeVisible();
+    await expect(rail.getByRole("img", { name: "Sunroom" })).toBeVisible();
+    // The board takes the room, and the header starts where the rail ends.
+    expect(await boardWidth()).toBe(wide + 120);
+    expect(Math.round((await page.getByRole("banner").boundingBox())?.x ?? 0)).toBe(72);
+    // It stays folded from room to room.
+    await rail.getByRole("link", { name: "Lists", exact: true }).click();
+    await expect(page.getByRole("banner").getByRole("heading", { name: "Lists" })).toBeVisible();
+    expect(await width()).toBe(72);
+    await rail.getByRole("link", { name: "Calendar", exact: true }).click();
+    await expect(board).toBeVisible();
+
+    await rail.getByRole("button", { name: "Show the rail" }).click();
+    await expect.poll(width).toBe(192);
+    await rail.getByRole("button", { name: "Hide the rail" }).click();
+    await expect.poll(width).toBe(72);
+    // Left alone for two minutes, the screen goes back to how the household set it.
+    await page.clock.fastForward(121_000);
+    await expect.poll(width).toBe(192);
+  });
+
+  test("keeps its rail folded when the household picks Compact rail", async ({ page, request }) => {
+    test.skip(test.info().project.name !== "display-1080p", "landscape: portrait's bar is whole");
+    await seed(request);
+    await pairWall(page);
+    await page.clock.install();
+    // No PIN in this household: the wall opens Settings itself.
+    await page.goto("/settings/display");
+    const rail = page.getByRole("navigation", { name: "Rooms" });
+    const width = async () => Math.round((await rail.boundingBox())?.width ?? 0);
+    expect(await width()).toBe(192);
+    const compact = page.getByRole("switch", { name: /^Compact rail/ });
+    await compact.click();
+    await expect(compact).toBeChecked();
+    await expect.poll(width).toBe(72);
+    // The setting lasts: two idle minutes send the wall home, still folded.
+    await page.clock.fastForward(121_000);
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    expect(await width()).toBe(72);
+    // Anyone can open it back out for now; idle puts it back to the household's choice.
+    await rail.getByRole("button", { name: "Show the rail" }).click();
+    await expect.poll(width).toBe(192);
+    await page.clock.fastForward(121_000);
+    await expect.poll(width).toBe(72);
+  });
+
+  test("shows a padlock only while Settings are locked behind the PIN", async ({
+    page,
+    request,
+  }) => {
+    await seed(request, { pin: PIN });
+    await pairWall(page);
+    await page.goto("/display");
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    const settings = page.getByRole("button", { name: "Settings" });
+    await expect(settings).toHaveAttribute("data-icon", "lock");
+    await settings.click();
+    const pin = page.getByRole("dialog", { name: "Parent PIN" });
+    for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
+    await expect(pin).toBeHidden();
+    // Open for now: a gear, and the header's own Lock button ends it.
+    await expect(settings).toHaveAttribute("data-icon", "gear");
+    await page.getByRole("banner").getByRole("button", { name: "Lock" }).click();
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    await expect(settings).toHaveAttribute("data-icon", "lock");
+  });
+
   test("types into a sheet with its own keyboard, and the sheet rises above the keys", async ({
     page,
     request,
@@ -391,7 +485,11 @@ test.describe("a laptop", () => {
     await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Rooms" })).toBeVisible();
     await noSidewaysScroll(page, "the board");
-    // A parent's laptop: Settings opens without a PIN.
+    // A parent's laptop: Settings is a gear, and opens without a PIN.
+    await expect(page.getByRole("button", { name: "Settings" })).toHaveAttribute(
+      "data-icon",
+      "gear",
+    );
     await page.getByRole("button", { name: "Settings" }).click();
     await expect(page.getByRole("heading", { name: "Family", level: 2 })).toBeVisible();
     const field = page.getByLabel("Add a person");

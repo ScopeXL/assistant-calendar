@@ -7,6 +7,9 @@ const SIZES = {
   stacked: { box: "flex flex-col items-center gap-4", mark: "size-24", word: "text-title" },
   /** The wall screen before it's paired. */
   entry: { box: "flex items-center gap-4", mark: "size-16", word: "text-d-title" },
+  /** The top of the wall's rail: the mark over the name, beside Hide the rail. Folded, the
+   * mark alone. */
+  rail: { box: "flex flex-col items-start gap-1", mark: "size-10", word: "text-d-secondary" },
 } as const;
 
 /**
