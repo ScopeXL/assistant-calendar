@@ -46,6 +46,40 @@ describe("a segmented choice", () => {
   });
 });
 
+describe("a stacked row of kinds (the Add panel's types)", () => {
+  const KINDS = [
+    { value: "event", label: "Event", icon: Clock3 },
+    { value: "item", label: "Item", icon: List },
+  ] as const;
+
+  it("is one line that scrolls sideways, each cell an icon over its word", () => {
+    const onChange = vi.fn();
+    render(
+      <ShellContext.Provider value="display">
+        <Segmented label="What to add" options={KINDS} value="item" onChange={onChange} stacked />
+      </ShellContext.Provider>,
+    );
+    const group = screen.getByRole("group", { name: "What to add" });
+    expect(group.className).toContain("flex-nowrap");
+    expect(group.className).toContain("overflow-x-auto");
+    expect(group.className).not.toContain("flex-wrap");
+    expect(group.hasAttribute("data-segmented")).toBe(true);
+    expect(group.getAttribute("data-overflow")).toBe("none");
+    const event = screen.getByRole("button", { name: "Event" });
+    const item = screen.getByRole("button", { name: "Item" });
+    expect([event, item].map((cell) => cell.getAttribute("aria-pressed"))).toEqual([
+      "false",
+      "true",
+    ]);
+    for (const cell of [event, item]) {
+      expect(cell.className).toContain("flex-col");
+      expect(cell.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    }
+    fireEvent.click(event);
+    expect(onChange).toHaveBeenCalledWith("event");
+  });
+});
+
 describe("an icon group", () => {
   const LAYOUTS = [
     { value: "agenda", label: "Agenda", icon: List },

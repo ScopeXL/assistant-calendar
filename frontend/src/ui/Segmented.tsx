@@ -1,10 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 
+import { useOverflow } from "./ScrollRow";
 import { useShell } from "./shell";
 
 export interface SegmentOption<T extends string> {
   value: T;
   label: string;
+  /** Drawn before the word, or over it when the group is `stacked`. */
+  icon?: LucideIcon | undefined;
 }
 
 /**
@@ -14,44 +17,67 @@ export interface SegmentOption<T extends string> {
  * options can't fit one line (five time words on a phone) the group wraps onto a second row
  * instead of spilling past the edge; its corners are a fixed radius, so two rows still read as
  * one control.
+ *
+ * `stacked` is the form for a row of kinds (the Add panel's Event, Item, Task…): each cell's
+ * icon over a short word, always one line; where the row is too narrow (a phone) it scrolls
+ * sideways with a fade at the edge instead of wrapping.
  */
 export function Segmented<T extends string>({
   label,
   options,
   value,
   onChange,
+  stacked = false,
 }: {
   label: string;
   options: readonly SegmentOption<T>[];
   value: T;
   onChange: (value: T) => void;
+  stacked?: boolean;
 }) {
   const display = useShell() === "display";
-  return (
-    <div
-      role="group"
-      aria-label={label}
-      data-segmented=""
-      className={`flex flex-wrap gap-1 border-2 border-line bg-surface p-1 ${
-        // A cell's own radius plus the padding and the border around it.
+  const [ref, overflow] = useOverflow<HTMLDivElement>(options, stacked);
+  const group = stacked
+    ? `fade-x flex-nowrap snap-x overflow-x-auto [scrollbar-width:none] rounded-panel ${
+        display ? "text-d-secondary" : "text-caption"
+      }`
+    : // A cell's own radius plus the padding and the border around it.
+      `flex-wrap ${
         display
           ? "rounded-[calc(var(--tap)/2+6px)] text-d-body"
           : "rounded-[1.75rem] text-secondary"
-      }`}
+      }`;
+  const cell = stacked
+    ? `shrink-0 snap-start flex-col gap-1 rounded-[1.25rem] ${
+        display ? "min-h-[4.5rem] min-w-[6.5rem] px-3" : "min-h-14 min-w-[4.75rem] px-2"
+      }`
+    : `rounded-full ${display ? "min-h-tap min-w-tap gap-2 px-5" : "min-h-11 min-w-11 gap-2 px-4"}`;
+  return (
+    <div
+      ref={ref}
+      role="group"
+      aria-label={label}
+      data-segmented=""
+      data-overflow={stacked ? overflow : undefined}
+      className={`flex gap-1 border-2 border-line bg-surface p-1 ${group}`}
     >
-      {options.map((option) => (
+      {options.map(({ value: option, label: word, icon: Icon }) => (
         <button
-          key={option.value}
+          key={option}
           type="button"
-          aria-pressed={option.value === value}
+          aria-pressed={option === value}
           onClick={() => {
-            onChange(option.value);
+            onChange(option);
           }}
-          className={`press select-fill flex flex-auto items-center justify-center rounded-full font-semibold whitespace-nowrap aria-pressed:bg-ink aria-pressed:text-on-ink ${
-            display ? "min-h-tap min-w-tap px-5" : "min-h-11 min-w-11 px-4"
-          }`}
+          className={`press select-fill flex flex-auto items-center justify-center font-semibold whitespace-nowrap aria-pressed:bg-ink aria-pressed:text-on-ink ${cell}`}
         >
-          {option.label}
+          {Icon ? (
+            <Icon
+              aria-hidden="true"
+              className={`shrink-0 ${display ? (stacked ? "size-8" : "size-7") : "size-5"}`}
+            />
+          ) : null}
+          {word}
         </button>
       ))}
     </div>

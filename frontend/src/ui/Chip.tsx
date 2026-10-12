@@ -10,6 +10,7 @@ export function Chip({
   children,
   disabled = false,
   label,
+  expanded,
 }: {
   /** Pressed state; leave it out for a chip that just does something. */
   on?: boolean;
@@ -18,12 +19,15 @@ export function Chip({
   disabled?: boolean;
   /** The accessible name, when the visible text isn't enough. */
   label?: string;
+  /** For a chip that opens something in place (Pick a date, Custom…): whether it's open. */
+  expanded?: boolean | undefined;
 }) {
   const display = useShell() === "display";
   return (
     <button
       type="button"
       aria-pressed={on}
+      aria-expanded={expanded}
       aria-label={label}
       disabled={disabled}
       onClick={onClick}

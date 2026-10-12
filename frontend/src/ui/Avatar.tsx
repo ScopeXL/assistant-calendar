@@ -8,6 +8,8 @@ const SIZES = {
   xs: "size-7 text-[0.8rem] border-2",
   sm: "size-10 text-body border-[3px]",
   md: "size-12 text-row border-[3px]",
+  /** 56 px: the Who picker when a seventh person would otherwise wrap its row. */
+  tap: "size-14 text-d-body border-[3px]",
   lg: "size-16 text-d-body border-[3px]",
   xl: "size-[72px] text-d-title border-4",
 } as const;

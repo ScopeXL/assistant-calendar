@@ -91,8 +91,20 @@ export function CalendarRoom() {
       },
     });
   };
+  // A tap on the board while Add is open sets the day: the panel keeps the kind of thing being
+  // added and its title.
   const add = (day: string | null, hour: number | null = null, minute: number | null = null) => {
-    updateDisplay({ panel: { kind: "add", day, hour, minute } });
+    const open = state.panel?.kind === "add" ? state.panel : null;
+    updateDisplay({
+      panel: {
+        kind: "add",
+        day,
+        hour,
+        minute,
+        ...(open?.type ? { type: open.type } : {}),
+        ...(open?.title ? { title: open.title } : {}),
+      },
+    });
   };
   const move = (occurrence: Occurrence, toDay: string) => {
     if (!occurrence.event_id) return;
