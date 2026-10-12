@@ -294,16 +294,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
                 {children}
                 <TipsBar />
               </main>
-              {showPanel ? (
-                <div
-                  data-surface=""
-                  className={`flex w-[var(--panel-w)] shrink-0 flex-col border-line bg-surface portrait:hidden ${
-                    railSide === "right" ? "border-r" : "border-l"
-                  }`}
-                >
-                  <TodayPanel home={home} />
-                </div>
-              ) : null}
+              <TodaySide shown={showPanel} railSide={railSide} home={home} />
             </div>
           </div>
         </div>
@@ -335,18 +326,76 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
             className={`pointer-events-none fixed inset-0 z-[58] bg-night ${VEIL[dim] ?? "opacity-45"}`}
           />
         ) : null}
-        {sleeping ? (
-          <Night
-            mode={settings?.sleep_mode ?? "dim_clock"}
-            onWake={() => {
-              swallowFollowingClick();
-              setAwake(true);
-              setWakes((n) => n + 1);
-              if (kiosk) tellServerAwake();
-            }}
-          />
-        ) : null}
+        <Night
+          sleeping={sleeping}
+          mode={settings?.sleep_mode ?? "dim_clock"}
+          onWake={() => {
+            swallowFollowingClick();
+            setAwake(true);
+            setWakes((n) => n + 1);
+            if (kiosk) tellServerAwake();
+          }}
+        />
       </MotionProvider>
     </ShellContext.Provider>
+  );
+}
+
+/** How long what's in the Today panel stays while its box closes: a little over the 220 ms. */
+const PANEL_CLOSES_MS = 300;
+
+/**
+ * The Today panel beside the board, in landscape. Shown or hidden, its box stays in the row: the
+ * width eases between the panel's and nothing (UX §9 "The shell"; styles/motion.css), so the board
+ * takes or gives the room rather than jumping. What's inside keeps its own width meanwhile, and
+ * leaves once the box has closed. Never on first paint: the motion arrives a frame later.
+ */
+function TodaySide({
+  shown,
+  railSide,
+  home,
+}: {
+  shown: boolean;
+  railSide: "left" | "right";
+  home: "/display" | "/";
+}) {
+  const [moves, setMoves] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMoves(true);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  const [held, setHeld] = useState(shown);
+  if (shown && !held) setHeld(true);
+  useEffect(() => {
+    if (shown || !held) return;
+    const timer = setTimeout(() => {
+      setHeld(false);
+    }, PANEL_CLOSES_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [shown, held]);
+  return (
+    <div
+      data-today-side={moves ? "" : undefined}
+      inert={!shown}
+      aria-hidden={shown ? undefined : true}
+      className={`flex shrink-0 overflow-clip portrait:hidden ${shown ? "w-[var(--panel-w)]" : "w-0"}`}
+    >
+      {held ? (
+        <div
+          data-surface=""
+          className={`flex w-[var(--panel-w)] shrink-0 flex-col border-line bg-surface ${
+            railSide === "right" ? "border-r" : "border-l"
+          }`}
+        >
+          <TodayPanel home={home} />
+        </div>
+      ) : null}
+    </div>
   );
 }

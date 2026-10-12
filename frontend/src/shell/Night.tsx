@@ -1,8 +1,12 @@
+import { useEffect, useState } from "react";
+
 import { useOccurrences } from "../features/calendar/data";
 import { byDay } from "../features/calendar/layout";
 import { addDays, formatClock, formatWallTime, zonedParts } from "../lib/dates";
 import { useMinute } from "../lib/time";
 import { Digits } from "../ui/Digits";
+
+const LEAVE_AT_MOST_MS = 400;
 
 /**
  * Night (UX §4): the dim clock on black with tomorrow's first event under it, or a black screen
@@ -10,7 +14,56 @@ import { Digits } from "../ui/Digits";
  * screen for 2 minutes and does nothing else: this layer takes the touch, and lib/idle drops the
  * click that follows.
  */
-export function Night({ mode, onWake }: { mode: "dim_clock" | "screen_off"; onWake: () => void }) {
+export function Night({
+  sleeping,
+  mode,
+  onWake,
+}: {
+  sleeping: boolean;
+  mode: "dim_clock" | "screen_off";
+  onWake: () => void;
+}) {
+  // Waking, the layer fades away over the screen it gives back (UX §9), then goes.
+  const [leaving, setLeaving] = useState(false);
+  const [was, setWas] = useState(sleeping);
+  if (sleeping !== was) {
+    setWas(sleeping);
+    setLeaving(!sleeping);
+  }
+  useEffect(() => {
+    if (!leaving) return;
+    // Its fade's end takes it away; this is for a browser that never says the fade ended.
+    const timer = setTimeout(() => {
+      setLeaving(false);
+    }, LEAVE_AT_MOST_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [leaving]);
+  if (!sleeping && !leaving) return null;
+  return (
+    <NightLayer
+      mode={mode}
+      leaving={!sleeping}
+      onWake={onWake}
+      onGone={() => {
+        setLeaving(false);
+      }}
+    />
+  );
+}
+
+function NightLayer({
+  mode,
+  leaving,
+  onWake,
+  onGone,
+}: {
+  mode: "dim_clock" | "screen_off";
+  leaving: boolean;
+  onWake: () => void;
+  onGone: () => void;
+}) {
   const now = useMinute();
   const { day, hour } = zonedParts(now);
   // Before dawn, "tomorrow" is today: what the morning starts with.
@@ -30,7 +83,12 @@ export function Night({ mode, onWake }: { mode: "dim_clock" | "screen_off"; onWa
         onWake();
       }}
       onKeyDown={onWake}
-      className="night-in fixed inset-0 z-[60] flex cursor-pointer flex-col items-center justify-center gap-6 bg-night text-night-ink"
+      onAnimationEnd={(event) => {
+        if (leaving && event.target === event.currentTarget) onGone();
+      }}
+      className={`fixed inset-0 z-[60] flex cursor-pointer flex-col items-center justify-center gap-6 bg-night text-night-ink ${
+        leaving ? "night-out pointer-events-none" : "night-in"
+      }`}
     >
       {mode === "dim_clock" ? (
         <>

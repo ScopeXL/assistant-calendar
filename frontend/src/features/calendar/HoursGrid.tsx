@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import {
   useEffect,
   useLayoutEffect,
@@ -13,7 +13,7 @@ import {
 import { useArrived } from "../../lib/arrivals";
 import { dayNumber, formatWallTime, longWeekday, shortWeekday } from "../../lib/dates";
 import type { Member } from "../../lib/household";
-import { LEAVE, useMotionReduced } from "../../lib/motion";
+import { Leaves } from "../../ui/Leaves";
 import { Draggable, MoreButton } from "./Draggable";
 import {
   EventChip,
@@ -255,7 +255,6 @@ function HoursColumn({
   width: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: day });
-  const reduced = useMotionReduced();
   const filter = new Set(people);
   const allDay = column?.allDay ?? [];
   const timed = column?.timed ?? [];
@@ -352,6 +351,7 @@ function HoursColumn({
       <div
         data-dense=""
         data-day-body=""
+        data-over={lighted ? "" : undefined}
         onClick={add}
         className={`hour-lines relative min-w-0 @container ${lighted ? "bg-sun/15" : isToday ? "bg-lit" : ""}`}
       >
@@ -395,7 +395,7 @@ function HoursColumn({
                     ...laneStyle(item.lane, item.lanes),
                   }}
                 >
-                  <motion.div className="h-full" {...(reduced ? {} : { exit: LEAVE })}>
+                  <Leaves className="h-full">
                     <HoursChip
                       entry={entry}
                       box={item.box}
@@ -408,7 +408,7 @@ function HoursColumn({
                         onOpen(item.occurrence);
                       }}
                     />
-                  </motion.div>
+                  </Leaves>
                 </Draggable>
               );
             })}

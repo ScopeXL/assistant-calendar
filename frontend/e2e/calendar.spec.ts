@@ -308,8 +308,12 @@ test("an event added from a phone eases onto the wall, and one removed fades awa
     headers: CSRF,
   });
   expect(removed.ok()).toBe(true);
+  // Gone for a reader and a finger at once (it's inert while it fades), then from the page.
   await expect(chip).toHaveCount(0, { timeout: 3_000 });
-  expect(await page.evaluate(() => (window as unknown as { faded?: boolean }).faded)).toBe(true);
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { faded?: boolean }).faded))
+    .toBe(true);
+  await expect(page.locator('[data-chip][aria-label^="Library day"]')).toHaveCount(0);
 
   // With Reduce motion on (Settings → Display), a newcomer has no animation at all.
   const calm = await phonePage.request.patch("/api/settings", {

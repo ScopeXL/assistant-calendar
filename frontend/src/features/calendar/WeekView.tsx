@@ -231,6 +231,7 @@ function DayColumn({
       ref={setNodeRef}
       data-day={day}
       data-today={isToday ? "" : undefined}
+      data-over={isOver || lit === day ? "" : undefined}
       aria-current={isToday ? "date" : undefined}
       className={`day-column flex min-h-0 min-w-0 flex-col border-l border-line first:border-l-0 portrait:flex-row portrait:border-t portrait:border-l-0 portrait:first:border-t-0 ${
         isOver || lit === day ? "bg-sun/15" : isToday ? "bg-lit" : ""

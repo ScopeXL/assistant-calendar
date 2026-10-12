@@ -34,6 +34,19 @@
     color var(--motion-crossfade) linear;
 }
 
+/* Midnight: today's lit column hands over to the next, and the fill crossfades (UX §9 "Quiet
+   crossfades"). Not while a day is the drop target or the one being added to: that highlight
+   answers a finger, at once. */
+:root[data-motion-ready] :is(.day-column, [data-day-body]):not([data-over]) {
+  transition: background-color var(--motion-crossfade) linear;
+}
+
+/* The Today panel beside the board showing or hiding (shell/DisplayShell): its width eases, as
+   the rail's does, and the board takes or gives the room. Never on first paint. */
+[data-today-side] {
+  transition: width var(--motion-enter) var(--ease-standard);
+}
+
 /* The rail folding to its icons and back (shell/Rail): its width eases, and the board takes or
    gives the room. The attribute arrives a frame after the settings do, never on first paint. */
 nav[data-rail-motion] {
@@ -373,9 +386,13 @@ dialog[data-closing] [data-keyboard] {
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--sun) 35%, transparent);
 }
 
-/* Night: the black layer fades in; the clock follows. */
+/* Night: the black layer fades in; the clock follows. On waking it fades away over the screen
+   it gives back (shell/Night holds it for that long). */
 .night-in {
   animation: fade-in var(--motion-crossfade) linear;
+}
+.night-out {
+  animation: fade-out var(--motion-exit) var(--ease-leave) forwards;
 }
 
 /* The screensaver (UX §6 "Screensaver in and out", §9): the first photo fades in over the board,
@@ -449,11 +466,12 @@ dialog[data-closing] [data-keyboard] {
   .press:active:not(:disabled) {
     transform: none;
   }
-  .live-turn {
+  .live-turn,
+  .skeleton-shape {
     animation: none !important;
   }
 }
-:root[data-reduce-motion] .live-turn {
+:root[data-reduce-motion] :is(.live-turn, .skeleton-shape) {
   animation: none !important;
 }
 :root[data-reduce-motion] *,

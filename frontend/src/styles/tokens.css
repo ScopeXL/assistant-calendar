@@ -479,6 +479,14 @@ dialog [data-osk] {
 }
 .skeleton-shape {
   background: var(--line);
+  /* A slow breath while it waits (UX §9), by opacity only; still under Reduce Motion
+     (styles/motion.css). */
+  animation: skeleton-breathe 2s ease-in-out infinite;
+}
+@keyframes skeleton-breathe {
+  50% {
+    opacity: 0.55;
+  }
 }
 @keyframes skeleton-wait {
   from {

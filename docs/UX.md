@@ -719,6 +719,7 @@ Other motions: a press dips controls by 3% and shades rows (tap); sheets slide u
 | Warm cream background with a serif display and a terracotta accent | The cool-to-warm daypart tints, and no serif | That combination is the current generated-page tell, and cream glares at night |
 | A grid of identical rounded, shadowed cards per widget (the dashboard look) | One board surface; chips are the only cards; the Today panel is stacked blocks | Glanceability needs hierarchy, not a kit of equal boxes |
 | ALL-CAPS eyebrow labels, "A · B · C" meta strings, arrows on buttons, monospace for times | Title Case only for titles, headings and navigation (§2), sentence case for the rest, stacked lines, plain verbs, tabular figures in the same family | Dinner Bell's rules, and they are easier to read from across a room |
+| Motion as decoration: staggered entrances on load, hover lifts, things that drift | Motion answers what someone just did (ADR 0029): an event eases in where it was added, a finished task glides under Done, the week slides in from the side it was paged from, a count pops. Nothing moves on first paint or when a room opens, and Reduce Motion turns all of it off | On a wall that's glanced at all day, movement that means nothing is noise; movement that follows a tap says "that worked" from across the room |
 | A "now" indicator as a red hairline (Google Calendar's) | An amber line with a soft glow, the lit today column, and the wall's own tint | Ties the time of day into the identity instead of borrowing a competitor's cue |
 | Confetti on everything | One celebration, Done, in the person's color; a bigger one at the end of a routine; nothing else bursts | Spend the boldness in one place so it keeps meaning something |
 
@@ -772,7 +773,7 @@ Quiet states, never error walls:
 
 ## 9. Motion spec
 
-The principles and the signature moment are in §7. Implementation (decision 0007): anything that is a state toggle (press, selection, sheets and panels, toasts, the list strike, crossfades, the PIN shake, placeholders) is CSS in `styles/motion.css`; anything that moves between layouts or follows a finger (chips arriving, leaving, dropping and springing back, the week swipe, the done row relocating, routine steps swapping) uses `motion` layout and gesture animations under `<MotionConfig nonce reducedMotion="user">`; the bursts are a canvas layer. Nothing animates on first paint or a room switch.
+The principles and the signature moment are in §7. Implementation (decision 0007): anything that is a state toggle (press, selection, sheets and panels, toasts, the list strike, crossfades, the PIN shake, placeholders) is CSS in `styles/motion.css`; anything that moves between layouts or follows a finger (chips arriving, leaving, dropping and springing back, the week swipe, the done row relocating, routine steps swapping) uses `motion` under `<MotionConfig nonce reducedMotion="user">` (exits through `AnimatePresence`, the done row through `layout` by position); the bursts are a canvas layer. Nothing animates on first paint or a room switch. As built (ADR 0029), three of those are CSS keyframes instead, because they only need to play once when an attribute or a key changes and must never run when the board is merely resized: a chip arriving (`data-arrive`), a page turning (`data-page`), and the now line's drop. The table's last column says what is built and since when. `motion` keeps fading under Reduce Motion (it drops only transforms), so anything that leaves through it asks `useMotionReduced()` and leaves its `exit` out.
 
 | Name | Value | Easing |
 |---|---|---|
@@ -788,37 +789,38 @@ The principles and the signature moment are in §7. Implementation (decision 000
 | saver-in / saver-out | 800 / 220 ms | linear / leave |
 | photo | 1500 ms | linear |
 
-| Motion | Trigger | Behaviour | Reduced motion |
-|---|---|---|---|
-| Press dip | finger down on a button, chip or key | tap: scale .96 and shade | shade only |
-| Row shade | finger down on a row | tap: shade | same |
-| Selection fill | a chip or avatar selected | quick: fill and ring | instant |
-| Panel or sheet open | Add, a chip tapped, Change | enter: slide from the right (landscape) or the bottom; the backdrop fades with it | appears in place |
-| Panel or sheet close | Close, Save, Cancel | exit: slide back; the page takes taps 180 ms later | disappears |
-| Keyboard | a field focused or blurred | enter / exit: slides up and down; the field scrolls into view in the same 220 ms | appears / disappears |
-| Toast | after an action | enter: rise 16 px and fade; exit: ease out | appears / disappears |
-| Rail fold | Hide the rail, Show the rail, the Compact rail setting | enter: the rail's width eases between 192 and 72 px and the board follows; never on first paint (a rail that starts folded is drawn folded) | instant |
-| Chip arrives | saved here or on another device | enter: fade and grow from 96% in place; neighbours close the gap in quick | appears |
-| Chip leaves | removed, moved, undone | exit: fade and shrink; the gap closes in quick | disappears |
-| Count pop | "2 of 3", "12 to get", a star balance | quick: scale 1 → 1.15 → 1 | no scale |
-| List strike | an item checked | 250 ms marker stroke in the checker's color, 600 ms hold, then folds into Done | strike appears; the row moves without sliding |
-| Task done | the box tapped | the signature moment (§7) | box fills, check and stamp appear, "Done by Mia" appears, no burst |
-| All done | a person's last task | 900 ms: a header burst and "All done, Mia!" fades in | text appears |
-| Routine step | Done in the runner | celebrate on the button; the next step enters from the right as the old one exits left | steps swap in place |
-| Routine finish, reward approved, countdown day | | 900 ms full-screen or panel burst, once | text appears |
-| Week swipe | horizontal drag on the board | 1:1 with the finger, resistance beyond one week; on release, glide to the nearest week; a flick over 0.5 px/ms moves exactly one | pages without sliding |
-| Week buttons | arrows, This Week | glide | cuts |
-| Chip lift / drag / drop / spring back | long-press 400 ms, move, release | lift: scale 1.04 and an 8 px shadow, the origin keeps a dashed outline; drag 1:1 with the column tinting; drop settles into time order; elsewhere springs back | lift shade only; lands in place |
-| Now line (board) | an event ends | glide: drops to the next slot while the finished chip dims | instant |
-| Now line (Hours grid) | every minute | a 60 s linear transition of its position (`--motion-minute`), so it creeps; remounted on a zoom or resize so it never glides across a change of scale, and nothing moves on first paint | steps once a minute |
-| Now line (Day view) | every minute | a 60 s linear transition of its position, so it never jumps | updates each minute |
-| Lit column | midnight | crossfade | instant |
-| Wall tint | the daypart changes | daylight crossfade, at most once a minute, never on first paint | instant |
-| Theme switch | sunset, sunrise, the setting | crossfade on every token, deferred until 10 s idle | instant |
-| Screensaver in / photo / out | idle, every 30 s, a tap | saver-in, photo crossfade (no pan or zoom), saver-out | cuts |
-| Night in / out | the schedule | crossfade to black; the clock fades in | cut |
-| PIN wrong | | quick: the dots shake once (±6 px) and clear | dots clear |
-| Spinner, placeholders | waiting, loading after 300 ms | continuous; a slow shimmer | still |
+| Motion | Trigger | Behaviour | Reduced motion | Built |
+|---|---|---|---|---|
+| Press dip | finger down on a button, chip or key | tap: scale .96 and shade | shade only | yes |
+| Row shade | finger down on a row | tap: shade | same | yes |
+| Selection fill | a chip or avatar selected | quick: fill and ring | instant | yes |
+| Panel or sheet open | Add, a chip tapped, Change | enter: slide from the right (landscape) or the bottom; the backdrop fades with it | appears in place | yes |
+| Panel or sheet close | Close, Save, Cancel | exit: slide back; the page takes taps 180 ms later | disappears | yes |
+| Keyboard | a field focused or blurred | enter / exit: slides up and down; the field scrolls into view in the same 220 ms | appears / disappears | yes |
+| Toast | after an action | enter: rise 16 px and fade; exit: ease out | appears / disappears | yes |
+| Rail fold | Hide the rail, Show the rail, the Compact rail setting | enter: the rail's width eases between 192 and 72 px and the board follows; never on first paint (a rail that starts folded is drawn folded) | instant | 0.8.0 |
+| Chip arrives | saved here or on another device | enter: fade and grow from 96% in place. One that moved to another day or time arrives there | appears | 0.8.0: the Week (Agenda, Hours), Day, People, Month and the phone's lists (`lib/arrivals`); marked for a second, never on first paint, paging or a view switch |
+| Chip leaves | removed, moved, undone | exit: fade and shrink; the others close up once it has gone | disappears | 0.8.0: the Week's Agenda and Hours |
+| Count pop | "2 of 3", "12 to get", a star balance | quick: scale 1 → 1.15 → 1 | no scale | yes; since 0.8.0 also the Today panel's lines, a list's count on its tile and in its header, a child's stars on Rewards (`ui/Pop`) |
+| List strike | an item checked | 250 ms marker stroke in the checker's color, 600 ms hold, then folds into Done | strike appears; the row moves without sliding | yes; since 0.8.0 the row glides into Done and back, and the rows around it close up |
+| Task done | the box tapped | the signature moment (§7) | box fills, check and stamp appear, "Done by Mia" appears, no burst | yes; since 0.8.0 the stamped row glides under Done |
+| All done | a person's last task | 900 ms: a header burst and "All done, Mia!" fades in | text appears | yes |
+| Routine step | Done in the runner | celebrate on the button; the next step enters from the right as the old one slides off to the left and fades | steps swap in place | yes; the old step's exit since 0.8.0 |
+| Routine finish, reward approved, countdown day | | 900 ms full-screen or panel burst, once | text appears | yes |
+| Week swipe | horizontal drag on the board | 1:1 with the finger, resistance beyond one week; on release, glide to the nearest week; a flick over 0.5 px/ms moves exactly one | pages without sliding | not yet: a swipe pages by a week, with the Week buttons' slide. Following the finger is its own task |
+| Week buttons | arrows, This Week (Today, This Month), a swipe | enter: the new page slides in 1.5rem from the side it comes from and fades up. Not the idle reset going back to this week, nor a view switch | cuts | 0.8.0: the wall's Week, Day and Month, Meals' week, the phone's Calendar (`usePageTurn`) |
+| Chip lift / drag / drop / spring back | long-press 400 ms, move, release | lift: scale 1.04 and an 8 px shadow, the origin keeps a dashed outline; drag 1:1 with the column tinting; drop settles into time order; elsewhere springs back | lift shade only; lands in place | the lift and the drag; a drop lands in place and elsewhere it returns at once, with no spring |
+| Now line (board) | an event ends | glide: drops into its new place, from about a chip above (from the side in portrait), while the finished chip dims | instant | 0.8.0 |
+| Now line (Hours grid) | every minute | a 60 s linear transition of its position (`--motion-minute`), so it creeps; remounted on a zoom or resize so it never glides across a change of scale, and nothing moves on first paint | steps once a minute | yes |
+| Now line (Day view) | an event ends | glide: the line sits between the day's rows, and drops into its new place | instant | 0.8.0 |
+| Lit column | midnight | crossfade | instant | 0.8.0: the Week's columns (Agenda and Hours) |
+| Wall tint | the daypart changes | daylight crossfade, at most once a minute, never on first paint | instant | yes |
+| Theme switch | sunset, sunrise, the setting | crossfade on every token, deferred until 10 s idle | instant | yes |
+| Screensaver in / photo / out | idle, every 30 s, a tap | saver-in, photo crossfade (no pan or zoom), saver-out | cuts | yes |
+| Night in / out | the schedule | crossfade to black, the clock fading in; on waking, the layer fades away in exit over the screen it gives back | cut | yes; the fade out since 0.8.0 |
+| PIN wrong | | quick: the dots shake once (±6 px) and clear | dots clear | yes |
+| Spinner, placeholders | waiting, loading after 300 ms | continuous; the placeholders breathe slowly (opacity, 2 s) | still | yes; the placeholders' breath since 0.8.0 |
+| Today panel | its button in the header | enter: its width eases between 400 px and nothing, and the board takes or gives the room; what's in it keeps its width and leaves once it has closed. Never on first paint | instant | 0.8.0 |
 
 Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safari): the dialog stays open while a keyframe slides it away, then the script closes it (Dinner Bell's pattern). Sound for the done moment exists and is off by default (a 120 ms pop).
 

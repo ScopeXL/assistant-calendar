@@ -22,6 +22,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Changed
 
+- Things move now, when you do something: an event eases onto the board when it's added or
+  moved and fades when it's removed, a finished task or a checked item slides into Done, the
+  week slides when you page, counts pop, and the Today panel slides open and shut. Reduce motion
+  turns all of it off.
 - Chores are now Tasks everywhere you read it, and Who's Doing What is now People.
 - Button groups have more room around each word.
 - The top of the kitchen screen is one bar: the date, time and weather at the left, the page's

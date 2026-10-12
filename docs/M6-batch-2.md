@@ -1156,7 +1156,24 @@ screensaver's timing and the Tasks board's stars included."
 
 ### T14 Motion: what moves, and why
 
-- [ ] Done (commit: )
+- [x] Done (commits: `motion: chips arrive and leave, and the week slides when paged`;
+  `motion: counts pop, the done row glides into Done, the now line drops`;
+  `motion: quiet crossfades, routine steps, the Today panel's width`)
+
+**As built.** All nine, with these differences. 1: the arrival is a keyframe on `data-arrive`,
+not `@starting-style`, so a chip that moves within its column plays it too; the mark lasts a
+second. 2: a chip that leaves fades and shrinks, and the others close up once it has gone; they
+don't glide, because I didn't put `layout` on the chips (it would have to live with FitList's
+measuring copy and dnd-kit's transforms, and that wasn't tried). 3: the slide is two keyframe
+names per side re-keyed by `data-turn`, so the body isn't remounted; the idle reset doesn't
+slide. 4: one `ui/Pop`; the Tasks columns already popped. 5: `layout="position"` and a
+`layoutId` per row. 6: the Agenda's now line drops by a keyframe re-keyed by its slot, not a
+`motion` layout, so a resize never sends it gliding; the Day view's line sits between rows, not
+on a time scale, so it gets the same drop rather than a minute-by-minute creep. 7: the lit day
+crossfades on the Week's columns only; the skeleton breathes by opacity. 8 and 9 as planned
+(the panel's box stays in the row and its content leaves 300 ms after it closes).
+**Not checked here:** frame rate on the owner's Pi with 60 chips. If a drag stutters, Reduce
+motion is the fallback, and item 2 is the first to drop.
 
 **Owner's note.** "Currently, the app has little to no animations/motion… Please take some time to
 plan some animations for the user while using the app."

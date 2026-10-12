@@ -1,10 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useIsPresent } from "motion/react";
+import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 
 import { holdIdle } from "../../lib/displayState";
 import { playDone } from "../../lib/done";
 import { useMembers, useSettings } from "../../lib/household";
 import { whenIdle } from "../../lib/idle";
+import { EXIT, useMotionReduced } from "../../lib/motion";
 import { Button } from "../../ui/Button";
 import { celebrate } from "../../ui/Celebration";
 import { useShell } from "../../ui/shell";
@@ -176,62 +178,98 @@ export function RoutineRunner({
           ) : null}
         </button>
       ) : (
-        <main
-          key={current.id}
-          className={`step-in flex flex-1 flex-col items-center justify-center ${display ? "gap-8 px-8" : "gap-5 px-4"}`}
-        >
-          <span className="text-p-text">{icon(current.icon)}</span>
-          <h2
-            className={`text-center ${display ? "text-d-step font-extrabold" : "text-big font-extrabold"}`}
+        // The step just done slides off to the left while the next comes in from the right
+        // (UX §9 "Routine step"): it's taken out of the layout as it goes, so the new one has
+        // the screen.
+        <AnimatePresence mode="popLayout" initial={false}>
+          <Step
+            key={current.id}
+            className={`step-in flex flex-1 flex-col items-center justify-center ${display ? "gap-8 px-8" : "gap-5 px-4"}`}
           >
-            {current.title}
-          </h2>
-          <ol aria-label="Steps" className="flex gap-3">
-            {steps.map((step) => {
-              const state = checked.has(step.id)
-                ? "done"
-                : skipped.includes(step.id)
-                  ? "skipped"
-                  : step.id === current.id
-                    ? "now"
-                    : "to do";
-              return (
-                <li
-                  key={step.id}
-                  aria-label={`${step.title}: ${state}`}
-                  className={`rounded-full border-[3px] ${display ? "size-6" : "size-4"} ${
-                    state === "done"
-                      ? "border-p bg-p"
-                      : state === "now"
-                        ? "border-p bg-p-tint"
-                        : "border-ink-soft"
-                  }`}
-                />
-              );
-            })}
-          </ol>
-          <button
-            ref={button}
-            type="button"
-            onClick={() => {
-              next(true);
-            }}
-            className={`press rounded-button-d bg-p font-extrabold text-on-ink ${
-              display ? "h-[120px] w-3/5 text-d-glance" : "min-h-16 w-full text-title"
-            }`}
-          >
-            Done
-          </button>
-          <Button
-            variant="quiet"
-            onClick={() => {
-              next(false);
-            }}
-          >
-            Skip this one
-          </Button>
-        </main>
+            <span className="text-p-text">{icon(current.icon)}</span>
+            <h2
+              className={`text-center ${display ? "text-d-step font-extrabold" : "text-big font-extrabold"}`}
+            >
+              {current.title}
+            </h2>
+            <ol aria-label="Steps" className="flex gap-3">
+              {steps.map((step) => {
+                const state = checked.has(step.id)
+                  ? "done"
+                  : skipped.includes(step.id)
+                    ? "skipped"
+                    : step.id === current.id
+                      ? "now"
+                      : "to do";
+                return (
+                  <li
+                    key={step.id}
+                    aria-label={`${step.title}: ${state}`}
+                    className={`rounded-full border-[3px] ${display ? "size-6" : "size-4"} ${
+                      state === "done"
+                        ? "border-p bg-p"
+                        : state === "now"
+                          ? "border-p bg-p-tint"
+                          : "border-ink-soft"
+                    }`}
+                  />
+                );
+              })}
+            </ol>
+            <button
+              // Only ever set: the step that's leaving still holds its own button for a moment,
+              // and must not clear the new one's on its way out.
+              ref={(node) => {
+                if (node) button.current = node;
+              }}
+              type="button"
+              onClick={() => {
+                next(true);
+              }}
+              className={`press rounded-button-d bg-p font-extrabold text-on-ink ${
+                display ? "h-[120px] w-3/5 text-d-glance" : "min-h-16 w-full text-title"
+              }`}
+            >
+              Done
+            </button>
+            <Button
+              variant="quiet"
+              onClick={() => {
+                next(false);
+              }}
+            >
+              Skip this one
+            </Button>
+          </Step>
+        </AnimatePresence>
       )}
     </div>
+  );
+}
+
+/** One step on the screen. When the next one takes its place it slides off to the left and
+ * fades, already out of reach: its Done can't be tapped twice, and a screen reader hears only
+ * the new step. */
+function Step({
+  ref,
+  className,
+  children,
+}: {
+  ref?: Ref<HTMLElement>;
+  className: string;
+  children: ReactNode;
+}) {
+  const present = useIsPresent();
+  const reduced = useMotionReduced();
+  return (
+    <motion.main
+      ref={ref}
+      inert={!present}
+      aria-hidden={present ? undefined : true}
+      className={className}
+      {...(reduced ? {} : { exit: { opacity: 0, x: "-12%", transition: EXIT } })}
+    >
+      {children}
+    </motion.main>
   );
 }

@@ -1,7 +1,7 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
-import { LEAVE, useMotionReduced } from "../../lib/motion";
+import { Leaves } from "../../ui/Leaves";
 
 /** Where an item of the invisible copy landed (px, inside the list). */
 export interface Box {
@@ -163,20 +163,15 @@ export function FitList<T>({
   const pin = pinnedIndex >= fits ? items[pinnedIndex] : undefined;
   if (pin !== undefined) shown.push(pin);
   const hidden = items.filter((_, index) => index >= fits && index !== pinnedIndex);
-  const reduced = useMotionReduced();
   return (
     <div ref={box} className="relative min-h-0 flex-1 overflow-hidden">
       <div className={listClassName}>
         {leaving ? (
           <AnimatePresence initial={false}>
             {shown.map((item, index) => (
-              <motion.div
-                key={itemKey(item)}
-                className={itemClassName(item)}
-                {...(reduced || pinned(item) ? {} : { exit: LEAVE })}
-              >
+              <Leaves key={itemKey(item)} className={itemClassName(item)} stays={pinned(item)}>
                 {render(item, index, false)}
-              </motion.div>
+              </Leaves>
             ))}
           </AnimatePresence>
         ) : (
