@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import sqlite3
 from collections.abc import AsyncIterator, Callable
+from dataclasses import replace
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -13,9 +16,12 @@ from fastapi import FastAPI
 from sunroom.app import create_app
 from sunroom.core.clock import FakeClock
 from sunroom.core.config import Settings
+from sunroom.db import migrate
 from sunroom.plugins.base import PluginStatus
 from tests.plugins.sample import SamplePlugin
 from tests.support import BASE_URL, CSRF, PASSWORD, add_member, run_setup, set_pin, state_of
+
+FIXTURE_0_7_0 = "fixtures/db/202610091752.sql"
 
 
 async def eventually(condition: Callable[[], bool], within_s: float = 2.0) -> None:
@@ -196,6 +202,77 @@ async def test_settings_survive_a_restart(
         assert manager.is_enabled("sample")
         assert manager.settings("sample")["interval"] == 90
         await eventually(lambda: fresh["sample"].ticks > 0)
+
+
+class RenamedSample(SamplePlugin):
+    """The sample a version on: "How often" was ``interval`` and is now ``pace``."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        spec = tuple(
+            replace(field, key="pace") if field.key == "interval" else field
+            for field in self.manifest.settings_spec
+        )
+        self.manifest = replace(self.manifest, version="1.1.0", settings_spec=spec)
+        self.upgraded_from: list[str] = []
+
+    def upgrade_settings(self, raw: dict[str, Any], from_version: str) -> dict[str, Any]:
+        self.upgraded_from.append(from_version)
+        return {("pace" if key == "interval" else key): value for key, value in raw.items()}
+
+
+async def test_a_newer_plugin_carries_its_old_settings_over_once(
+    settings: Settings, clock: FakeClock, plugins: dict[str, SamplePlugin]
+) -> None:
+    app = create_app(settings, clock=clock, plugins=plugins)
+    async with app.router.lifespan_context(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as client:
+            await run_setup(client)
+            await client.post("/api/plugins/sample/enable", headers=CSRF)
+            await client.put(
+                "/api/plugins/sample/settings", json={"values": {"interval": 90}}, headers=CSRF
+            )
+    newer = RenamedSample()
+    again = create_app(settings, clock=clock, plugins={"sample": newer})
+    async with again.router.lifespan_context(again):
+        # Without the hook the old key would be dropped, and "How often" back at 60.
+        assert newer.upgraded_from == ["1.0.0"]
+        assert state_of(again).plugins.settings("sample")["pace"] == 90
+    # What it carried was stored under the new version: the next start has nothing to do.
+    later = RenamedSample()
+    third = create_app(settings, clock=clock, plugins={"sample": later})
+    async with third.router.lifespan_context(third):
+        assert later.upgraded_from == []
+        assert state_of(third).plugins.settings("sample")["pace"] == 90
+
+
+async def test_a_household_from_the_last_release_keeps_what_it_chose(
+    data_dir: Path, settings: Settings, clock: FakeClock
+) -> None:
+    """0.7.0's database under this release's plugins: dinner stays on the calendar (one switch
+    then, a choice per meal now), and photos set to start after 10 minutes, which is no longer
+    offered, start after the default."""
+    db = data_dir / "sunroom.db"
+    db.unlink()
+    conn = sqlite3.connect(db)
+    conn.executescript((Path(__file__).parent.parent / FIXTURE_0_7_0).read_text())
+    conn.close()
+    migrate.upgrade(db)
+    app = create_app(settings, clock=clock)
+    async with app.router.lifespan_context(app):
+        manager = state_of(app).plugins
+        assert manager.settings("meals") == {"slots": ["dinner"], "calendar_slots": ["dinner"]}
+        assert manager.settings("screensaver")["start_after"] == "15"
+        assert manager.settings("screensaver")["every"] == "30"
+    conn = sqlite3.connect(db)
+    try:
+        stored = conn.execute(
+            "SELECT plugin_version, settings_json FROM plugin_state WHERE plugin_id = 'meals'"
+        ).fetchone()
+    finally:
+        conn.close()
+    assert stored == ("1.1.0", '{"slots": ["dinner"], "calendar_slots": ["dinner"]}')
 
 
 async def test_only_a_parent_turns_features_on_and_off(

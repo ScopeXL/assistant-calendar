@@ -25,12 +25,14 @@ MANIFEST = PluginManifest(
     settings_spec=(
         ParamField(
             "units",
-            "Temperatures in",
+            "Temperature unit",
             "choice",
-            help="Usual: °F in the United States, °C elsewhere (by the household's time zone).",
+            help=(
+                "Auto: °F in the United States, °C elsewhere, going by the household's time zone."
+            ),
             default="auto",
             choices=("auto", "fahrenheit", "celsius"),
-            choice_labels=("Usual for where you live", "°F", "°C"),
+            choice_labels=("Auto", "°F", "°C"),
         ),
     ),
     tables=TABLES,

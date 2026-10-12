@@ -907,7 +907,14 @@ includes Google's client secret."
 
 ### T10 Settings: the words and the options
 
-- [ ] Done (commit: )
+- [x] Done (commit: `settings: shorter words and options; a calendar switch per meal`)
+
+**As built.** The Theme hint reads the household's latitude and longitude, the same test
+`lib/sun` makes, rather than `location_label`. The calendar orders a day's all-day chips by name
+(`occurrences.sort_key`), so the meals overlay keeps its plain order by day and position.
+`Group`'s title became optional for the Meals page. The 0.8.0 fixture database carries Meals
+1.1.0's settings and the 15-minute start, and a manager test boots 0.7.0's database under this
+release's plugins. UX §4's Settings table gained rows for the Tasks and Meals pages.
 
 **Owner's notes.** The Lists, Photos & Screensaver, Weather, Tasks, Meals and Display items in the
 table above, plus "Settings->Display->Theme: Remove the '(7 PM until a location is set)' when a

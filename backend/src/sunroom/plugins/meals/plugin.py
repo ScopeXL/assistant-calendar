@@ -25,7 +25,7 @@ HOUR_S = 3600
 
 MANIFEST = PluginManifest(
     id="meals",
-    version="1.0.0",
+    version="1.1.0",  # 1.1.0: calendar_slots replaced show_on_calendar (upgrade_settings)
     name="Meals",
     description="The week's dinners, saved meals to add in one tap, and Tonight on the wall.",
     settings_spec=(
@@ -39,11 +39,13 @@ MANIFEST = PluginManifest(
             choice_labels=("Breakfast", "Lunch", "Dinner", "Snack"),
         ),
         ParamField(
-            "show_on_calendar",
-            "Show dinner on the calendar",
-            "bool",
-            help="Each day's dinner at the top of its day on the board.",
-            default=False,
+            "calendar_slots",
+            "On the calendar",
+            "multichoice",
+            help="These meals show at the top of their day on the board.",
+            default=[],
+            choices=("breakfast", "lunch", "dinner", "snack"),
+            choice_labels=("Breakfast", "Lunch", "Dinner", "Snack"),
         ),
     ),
     tables=TABLES,
@@ -85,6 +87,15 @@ class Meals(PluginBase):
     # No on_disable: the context stays, so routes keep answering while a failed job has the
     # plugin errored (PLAN §11.4); switched off, the framework's gate answers for them, and the
     # overlay answers nothing.
+
+    def upgrade_settings(self, raw: dict[str, Any], from_version: str) -> dict[str, Any]:
+        """Before 1.1.0 one switch, "Show dinner on the calendar", did what ``calendar_slots``
+        does per meal: a household that had it on keeps dinner on its board."""
+        if "calendar_slots" in raw or "show_on_calendar" not in raw:
+            return raw
+        carried = {key: value for key, value in raw.items() if key != "show_on_calendar"}
+        carried["calendar_slots"] = ["dinner"] if raw["show_on_calendar"] is True else []
+        return carried
 
     async def validate_settings(self, ctx: PluginContext, values: dict[str, Any]) -> list[str]:
         if not values.get("slots"):

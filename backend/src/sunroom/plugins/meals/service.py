@@ -31,7 +31,7 @@ from sunroom.core.errors import AppError
 from sunroom.db.types import new_id
 from sunroom.domain.timeparts import to_local, week_start
 from sunroom.plugins.context import PluginContext
-from sunroom.plugins.meals.models import MealEntry, MealSlot, SavedMeal
+from sunroom.plugins.meals.models import MealEntry, SavedMeal
 from sunroom.plugins.meals.schemas import (
     SLOT_ORDER,
     CopyWeekIn,
@@ -613,7 +613,7 @@ async def restore_saved(ctx: PluginContext, saved_id: str) -> SavedMealOut:
 
 
 def _occurrence(entry: MealEntry) -> OccurrenceOut:
-    """A dinner as an all-day chip at the top of its day, in the cook's color."""
+    """A meal as an all-day chip at the top of its day, in the cook's color."""
     return OccurrenceOut(
         key=f"meals|{entry.id}",
         event_id=None,
@@ -645,22 +645,26 @@ def _occurrence(entry: MealEntry) -> OccurrenceOut:
 async def overlay(
     ctx: PluginContext, start: date, end: date, zone: ZoneInfo
 ) -> list[OccurrenceOut]:
-    """``occurrences?overlays=meals``: with "Show dinner on the calendar" on, each live dinner in
-    [start, end); otherwise nothing."""
-    if not ctx.settings().get("show_on_calendar"):
+    """``occurrences?overlays=meals``: each live meal in [start, end) of the kinds the family
+    shows on the calendar ("Show dinner on the calendar", one switch per meal it plans); none
+    by default. A meal the family no longer plans isn't drawn, whatever was chosen before."""
+    settings = ctx.settings()
+    chosen: Sequence[str] = settings.get("calendar_slots") or ()
+    shown = [slot for slot in planned_slots(settings) if slot in chosen]
+    if not shown:
         return []
     async with ctx.read() as session:
-        dinners = await session.scalars(
+        meals = await session.scalars(
             select(MealEntry)
             .where(
                 IS_LIVE,
-                MealEntry.slot == MealSlot.DINNER,
+                MealEntry.slot.in_(shown),
                 MealEntry.day >= start,
                 MealEntry.day < end,
             )
             .order_by(MealEntry.day, MealEntry.position, MealEntry.id)
         )
-        return [_occurrence(entry) for entry in dinners]
+        return [_occurrence(entry) for entry in meals]
 
 
 # ---- the job (hourly) --------------------------------------------------------------------------

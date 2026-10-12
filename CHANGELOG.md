@@ -36,6 +36,15 @@ Everything that changes in Sunroom, written in plain English. The format follows
   calendar's and an account's sheets still have Save.
 - Features is shorter: Tasks, Meals and Photos & Screensaver each show a row that opens their
   own page, and Sign in with Google's keys sit behind a Set up button.
+- Meals has a switch for each meal you plan, "Show breakfast on the calendar" and so on, where
+  there was one for dinner. If dinner was on your calendar it still is.
+- Photos start after 15 minutes by default now; a screen set to 10 minutes starts after 15 until
+  you pick another. You can also wait an hour, and change the photo every 5 minutes.
+- Shorter words in Settings: Lists' "Clear completed items after" (Never, 1 day, 3 days, 1 week),
+  Weather's "Temperature unit" (Auto, °F, °C), and the screen's evening "Brightness" as 60%, 40%
+  or 20%. "Return to the calendar after" starts with Never.
+- Settings → Display says what Daylight tint does, and Theme's hint mentions 7 PM only until
+  your location is set.
 - The Sunroom mark sits at the top of the rail, and Settings is a gear now. The padlock shows
   only while a paired screen's Settings are locked behind the PIN.
 

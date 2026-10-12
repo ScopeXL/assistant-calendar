@@ -503,7 +503,7 @@ function AdjustGroup() {
   const [reason, setReason] = useState("");
   const chosen = personOf(members, kid);
   return (
-    <Group title="Give or Take Stars">
+    <Group title="Stars">
       <div className={`flex flex-col ${display ? "gap-5 py-5" : "gap-4 py-4"}`}>
         <WhoPicker
           label="Who"

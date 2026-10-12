@@ -38,7 +38,7 @@ from tests.screensaver.helpers import (
 )
 from tests.support import BASE_URL, CSRF, state_of
 
-DEFAULTS = {"start_after_minutes": 10, "every_seconds": 30, "show_clock": True, "shuffle": True}
+DEFAULTS = {"start_after_minutes": 15, "every_seconds": 30, "show_clock": True, "shuffle": True}
 OFF = {
     "code": "plugin_disabled",
     "message": "Photos & Screensaver is turned off. A parent can turn it on in Settings.",
@@ -106,6 +106,16 @@ async def test_the_manifest_carries_the_settings_as_the_wall_uses_them(
         "start_after_minutes": 5,
         "every_seconds": 15,
     }
+    await choose(start_after="60", every="300")
+    assert (await manifest(parent))["settings"] == DEFAULTS | {
+        "start_after_minutes": 60,
+        "every_seconds": 300,
+    }
+    # Ten minutes was a choice before 0.8.0 and isn't now.
+    refused = await parent.put(
+        "/api/plugins/screensaver/settings", json={"values": {"start_after": "10"}}, headers=CSRF
+    )
+    assert refused.status_code == 422, refused.text
 
 
 async def test_the_manifest_stops_at_5000_photos(

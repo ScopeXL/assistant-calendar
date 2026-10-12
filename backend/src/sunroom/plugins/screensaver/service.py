@@ -90,7 +90,7 @@ def saver_settings(ctx: PluginContext) -> SaverSettings:
     """The plugin's settings as the wall uses them: minutes and seconds as numbers, Never as
     None."""
     values = ctx.settings()
-    start = str(values.get("start_after") or "10")
+    start = str(values.get("start_after") or "15")
     show_clock, shuffle = values.get("show_clock"), values.get("shuffle")
     return SaverSettings(
         start_after_minutes=None if start == "never" else int(start),

@@ -18,10 +18,19 @@ export function DisplayPage() {
   const { data: settings } = useSettings();
   const update = useUpdateSettings();
   if (!settings) return null;
+  // The same test the wall's sun makes (lib/sun): without a place, 7 AM and 7 PM.
+  const placed = settings.latitude !== null && settings.longitude !== null;
   return (
     <>
       <Group title="Look">
-        <Row label="Theme" hint="Auto turns dark at sunset (7 PM until a location is set).">
+        <Row
+          label="Theme"
+          hint={
+            placed
+              ? "Auto turns dark at sunset and light at sunrise."
+              : "Auto turns dark at 7 PM until a location is set in Household."
+          }
+        >
           <Segmented
             label="Theme"
             value={settings.theme}
@@ -52,7 +61,7 @@ export function DisplayPage() {
         </Row>
         <Switch
           label="Daylight tint"
-          hint="The wall's color follows the time of day."
+          hint="The background warms through the day: cool in the morning, golden in the afternoon, rosy at dusk. Off keeps the midday shade."
           checked={settings.daylight_tint}
           onChange={(daylight_tint) => {
             update.mutate({ daylight_tint });
@@ -68,7 +77,7 @@ export function DisplayPage() {
         />
       </Group>
       <Group title="Layout">
-        <Row label="Rail side" hint="Where the rooms and Add sit, for a screen hung to one side.">
+        <Row label="Rail side" hint="Where the rooms sit, for a screen hung to one side.">
           <Segmented
             label="Rail side"
             value={settings.display_rail_side}
@@ -151,10 +160,10 @@ export function DisplayPage() {
               update.mutate({ display_return_minutes: Number(value) as 0 | 2 | 5 | 10 });
             }}
             options={[
+              { value: "0", label: "Never" },
               { value: "2", label: "2 min" },
               { value: "5", label: "5 min" },
               { value: "10", label: "10 min" },
-              { value: "0", label: "Never" },
             ]}
           />
         </Row>
@@ -293,17 +302,17 @@ function SleepGroup() {
                 </div>
                 <SavedMark show={dimSaved.saved} />
               </form>
-              <Row label="How dim">
+              <Row label="Brightness">
                 <Segmented
-                  label="How dim"
+                  label="Brightness"
                   value={String(settings.dim_level) as "60" | "40" | "20"}
                   onChange={(value) => {
                     update.mutate({ dim_level: Number(value) as 20 | 40 | 60 });
                   }}
                   options={[
-                    { value: "60", label: "A little" },
-                    { value: "40", label: "Half" },
-                    { value: "20", label: "Low" },
+                    { value: "60", label: "60%" },
+                    { value: "40", label: "40%" },
+                    { value: "20", label: "20%" },
                   ]}
                 />
               </Row>

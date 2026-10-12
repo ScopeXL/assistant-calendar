@@ -114,15 +114,15 @@ test.describe("a phone", () => {
         .then(
           (plugins) => plugins.find((plugin) => plugin.id === "lists")?.settings.auto_clear_days,
         );
-    const clear = page.getByRole("group", { name: "Clear done items by themselves" });
+    const clear = page.getByRole("group", { name: "Clear completed items after" });
     const heard = screen.waitForResponse(
       (response) =>
         new URL(response.url()).pathname === "/api/plugins" &&
         response.request().method() === "GET",
       { timeout: 3_000 },
     );
-    await clear.getByRole("button", { name: "After 3 days" }).click();
-    await expect(clear.getByRole("button", { name: "After 3 days" })).toHaveAttribute(
+    await clear.getByRole("button", { name: "3 days" }).click();
+    await expect(clear.getByRole("button", { name: "3 days" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );

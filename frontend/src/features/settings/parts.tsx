@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 
 import { useShell } from "../../ui/shell";
 
-/** A titled group of settings: a surface block with rows. */
+/** A group of settings: a surface block with rows, under its title. A page with one group
+ * leaves the title off, since the page's own says it. */
 export function Group({
   title,
   children,
   note,
 }: {
-  title: string;
+  title?: string | undefined;
   children: ReactNode;
   note?: string | undefined;
 }) {
@@ -18,9 +19,11 @@ export function Group({
   const Heading = display ? "h3" : "h2";
   return (
     <section className={display ? "mb-10" : "mb-8"}>
-      <Heading className={display ? "mb-3 text-d-title font-bold" : "mb-2 text-row font-bold"}>
-        {title}
-      </Heading>
+      {title ? (
+        <Heading className={display ? "mb-3 text-d-title font-bold" : "mb-2 text-row font-bold"}>
+          {title}
+        </Heading>
+      ) : null}
       {note ? (
         <p
           className={

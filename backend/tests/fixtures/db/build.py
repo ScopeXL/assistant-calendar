@@ -344,10 +344,15 @@ def _v0_7_0() -> list[Statement]:
 
 
 def _v0_8_0() -> list[Statement]:
-    """0.8.0 (M6 batch 2): 0.7.0's household with the rail folded to its icons and Small text."""
+    """0.8.0 (M6 batch 2): 0.7.0's household with the rail folded to its icons and Small text;
+    Meals 1.1.0's settings (a calendar choice per meal), and photos starting after 15 minutes."""
     return [
         *_v0_7_0(),
         "UPDATE household SET display_rail_compact = 1, text_size = 'small'",
+        "UPDATE plugin_state SET plugin_version = '1.1.0', settings_json ="
+        ' \'{"slots": ["dinner"], "calendar_slots": ["dinner"]}\' WHERE plugin_id = \'meals\'',
+        'UPDATE plugin_state SET settings_json = \'{"start_after": "15", "every": "30",'
+        ' "show_clock": true, "shuffle": true}\' WHERE plugin_id = \'screensaver\'',
     ]
 
 

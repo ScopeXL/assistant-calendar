@@ -637,7 +637,7 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
   await change(page, { theme: "auto" });
   const shown = await page.request.put("/api/plugins/meals/settings", {
     headers: CSRF,
-    data: { values: { slots: ["dinner"], show_on_calendar: true } },
+    data: { values: { slots: ["dinner"], calendar_slots: ["dinner"] } },
   });
   expect(shown.ok()).toBe(true);
   await page.goto("/display");

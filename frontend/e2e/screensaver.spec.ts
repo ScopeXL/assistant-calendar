@@ -55,7 +55,10 @@ test("the photos fade in after the idle minutes, and a tap goes back to where th
   await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
   await expect(saver(page)).toHaveCount(0);
 
-  await page.clock.fastForward("10:30");
+  // Photos start after 15 minutes unless the family picks another time.
+  await page.clock.fastForward("14:30");
+  await expect(saver(page)).toHaveCount(0);
+  await page.clock.fastForward("01:00");
   await expect(saver(page)).toBeVisible();
   await expect(saver(page).locator("img").first()).toHaveJSProperty("complete", true);
   await expect(saver(page)).toContainText("Wednesday, Oct 7");

@@ -94,7 +94,7 @@ async def test_dinner_shows_on_the_calendar_when_the_family_asks(
     await remove(parent, await plan(parent, FRI, "Pizza night"))  # removed
     await plan(parent, SUN + WEEK, "Roast chicken")  # next week
     assert await occurrences(parent) == []  # "Show dinner on the calendar" starts off
-    await set_meals(parent, slots=["breakfast", "dinner"], show_on_calendar=True)
+    await set_meals(parent, slots=["breakfast", "dinner"], calendar_slots=["dinner"])
     found = await occurrences(parent)
     assert [
         (o["key"], o["title"], o["start_date"], o["end_date"], o["member_ids"]) for o in found
@@ -182,6 +182,56 @@ async def test_prune_forgets_what_was_removed_over_a_week_ago(
     assert changed_days(events) == []
 
 
+async def test_each_meal_the_family_plans_can_show_on_the_calendar(
+    parent: httpx.AsyncClient, family: Family
+) -> None:
+    await plan(parent, WED, "Tacos")
+    await plan(parent, WED, "Leftovers", slot="lunch")
+    await plan(parent, WED, "Pancakes", slot="breakfast")
+    await plan(parent, WED, "Fruit", slot="breakfast", position=1)
+    await plan(parent, TUE, "Soup")
+
+    async def shown() -> list[tuple[str, str]]:
+        return [(o["start_date"], o["title"]) for o in await occurrences(parent)]
+
+    everything = ["breakfast", "lunch", "dinner", "snack"]
+    await set_meals(parent, slots=everything, calendar_slots=["dinner", "breakfast"])
+    # All-day chips: the calendar orders a day's by name, as it does its own.
+    assert await shown() == [
+        ("2026-10-06", "Soup"),
+        ("2026-10-07", "Fruit"),
+        ("2026-10-07", "Pancakes"),
+        ("2026-10-07", "Tacos"),
+    ]
+    await set_meals(parent, slots=everything, calendar_slots=["lunch"])
+    assert await shown() == [("2026-10-07", "Leftovers")]
+    # A meal the family stopped planning isn't drawn, though its switch was on.
+    await set_meals(parent, slots=["dinner"], calendar_slots=everything)
+    assert await shown() == [("2026-10-06", "Soup"), ("2026-10-07", "Tacos")]
+    refused = await parent.put(
+        "/api/plugins/meals/settings",
+        json={"values": {"slots": ["dinner"], "calendar_slots": ["brunch"]}},
+        headers=CSRF,
+    )
+    assert refused.status_code == 422, refused.text
+
+
+def test_the_old_dinner_switch_becomes_dinner_on_the_calendar() -> None:
+    upgrade = Meals().upgrade_settings
+    assert upgrade({"slots": ["lunch", "dinner"], "show_on_calendar": True}, "1.0.0") == {
+        "slots": ["lunch", "dinner"],
+        "calendar_slots": ["dinner"],
+    }
+    assert upgrade({"slots": ["dinner"], "show_on_calendar": False}, "1.0.0") == {
+        "slots": ["dinner"],
+        "calendar_slots": [],
+    }
+    # Nothing to carry: never set, or already in the new shape.
+    assert upgrade({}, "1.0.0") == {}
+    current = {"slots": ["dinner"], "calendar_slots": ["breakfast"]}
+    assert upgrade(current, "1.0.0") == current
+
+
 # ---- switched off, starting, signed out --------------------------------------------------------
 
 
@@ -189,7 +239,7 @@ async def test_off_every_route_is_404_and_on_again_the_data_is_there(
     parent: httpx.AsyncClient, plugin: Meals, family: Family
 ) -> None:
     await plan(parent, TODAY, "Tacos")
-    await set_meals(parent, show_on_calendar=True)
+    await set_meals(parent, calendar_slots=["dinner"])
     assert len(await occurrences(parent)) == 1
     off = await parent.post("/api/plugins/meals/disable", headers=CSRF)
     assert off.status_code == 200, off.text

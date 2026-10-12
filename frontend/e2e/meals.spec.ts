@@ -1,7 +1,7 @@
 /**
  * Meals end to end (PLAN §15 M4, UX §4 "Meals room"): Tonight on the Today panel; a dinner added
- * on the wall from a saved meal; Swap days; Copy last week with Undo; and a saved meal's
- * ingredients put on Groceries. The server's clock reads Wednesday, October 7, 2026 in New
+ * on the wall from a saved meal; Swap days; Copy last week with Undo; a saved meal's
+ * ingredients put on Groceries; and a switch per planned meal to show it on the calendar. The server's clock reads Wednesday, October 7, 2026 in New
  * York; the Sample Family's meals come from the seed. Synthetic data only.
  */
 import type { Locator, Page } from "@playwright/test";
@@ -79,4 +79,36 @@ test("a saved meal's ingredients go on Groceries", async ({ page }) => {
   await page.goto("/lists");
   await page.getByRole("link", { name: /^Groceries/ }).click();
   await expect(page.getByRole("list", { name: "On Groceries" })).toContainText("Tortillas");
+});
+
+test("each meal the family plans has a switch that shows it on the calendar", async ({ page }) => {
+  const set = (values: Record<string, string[]>) =>
+    page.request.put("/api/plugins/meals/settings", { headers: CSRF, data: { values } });
+  await pairWall(page);
+  // The test server keeps plugin settings between tests: start from the defaults, and end there.
+  expect((await set({ slots: ["dinner"], calendar_slots: [] })).ok()).toBe(true);
+  try {
+    await page.goto("/settings/meals");
+    const switches = page.getByRole("switch", { name: /on the calendar$/ });
+    await expect(switches).toHaveCount(1);
+    await page
+      .getByRole("group", { name: "Which meals" })
+      .getByRole("button", { name: "Breakfast" })
+      .click();
+    await expect(switches).toHaveCount(2);
+    await expect(
+      page.getByRole("switch", { name: "Show breakfast on the calendar" }),
+    ).not.toBeChecked();
+    const dinner = page.getByRole("switch", { name: "Show dinner on the calendar" });
+    await dinner.click();
+    await expect(dinner).toBeChecked();
+    // Tonight's dinner is on the board now; breakfast, whose switch is off, isn't.
+    await page.goto("/display");
+    const tacos = page
+      .getByRole("region", { name: "This Week" })
+      .getByRole("button", { name: /Tacos, all day/ });
+    await expect(tacos).toHaveAttribute("data-overlay", "meals");
+  } finally {
+    await set({ slots: ["dinner"], calendar_slots: [] });
+  }
 });

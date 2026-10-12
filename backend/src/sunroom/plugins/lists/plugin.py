@@ -26,12 +26,12 @@ MANIFEST = PluginManifest(
     settings_spec=(
         ParamField(
             "auto_clear_days",
-            "Clear done items by themselves",
+            "Clear completed items after",
             "choice",
             help="Checked items leave Done on their own after this long.",
             default="never",
             choices=("never", "1", "3", "7"),
-            choice_labels=("Never", "After a day", "After 3 days", "After a week"),
+            choice_labels=("Never", "1 day", "3 days", "1 week"),
         ),
     ),
     tables=TABLES,

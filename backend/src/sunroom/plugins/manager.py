@@ -249,6 +249,10 @@ class PluginManager:
                     )
                     tx.session.add(row)
                 elif row.plugin_version != plugin.manifest.version:
+                    # A setting whose shape changed is carried over before the spec drops it.
+                    row.settings_json = json.dumps(
+                        plugin.upgrade_settings(self._stored(row.settings_json), row.plugin_version)
+                    )
                     row.plugin_version = plugin.manifest.version
                 live = self._live[plugin_id]
                 live.enabled = row.enabled
@@ -348,12 +352,17 @@ class PluginManager:
         if plugin_id not in self.registry:
             raise PluginError("not_found", "That feature isn't part of this version.")
 
-    def _coerce_stored(self, plugin: Plugin, settings_json: str) -> dict[str, Any]:
+    @staticmethod
+    def _stored(settings_json: str) -> dict[str, Any]:
+        """The settings as stored: whatever keys an older version wrote included."""
         try:
             loaded: object = json.loads(settings_json)
         except json.JSONDecodeError:
             loaded = {}
-        stored = cast("dict[str, Any]", loaded) if isinstance(loaded, dict) else {}
+        return cast("dict[str, Any]", loaded) if isinstance(loaded, dict) else {}
+
+    def _coerce_stored(self, plugin: Plugin, settings_json: str) -> dict[str, Any]:
+        stored = self._stored(settings_json)
         spec = plugin.manifest.settings_spec
         known = {field.key for field in spec}
         raw = {key: value for key, value in stored.items() if key in known}

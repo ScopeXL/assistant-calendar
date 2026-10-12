@@ -32,7 +32,7 @@ CREATE TABLE calendars (
 	CONSTRAINT pk_calendars PRIMARY KEY (id), 
 	CONSTRAINT fk_calendars_owner_member_id_members FOREIGN KEY(owner_member_id) REFERENCES members (id)
 );
-INSERT INTO "calendars" VALUES('01a1313c-7086-75fb-b687-a87af0637d6b','Home','sky','local',NULL,0,1,1,NULL,0,'2026-10-12 17:50:06.982905','2026-10-12 17:50:06.982905',NULL);
+INSERT INTO "calendars" VALUES('01a131d8-12f6-76a9-9d0c-61340c9f9eb5','Home','sky','local',NULL,0,1,1,NULL,0,'2026-10-12 20:40:06.646314','2026-10-12 20:40:06.646314',NULL);
 INSERT INTO "calendars" VALUES('00000000-0000-7000-8000-000000000401','Kids'' activities','iris','local','00000000-0000-7000-8000-000000000002',0,1,3,NULL,1,'2026-10-08 12:00:00','2026-10-08 12:00:00',NULL);
 INSERT INTO "calendars" VALUES('00000000-0000-7000-8000-000000000402','School','olive','sync','00000000-0000-7000-8000-000000000002',1,1,1,'a calendar address',1000,'2026-10-08 18:00:00','2026-10-08 18:00:00',NULL);
 CREATE TABLE chore_completions (
@@ -233,7 +233,7 @@ CREATE TABLE "household" (
 	CONSTRAINT ck_household_single_row CHECK (id = 1), 
 	CONSTRAINT fk_household_default_calendar_id_calendars FOREIGN KEY(default_calendar_id) REFERENCES calendars (id)
 );
-INSERT INTO "household" VALUES(1,'Sample Family','America/New_York',6,'12h','auto',1,'small','week',5,'left',0,1,'auto',0,1,0,NULL,NULL,'dim_clock',1,NULL,NULL,NULL,'2026-10-07 12:00:00','Sample Town',40.71,-74.01,'2026-10-07 12:00:00','01a1313c-7086-75fb-b687-a87af0637d6b','20:00',40,1,'hours',1,1);
+INSERT INTO "household" VALUES(1,'Sample Family','America/New_York',6,'12h','auto',1,'small','week',5,'left',0,1,'auto',0,1,0,NULL,NULL,'dim_clock',1,NULL,NULL,NULL,'2026-10-07 12:00:00','Sample Town',40.71,-74.01,'2026-10-07 12:00:00','01a131d8-12f6-76a9-9d0c-61340c9f9eb5','20:00',40,1,'hours',1,1);
 CREATE TABLE join_codes (
 	code_hash VARCHAR(64) NOT NULL, 
 	kind VARCHAR(8) NOT NULL, 
@@ -408,9 +408,9 @@ INSERT INTO "plugin_state" VALUES('sample',0,'{}',1,'1.0.0',NULL,NULL,'2026-10-0
 INSERT INTO "plugin_state" VALUES('calendar_sync',1,'{"google_client_id": null, "google_client_secret": null}',1,'1.0.0','2026-10-08 18:00:00',NULL,'2026-10-08 18:00:00');
 INSERT INTO "plugin_state" VALUES('lists',1,'{"auto_clear_days": "never"}',1,'1.0.0','2026-10-08 19:00:00',NULL,'2026-10-08 19:00:00');
 INSERT INTO "plugin_state" VALUES('chores',1,'{"stars": true, "rewards": true, "routines": true, "approval": false}',2,'1.0.0','2026-10-08 19:00:00',NULL,'2026-10-08 19:05:00');
-INSERT INTO "plugin_state" VALUES('meals',1,'{"slots": ["dinner"], "show_on_calendar": true}',2,'1.0.0','2026-10-08 21:00:00',NULL,'2026-10-08 21:00:00');
+INSERT INTO "plugin_state" VALUES('meals',1,'{"slots": ["dinner"], "calendar_slots": ["dinner"]}',2,'1.1.0','2026-10-08 21:00:00',NULL,'2026-10-08 21:00:00');
 INSERT INTO "plugin_state" VALUES('countdowns',1,'{"birthdays": true}',1,'1.0.0','2026-10-08 21:00:00',NULL,'2026-10-08 21:00:00');
-INSERT INTO "plugin_state" VALUES('screensaver',1,'{"start_after": "10", "every": "30", "show_clock": true, "shuffle": true}',1,'1.0.0','2026-10-08 21:00:00',NULL,'2026-10-08 21:00:00');
+INSERT INTO "plugin_state" VALUES('screensaver',1,'{"start_after": "15", "every": "30", "show_clock": true, "shuffle": true}',1,'1.0.0','2026-10-08 21:00:00',NULL,'2026-10-08 21:00:00');
 INSERT INTO "plugin_state" VALUES('weather',0,'{"units": "auto"}',1,'1.0.0',NULL,'2026-10-08 21:40:00','2026-10-08 21:40:00');
 CREATE TABLE point_adjustments (
 	id VARCHAR(36) NOT NULL, 

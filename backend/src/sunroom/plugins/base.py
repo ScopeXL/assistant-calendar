@@ -134,6 +134,13 @@ class Plugin(Protocol):
         """Extra checks after coercion; return plain-English problems (empty when fine)."""
         ...
 
+    def upgrade_settings(self, raw: dict[str, Any], from_version: str) -> dict[str, Any]:
+        """Stored settings written by an older ``manifest.version``, as this version reads them.
+        Called once at boot when the stored version is behind, on the raw JSON, before unknown
+        keys are dropped: the place to carry a renamed or reshaped setting over, so nothing the
+        family set disappears. Return ``raw`` unchanged when there's nothing to carry."""
+        ...
+
     async def seed_sample(self, ctx: PluginContext, people: dict[str, str]) -> None:
         """Test mode only (``just seed``, screenshots, end-to-end runs): the synthetic Sample
         Family's data in this plugin's tables. ``people`` maps names (Ana, Sam, Mia, Leo) to
@@ -160,6 +167,9 @@ class PluginBase:
 
     async def validate_settings(self, ctx: PluginContext, values: dict[str, Any]) -> list[str]:
         return []
+
+    def upgrade_settings(self, raw: dict[str, Any], from_version: str) -> dict[str, Any]:
+        return raw
 
     async def seed_sample(self, ctx: PluginContext, people: dict[str, str]) -> None:
         return None
