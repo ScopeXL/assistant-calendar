@@ -47,6 +47,33 @@ describe("event router", () => {
     }
   });
 
+  it("refreshes a plugin's own queries when its switch or settings change", () => {
+    const spy = vi.spyOn(client, "invalidateQueries");
+    const handle = createEventHandler(client, { onSignedOut: vi.fn() });
+    const refreshed = (id: unknown) => {
+      spy.mockClear();
+      handle({ type: "plugins.changed", id, status: "running" });
+      vi.advanceTimersByTime(250);
+      return spy.mock.calls.map(([filters]) => filters?.queryKey);
+    };
+    // The screensaver's timing lives in its manifest: no waiting for it to go stale.
+    expect(refreshed("screensaver")).toEqual([
+      ["plugins"],
+      ["occurrences"],
+      ["screensaver"],
+      ["photos"],
+    ]);
+    expect(refreshed("chores")).toEqual([["plugins"], ["occurrences"], ["chores"]]);
+    expect(refreshed("meals")).toEqual([["plugins"], ["occurrences"], ["meals"]]);
+    expect(refreshed("lists")).toEqual([["plugins"], ["occurrences"], ["lists"]]);
+    expect(refreshed("countdowns")).toEqual([["plugins"], ["occurrences"], ["countdowns"]]);
+    expect(refreshed("weather")).toEqual([["plugins"], ["occurrences"], ["weather"]]);
+    expect(refreshed("calendar_sync")).toEqual([["plugins"], ["occurrences"], ["calendar-sync"]]);
+    // A plugin this build has never heard of, or no id at all: everything, at once.
+    expect(refreshed("something_new")).toEqual([undefined, ["plugins"], ["occurrences"]]);
+    expect(refreshed(undefined)).toEqual([undefined, ["plugins"], ["occurrences"]]);
+  });
+
   it("hands commands for the wall screen to the shell", () => {
     const onKioskCommand = vi.fn();
     const handle = createEventHandler(client, { onSignedOut: vi.fn(), onKioskCommand });

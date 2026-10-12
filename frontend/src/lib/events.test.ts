@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { HELLO_TIMEOUT_MS, LiveUpdates, WATCHDOG_MS, liveStatus, type ServerEvent } from "./events";
+import {
+  forgetStreamPosition,
+  HELLO_TIMEOUT_MS,
+  LiveUpdates,
+  WATCHDOG_MS,
+  liveStatus,
+  type ServerEvent,
+} from "./events";
 import { serverVersion } from "./update";
 
 class FakeSource {
@@ -59,6 +66,7 @@ beforeEach(() => {
   FakeSource.all = [];
   liveStatus.set("connecting");
   serverVersion.set(null);
+  forgetStreamPosition();
 });
 
 afterEach(() => {
@@ -96,6 +104,40 @@ describe("LiveUpdates", () => {
     await vi.runOnlyPendingTimersAsync();
     expect(latest().url).toBe("/api/events?since=e1%3A5");
     live.stop();
+  });
+
+  it("a new client resumes where the page's last one stopped (the wall's shell remounts)", () => {
+    const first = setup();
+    first.live.start();
+    expect(latest().url).toBe("/api/events");
+    latest().emit({ type: "hello", mode: "live", epoch: "e1", seq: 4 });
+    latest().emit({ type: "settings.changed" }, "e1:5");
+    first.live.stop();
+    // The next shell's stream asks for what was published in between, and gets it replayed.
+    const second = setup();
+    second.live.start();
+    expect(latest().url).toBe("/api/events?since=e1%3A5");
+    latest().emit({ type: "hello", mode: "replay", epoch: "e1", seq: 5 });
+    latest().emit({ type: "plugins.changed", id: "meals" }, "e1:6");
+    expect(second.events.map((event) => event.type)).toEqual(["hello", "plugins.changed"]);
+    second.live.stop();
+    // A gap after a remount is still a gap.
+    const third = setup();
+    third.live.start();
+    expect(latest().url).toBe("/api/events?since=e1%3A6");
+    third.live.stop();
+  });
+
+  it("starts from now again once the session has ended", () => {
+    const { live } = setup();
+    live.start();
+    latest().emit({ type: "hello", mode: "live", epoch: "e1", seq: 4 });
+    latest().emit({ type: "session.expired" });
+    expect(liveStatus.get()).toBe("signed-out");
+    const next = setup();
+    next.live.start();
+    expect(latest().url).toBe("/api/events");
+    next.live.stop();
   });
 
   it("treats a gap in the sequence as a reason to reconnect", () => {

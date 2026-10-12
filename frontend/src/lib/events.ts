@@ -3,7 +3,8 @@
  *
  * * One household-wide stream. Every frame carries a position `epoch:seq`; we reconnect with
  *   `?since=` so the server can replay what we missed (a fresh EventSource never sends
- *   Last-Event-ID itself).
+ *   Last-Event-ID itself). The position outlives the client: the wall remounts its shell
+ *   between rooms, and the stream that opens then asks for what was published in the gap.
  * * The server's `ping` is a real data event every 15 s; with nothing for 40 s we assume the
  *   connection is dead (common on mobile) and reconnect.
  * * Closed while the app is hidden, reopened when visible.
@@ -36,6 +37,14 @@ export interface LiveUpdatesOptions {
 
 export const liveStatus = createStore<LiveStatus>("connecting");
 
+/** The last frame this page saw, whichever client saw it: where the next one resumes. */
+let lastSeen: { position: string; seq: number } | null = null;
+
+/** Start the next stream from now (signed out; a test). */
+export function forgetStreamPosition(): void {
+  lastSeen = null;
+}
+
 export const WATCHDOG_MS = 40_000;
 export const HELLO_TIMEOUT_MS = 5_000;
 const BACKOFF_START_MS = 500;
@@ -47,8 +56,8 @@ const FAILURES_BEFORE_POLLING = 3;
 
 export class LiveUpdates {
   private source: EventSource | null = null;
-  private position: string | null = null;
-  private lastSeq: number | null = null;
+  private position: string | null = lastSeen?.position ?? null;
+  private lastSeq: number | null = lastSeen?.seq ?? null;
   private attempt = 0;
   private failures: number[] = [];
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -148,8 +157,7 @@ export class LiveUpdates {
       this.stopPolling();
       const epoch = String(event.epoch);
       const seq = Number(event.seq);
-      this.position = `${epoch}:${seq}`;
-      this.lastSeq = seq;
+      this.at(`${epoch}:${seq}`, seq);
       liveStatus.set("live");
       // An updated container says so here; the shells reload for it (lib/update).
       announceServerVersion(event.version);
@@ -160,14 +168,20 @@ export class LiveUpdates {
         this.reconnect();
         return;
       }
-      this.position = message.lastEventId;
-      this.lastSeq = seq;
+      this.at(message.lastEventId, seq);
     }
     this.options.onEvent(event);
     if (event.type === "session.expired") {
       liveStatus.set("signed-out");
+      forgetStreamPosition();
       this.stop();
     }
+  }
+
+  private at(position: string, seq: number): void {
+    this.position = position;
+    this.lastSeq = seq;
+    lastSeen = { position, seq };
   }
 
   private reconnect(): void {
@@ -183,6 +197,7 @@ export class LiveUpdates {
       if (!this.running) return;
       if (result === "signed-out") {
         liveStatus.set("signed-out");
+        forgetStreamPosition();
         this.options.onEvent({ type: "session.expired" });
         this.stop();
         return;

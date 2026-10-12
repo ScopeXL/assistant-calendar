@@ -1101,7 +1101,15 @@ from the kitchen screen."
 
 ### T13 Settings reach every screen at once
 
-- [ ] Done (commit: )
+- [x] Done (commit: `live: a plugin's setting reaches every screen at once`)
+
+**As built.** As planned. The Saver's idle timer already re-armed on a new `start_after_minutes`
+(its effect is keyed on it, and `whenIdle` counts from the last touch); what it lacked was the
+manifest being asked for again. The screensaver's keys include `photos`. The stream's position
+is forgotten when the session ends. The e2e test "after the container is updated" timed out once
+in an earlier run: it named the new version on the next hello only, and a later hello naming the
+page's own version cancels the refresh, as it should. It now names the new version on every
+hello, as a real update does, and still checks the page refreshes once.
 
 **Owner's note.** "After settings have been changed, any paired screen should show the changes
 immediately. A refresh shouldn't be required, if it is let me know why, and give some

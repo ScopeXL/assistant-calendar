@@ -63,6 +63,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   no longer drops its repeat when you save. It shows as "As it is" and stays untouched.
 - The Add panel on the kitchen screen opens at its top, with what you can add in view.
 - Export everything no longer includes Google's client secret.
+- A setting changed on a phone shows on the kitchen screen at once, the screensaver's timing and
+  the Tasks board's stars included. They used to wait up to five minutes.
+- Turning a feature on or off no longer makes the other rooms blink off the rail.
 - A laptop's Backup page has its downloads: Download backup, Download everything and Export
   everything used to show on phones only.
 

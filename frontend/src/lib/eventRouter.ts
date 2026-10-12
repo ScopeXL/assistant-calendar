@@ -33,6 +33,21 @@ export function createInvalidator(queryClient: QueryClient) {
   };
 }
 
+/**
+ * What each plugin's own queries are keyed under. A change to a plugin's switch or settings
+ * refreshes them at once (the screensaver's timing, the Tasks board's stars, which meals are
+ * planned), not whenever they next go stale: no setting needs a refresh (ADR 0029).
+ */
+const PLUGIN_KEYS: Record<string, readonly QueryKey[]> = {
+  calendar_sync: [["calendar-sync"]],
+  lists: [["lists"]],
+  chores: [["chores"]],
+  meals: [["meals"]],
+  countdowns: [["countdowns"]],
+  screensaver: [["screensaver"], ["photos"]],
+  weather: [["weather"]],
+};
+
 export interface EventHandlers {
   onSignedOut: () => void;
   /** A parent asked every wall screen to do something now (wall screens act; phones ignore). */
@@ -65,11 +80,16 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         invalidate(qk.devices());
         invalidate(qk.session());
         break;
-      case "plugins.changed":
+      case "plugins.changed": {
         invalidate(qk.plugins());
         // A plugin's settings may change what it adds to the board (dinner on the calendar).
         invalidate(["occurrences"]);
+        const own = typeof event.id === "string" ? PLUGIN_KEYS[event.id] : undefined;
+        // A plugin this build doesn't know: everything, rather than guess its keys.
+        if (!own) void queryClient.invalidateQueries();
+        for (const key of own ?? []) invalidate(key);
         break;
+      }
       case "photos.changed":
         invalidate(["photos"]);
         invalidate(["screensaver"]);

@@ -525,6 +525,115 @@ test.describe("the wall screen", () => {
     expect(Math.round(arrow?.width ?? 0)).toBeGreaterThanOrEqual(56);
   });
 
+  test("takes a feature's setting from a phone at once: the screensaver's timing", async ({
+    page,
+    request,
+  }) => {
+    test.skip(test.info().project.name !== "display-1080p", "one wall is enough");
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/display");
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    await expect(page.locator("[data-live]").first()).toHaveAttribute("data-live", "live");
+    // A parent's phone (its own cookies) changes Start after in Photos & Screensaver.
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    const startAfter = (minutes: string) =>
+      request.put("/api/plugins/screensaver/settings", {
+        headers: CSRF,
+        data: { values: { start_after: minutes } },
+      });
+    try {
+      // The wall asks for the screensaver's settings again by itself: no refresh (ADR 0029).
+      const asked = page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname === "/api/screensaver/manifest" &&
+          response.request().method() === "GET",
+        { timeout: 3_000 },
+      );
+      expect((await startAfter("30")).ok()).toBe(true);
+      const manifest = (await (await asked).json()) as {
+        settings: { start_after_minutes: number };
+      };
+      expect(manifest.settings.start_after_minutes).toBe(30);
+    } finally {
+      // The test server keeps plugin settings between tests.
+      await startAfter("15");
+    }
+  });
+
+  test("keeps its other rooms while a feature is switched off and on", async ({
+    page,
+    request,
+  }) => {
+    test.skip(test.info().project.name !== "display-1080p", "the rail, in landscape");
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/lists");
+    const rail = page.getByRole("navigation", { name: "Rooms" });
+    await expect(rail.getByRole("link", { name: "Meals" })).toBeVisible();
+    await expect(page.locator("[data-live]").first()).toHaveAttribute("data-live", "live");
+    // Watch every change to the page: the Lists room must never leave the rail, not for a frame.
+    await page.evaluate(() => {
+      const seen = window as unknown as { railLostLists?: boolean };
+      seen.railLostLists = false;
+      new MutationObserver(() => {
+        if (!document.querySelector('nav[aria-label="Rooms"] a[href="/lists"]')) {
+          seen.railLostLists = true;
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    try {
+      const off = await request.post("/api/plugins/meals/disable", { headers: CSRF });
+      expect(off.ok()).toBe(true);
+      await expect(rail.getByRole("link", { name: "Meals" })).toHaveCount(0, { timeout: 3_000 });
+      const on = await request.post("/api/plugins/meals/enable", { headers: CSRF });
+      expect(on.ok()).toBe(true);
+      await expect(rail.getByRole("link", { name: "Meals" })).toBeVisible({ timeout: 3_000 });
+    } finally {
+      await request.post("/api/plugins/meals/enable", { headers: CSRF });
+    }
+    await expect(rail.getByRole("link", { name: "Lists" })).toBeVisible();
+    expect(
+      await page.evaluate(() => (window as unknown as { railLostLists?: boolean }).railLostLists),
+    ).toBe(false);
+  });
+
+  test("catches up on a setting changed while its stream was down", async ({ page, request }) => {
+    test.skip(test.info().project.name !== "display-1080p", "one wall is enough");
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/lists");
+    await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await expect(page.locator("[data-live]").first()).toHaveAttribute("data-live", "live");
+    const rootPx = () =>
+      page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    expect(await rootPx()).toBe(16);
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    // Every stream drops, and the setting changes before the wall has reconnected: the server
+    // replays what the wall missed from where it last heard.
+    const dropped = await request.post("/api/_test/drop-streams", { headers: CSRF });
+    expect(dropped.status()).toBe(204);
+    const small = await request.patch("/api/settings", {
+      headers: CSRF,
+      data: { text_size: "small" },
+    });
+    expect(small.ok()).toBe(true);
+    await expect.poll(rootPx, { timeout: 3_000 }).toBe(14);
+  });
+
   test("sleeps on schedule and wakes at a touch", async ({ page, request }) => {
     // 11:30 PM in the household's zone, inside a 10 PM to 6 AM sleep schedule. No PIN: the wall
     // screen may change settings itself.
@@ -594,10 +703,12 @@ test.describe("after the container is updated", () => {
     }
     const live = page.locator("[data-live]").first();
     await expect(live).toHaveAttribute("data-live", "live");
-    // The next hello names another version, as after `docker compose pull && up -d`.
+    // Every hello from now on names another version, as after `docker compose pull && up -d`.
+    // Not just the next one: a hello naming the page's own version after the new one rightly
+    // calls the refresh off, so a page that opened one more stream in between never reloaded.
     const updated = await request.post("/api/_test/version", {
       headers: CSRF,
-      data: { version: "9.9.9", once: true },
+      data: { version: "9.9.9" },
     });
     expect(updated.status()).toBe(204);
     const reloaded = page.waitForEvent("load");
@@ -606,7 +717,7 @@ test.describe("after the container is updated", () => {
     const toasts = page.locator("[data-toast]");
     await expect(toasts.filter({ hasText: "Sunroom was updated to 9.9.9" })).toBeVisible();
     await reloaded;
-    // The reloaded page hears its own version: nothing more to say.
+    // The reloaded page hears that version again: it has refreshed for it once, and says no more.
     await expect(live).toHaveAttribute("data-live", "live");
     await page.waitForTimeout(1500);
     await expect(toasts).toHaveCount(0);

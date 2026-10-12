@@ -3,7 +3,7 @@
  * /api/plugins) intersected with the registry, each loaded once, in the registry's order, and
  * what they add to the shell, sorted.
  */
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ComponentType } from "react";
 
 import { usePlugins } from "../lib/household";
@@ -37,6 +37,9 @@ export function usePluginModulesState(): { modules: PluginModule[]; ready: boole
       ),
     staleTime: Infinity,
     enabled: on.length > 0,
+    // Switching a plugin on or off re-keys this query: until the new list has loaded, the
+    // rooms, Today blocks and Settings pages stay as they were instead of blinking away.
+    placeholderData: keepPreviousData,
   });
   if (on.length === 0) return { modules: [], ready: listedReady };
   return { modules: isSuccess ? data : [], ready: listedReady && isSuccess };
