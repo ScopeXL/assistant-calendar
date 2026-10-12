@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { addDays } from "../../lib/dates";
+import { useReveal } from "../../lib/reveal";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { MonthGrid } from "../../ui/MonthGrid";
 import { Segmented } from "../../ui/Segmented";
@@ -72,6 +73,7 @@ export function RepeatField({
   const [opened, setOpened] = useState(false);
   const open = opened || (!kept && value !== null && !isPreset);
   const custom = repeatToCustom(value, day);
+  const customPanel = useReveal<HTMLDivElement>(open);
   const endKind: EndKind =
     repeatEnd.until !== undefined ? "until" : repeatEnd.count !== undefined ? "count" : "never";
 
@@ -123,7 +125,10 @@ export function RepeatField({
         </Chip>
       </ChipRow>
       {open ? (
-        <div className="flex flex-col gap-4 rounded-panel border-2 border-line p-3">
+        <div
+          ref={customPanel}
+          className="flex flex-col gap-4 rounded-panel border-2 border-line p-3"
+        >
           <div className="flex flex-wrap items-center gap-3">
             <span className={heading}>Every</span>
             <Stepper
@@ -184,7 +189,13 @@ export function RepeatField({
             options={[
               { value: "never", label: "Never" },
               { value: "until", label: "On a date" },
-              { value: "count", label: "After a number of times" },
+              {
+                value: "count",
+                label: `After ${String(repeatEnd.count ?? DEFAULT_COUNT)} times`.replace(
+                  "After 1 times",
+                  "After 1 time",
+                ),
+              },
             ]}
             onChange={(kind) => {
               set(

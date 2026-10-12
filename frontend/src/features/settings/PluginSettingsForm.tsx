@@ -13,7 +13,7 @@ import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
-import { COLORS } from "./MemberSheet";
+import { COLORS } from "../../lib/colors";
 
 type Field = components["schemas"]["FieldOut"];
 type Values = Record<string, unknown>;

@@ -22,7 +22,14 @@ const module: PluginModule = {
   ],
   today: [{ key: "coming-up", order: 40, Display: ComingUpWall, Phone: ComingUpPhone }],
   add: [
-    { key: "countdown", label: "Countdown", order: 50, room: "countdowns", Editor: AddCountdown },
+    {
+      key: "countdown",
+      label: "Countdown",
+      icon: Hourglass,
+      order: 50,
+      room: "countdowns",
+      Editor: AddCountdown,
+    },
   ],
   calendarOverlays: [{ key: "countdowns", icon: Star, room: "countdowns" }],
   eventAction: AddCountdownFromEvent,

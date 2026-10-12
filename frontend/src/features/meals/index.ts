@@ -24,7 +24,7 @@ const module: PluginModule = {
     },
   ],
   today: [{ key: "tonight", order: 20, Display: TonightWall, Phone: TonightPhone }],
-  add: [{ key: "meal", label: "Meal", order: 40, room: "meals", Editor: AddMeal }],
+  add: [{ key: "meal", label: "Meal", icon: Utensils, order: 40, room: "meals", Editor: AddMeal }],
   calendarOverlays: [{ key: "meals", icon: Utensils, room: "meals" }],
   removed: RemovedMealRows,
   settingsPages: [{ key: "meals", title: "Meals", Page: SettingsMeals }],

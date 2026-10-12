@@ -59,7 +59,25 @@ test("quick add on the wall, seen on a phone, changed and undone, dragged and pu
   await page.getByRole("button", { name: "Add", exact: true }).click();
   const add = page.getByRole("dialog", { name: "Add" });
   await add.getByLabel("What, when, who").fill("Dentist Thu 2:30pm Mia");
-  await expect(add).toContainText("Dentist · Thu, Oct 8 · 2:30 PM · 1 hour · Mia");
+  // What was typed fills the rows: the title that's left, the day, the time, how long and who.
+  await expect(add).toContainText('Saved as "Dentist"');
+  const row = (name: string) => add.getByRole("group", { name, exact: true });
+  const pressed = (group: string, name: string) =>
+    expect(row(group).getByRole("button", { name, exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  await pressed("Day", "Thu, Oct 8");
+  await pressed("Time", "2:30 PM");
+  await pressed("How long", "1 hour");
+  await pressed("Who", "Mia");
+  await pressed("Repeats", "Doesn't repeat");
+  // The kinds of thing to add are one row, and the button stays in view above the keyboard.
+  const kinds = await row("What to add")
+    .getByRole("button")
+    .evaluateAll((cells) => cells.map((cell) => Math.round(cell.getBoundingClientRect().y)));
+  expect(new Set(kinds).size).toBe(1);
+  await expect(add.getByRole("button", { name: "Add event" })).toBeInViewport();
   await add.getByRole("button", { name: "Add event" }).click();
   await expect(add).toBeHidden();
   const dentist = board.getByRole("button", {

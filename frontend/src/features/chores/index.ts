@@ -23,7 +23,16 @@ const module: PluginModule = {
     },
   ],
   today: [{ key: "chores", order: 10, Display: ChoresTodayWall, Phone: ChoresTodayPhone }],
-  add: [{ key: "chore", label: "Task", order: 30, room: "chores", Editor: AddChore }],
+  add: [
+    {
+      key: "chore",
+      label: "Task",
+      icon: SquareCheckBig,
+      order: 30,
+      room: "chores",
+      Editor: AddChore,
+    },
+  ],
   personColumn: ChoresPersonColumn,
   removed: RemovedChoreRows,
   settingsPages: [{ key: "chores", title: "Tasks", Page: SettingsChores }],

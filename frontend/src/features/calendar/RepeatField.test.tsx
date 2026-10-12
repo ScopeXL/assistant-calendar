@@ -137,11 +137,12 @@ describe("how something repeats (ADR 0029)", () => {
     expect(within(ends).getByRole("button", { name: "Never" }).getAttribute("aria-pressed")).toBe(
       "true",
     );
-    fireEvent.click(within(ends).getByRole("button", { name: "After a number of times" }));
+    fireEvent.click(within(ends).getByRole("button", { name: "After 10 times" }));
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=DAILY;COUNT=10");
     fireEvent.click(screen.getByRole("button", { name: "Times: less" }));
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=DAILY;COUNT=9");
     expect(sentence().textContent).toBe("Every day, 9 times");
+    expect(within(ends).getByRole("button", { name: "After 9 times" })).toBeTruthy();
     fireEvent.click(within(ends).getByRole("button", { name: "On a date" }));
     // Seeded 90 days on: January 6, 2027.
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=DAILY;UNTIL=20270106");

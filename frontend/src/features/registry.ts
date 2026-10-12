@@ -48,8 +48,10 @@ export interface AddEditorProps {
 /** A kind of thing Add makes, beside Event (UX §4 "The Add panel for other things"). */
 export interface AddType {
   key: string;
-  /** The chip's word: "Item", "Task". */
+  /** The cell's word in the Add panel's row of kinds: "Item", "Task". */
   label: string;
+  /** Drawn over the word: the room's own icon, so Add mirrors the rail. */
+  icon: LucideIcon;
   order: number;
   /** The room where it's the first choice when Add opens. */
   room?: string;

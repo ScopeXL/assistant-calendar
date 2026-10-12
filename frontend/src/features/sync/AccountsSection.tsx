@@ -14,7 +14,7 @@ import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
-import { COLORS } from "../settings/MemberSheet";
+import { COLORS } from "../../lib/colors";
 import { AddAccountSheet } from "./AddAccount";
 import { sourceName, useAccounts, useSyncChanges, type Account, type RemoteCalendar } from "./data";
 

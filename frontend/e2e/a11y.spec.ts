@@ -371,11 +371,29 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("button", { name: "Add", exact: true }).click();
       const add = page.getByRole("dialog", { name: "Add" });
       await add.getByLabel("What, when, who").fill("Dentist every Thu 2:30pm Mia");
-      await add.getByRole("button", { name: "2:30 PM" }).click();
+      await check(page, "display: add an event");
+      // The keyboard down, each row's picker opened in turn: the month, the hours, Custom.
+      await page
+        .getByRole("group", { name: "On-screen keyboard" })
+        .getByRole("button", { name: "Done" })
+        .click();
+      await add.getByRole("button", { name: "Pick a date" }).click();
+      await expect(add.getByRole("button", { name: "October 8" })).toBeVisible();
+      await check(page, "display: add, the month grid");
+      await add.getByRole("button", { name: "Pick a date" }).click();
+      await add.getByRole("button", { name: "Pick a time" }).click();
+      await expect(add.getByRole("group", { name: "Time: hour" })).toBeVisible();
       await check(page, "display: add, the time picker");
-      await add.getByRole("button", { name: "Every week on Thu" }).click();
-      await check(page, "display: add, the repeat picker");
+      await add.getByRole("button", { name: "Pick a time" }).click();
+      await add.getByRole("button", { name: "Custom…" }).click();
+      await expect(add.getByRole("group", { name: "On", exact: true })).toBeVisible();
+      await check(page, "display: add, the custom repeat");
+      await add.getByRole("button", { name: "More…" }).click();
+      await expect(add.getByLabel("Where")).toBeVisible();
+      await check(page, "display: add, more");
       await add.getByRole("button", { name: "Close" }).click();
+      // Gone before the views below: Custom's "Day" and "Month" would answer to their names.
+      await expect(add).toBeHidden();
       for (const view of ["Day", "Month", "People"]) {
         await page.getByRole("button", { name: view, exact: true }).click();
         await check(page, `display: ${view}`);

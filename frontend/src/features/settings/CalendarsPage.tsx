@@ -14,7 +14,7 @@ import { TextField } from "../../ui/TextField";
 import { useCalendars } from "../calendar/data";
 import { usePluginModules } from "../usePluginModules";
 import type { CalendarInfo, PersonColor } from "../calendar/types";
-import { COLORS } from "./MemberSheet";
+import { COLORS } from "../../lib/colors";
 import { Group, Text } from "./parts";
 
 type Editing = { kind: "new" } | { kind: "change"; calendar: CalendarInfo } | null;

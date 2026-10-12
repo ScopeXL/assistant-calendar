@@ -12,7 +12,7 @@ import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { WhoPicker } from "../../ui/WhoPicker";
 import type { AddEditorProps } from "../registry";
-import { COLORS } from "../settings/MemberSheet";
+import { COLORS } from "../../lib/colors";
 import { useCountdownChanges, type Countdown, type CountdownIn } from "./data";
 
 const EMOJI = ["🎂", "🎉", "🏖️", "⛺", "✈️", "🎃", "🎄", "🏫", "⚽", "🎁"];

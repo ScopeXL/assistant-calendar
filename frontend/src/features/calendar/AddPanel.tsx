@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { CalendarDays } from "lucide-react";
 import { useState } from "react";
 
 import { addDays } from "../../lib/dates";
 import type { BoardPanel } from "../../lib/displayState";
 import { useSettings } from "../../lib/household";
-import { Chip, ChipRow } from "../../ui/Chip";
+import { Segmented } from "../../ui/Segmented";
 import { SidePanel } from "../../ui/SidePanel";
 import { useAddTypes } from "../usePluginModules";
 import { useEvent, useEventChanges } from "./data";
@@ -70,8 +71,9 @@ export function fieldsFor(
 
 /**
  * Add and the event editor (UX §4), in the wall's side panel or a phone's sheet. Adding offers
- * every kind of thing the enabled plugins make beside events (Event, Item, Chore), with the
- * room's own kind first; `onType` switches it.
+ * every kind of thing the enabled plugins make beside events, as one row of icons over their
+ * words (Event, Item, Task, Meal, Countdown), with the room's own kind chosen first; `onType`
+ * switches it, and each kind has its own form.
  */
 export function AddPanel({
   panel,
@@ -120,19 +122,18 @@ export function AddPanel({
       <SidePanel open={panel !== null} title={title} onClose={onClose}>
         {adding && types.length > 0 ? (
           <div className="mb-5">
-            <ChipRow label="What to add">
-              {[{ key: "event", label: "Event" }, ...types].map((type) => (
-                <Chip
-                  key={type.key}
-                  on={type.key === chosen}
-                  onClick={() => {
-                    onType?.(type.key);
-                  }}
-                >
-                  {type.label}
-                </Chip>
-              ))}
-            </ChipRow>
+            <Segmented
+              stacked
+              label="What to add"
+              value={chosen}
+              options={[
+                { value: "event", label: "Event", icon: CalendarDays },
+                ...types.map((type) => ({ value: type.key, label: type.label, icon: type.icon })),
+              ]}
+              onChange={(type) => {
+                onType?.(type);
+              }}
+            />
           </div>
         ) : null}
         {plugin && adding ? (
@@ -147,6 +148,7 @@ export function AddPanel({
             key={editing ? `${editing.eventId}|${editing.recurrenceId ?? ""}` : "new"}
             initial={editing && event ? draftFromEvent(event, occurrence, weekStartsOn) : null}
             editing={editing !== null}
+            today={today}
             defaultDay={panel.kind === "add" ? (panel.day ?? today) : today}
             defaultHour={panel.kind === "add" ? panel.hour : null}
             defaultMinute={panel.kind === "add" ? (panel.minute ?? null) : null}

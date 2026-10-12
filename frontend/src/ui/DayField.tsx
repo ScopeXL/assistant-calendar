@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { addDays, weekOf, weekSpan } from "../lib/dates";
+import { useReveal } from "../lib/reveal";
 import { Button } from "./Button";
 import { Chip } from "./Chip";
 import { MonthGrid } from "./MonthGrid";
@@ -47,6 +48,7 @@ export function DayField({
 }) {
   const display = useShell() === "display";
   const [open, setOpen] = useState(grid === "open");
+  const month = useReveal<HTMLDivElement>(open);
   const [shown, setShown] = useState(value ?? anchor ?? today);
   // The week on show follows the chosen day when it changes to one outside it.
   const [followed, setFollowed] = useState(value);
@@ -122,14 +124,16 @@ export function DayField({
         </Chip>
       </div>
       {open ? (
-        <MonthGrid
-          label={`${label}, by month`}
-          value={value}
-          today={today}
-          weekStartsOn={weekStartsOn}
-          min={min}
-          onChange={onChange}
-        />
+        <div ref={month}>
+          <MonthGrid
+            label={`${label}, by month`}
+            value={value}
+            today={today}
+            weekStartsOn={weekStartsOn}
+            min={min}
+            onChange={onChange}
+          />
+        </div>
       ) : null}
       {hint ? <p className={soft}>{hint}</p> : null}
     </div>

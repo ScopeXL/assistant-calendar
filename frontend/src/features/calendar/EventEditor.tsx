@@ -1,43 +1,27 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { errorMessage } from "../../api/client";
-import {
-  addDays,
-  formatWallTime,
-  householdZone,
-  shortDate,
-  shortWeekday,
-  weekdayOf,
-} from "../../lib/dates";
-import { useMembers, useSettings } from "../../lib/household";
+import { addDays, householdZone, longMonthDay, weekdayOf } from "../../lib/dates";
 import { serverNow } from "../../lib/clock";
+import { COLORS } from "../../lib/colors";
+import { useMembers, useSettings } from "../../lib/household";
+import { EVENT_TIMES } from "../../lib/times";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { DayField } from "../../ui/DayField";
+import { MonthGrid } from "../../ui/MonthGrid";
+import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
-import { WhoPicker } from "../../ui/WhoPicker";
 import { TextField } from "../../ui/TextField";
+import { TimeField } from "../../ui/TimeField";
+import { WhoPicker } from "../../ui/WhoPicker";
 import { useCalendars } from "./data";
 import { parseQuickAdd, type QuickAddDraft } from "./quickAdd";
-import {
-  describeRepeat,
-  repeatPresets,
-  repeatToRRule,
-  rruleToRepeat,
-  type Repeat,
-  type RepeatEnd,
-} from "./repeat";
+import { RepeatField } from "./RepeatField";
+import { repeatToRRule, rruleToRepeat, type Repeat, type RepeatEnd } from "./repeat";
 import type { CalendarEvent, EventFields, Occurrence, PersonColor } from "./types";
+import { useBoardDay } from "./useBoardDay";
 
-const COLORS: { value: PersonColor; word: string }[] = [
-  { value: "clay", word: "Red" },
-  { value: "olive", word: "Olive" },
-  { value: "moss", word: "Green" },
-  { value: "sea", word: "Teal" },
-  { value: "sky", word: "Blue" },
-  { value: "iris", word: "Purple" },
-  { value: "berry", word: "Plum" },
-  { value: "rose", word: "Pink" },
-];
 const LENGTHS = [30, 60, 90, 120, 180];
 const REMINDERS: { minutes: number | null; label: string }[] = [
   { minutes: null, label: "None" },
@@ -45,9 +29,6 @@ const REMINDERS: { minutes: number | null; label: string }[] = [
   { minutes: 60, label: "1 hour before" },
   { minutes: 1440, label: "1 day before" },
 ];
-
-type Field = "day" | "time" | "length" | "who" | "repeat";
-type Picker = Field | "calendar" | "color" | "more" | null;
 
 export interface Draft {
   title: string;
@@ -192,14 +173,17 @@ export function draftFromEvent(
 }
 
 /**
- * The event editor (UX §4 "Add and the event editor", §5): the quick-add field, the line of what
- * was understood, and a chip for each part that opens its picker; anything the parser misread is
- * one tap to fix, and a part set by hand isn't overwritten by more typing. The same form fills
- * the wall's side panel and a phone's sheet.
+ * The event editor (UX §4 "Add and the event editor", §5, ADR 0029): the quick-add field, then
+ * every part of the event on its own row, built for a finger: Who, Day, Time, How long, Repeats,
+ * Calendar, Color, and More… for the rest. Typing fills the rows as it's understood; a row set
+ * by hand keeps winning over later typing, and anything the parser fills is one tap to change.
+ * The button stays pinned above the keyboard. The same form fills the wall's side panel and a
+ * phone's sheet.
  */
 export function EventEditor({
   initial,
   editing,
+  today,
   defaultDay,
   defaultHour,
   defaultMinute = null,
@@ -212,6 +196,8 @@ export function EventEditor({
   initial: Draft | null;
   /** Only the title in the field (no parsing) when changing an event. */
   editing: boolean;
+  today: string;
+  /** The day Add was opened on: a tapped day, or today. */
   defaultDay: string;
   defaultHour: number | null;
   /** With `defaultHour`: the minute a tap on the Hours grid chose. */
@@ -226,11 +212,15 @@ export function EventEditor({
   const { data: settings } = useSettings();
   const { data: members = [] } = useMembers();
   const { data: calendars = [] } = useCalendars();
+  const weekStartsOn = settings?.week_starts_on ?? 6;
   const writable = calendars.filter((c) => !c.read_only && !c.deleted);
   const defaultCalendar = writable.find((c) => c.is_default)?.id ?? writable[0]?.id ?? null;
   const [text, setText] = useState(initial?.title ?? "");
   const [manual, setManual] = useState<Partial<Draft>>(initial ?? {});
-  const [picker, setPicker] = useState<Picker>(null);
+  const [more, setMore] = useState(
+    Boolean(initial && (initial.location || initial.notes || initial.reminder !== null)),
+  );
+  const [span, setSpan] = useState(Boolean(initial?.lastDay && initial.lastDay !== initial.day));
 
   const parsed: QuickAddDraft | null = useMemo(() => {
     if (editing) return null;
@@ -243,12 +233,13 @@ export function EventEditor({
     });
   }, [editing, text, settings, members, defaultDay]);
 
+  const set = (change: Partial<Draft>) => {
+    setManual((current) => ({ ...current, ...change }));
+  };
   // A day tapped on the board while the panel is open sets the date (UX §4).
-  const [boardDay, setBoardDay] = useState(defaultDay);
-  if (boardDay !== defaultDay) {
-    setBoardDay(defaultDay);
-    if (!initial) setManual((current) => ({ ...current, day: defaultDay }));
-  }
+  useBoardDay(defaultDay, (day) => {
+    if (!initial) set({ day });
+  });
 
   const fromHour =
     defaultHour === null
@@ -271,9 +262,6 @@ export function EventEditor({
     notes: manual.notes ?? "",
     reminder: manual.reminder !== undefined ? manual.reminder : null,
   };
-  const set = (change: Partial<Draft>) => {
-    setManual((current) => ({ ...current, ...change }));
-  };
   useEffect(() => {
     onDay?.(draft.day);
   }, [onDay, draft.day]);
@@ -283,40 +271,17 @@ export function EventEditor({
     },
     [onDay],
   );
-  const people = members.filter((m) => draft.memberIds.includes(m.id));
-  const calendar = writable.find((c) => c.id === draft.calendarId);
-  const timeText = draft.allDay ? "All day" : formatWallTime(`${draft.day}T${draft.start}:00`);
-  const repeatText = draft.repeat
-    ? describeRepeat(draft.repeat, draft.day, draft.repeatEnd)
-    : "Doesn't repeat";
-  const dayText =
-    draft.allDay && draft.lastDay && draft.lastDay !== draft.day
-      ? `${shortDate(draft.day)} – ${shortDate(draft.lastDay)}`
-      : shortDate(draft.day);
-  const understood = [
-    draft.title || null,
-    dayText,
-    timeText,
-    draft.allDay ? null : lengthWords(draft.minutes),
-    people.length ? people.map((p) => p.name).join(", ") : "Everyone",
-  ].filter(Boolean);
 
+  const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
   const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
-  const label = display ? "text-d-body font-semibold" : "text-body font-semibold";
-  const chip = (field: Picker, children: ReactNode) => (
-    <Chip
-      on={picker === field}
-      onClick={() => {
-        setPicker(picker === field ? null : field);
-      }}
-    >
-      {children}
-    </Chip>
-  );
+  // Once the parser has taken words out of what was typed, say what's left as the title.
+  const took = !editing && draft.title.trim() !== "" && draft.title.trim() !== text.trim();
+  const lengths = [...new Set([...LENGTHS, draft.minutes])].sort((a, b) => a - b);
+  const longer = draft.lastDay !== null && draft.lastDay !== draft.day;
 
   return (
     <form
-      className="flex flex-col gap-5"
+      className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
       onSubmit={(event) => {
         event.preventDefault();
         if (draft.title.trim()) onSave(draft);
@@ -324,7 +289,13 @@ export function EventEditor({
     >
       <TextField
         label={editing ? "Title" : "What, when, who"}
-        hint={editing ? null : "For example: Dentist Thu 2:30pm Mia"}
+        hint={
+          editing
+            ? null
+            : took
+              ? `Saved as "${draft.title.trim()}"`
+              : "For example: Dentist Thu 2:30pm Mia"
+        }
         value={text}
         maxLength={200}
         autoComplete="off"
@@ -335,41 +306,7 @@ export function EventEditor({
         }}
       />
       <div className="flex flex-col gap-2">
-        <p className={soft}>{editing ? "When and who" : "Understood as"}</p>
-        <p className={`${label} break-words`}>{understood.join(" · ")}</p>
-      </div>
-      <ChipRow label="Change a part">
-        {chip("day", dayText)}
-        {chip("time", timeText)}
-        {draft.allDay ? null : chip("length", lengthWords(draft.minutes))}
-        {chip("who", people.length ? people.map((p) => p.name).join(", ") : "Everyone")}
-        {chip("repeat", repeatText)}
-        {writable.length > 1 ? chip("calendar", calendar?.name ?? "Calendar") : null}
-        {chip(
-          "color",
-          draft.color ? (COLORS.find((c) => c.value === draft.color)?.word ?? "Color") : "Color",
-        )}
-        {chip("more", "More…")}
-      </ChipRow>
-      {picker === "day" ? (
-        <DayPicker draft={draft} defaultDay={defaultDay} set={set} />
-      ) : picker === "time" ? (
-        <TimePicker draft={draft} set={set} />
-      ) : picker === "length" ? (
-        <ChipRow label="How long">
-          {LENGTHS.map((minutes) => (
-            <Chip
-              key={minutes}
-              on={draft.minutes === minutes}
-              onClick={() => {
-                set({ minutes });
-              }}
-            >
-              {lengthWords(minutes)}
-            </Chip>
-          ))}
-        </ChipRow>
-      ) : picker === "who" ? (
+        <p className={heading}>Who</p>
         <WhoPicker
           label="Who"
           members={members}
@@ -379,23 +316,111 @@ export function EventEditor({
             set({ memberIds });
           }}
         />
-      ) : picker === "repeat" ? (
-        <RepeatPicker draft={draft} set={set} />
-      ) : picker === "calendar" ? (
-        <ChipRow label="Calendar">
-          {writable.map((c) => (
-            <Chip
-              key={c.id}
-              on={draft.calendarId === c.id}
-              onClick={() => {
-                set({ calendarId: c.id });
-              }}
-            >
-              {c.name}
-            </Chip>
-          ))}
-        </ChipRow>
-      ) : picker === "color" ? (
+      </div>
+      <div className="flex flex-col gap-3">
+        <DayField
+          value={draft.day}
+          today={today}
+          weekStartsOn={weekStartsOn}
+          onChange={(day) => {
+            // A span keeps its last day while it's still after the new first one.
+            set({ day, lastDay: draft.lastDay && draft.lastDay > day ? draft.lastDay : null });
+          }}
+        />
+        {draft.allDay ? (
+          <div className="flex flex-col gap-2">
+            <p className={soft}>Last day</p>
+            <ChipRow label="Last day">
+              <Chip
+                on={!longer && !span}
+                onClick={() => {
+                  setSpan(false);
+                  set({ lastDay: null });
+                }}
+              >
+                Same day
+              </Chip>
+              <Chip
+                on={longer || span}
+                expanded={span}
+                onClick={() => {
+                  setSpan(!span);
+                }}
+              >
+                {longer && draft.lastDay ? `Until ${longMonthDay(draft.lastDay)}` : "Another day"}
+              </Chip>
+            </ChipRow>
+            {span ? (
+              <MonthGrid
+                label="Last day, by month"
+                value={draft.lastDay ?? draft.day}
+                today={today}
+                weekStartsOn={weekStartsOn}
+                min={draft.day}
+                onChange={(lastDay) => {
+                  set({ lastDay: lastDay === draft.day ? null : lastDay });
+                }}
+              />
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+      <TimeField
+        label="Time"
+        value={draft.allDay ? null : draft.start}
+        none={{ label: "All day" }}
+        suggestions={EVENT_TIMES}
+        onChange={(time) => {
+          set(time === null ? { allDay: true } : { allDay: false, start: time });
+        }}
+      />
+      {draft.allDay ? null : (
+        <div className="flex flex-col gap-2">
+          <p className={heading}>How long</p>
+          <ChipRow label="How long">
+            {lengths.map((minutes) => (
+              <Chip
+                key={minutes}
+                on={draft.minutes === minutes}
+                onClick={() => {
+                  set({ minutes });
+                }}
+              >
+                {lengthWords(minutes)}
+              </Chip>
+            ))}
+          </ChipRow>
+        </div>
+      )}
+      <RepeatField
+        day={draft.day}
+        today={today}
+        value={draft.repeat}
+        repeatEnd={draft.repeatEnd}
+        kept={draft.kept}
+        weekStartsOn={weekStartsOn}
+        onChange={set}
+      />
+      {writable.length > 1 ? (
+        <div className="flex flex-col gap-2">
+          <p className={heading}>Calendar</p>
+          <ChipRow label="Calendar">
+            {writable.map((c) => (
+              <Chip
+                key={c.id}
+                on={draft.calendarId === c.id}
+                onClick={() => {
+                  set({ calendarId: c.id });
+                }}
+              >
+                {c.name}
+              </Chip>
+            ))}
+          </ChipRow>
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-2">
+        <p className={heading}>Color</p>
         <ChipRow label="Color">
           <Chip
             on={draft.color === null}
@@ -420,256 +445,63 @@ export function EventEditor({
             </Chip>
           ))}
         </ChipRow>
-      ) : picker === "more" ? (
-        <div className="flex flex-col gap-4">
-          <TextField
-            label="Where"
-            value={draft.location}
-            maxLength={300}
-            autoComplete="off"
-            onChange={(event) => {
-              set({ location: event.target.value });
+      </div>
+      <div className="flex flex-col gap-4">
+        <div>
+          <Chip
+            on={more}
+            expanded={more}
+            onClick={() => {
+              setMore(!more);
             }}
-          />
-          <TextField
-            label="Notes"
-            value={draft.notes}
-            maxLength={5000}
-            autoComplete="off"
-            onChange={(event) => {
-              set({ notes: event.target.value });
-            }}
-          />
-          <div className="flex flex-col gap-2">
-            <p className={label}>Remind on the kitchen screen</p>
-            <ChipRow label="Remind on the kitchen screen">
-              {REMINDERS.map((option) => (
-                <Chip
-                  key={option.label}
-                  on={draft.reminder === option.minutes}
-                  onClick={() => {
-                    set({ reminder: option.minutes });
-                  }}
-                >
-                  {option.label}
-                </Chip>
-              ))}
-            </ChipRow>
-          </div>
+          >
+            More…
+          </Chip>
         </div>
-      ) : null}
-      {/* On the wall it stays in view at the bottom of the panel; the panel's padding keeps it
-          above the on-screen keyboard (a sticky box stops at its scroller's padding). */}
-      <div
-        className={
-          display ? "sticky bottom-0 z-10 -mx-6 border-t border-line bg-surface px-6 py-4" : ""
-        }
-      >
+        {more ? (
+          <>
+            <TextField
+              label="Where"
+              value={draft.location}
+              maxLength={300}
+              autoComplete="off"
+              onChange={(event) => {
+                set({ location: event.target.value });
+              }}
+            />
+            <TextField
+              label="Notes"
+              value={draft.notes}
+              maxLength={5000}
+              autoComplete="off"
+              onChange={(event) => {
+                set({ notes: event.target.value });
+              }}
+            />
+            <div className="flex flex-col gap-2">
+              <p className={heading}>Remind on the kitchen screen</p>
+              <ChipRow label="Remind on the kitchen screen">
+                {REMINDERS.map((option) => (
+                  <Chip
+                    key={option.label}
+                    on={draft.reminder === option.minutes}
+                    onClick={() => {
+                      set({ reminder: option.minutes });
+                    }}
+                  >
+                    {option.label}
+                  </Chip>
+                ))}
+              </ChipRow>
+            </div>
+          </>
+        ) : null}
+      </div>
+      <PanelActions>
         <Button type="submit" block pending={pending} disabled={!draft.title.trim()}>
           {editing ? "Save changes" : "Add event"}
         </Button>
-      </div>
+      </PanelActions>
     </form>
-  );
-}
-
-function DayPicker({
-  draft,
-  defaultDay,
-  set,
-}: {
-  draft: Draft;
-  defaultDay: string;
-  set: (change: Partial<Draft>) => void;
-}) {
-  const display = useShell() === "display";
-  const today = defaultDay;
-  const days = Array.from({ length: 7 }, (_, n) => addDays(today, n));
-  return (
-    <div className="flex flex-col gap-3">
-      <ChipRow label="Day">
-        {days.map((day, n) => (
-          <Chip
-            key={day}
-            on={draft.day === day}
-            onClick={() => {
-              set({ day, lastDay: null });
-            }}
-          >
-            {n === 0 ? shortDate(day) : `${shortWeekday(day)} ${String(Number(day.slice(8)))}`}
-          </Chip>
-        ))}
-      </ChipRow>
-      <label className="flex flex-col gap-2">
-        <span
-          className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}
-        >
-          Pick a date
-        </span>
-        <input
-          type="date"
-          value={draft.day}
-          className={`rounded-button border-2 border-line bg-surface ${
-            display ? "min-h-16 px-4 text-d-body" : "min-h-12 px-3 text-body"
-          }`}
-          onChange={(event) => {
-            if (event.target.value) set({ day: event.target.value });
-          }}
-        />
-      </label>
-      {draft.allDay ? (
-        <label className="flex flex-col gap-2">
-          <span
-            className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}
-          >
-            Last day (for more than one day)
-          </span>
-          <input
-            type="date"
-            value={draft.lastDay ?? draft.day}
-            min={draft.day}
-            className={`rounded-button border-2 border-line bg-surface ${
-              display ? "min-h-16 px-4 text-d-body" : "min-h-12 px-3 text-body"
-            }`}
-            onChange={(event) => {
-              set({ lastDay: event.target.value || null });
-            }}
-          />
-        </label>
-      ) : null}
-    </div>
-  );
-}
-
-function TimePicker({ draft, set }: { draft: Draft; set: (change: Partial<Draft>) => void }) {
-  const [early, setEarly] = useState(false);
-  const hour = Number(draft.start.slice(0, 2));
-  const minute = draft.start.slice(3, 5);
-  const hours = early
-    ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    : [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
-  const at = (h: number, m: string) => `${String(h).padStart(2, "0")}:${m}`;
-  return (
-    <div className="flex flex-col gap-3">
-      <ChipRow label="All day">
-        <Chip
-          on={draft.allDay}
-          onClick={() => {
-            set({ allDay: !draft.allDay });
-          }}
-        >
-          All day
-        </Chip>
-        <Chip
-          on={early}
-          onClick={() => {
-            setEarly(!early);
-          }}
-        >
-          {early ? "Later hours" : "Earlier hours"}
-        </Chip>
-      </ChipRow>
-      <ChipRow label="Hour">
-        {hours.map((h) => (
-          <Chip
-            key={h}
-            on={!draft.allDay && hour === h}
-            onClick={() => {
-              set({ allDay: false, start: at(h, minute) });
-            }}
-          >
-            {formatWallTime(`2000-01-01T${at(h, "00")}:00`, { compact: true })}
-          </Chip>
-        ))}
-      </ChipRow>
-      <ChipRow label="Minutes">
-        {["00", "15", "30", "45"].map((m) => (
-          <Chip
-            key={m}
-            on={!draft.allDay && minute === m}
-            onClick={() => {
-              set({ allDay: false, start: at(hour, m) });
-            }}
-          >
-            {`:${m}`}
-          </Chip>
-        ))}
-      </ChipRow>
-    </div>
-  );
-}
-
-function RepeatPicker({ draft, set }: { draft: Draft; set: (change: Partial<Draft>) => void }) {
-  const display = useShell() === "display";
-  const presets = repeatPresets(draft.day);
-  const current = draft.repeat ? JSON.stringify(draft.repeat) : null;
-  const ends: { key: string; label: string; end: RepeatEnd }[] = [
-    { key: "never", label: "Never ends", end: {} },
-    { key: "count", label: "10 times", end: { count: 10 } },
-    {
-      key: "until",
-      label: `Until ${shortDate(addDays(draft.day, 90))}`,
-      end: { until: addDays(draft.day, 90) },
-    },
-  ];
-  const endKey = draft.repeatEnd.count ? "count" : draft.repeatEnd.until ? "until" : "never";
-  return (
-    <div className="flex flex-col gap-3">
-      <ChipRow label="Repeats">
-        {presets.map((preset) => (
-          <Chip
-            key={preset.key}
-            on={(preset.repeat ? JSON.stringify(preset.repeat) : null) === current}
-            onClick={() => {
-              set({ repeat: preset.repeat });
-            }}
-          >
-            {preset.label}
-          </Chip>
-        ))}
-      </ChipRow>
-      {draft.repeat ? (
-        <>
-          <ChipRow label="Ends">
-            {ends.map((option) => (
-              <Chip
-                key={option.key}
-                on={endKey === option.key}
-                onClick={() => {
-                  set({ repeatEnd: option.end });
-                }}
-              >
-                {option.label}
-              </Chip>
-            ))}
-          </ChipRow>
-          {endKey === "until" ? (
-            <label className="flex flex-col gap-2">
-              <span
-                className={
-                  display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"
-                }
-              >
-                Last day
-              </span>
-              <input
-                type="date"
-                value={draft.repeatEnd.until ?? ""}
-                min={draft.day}
-                className={`rounded-button border-2 border-line bg-surface ${
-                  display ? "min-h-16 px-4 text-d-body" : "min-h-12 px-3 text-body"
-                }`}
-                onChange={(event) => {
-                  if (event.target.value) set({ repeatEnd: { until: event.target.value } });
-                }}
-              />
-            </label>
-          ) : null}
-        </>
-      ) : null}
-      <p className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}>
-        {draft.repeat ? describeRepeat(draft.repeat, draft.day, draft.repeatEnd) : "Doesn't repeat"}
-      </p>
-    </div>
   );
 }

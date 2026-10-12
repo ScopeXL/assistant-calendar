@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
+import { COLORS } from "../../lib/colors";
 import type { Member } from "../../lib/household";
 import { asParent } from "../../lib/parent";
 import { fetchSession } from "../../lib/session";
@@ -16,18 +17,6 @@ import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
 
 type Color = Member["color"];
-
-/** The eight person colors, in their plain words (UX §10), each shown with the initial. */
-export const COLORS: { value: Color; word: string }[] = [
-  { value: "clay", word: "Red" },
-  { value: "olive", word: "Olive" },
-  { value: "moss", word: "Green" },
-  { value: "sea", word: "Teal" },
-  { value: "sky", word: "Blue" },
-  { value: "iris", word: "Purple" },
-  { value: "berry", word: "Plum" },
-  { value: "rose", word: "Pink" },
-];
 
 /**
  * Change a person (UX §4 Settings → Family): name, parent or child, color, birthday and photo.

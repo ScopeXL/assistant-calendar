@@ -28,6 +28,7 @@ function WallPanel({ open, title, onClose, children, footer }: PanelProps) {
   const { data: settings } = useSettings();
   const titleId = useId();
   const ref = useRef<HTMLElement>(null);
+  const body = useRef<HTMLDivElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
   const [shown, setShown] = useState({ title, children, footer });
   const [closing, setClosing] = useState(false);
@@ -39,6 +40,12 @@ function WallPanel({ open, title, onClose, children, footer }: PanelProps) {
   if (open && (shown.title !== title || shown.children !== children || shown.footer !== footer)) {
     setShown({ title, children, footer });
   }
+
+  // It opens at its top, whatever was scrolled to the last time it was open, or in the panel
+  // it replaces (an event's sheet, then Change): the node is the same one.
+  useEffect(() => {
+    if (open && body.current) body.current.scrollTop = 0;
+  }, [open, title]);
 
   // Focus moves in when it opens and back to where it was when it closes.
   useEffect(() => {
@@ -87,6 +94,7 @@ function WallPanel({ open, title, onClose, children, footer }: PanelProps) {
       </header>
       {/* Focusable, so a keyboard can scroll it even when nothing inside takes focus. */}
       <div
+        ref={body}
         tabIndex={0}
         className={`min-h-0 flex-1 overflow-y-auto px-6 py-5 ${
           shown.footer

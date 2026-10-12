@@ -414,6 +414,12 @@ input[type="search"]::-webkit-search-decoration {
 dialog [data-osk] {
   scroll-margin-bottom: 6rem;
 }
+/* The wall's side panel pads its own scroller by the keyboard and the pinned button
+   (ui/SidePanel's scroll-padding), so a field in it needs only a little air: counted twice, the
+   field jumped to the top and took the row of kinds above it out of view. */
+[data-panel] [data-osk] {
+  scroll-margin-bottom: 1rem;
+}
 
 /* A one-line row that scrolls sideways (ui/ScrollRow): a soft fade at each edge that has more
    behind it, so a cut-off cell reads as "there's more", not as a mistake. */

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { formatWallTime } from "../lib/dates";
+import { useReveal } from "../lib/reveal";
 import { atHour, atMinute, timeChips } from "../lib/times";
 import { Chip, ChipRow } from "./Chip";
 import { useShell } from "./shell";
@@ -40,6 +41,7 @@ export function TimeField({
   const display = useShell() === "display";
   const [open, setOpen] = useState(false);
   const [early, setEarly] = useState(false);
+  const picker = useReveal<HTMLDivElement>(open);
   const hour = value ? Number(value.slice(0, 2)) : null;
   const minute = value ? value.slice(3, 5) : null;
   const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
@@ -80,7 +82,7 @@ export function TimeField({
         </Chip>
       </ChipRow>
       {open ? (
-        <div className="flex flex-col gap-3 rounded-panel border-2 border-line p-3">
+        <div ref={picker} className="flex flex-col gap-3 rounded-panel border-2 border-line p-3">
           <p className={soft}>Hour</p>
           <ChipRow label={`${label}: hour`}>
             {(early ? EARLIER : LATER).map((h) => (

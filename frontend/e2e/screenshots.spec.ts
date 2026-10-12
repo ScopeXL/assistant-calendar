@@ -197,9 +197,25 @@ test("the wall screen", async ({ page }) => {
   await page.getByRole("button", { name: "Add", exact: true }).click();
   const add = page.getByRole("dialog", { name: "Add" });
   await add.getByLabel("What, when, who").fill("Dentist Thu 2:30pm Mia");
-  await shot(page, "add-quick");
-  await add.getByRole("button", { name: "2:30 PM" }).click();
+  await shot(page, "add-event-keyboard");
+  await page
+    .getByRole("group", { name: "On-screen keyboard" })
+    .getByRole("button", { name: "Done" })
+    .click();
+  await shot(page, "add-event");
+  await add.getByRole("button", { name: "Pick a date" }).click();
+  await add.getByRole("button", { name: "Pick a date" }).scrollIntoViewIfNeeded();
+  await shot(page, "add-pick-a-date");
+  await add.getByRole("button", { name: "Pick a date" }).click();
+  await add.getByRole("button", { name: "Pick a time" }).click();
+  await add.getByRole("group", { name: "Time: minutes" }).scrollIntoViewIfNeeded();
   await shot(page, "add-time");
+  await add.getByRole("button", { name: "Pick a time" }).click();
+  await add.getByRole("button", { name: "Custom…" }).click();
+  await add.getByRole("button", { name: "Every: more" }).click();
+  await add.getByRole("button", { name: "Tuesday" }).click();
+  await add.getByRole("group", { name: "Ends" }).scrollIntoViewIfNeeded();
+  await shot(page, "add-custom-repeat");
   await add.getByRole("button", { name: "Close" }).click();
   await change(page, { display_home_view: "today" });
   await page.reload();

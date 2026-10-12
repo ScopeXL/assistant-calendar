@@ -21,7 +21,9 @@ const module: PluginModule = {
     },
   ],
   today: [{ key: "todo", order: 30, Display: TodoBlockWall, Phone: TodoBlockPhone }],
-  add: [{ key: "item", label: "Item", order: 20, room: "lists", Editor: AddItem }],
+  add: [
+    { key: "item", label: "Item", icon: ListChecks, order: 20, room: "lists", Editor: AddItem },
+  ],
   removed: RemovedListRows,
 };
 
