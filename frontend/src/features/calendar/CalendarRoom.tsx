@@ -216,6 +216,9 @@ export function CalendarRoom() {
           people={state.people}
           layout={layout}
           zoom={state.hoursZoom}
+          onZoom={(hoursZoom) => {
+            updateDisplay({ hoursZoom });
+          }}
           onOpen={open}
           onAdd={(day, hour, minute) => {
             add(day, hour ?? null, minute ?? null);

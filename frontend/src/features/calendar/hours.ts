@@ -1,18 +1,19 @@
 /**
- * The Week board's Hours layout (UX §4 "Week board, Hours layout", ADR 0028): how tall an hour
- * is at each zoom, where a chip sits and how much of it shows, how many lanes a day's column
- * holds, where the now line goes and where the grid scrolls to. Pure and unit-tested. Sizes are
- * in rem (`rem` is the root font size in px), so Extra large scales them all.
+ * The Week board's Hours layout (UX §4 "Week board, Hours layout", ADR 0028, ADR 0029): how tall
+ * an hour is at a zoom, where a chip sits and how much of it shows, how many lanes a day's
+ * column holds, where the now line goes and where the grid scrolls to. Pure and unit-tested.
+ * Sizes are in rem (`rem` is the root font size in px), so Extra large scales them all.
+ *
+ * The zoom is a number: 1 fits the whole day in the grid with nothing to scroll, and each Zoom
+ * in makes an hour half again as tall (1.5, 2.25, …), as far as a 15-minute event filling a
+ * full chip. There are no named levels (ADR 0029 replaced ADR 0028's 24h · 12h · 1h · 15m).
  *
  * Times are the household's wall time as the API sends it ("2026-10-08T14:30:00").
  */
-import type { HoursZoom } from "../../lib/displayState";
 import { clusters, type Placed } from "./layout";
 
-export type { HoursZoom };
-/** The zoom ladder: the whole day fits the grid at 24h, half of it at 12h, and each step after
- * at least doubles the one before. */
-export const ZOOMS: readonly HoursZoom[] = ["24h", "12h", "1h", "15m"];
+/** One tap of Zoom in or Zoom out. */
+export const ZOOM_STEP = 1.5;
 
 /** The wall's smallest tap target (UX §1), and a chip with a time row and a title under it. */
 export const TAP_REM = 3.5;
@@ -34,12 +35,32 @@ export function tapPx(rem: number): number {
 }
 
 /** Pixels per hour. `gridHeight` is what the grid has under its sticky heads. */
-export function pixelsPerHour(zoom: HoursZoom, gridHeight: number, rem: number): number {
-  if (zoom === "24h") return gridHeight / 24;
-  if (zoom === "12h") return gridHeight / 12;
-  const hour = Math.max(2 * FULL_CHIP_REM * rem, gridHeight / 6);
-  if (zoom === "1h") return hour; // a 30-minute event gets the full two-line chip
-  return Math.max(4 * FULL_CHIP_REM * rem, 2 * hour); // and so does a 15-minute one
+export function pixelsPerHour(zoom: number, gridHeight: number): number {
+  return (zoom * gridHeight) / 24;
+}
+
+/** How many taps of Zoom in a zoom is from the whole day. */
+function zoomSteps(zoom: number): number {
+  return Math.max(0, Math.round(Math.log(zoom) / Math.log(ZOOM_STEP)));
+}
+
+/** As far in as it goes: the first step at which a 15-minute event gets a full chip (a time row
+ * and its title), which is what the old 15m level promised. Never less than one step, so a very
+ * tall grid can still zoom. */
+export function maxZoom(gridHeight: number, rem: number): number {
+  if (gridHeight <= 0) return ZOOM_STEP;
+  const enough = (4 * FULL_CHIP_REM * rem * 24) / gridHeight;
+  return ZOOM_STEP ** Math.max(1, Math.ceil(Math.log(enough) / Math.log(ZOOM_STEP) - 1e-9));
+}
+
+/** One tap in: half again as tall, snapped to the ladder so in then out comes back exactly. */
+export function zoomIn(zoom: number, max: number): number {
+  return Math.min(ZOOM_STEP ** (zoomSteps(zoom) + 1), max);
+}
+
+/** One tap out, never past the whole day. */
+export function zoomOut(zoom: number): number {
+  return ZOOM_STEP ** Math.max(0, zoomSteps(zoom) - 1);
 }
 
 /** "2026-10-08T15:30:00" → 930. */
@@ -196,8 +217,8 @@ function clampScroll(scrollTop: number, fit: number, pph: number): number {
   return Math.max(0, Math.min(scrollTop, 24 * pph - fit));
 }
 
-/** Where the grid starts scrolled: at 24h it never scrolls; on this week the now line sits a
- * third of the way down; on another week 7 AM is at the top. */
+/** Where the grid starts scrolled: fitting the day it never scrolls; on this week the now line
+ * sits a third of the way down; on another week 7 AM is at the top. */
 export function initialScrollTop({
   zoom,
   pph,
@@ -205,13 +226,13 @@ export function initialScrollTop({
   now,
   days,
 }: {
-  zoom: HoursZoom;
+  zoom: number;
   pph: number;
   fit: number;
   now: string;
   days: readonly string[];
 }): number {
-  if (zoom === "24h") return 0;
+  if (zoom <= 1) return 0;
   const today = now.slice(0, 10);
   if (days.includes(today)) {
     return clampScroll(minutesToPixels(minuteOfDay(now), pph) - fit / 3, fit, pph);
@@ -230,21 +251,22 @@ export function rescaledScrollTop(
   return clampScroll(middle * toPph - fit / 2, fit, toPph);
 }
 
-/** The hours the gutter names: every other one at 24h, every one otherwise; never 0 or 24. */
-/** The hours the gutter names: every hour, every 2 at 24h, or fewer when an hour is too short
- * for its label (Extra large in portrait), so no two labels touch. */
-export function gutterHours(zoom: HoursZoom, pph = Infinity, rem = 16): number[] {
-  const least = zoom === "24h" ? 2 : 1;
+/** The hours the gutter names: every hour once an hour is 3rem tall, every other hour below
+ * that, or fewer when an hour is too short for its label (Extra large in portrait), so no two
+ * labels touch. Never 0 or 24. */
+export function gutterHours(pph: number, rem = 16): number[] {
+  const least = pph >= 3 * rem ? 1 : 2;
   const every =
     [1, 2, 3, 4, 6, 12].find((step) => step >= least && step * pph >= LABEL_REM * rem) ?? 12;
   return Array.from({ length: 24 / every - 1 }, (_, n) => (n + 1) * every);
 }
 
-/** The faint lines between the hour lines. */
-export function gridStepMinutes(zoom: HoursZoom): number {
-  if (zoom === "1h") return 30;
-  if (zoom === "15m") return 15;
-  return 60;
+/** The faint lines between the hour lines: none until an hour is 6rem tall, then every half
+ * hour, and every quarter from 12rem. */
+export function gridStepMinutes(pph: number, rem = 16): number {
+  if (pph < 6 * rem) return 60;
+  if (pph < 12 * rem) return 30;
+  return 15;
 }
 
 /** The minute a tap at `y` on a day's column means, to the nearest `step` (a new event starts

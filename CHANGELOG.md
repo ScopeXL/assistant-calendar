@@ -21,6 +21,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   buttons at the right, and the Today panel's button in every room, Settings included. The
   calendar's views (Week, Day, Month, People) are icons there, with the one you're on written
   out.
+- Hours zooms with Zoom in and Zoom out buttons, as far in as you like; Fit the day shows the
+  whole day again. They replace 24h · 12h · 1h · 15m.
 - The Sunroom mark sits at the top of the rail, and Settings is a gear now. The padlock shows
   only while a paired screen's Settings are locked behind the PIN.
 

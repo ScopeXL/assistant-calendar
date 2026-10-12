@@ -409,9 +409,13 @@ for (const scheme of ["light", "dark"] as const) {
       // The Hours layout, the whole day and zoomed in all the way.
       await page.getByRole("button", { name: "Hours", exact: true }).click();
       await expect(page.locator("[data-hours] [data-now-line]")).toBeVisible();
-      await check(page, "display: hours at 24h");
-      await page.getByRole("button", { name: "15m", exact: true }).click();
-      await check(page, "display: hours at 15m");
+      await check(page, "display: hours, the whole day");
+      // Zoomed in all the way: Zoom in stops when a 15-minute event would fill a chip.
+      const zoomIn = page.getByRole("button", { name: "Zoom in" });
+      for (let tap = 0; tap < 12 && (await zoomIn.isEnabled()); tap++) await zoomIn.click();
+      await expect(zoomIn).toBeDisabled();
+      await check(page, "display: hours zoomed in");
+      await page.getByRole("button", { name: "Fit the day" }).click();
       await page.getByRole("button", { name: "Agenda", exact: true }).click();
       await page.getByRole("link", { name: "Lists" }).click();
       await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();

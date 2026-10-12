@@ -1,6 +1,6 @@
 /**
  * The Week board's Hours layout end to end (UX §4 "Week board, Hours layout", ADR 0028): the
- * whole day at 24h with nothing to scroll, the zoom ladder, a drop that keeps the time, a tap
+ * whole day with nothing to scroll, Zoom in, Zoom out and Fit the day, a drop that keeps the time, a tap
  * that adds at a time, and the layout and zoom going back after two minutes idle. The server's
  * clock reads Wednesday, October 7, 2026, 10:00 AM in New York. Synthetic data only.
  */
@@ -56,12 +56,15 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   await page.getByRole("button", { name: "Hours", exact: true }).click();
   const grid = board.locator("[data-hours]");
   await expect(grid).toBeVisible();
-  await expect(page.getByRole("button", { name: "24h", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  // No zoom is the default: the whole day, with nothing to zoom out of.
+  const zoomIn = page.getByRole("button", { name: "Zoom in" });
+  const zoomOut = page.getByRole("button", { name: "Zoom out" });
+  const fitDay = page.getByRole("button", { name: "Fit the day" });
+  await expect(zoomIn).toBeEnabled();
+  await expect(zoomOut).toBeDisabled();
+  await expect(fitDay).toBeDisabled();
 
-  // 24h: the whole day fits, and nothing scrolls.
+  // The whole day fits, and nothing scrolls.
   const wednesday = board.locator('[data-day="2026-10-07"] [data-day-body]');
   await expect(wednesday.locator("[data-now-line]")).toBeVisible();
   expect(await grid.evaluate((node) => node.scrollHeight - node.clientHeight)).toBeLessThanOrEqual(
@@ -81,20 +84,60 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   expect(Math.abs((await boxOf(nowLine)).y - day.y - (10 / 24) * fit)).toBeLessThanOrEqual(2);
   await expect(nowLine.locator(".now-label")).toHaveText(/^now 10:0\d$/);
 
-  // 12h: twice as tall, scrolled so now sits a third of the way down; the hour twice as tall.
-  await page.getByRole("button", { name: "12h", exact: true }).click();
+  // Zoom in: half again as tall, scrolled so now (10:00) sits a third of the way down.
+  await zoomIn.click();
   await expect
-    .poll(async () => Math.abs((await boxOf(wednesday)).height - 2 * fit))
+    .poll(async () => Math.abs((await boxOf(wednesday)).height - 1.5 * fit))
     .toBeLessThanOrEqual(1);
-  expect(Math.abs((await grid.evaluate((node) => node.scrollTop)) - fit / 2)).toBeLessThanOrEqual(
-    2,
-  );
-  expect(Math.abs((await boxOf(block)).height - fit / 12)).toBeLessThanOrEqual(1.5);
-
-  // 1h: at least a full two-line chip for a half hour.
-  await page.getByRole("button", { name: "1h", exact: true }).click();
+  const scrolled = () => grid.evaluate((node) => node.scrollTop);
+  expect(Math.abs((await scrolled()) - ((10 / 24) * 1.5 * fit - fit / 3))).toBeLessThanOrEqual(2);
+  await expect(zoomOut).toBeEnabled();
+  await expect(fitDay).toBeEnabled();
+  // Again: 2.25 times the day, and the minute in the middle of the view stays put (12:40).
+  await zoomIn.click();
   await expect
-    .poll(async () => Math.abs((await boxOf(block)).height - Math.max(144, fit / 6)))
+    .poll(async () => Math.abs((await boxOf(wednesday)).height - 2.25 * fit))
+    .toBeLessThanOrEqual(1);
+  expect(Math.abs((await scrolled()) - 0.6875 * fit)).toBeLessThanOrEqual(3);
+  expect(Math.abs((await boxOf(block)).height - (2.25 * fit) / 24)).toBeLessThanOrEqual(1.5);
+  // Zoom out steps back the same way.
+  await zoomOut.click();
+  await expect
+    .poll(async () => Math.abs((await boxOf(wednesday)).height - 1.5 * fit))
+    .toBeLessThanOrEqual(1);
+  // Fit the day: the whole day again, nothing to scroll, nothing left to zoom out of.
+  await fitDay.click();
+  await expect
+    .poll(async () => Math.abs((await boxOf(wednesday)).height - fit))
+    .toBeLessThanOrEqual(1);
+  expect(await grid.evaluate((node) => node.scrollHeight - node.clientHeight)).toBeLessThanOrEqual(
+    0,
+  );
+  await expect(zoomOut).toBeDisabled();
+  await expect(fitDay).toBeDisabled();
+  // A laptop's shortcut: ctrl + wheel (a trackpad pinch sends the same) zooms like the buttons.
+  await page.mouse.move(day.x + day.width / 2, day.y + fit / 2);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -120);
+  await page.keyboard.up("Control");
+  await expect
+    .poll(async () => Math.abs((await boxOf(wednesday)).height - 1.5 * fit))
+    .toBeLessThanOrEqual(1);
+  await fitDay.click();
+  // As far in as it goes: a 15-minute event would fill a full chip, and Zoom in stops.
+  let taps = 0;
+  while (await zoomIn.isEnabled()) {
+    await zoomIn.click();
+    taps += 1;
+    expect(taps).toBeLessThan(12);
+  }
+  expect(taps).toBeGreaterThanOrEqual(3);
+  expect((await boxOf(block)).height / 4).toBeGreaterThanOrEqual(72 - 1);
+  await fitDay.click();
+  // Three taps in for the rest: an hour is about a chip and a half tall.
+  for (let tap = 0; tap < 3; tap++) await zoomIn.click();
+  await expect
+    .poll(async () => Math.abs((await boxOf(block)).height - (3.375 * fit) / 24))
     .toBeLessThanOrEqual(1.5);
 
   // A drop on another day keeps the time of day.
@@ -123,7 +166,7 @@ test("the zoom and the layout go back after two minutes idle", async ({ page }) 
   const board = page.getByRole("region", { name: "This Week" });
   const grid = board.locator("[data-hours]");
   await page.getByRole("button", { name: "Hours", exact: true }).click();
-  await page.getByRole("button", { name: "1h", exact: true }).click();
+  await page.getByRole("button", { name: "Zoom in" }).click();
   await expect(grid).toBeVisible();
   await page.clock.fastForward("02:05");
   await expect(grid).toHaveCount(0);
@@ -132,7 +175,7 @@ test("the zoom and the layout go back after two minutes idle", async ({ page }) 
     "true",
   );
 
-  // The household's choice: Hours with no tap, at 24h.
+  // The household's choice: Hours with no tap, fitting the day.
   const hours = await page.request.patch("/api/settings", {
     headers: CSRF,
     data: { display_week_layout: "hours" },
@@ -140,11 +183,16 @@ test("the zoom and the layout go back after two minutes idle", async ({ page }) 
   expect(hours.ok()).toBe(true);
   await page.reload();
   await expect(grid).toBeVisible();
-  const whole = page.getByRole("button", { name: "24h", exact: true });
-  await expect(whole).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "15m", exact: true }).click();
-  await expect(whole).toHaveAttribute("aria-pressed", "false");
+  const fitDay = page.getByRole("button", { name: "Fit the day" });
+  await expect(fitDay).toBeDisabled();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(fitDay).toBeEnabled();
+  expect(await grid.evaluate((node) => node.scrollHeight - node.clientHeight)).toBeGreaterThan(0);
   await page.clock.fastForward("02:05");
-  await expect(whole).toHaveAttribute("aria-pressed", "true");
+  await expect(fitDay).toBeDisabled();
   await expect(grid).toBeVisible();
+  expect(await grid.evaluate((node) => node.scrollHeight - node.clientHeight)).toBeLessThanOrEqual(
+    0,
+  );
 });

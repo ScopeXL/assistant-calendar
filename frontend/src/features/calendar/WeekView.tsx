@@ -11,7 +11,7 @@ import {
 import { useRef, useState, type ComponentType } from "react";
 
 import { dayNumber, formatWallTime, shortWeekday } from "../../lib/dates";
-import type { HoursZoom, WeekLayout } from "../../lib/displayState";
+import type { WeekLayout } from "../../lib/displayState";
 import type { Member } from "../../lib/household";
 import { useDayHeaders } from "../usePluginModules";
 import { Draggable, MoreButton } from "./Draggable";
@@ -35,9 +35,12 @@ export interface WeekViewProps {
   members: Member[];
   dimPast: boolean;
   people: string[];
-  /** Agenda (stacked chips) or Hours (the grid), and the grid's zoom (ADR 0028). */
+  /** Agenda (stacked chips) or Hours (the grid), and the grid's zoom: 1 fits the day (ADR
+   * 0029). */
   layout: WeekLayout;
-  zoom: HoursZoom;
+  zoom: number;
+  /** The grid's own shortcuts (ctrl + wheel) ask for another zoom. */
+  onZoom?: (zoom: number) => void;
   onOpen: (occurrence: Occurrence) => void;
   /** A tap on a day's empty space; on the Hours grid, at a time. */
   onAdd: (day: string, hour?: number, minute?: number) => void;
@@ -120,6 +123,7 @@ export function WeekView(props: WeekViewProps) {
             dimPast={props.dimPast}
             people={props.people}
             zoom={props.zoom}
+            onZoom={props.onZoom}
             lifted={lifted}
             lit={props.lit ?? null}
             marks={marks}

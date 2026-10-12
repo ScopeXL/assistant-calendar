@@ -1,5 +1,6 @@
 import { useDroppable } from "@dnd-kit/core";
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -18,14 +19,18 @@ import {
   gutterHours,
   initialScrollTop,
   laneStyle,
+  maxZoom,
   minutesAtY,
   nowTop,
   pixelsPerHour,
   placeTimed,
   rescaledScrollTop,
+  zoomIn,
+  zoomOut,
+  ZOOM_STEP,
   type ChipBox,
-  type HoursZoom,
 } from "./hours";
+import { hoursMaxZoom } from "./hoursLimit";
 import { shownFor, type DayColumn, type DayEntry } from "./layout";
 import type { Occurrence } from "./types";
 
@@ -39,7 +44,11 @@ export interface HoursGridProps {
   members: Member[];
   dimPast: boolean;
   people: string[];
-  zoom: HoursZoom;
+  /** 1 fits the whole day; each Zoom in is half again (features/calendar/hours). */
+  zoom: number;
+  /** A shortcut asked for another zoom (ctrl + wheel, a trackpad pinch); the buttons are in the
+   * board's toolbar. */
+  onZoom?: ((zoom: number) => void) | undefined;
   lifted: Occurrence | null;
   lit: string | null;
   /** The plugins' marks for each day's header (its weather). */
@@ -63,12 +72,12 @@ interface Measure {
 /**
  * The Week board's Hours layout (UX §4 "Week board, Hours layout", ADR 0028): each day from
  * midnight to midnight, events placed by their time and as tall as they last, the now line
- * creeping down today. At 24h the whole day fits and nothing scrolls; the other zooms scroll,
- * with a visible scrollbar. Each day's head (its name, then its all-day events) stays on top.
+ * creeping down today. Fitting the day (zoom 1) nothing scrolls; zoomed in it scrolls, with a
+ * visible scrollbar. Each day's head (its name, then its all-day events) stays on top.
  * A tap on an empty spot adds an event there; a long press lifts a chip to another day.
  */
 export function HoursGrid(props: HoursGridProps) {
-  const { days, today, now, zoom } = props;
+  const { days, today, now, onZoom } = props;
   const scroller = useRef<HTMLDivElement>(null);
   const corner = useRef<HTMLDivElement>(null);
   const [measure, setMeasure] = useState<Measure | null>(null);
@@ -103,16 +112,48 @@ export function HoursGrid(props: HoursGridProps) {
     };
   }, []);
 
-  const pph = measure && measure.fit > 0 ? pixelsPerHour(zoom, measure.fit, measure.rem) : 0;
+  // As far in as this grid goes at this text size; a grid that got shorter (the keyboard, the
+  // tips strip) may hold a zoom past its new limit, so it's clamped here, not in the state.
+  const max = measure && measure.fit > 0 ? maxZoom(measure.fit, measure.rem) : ZOOM_STEP;
+  const zoom = Math.min(props.zoom, max);
+  const pph = measure && measure.fit > 0 ? pixelsPerHour(zoom, measure.fit) : 0;
+  const measured = measure !== null && measure.fit > 0;
+  useEffect(() => {
+    if (measured) hoursMaxZoom.set(max);
+  }, [measured, max]);
 
-  // At 24h the grid never scrolls. Zooming in from it starts at now (or 7 AM on another week);
-  // between the other zooms the minute in the middle of the view stays there.
-  const previous = useRef<{ zoom: HoursZoom; pph: number } | null>(null);
+  // Shortcuts for the toolbar's Zoom in and Zoom out: ctrl + wheel, which is also what a
+  // trackpad pinch sends. One step per gesture tick, never faster than the eye can follow.
+  const zoomRef = useRef({ zoom, max, onZoom });
+  useEffect(() => {
+    zoomRef.current = { zoom, max, onZoom };
+  });
+  useEffect(() => {
+    const node = scroller.current;
+    if (!node) return;
+    let last = 0;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      const state = zoomRef.current;
+      if (!state.onZoom || event.timeStamp - last < 150 || event.deltaY === 0) return;
+      last = event.timeStamp;
+      state.onZoom(event.deltaY < 0 ? zoomIn(state.zoom, state.max) : zoomOut(state.zoom));
+    };
+    node.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      node.removeEventListener("wheel", onWheel);
+    };
+  }, []);
+
+  // Fitting the day, the grid never scrolls. Zooming in from there starts at now (or 7 AM on
+  // another week); between zooms the minute in the middle of the view stays there.
+  const previous = useRef<{ zoom: number; pph: number } | null>(null);
   useLayoutEffect(() => {
     const node = scroller.current;
     if (!node || !measure || pph <= 0) return;
     const before = previous.current;
-    if (!before || before.zoom === "24h" || zoom === "24h") {
+    if (!before || before.zoom <= 1 || zoom <= 1) {
       if (before?.zoom !== zoom || before.pph !== pph) {
         node.scrollTop = initialScrollTop({ zoom, pph, fit: measure.fit, now, days });
       }
@@ -124,7 +165,7 @@ export function HoursGrid(props: HoursGridProps) {
 
   const style = {
     "--pph": `${String(pph)}px`,
-    "--step": String(gridStepMinutes(zoom)),
+    "--step": String(gridStepMinutes(pph, measure?.rem)),
     "--grid-h": `${String(24 * pph)}px`,
     scrollPaddingTop: `${String(measure?.head ?? 0)}px`,
   } as CSSProperties;
@@ -146,7 +187,7 @@ export function HoursGrid(props: HoursGridProps) {
           </div>
           <div aria-hidden="true" className="relative">
             {pph > 0
-              ? gutterHours(zoom, pph, measure?.rem).map((hour) => (
+              ? gutterHours(pph, measure?.rem).map((hour) => (
                   <span
                     key={hour}
                     className="absolute right-3 -translate-y-1/2 text-d-secondary whitespace-nowrap text-ink-soft"
@@ -357,7 +398,7 @@ function HoursColumn({
             );
           })}
         </div>
-        {y !== null ? <NowMinute key={`${zoom}:${String(pph)}`} y={y} now={now} /> : null}
+        {y !== null ? <NowMinute key={`${String(zoom)}:${String(pph)}`} y={y} now={now} /> : null}
       </div>
     </section>
   );

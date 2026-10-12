@@ -519,7 +519,7 @@ paired screen's Settings are locked."
 
 ### T6 The Hours zoom: buttons instead of a ladder
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: the Hours zoom is Zoom out, Fit the day and Zoom in")
 
 **Owner's note.** "The Hours view when viewing weekly data shows the button group of 24h | 12h |
 1h | 15m. Instead of a grouping explore the ability to add a zoom control so the user can change
@@ -548,6 +548,15 @@ full 24h."
   map ×1.5 per 25 % change, snapped to the step ladder; skip if it fights the long-press sensor)
   and ctrl + wheel on laptops. The buttons are the real control; the shortcuts have button twins.
 - Tips: tip 7 stays ("Zoom in when it's busy.").
+
+**As built.** `pixelsPerHour(zoom, gridHeight)` needs no rem. The limit depends on the grid's
+height, which only `HoursGrid` measures, so it publishes `maxZoom` in a small store
+(`hoursLimit.ts`) for the Zoom in button, and clamps a zoom the grid can no longer hold (the
+keyboard up) when it draws, not in the state. `zoomIn`/`zoomOut` snap to powers of 1.5, so
+floating-point drift can't creep in. Ctrl + wheel is built and tested (Chromium sends a trackpad
+pinch the same way). The touch-panel pinch is **not** built: with `touch-action: pan-y` and
+dnd-kit's long-press sensor on the same surface it can't be judged without the kiosk's panel, and
+the plan asked for it only if cheap there.
 
 **Tests.** Vitest `hours.test.ts:36-52,165-189`: the ladder values become 720 → 30, 45, 67.5,
 101.25…; `maxZoom(720, 16)` → the first step with pph ≥ 288 (1.5⁶ = 11.39 → 341.7; 1.5⁵ = 7.59 →

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ZOOMS,
+  ZOOM_STEP,
   chipBox,
   chipTier,
   gridStepMinutes,
@@ -12,9 +12,12 @@ import {
   minuteOfDay,
   minutesAtY,
   nowTop,
+  maxZoom,
   pixelsPerHour,
   placeTimed,
   rescaledScrollTop,
+  zoomIn,
+  zoomOut,
 } from "./hours";
 import type { Placed } from "./layout";
 
@@ -32,23 +35,41 @@ function timed(key: string, start: string, end: string, day = DAY): Placed {
   };
 }
 
-describe("the zoom ladder (pixelsPerHour)", () => {
-  it("fits the day at 24h, half of it at 12h, and doubles from there", () => {
-    expect(ZOOMS.map((zoom) => pixelsPerHour(zoom, 720, REM))).toEqual([30, 60, 144, 288]);
-    expect(ZOOMS.map((zoom) => pixelsPerHour(zoom, 1200, REM))).toEqual([50, 100, 200, 400]);
+describe("the zoom (ADR 0029)", () => {
+  it("fits the whole day at 1, and makes an hour half again as tall with each step in", () => {
+    const steps = [0, 1, 2, 3].map((n) => pixelsPerHour(ZOOM_STEP ** n, 720));
+    expect(steps).toEqual([30, 45, 67.5, 101.25]);
+    expect(pixelsPerHour(1, 1200)).toBe(50);
   });
 
-  it("makes each step at least twice the one before, at any height", () => {
-    for (const height of [300, 560, 708, 900, 1400, 2400]) {
-      const steps = ZOOMS.map((zoom) => pixelsPerHour(zoom, height, REM));
-      for (let n = 1; n < steps.length; n++) {
-        expect(steps[n]).toBeGreaterThanOrEqual(2 * (steps[n - 1] ?? 0));
-      }
-    }
+  it("goes in as far as a 15-minute event filling a full chip, and no further", () => {
+    // 720 px of grid at 16 px text: 288 px an hour is enough, and 1.5^6 (341.7) is the first
+    // step to reach it; 1.5^5 (227.8) isn't.
+    expect(maxZoom(720, REM)).toBeCloseTo(ZOOM_STEP ** 6);
+    expect(pixelsPerHour(maxZoom(720, REM), 720)).toBeGreaterThanOrEqual(4 * 4.5 * REM);
+    expect(pixelsPerHour(ZOOM_STEP ** 5, 720)).toBeLessThan(4 * 4.5 * REM);
+    // Extra large text needs taller hours, so it goes a step further.
+    expect(maxZoom(720, 20.8)).toBeCloseTo(ZOOM_STEP ** 7);
+    // A very tall grid can still zoom once; an unmeasured one too.
+    expect(maxZoom(8000, REM)).toBe(ZOOM_STEP);
+    expect(maxZoom(0, REM)).toBe(ZOOM_STEP);
   });
 
-  it("scales with the text size, so a half hour still gets a full chip", () => {
-    expect(pixelsPerHour("1h", 720, 20.8)).toBeGreaterThanOrEqual(187.2);
+  it("steps in and out along one ladder, stopping at the day and at the limit", () => {
+    const max = maxZoom(720, REM);
+    let zoom = 1;
+    const seen = [zoom];
+    for (let tap = 0; tap < 9; tap++) seen.push((zoom = zoomIn(zoom, max)));
+    expect(seen.slice(0, 4)).toEqual([1, 1.5, 2.25, 3.375]);
+    expect(seen.at(-1)).toBe(max);
+    expect(new Set(seen).size).toBe(7); // the day, then six steps
+    // Back out the same way, exactly, and never past the whole day.
+    for (let tap = 0; tap < 6; tap++) zoom = zoomOut(zoom);
+    expect(zoom).toBe(1);
+    expect(zoomOut(1)).toBe(1);
+    // A zoom that isn't on the ladder (a grid that grew) snaps to its nearest step first.
+    expect(zoomIn(1.4, max)).toBe(2.25);
+    expect(zoomOut(2.3)).toBe(1.5);
   });
 });
 
@@ -162,14 +183,14 @@ describe("the now line and scrolling", () => {
     expect(nowTop("2026-10-07T10:00:00", "2026-10-08", 30)).toBeNull();
   });
 
-  it("starts at the top at 24h, with now a third down on this week, else at 7 AM", () => {
+  it("starts at the top fitting the day, with now a third down on this week, else at 7 AM", () => {
     const days = ["2026-10-04", "2026-10-05", "2026-10-06", DAY, "2026-10-08"];
-    const at = (zoom: "24h" | "1h", now: string, week = days) =>
+    const at = (zoom: number, now: string, week = days) =>
       initialScrollTop({ zoom, pph: 60, fit: 720, now, days: week });
-    expect(at("24h", "2026-10-07T10:00:00")).toBe(0);
-    expect(at("1h", "2026-10-07T10:00:00")).toBe(360);
-    expect(at("1h", "2026-10-07T01:00:00")).toBe(0);
-    expect(at("1h", "2026-10-07T10:00:00", ["2026-10-11", "2026-10-12"])).toBe(420);
+    expect(at(1, "2026-10-07T10:00:00")).toBe(0);
+    expect(at(2, "2026-10-07T10:00:00")).toBe(360);
+    expect(at(2, "2026-10-07T01:00:00")).toBe(0);
+    expect(at(2, "2026-10-07T10:00:00", ["2026-10-11", "2026-10-12"])).toBe(420);
   });
 
   it("keeps the middle minute in the middle when the zoom changes", () => {
@@ -179,16 +200,24 @@ describe("the now line and scrolling", () => {
 });
 
 describe("the gutter, the lines and a tapped time", () => {
-  it("names every other hour at 24h and every hour otherwise, never 0 or 24", () => {
-    expect(gutterHours("24h")).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]);
-    expect(gutterHours("1h")).toEqual(Array.from({ length: 23 }, (_, n) => n + 1));
+  it("names every hour once an hour is 3rem tall, every other below, never 0 or 24", () => {
+    const everyOther = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+    expect(gutterHours(30)).toEqual(everyOther); // fitting the day
+    expect(gutterHours(45)).toEqual(everyOther); // one step in: 45 px is under 3rem
+    expect(gutterHours(48)).toEqual(Array.from({ length: 23 }, (_, n) => n + 1));
+    expect(gutterHours(101.25)).toEqual(Array.from({ length: 23 }, (_, n) => n + 1));
+    // By rem, not px: at Extra large 3rem is 62.4 px.
+    expect(gutterHours(60, 20.8)).toEqual(everyOther);
     // An hour too short for a label every two (portrait at Extra large): every three.
-    expect(gutterHours("24h", 13, 20.8)).toEqual([3, 6, 9, 12, 15, 18, 21]);
-    expect(gutterHours("24h", 25, 16)).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]);
+    expect(gutterHours(13, 20.8)).toEqual([3, 6, 9, 12, 15, 18, 21]);
+    expect(gutterHours(25, 16)).toEqual(everyOther);
   });
 
-  it("draws finer lines as it zooms in", () => {
-    expect(ZOOMS.map(gridStepMinutes)).toEqual([60, 60, 30, 15]);
+  it("draws finer lines as it zooms in: none, then half hours, then quarters", () => {
+    expect([30, 95, 96, 191, 192, 400].map((pph) => gridStepMinutes(pph))).toEqual([
+      60, 60, 30, 30, 15, 15,
+    ]);
+    expect(gridStepMinutes(96, 20.8)).toBe(60);
   });
 
   it("turns a tap into a quarter hour", () => {

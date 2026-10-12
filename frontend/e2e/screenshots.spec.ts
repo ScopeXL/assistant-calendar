@@ -122,17 +122,18 @@ test("the wall screen", async ({ page }) => {
     await shot(page, `view-${view.split(" ")[0]?.toLowerCase() ?? view}`);
   }
   await page.getByRole("button", { name: "Week", exact: true }).click();
-  // The Hours layout: the whole day at 24h, then zoomed in to 15m, light and dark.
+  // The Hours layout: the whole day, then four taps of Zoom in, light and dark.
   await page.getByRole("button", { name: "Hours", exact: true }).click();
   const root = page.locator("html");
   for (const theme of ["light", "dark"] as const) {
     await change(page, { theme });
     await expect(root).toHaveAttribute("data-theme", theme);
-    await page.getByRole("button", { name: "24h", exact: true }).click();
+    const fitDay = page.getByRole("button", { name: "Fit the day" });
+    if (await fitDay.isEnabled()) await fitDay.click();
     await expect(board.locator("[data-now-line]")).toBeVisible();
     await shot(page, `board-hours-24h-${theme}`);
-    await page.getByRole("button", { name: "15m", exact: true }).click();
-    await shot(page, `board-hours-15m-${theme}`);
+    for (let tap = 0; tap < 4; tap++) await page.getByRole("button", { name: "Zoom in" }).click();
+    await shot(page, `board-hours-zoomed-${theme}`);
   }
   // At Extra large the header holds Show, the zoom and the switch on its second line.
   await change(page, { theme: "light", text_size: "xl", display_week_layout: "hours" });

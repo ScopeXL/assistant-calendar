@@ -10,8 +10,6 @@ import { createStore } from "./store";
 export type BoardView = "week" | "day" | "month" | "people" | "today";
 /** How the Week board draws a day (ADR 0028): stacked chips, or the hours from midnight. */
 export type WeekLayout = "agenda" | "hours";
-/** The Hours grid's zoom: the whole day fits at 24h, half of it at 12h, then doubling. */
-export type HoursZoom = "24h" | "12h" | "1h" | "15m";
 
 export type BoardPanel =
   /** `eventId` null: a birthday's read-only sheet, which has no event behind it. */
@@ -42,7 +40,8 @@ export interface DisplayState {
   railCollapsed: boolean | null;
   /** null: the household's Week layout (Settings → Display). */
   weekLayout: WeekLayout | null;
-  hoursZoom: HoursZoom;
+  /** How far the Hours grid is zoomed in: 1 fits the whole day, each Zoom in is half again. */
+  hoursZoom: number;
   /** Show these people's events (and Everyone's); empty shows all. */
   people: string[];
   panel: BoardPanel;
@@ -56,7 +55,7 @@ const INITIAL: DisplayState = {
   panelShown: null,
   railCollapsed: null,
   weekLayout: null,
-  hoursZoom: "24h",
+  hoursZoom: 1,
   people: [],
   panel: null,
 };
@@ -98,7 +97,7 @@ export function resetBoard(): void {
     state.panelShown === null &&
     state.railCollapsed === null &&
     state.weekLayout === null &&
-    state.hoursZoom === "24h" &&
+    state.hoursZoom === 1 &&
     state.people.length === 0 &&
     state.panel === null
       ? state

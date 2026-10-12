@@ -412,7 +412,7 @@ test.describe("the wall screen", () => {
     const above = await board.boundingBox();
     expect(Math.round(box?.height ?? 0)).toBe(56);
     expect((above?.y ?? 0) + (above?.height ?? 0)).toBeLessThanOrEqual((box?.y ?? 0) + 1);
-    // Hours still fits the whole day at 24h with nothing to scroll.
+    // Hours still fits the whole day with nothing to scroll.
     await page.getByRole("button", { name: "Hours", exact: true }).click();
     const grid = board.locator("[data-hours]");
     await expect(grid).toBeVisible();
