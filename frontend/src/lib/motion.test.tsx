@@ -33,6 +33,25 @@ describe("a count that pops when it changes", () => {
   });
 });
 
+describe("a count within a scope", () => {
+  function Slot({ at, day }: { at: number | null; day: string }) {
+    return <span data-testid="slot" data-changes={useChangeCount(at, day)} />;
+  }
+  const changes = () => screen.getByTestId("slot").dataset.changes;
+
+  it("counts a change on the same day, not one that came with another day", () => {
+    const view = render(<Slot at={2} day="2026-10-07" />);
+    view.rerender(<Slot at={3} day="2026-10-07" />);
+    expect(changes()).toBe("1");
+    // Another day has no now line; coming back to today isn't the line moving.
+    view.rerender(<Slot at={null} day="2026-10-08" />);
+    view.rerender(<Slot at={3} day="2026-10-07" />);
+    expect(changes()).toBe("1");
+    view.rerender(<Slot at={4} day="2026-10-07" />);
+    expect(changes()).toBe("2");
+  });
+});
+
 describe("paging (UX §9 Paging slides)", () => {
   function Pager() {
     const pages = usePageTurn();

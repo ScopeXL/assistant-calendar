@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import { errorMessage } from "../../api/client";
@@ -7,6 +8,7 @@ import { useMembers, type Member } from "../../lib/household";
 import { whenIdle } from "../../lib/idle";
 import { createStore, useStore } from "../../lib/store";
 import { useMinute } from "../../lib/time";
+import { GLIDE } from "../../lib/motion";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
@@ -199,7 +201,12 @@ function ItemRow({
   const display = useShell() === "display";
   const text = item.quantity ? `${item.text} (${item.quantity})` : item.text;
   return (
-    <li
+    // The row glides to where it belongs next (UX §9 "The done row folds"): into Done once its
+    // line is drawn, back up when it's unchecked, and the others close the gap.
+    <motion.li
+      layout="position"
+      layoutId={`item ${item.id}`}
+      transition={GLIDE}
       data-person={person ?? "everyone"}
       className={`flex items-stretch gap-2 border-b border-line ${display ? "min-h-[72px]" : "min-h-20"}`}
     >
@@ -227,7 +234,7 @@ function ItemRow({
           </span>
         ) : null}
       </button>
-    </li>
+    </motion.li>
   );
 }
 

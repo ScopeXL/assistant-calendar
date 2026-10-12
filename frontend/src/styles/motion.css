@@ -256,6 +256,19 @@ dialog[data-closing] [data-keyboard] {
   }
 }
 
+/* A countdown's number when the day turns over (ui/Pop's `roll`): the new one rolls up into
+   place. */
+.roll {
+  display: inline-block;
+  animation: roll var(--motion-glide) var(--ease-arrive);
+}
+@keyframes roll {
+  from {
+    opacity: 0;
+    transform: translateY(40%);
+  }
+}
+
 /* Done (UX §7, §9): the box fills on a spring, its check draws, and the row is pressed into the
    wall (scale and a degree of rotation, overshooting). The burst is the canvas's
    (ui/Celebration). With Reduce Motion they all just appear. */
@@ -379,6 +392,28 @@ dialog[data-closing] [data-keyboard] {
 }
 .saver-photo-in {
   animation: fade-in var(--motion-photo) linear both;
+}
+
+/* The now line among a day's events (the Agenda, the Day view): when what's on ends, the line
+   drops under it, from about a chip above (re-keyed by its slot, lib/motion's useChangeCount).
+   In portrait the Agenda's days are rows, so it comes from the side. */
+.now-drop {
+  animation: now-drop var(--motion-glide) var(--ease-standard);
+}
+@keyframes now-drop {
+  from {
+    transform: translateY(-4.5rem);
+  }
+}
+@media (orientation: portrait) {
+  .day-column .now-drop {
+    animation-name: now-drop-across;
+  }
+}
+@keyframes now-drop-across {
+  from {
+    transform: translateX(-4.5rem);
+  }
 }
 
 /* The Hours grid's now line (UX §9): each minute's move glides over the whole minute, so it

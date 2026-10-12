@@ -1,5 +1,6 @@
 import { formatWallTime } from "../../lib/dates";
 import type { Member } from "../../lib/household";
+import { useChangeCount } from "../../lib/motion";
 import { useShell } from "../../ui/shell";
 import { EventChip } from "./EventChip";
 import { byDay, clusters, isPast, shownFor, type Cluster } from "./layout";
@@ -69,6 +70,9 @@ export function DayView({
     );
     rows.splice(index === -1 ? rows.length : index, 0, { kind: "now" });
   }
+  // Where the now line sits among today's rows; no line on another day.
+  const nowAt = rows.findIndex((row) => row.kind === "now");
+  const drops = useChangeCount(nowAt === -1 ? null : nowAt, day);
 
   const chip = (occurrence: Occurrence) => (
     <div key={occurrence.key} className={shownFor(occurrence, filter) ? "" : "opacity-30"}>
@@ -101,7 +105,12 @@ export function DayView({
       {rows.map((row, index) => {
         if (row.kind === "now") {
           return (
-            <div key="now" aria-hidden="true" className={`grid ${hours} items-center gap-4`}>
+            // Re-keyed by where it sits: it drops into its new place when what's on ends.
+            <div
+              key={`now-${String(drops)}`}
+              aria-hidden="true"
+              className={`grid ${hours} items-center gap-4 ${drops ? "now-drop" : ""}`}
+            >
               <span />
               <div className="flex items-center gap-3">
                 <span className="now-label font-semibold whitespace-nowrap text-sun-ink">

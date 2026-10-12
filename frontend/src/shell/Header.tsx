@@ -7,6 +7,7 @@ import { useMinute } from "../lib/time";
 import { Button } from "../ui/Button";
 import { Digits } from "../ui/Digits";
 import { LiveStatusButton } from "../ui/LiveStatus";
+import { Pop } from "../ui/Pop";
 import { roomHeader } from "./roomHeader";
 
 /**
@@ -74,7 +75,7 @@ export function Header({
               <>
                 {" "}
                 <span className="truncate text-d-caption leading-tight font-semibold text-ink-soft">
-                  {room.subtitle}
+                  {room.counts ? <Pop value={room.subtitle} /> : room.subtitle}
                 </span>
               </>
             ) : null}

@@ -13,6 +13,8 @@ export interface RoomHeaderSpec {
   title: string;
   /** A quiet line after the title: the week's span, "4 to get", "Today". */
   subtitle?: string | undefined;
+  /** The subtitle is a count: it pops when it changes (UX §9). A week's span doesn't. */
+  counts?: boolean | undefined;
   /** Replaces the title for a moment ("Drop on a day"). */
   notice?: string | null | undefined;
   /** A link back to the room this one belongs to ("‹ Lists"), before the title. */

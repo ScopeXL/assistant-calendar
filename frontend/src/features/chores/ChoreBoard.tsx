@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Check, Star } from "lucide-react";
+import { motion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -9,7 +10,7 @@ import { qk } from "../../api/keys";
 import { playDone } from "../../lib/done";
 import { flyPoints } from "../../lib/fly";
 import { useMembers, useSettings, type Member } from "../../lib/household";
-import { useChangeCount } from "../../lib/motion";
+import { GLIDE, useChangeCount } from "../../lib/motion";
 import { fetchSession } from "../../lib/session";
 import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
@@ -323,8 +324,13 @@ export function ChoreRow({
     starsOn,
   );
   return (
-    <li
+    // The row glides to where it belongs next (UX §9 "The done row folds"): under Done once it's
+    // stamped, back up on Undo, and its neighbours close the gap. Position only, by transform.
+    <motion.li
       ref={row}
+      layout="position"
+      layoutId={`task ${owner?.id ?? "anyone"} ${boxKey(box)}`}
+      transition={GLIDE}
       data-person={(doer ?? owner)?.color ?? "everyone"}
       className="relative flex flex-col border-b border-line"
     >
@@ -387,7 +393,7 @@ export function ChoreRow({
         />,
         document.body,
       )}
-    </li>
+    </motion.li>
   );
 }
 

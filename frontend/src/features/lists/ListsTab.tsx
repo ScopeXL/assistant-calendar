@@ -8,6 +8,7 @@ import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
 import { Screen } from "../../ui/Screen";
+import { Pop } from "../../ui/Pop";
 import { useList, useListChanges, useLists } from "./data";
 import { AddBar, ItemRows } from "./ListItems";
 import { ChangeListPanel, NewListPanel, tileCount } from "./ListsRoom";
@@ -52,7 +53,7 @@ function PhoneLists() {
               >
                 <span className="flex min-w-0 flex-col">
                   <span className="text-row font-bold break-words">{list.name}</span>
-                  <span className="text-secondary font-semibold">{tileCount(list)}</span>
+                  <Pop value={tileCount(list)} className="text-secondary font-semibold" />
                   {list.last_change ? (
                     <span className="text-secondary text-ink-soft">
                       {lastChangeLine(
@@ -103,7 +104,9 @@ function PhoneList({ listId }: { listId: string }) {
       }
     >
       <div className="-mt-3 mb-4 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-body font-semibold text-ink-soft">{tileCount(list)}</p>
+        <p className="text-body font-semibold text-ink-soft">
+          <Pop value={tileCount(list)} />
+        </p>
         <div className="flex gap-2">
           {list.done_count > 0 ? (
             <Button

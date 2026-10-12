@@ -5,6 +5,7 @@ import { useMembers } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Avatar } from "../../ui/Avatar";
 import { useShell } from "../../ui/shell";
+import { Pop } from "../../ui/Pop";
 import { ChoreColumn, personOf, useViewer, WaitingStrip } from "./ChoreBoard";
 import { useChoresDay, useRewards, type Column } from "./data";
 import { AskedStrip } from "./RewardsPage";
@@ -76,7 +77,7 @@ export function ChoresTodayWall() {
               <Avatar member={person} size="sm" />
             </span>
             <span className="flex-1 text-d-body font-bold">{person.name}</span>
-            <span className="text-d-body font-semibold">{statusOf(column)}</span>
+            <Pop value={statusOf(column)} className="text-d-body font-semibold" />
             <Ring done={column.done} total={column.total} />
           </button>
         );

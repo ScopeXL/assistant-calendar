@@ -15,6 +15,7 @@ import { EmptyState } from "../../ui/EmptyState";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
+import { Pop } from "../../ui/Pop";
 import { useList, useListChanges, useLists, type ListInfo } from "./data";
 import { AddBar, ItemRows } from "./ListItems";
 import { countLine, lastChangeLine } from "./words";
@@ -124,7 +125,7 @@ function ListTile({
       className="press flex min-h-40 flex-col justify-between gap-2 rounded-panel border border-line bg-surface p-6 select-none [-webkit-touch-callout:none]"
     >
       <span className="text-d-title font-bold break-words">{list.name}</span>
-      <span className="text-d-body font-semibold">{tileCount(list)}</span>
+      <Pop value={tileCount(list)} className="self-start text-d-body font-semibold" />
       {list.last_change ? (
         <span className="text-d-secondary text-ink-soft">
           {lastChangeLine(list.last_change, (id) => members.find((m) => m.id === id)?.name, today)}
@@ -226,6 +227,7 @@ function ListPage({ listId }: { listId: string }) {
       <RoomHeader
         title={list.name}
         subtitle={tileCount(list)}
+        counts
         back={
           <HeaderBack to="/$room" params={{ room: "lists" }}>
             Lists

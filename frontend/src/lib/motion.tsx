@@ -79,13 +79,15 @@ export function usePageTurn(): {
 /**
  * How many times `value` has changed since the first render. As a key it re-plays a "changed"
  * animation (a count that pops); 0 means it hasn't changed yet, so nothing plays on first paint.
- * Arriving from nothing (null or undefined, still loading) isn't a change either.
+ * Arriving from nothing (null or undefined, still loading) isn't a change either, and nor is
+ * a value that differs because its `scope` did (another day's now line isn't this day's moved).
  */
-export function useChangeCount(value: unknown): number {
-  const [seen, setSeen] = useState({ value, count: 0 });
-  if (!Object.is(seen.value, value)) {
+export function useChangeCount(value: unknown, scope: unknown = null): number {
+  const [seen, setSeen] = useState({ value, scope, count: 0 });
+  if (!Object.is(seen.value, value) || !Object.is(seen.scope, scope)) {
     const arriving = seen.value === null || seen.value === undefined;
-    const next = { value, count: arriving ? seen.count : seen.count + 1 };
+    const counts = !arriving && Object.is(seen.scope, scope);
+    const next = { value, scope, count: counts ? seen.count + 1 : seen.count };
     setSeen(next);
     return next.count;
   }

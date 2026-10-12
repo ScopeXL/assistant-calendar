@@ -13,6 +13,7 @@ import { useRef, useState, type ComponentType } from "react";
 import { dayNumber, formatWallTime, shortWeekday } from "../../lib/dates";
 import type { WeekLayout } from "../../lib/displayState";
 import type { Member } from "../../lib/household";
+import { useChangeCount } from "../../lib/motion";
 import { useDayHeaders } from "../usePluginModules";
 import { Draggable, MoreButton } from "./Draggable";
 import { EventChip } from "./EventChip";
@@ -264,7 +265,11 @@ function DayColumn({
           items={rows}
           itemKey={(row) => (row.kind === "chip" ? row.entry.occurrence.key : row.kind)}
           render={(row, _index, measuring) =>
-            row.kind === "now" ? <NowLine now={now} /> : chip(row.entry, row.allDay, measuring)
+            row.kind === "now" ? (
+              <NowLine now={now} slot={slot} />
+            ) : (
+              chip(row.entry, row.allDay, measuring)
+            )
           }
           renderMore={(hidden) =>
             events(hidden) ? <MoreButton count={events(hidden)} day={day} onMore={onMore} /> : null
@@ -282,12 +287,17 @@ function DayColumn({
   );
 }
 
-/** "now 9:41" and a 2 px amber line (UX §4), under the last finished chip. */
-function NowLine({ now }: { now: string }) {
+/** "now 9:41" and a 2 px amber line (UX §4), under the last finished chip. When that changes
+ * (what was on has ended), the line drops into its new place (UX §9 "Now lines"). */
+function NowLine({ now, slot }: { now: string; slot: number }) {
+  const drops = useChangeCount(slot);
   return (
     <div
+      key={drops}
       aria-hidden="true"
-      className="flex flex-col gap-1 px-1 py-1 portrait:flex-row-reverse portrait:items-center portrait:justify-end portrait:gap-2 portrait:self-stretch portrait:py-3"
+      className={`flex flex-col gap-1 px-1 py-1 portrait:flex-row-reverse portrait:items-center portrait:justify-end portrait:gap-2 portrait:self-stretch portrait:py-3 ${
+        drops ? "now-drop" : ""
+      }`}
     >
       <span className="now-label font-semibold whitespace-nowrap text-sun-ink">
         now {formatWallTime(now).replace(/ [AP]M$/, "")}

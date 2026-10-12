@@ -65,6 +65,13 @@ test("a chore done on the wall stamps, bursts and pops the count; Undo takes it 
   await expect(mia.locator(".pop").first()).toBeAttached();
   await expect(mia).toContainText("All done, Mia!");
   await expect(mia).toContainText("44");
+  // Stamped, the row glides under Done (UX §9): it comes to rest below that heading.
+  const doneHeading = mia.getByRole("heading", { name: "Done" });
+  await expect(async () => {
+    const heading = await doneHeading.boundingBox();
+    const row = await box.boundingBox();
+    expect(heading !== null && row !== null && row.y > heading.y).toBe(true);
+  }).toPass({ timeout: 3_000 });
 
   // Undo puts the box back, the count and the stars too.
   await toast(page, "Done by Mia").getByRole("button", { name: "Undo" }).click();

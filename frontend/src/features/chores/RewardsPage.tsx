@@ -15,6 +15,7 @@ import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
 import { WhoPicker } from "../../ui/WhoPicker";
+import { Pop } from "../../ui/Pop";
 import { personOf, Strip, useViewer } from "./ChoreBoard";
 import { useChoreChanges, useRewards, type Redemption, type Reward, type Stars } from "./data";
 import { starsLine } from "./words";
@@ -75,9 +76,10 @@ function RewardsBody() {
                   <span className={display ? "text-d-body font-bold" : "text-body font-bold"}>
                     {kid.name}
                   </span>
-                  <span className={display ? "text-d-secondary" : "text-secondary"}>
-                    {starsLine(stars)}
-                  </span>
+                  <Pop
+                    value={starsLine(stars)}
+                    className={`self-start ${display ? "text-d-secondary" : "text-secondary"}`}
+                  />
                 </span>
               </li>
             );

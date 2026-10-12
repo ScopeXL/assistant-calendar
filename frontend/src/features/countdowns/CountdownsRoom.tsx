@@ -11,6 +11,7 @@ import { Screen } from "../../ui/Screen";
 import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
+import { Pop } from "../../ui/Pop";
 import { CountdownEditor } from "./CountdownEditor";
 import { useCountdownChanges, useCountdowns, useUpcoming, type Upcoming } from "./data";
 import { daysText, turningText } from "./words";
@@ -46,11 +47,11 @@ function Tile({
         color !== "everyone" ? "border-l-[6px] border-l-p bg-p-tint" : "bg-surface"
       } ${display ? "min-h-[17.5rem] p-6" : "min-h-40 p-4"}`}
     >
-      <span
-        className={`${display ? "text-d-big" : "text-[2.5rem] leading-none"} font-extrabold text-p-text`}
-      >
-        {daysText(item.days)}
-      </span>
+      <Pop
+        value={daysText(item.days)}
+        roll
+        className={`self-start ${display ? "text-d-big" : "text-[2.5rem] leading-none"} font-extrabold text-p-text`}
+      />
       <span className="flex flex-col gap-1">
         <span className={`${display ? "text-d-title" : "text-row"} font-bold break-words`}>
           {item.emoji ? `${item.emoji} ` : ""}
