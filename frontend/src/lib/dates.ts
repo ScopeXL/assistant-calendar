@@ -50,7 +50,32 @@ function formatter(timeZone: string | undefined): Intl.DateTimeFormat {
   return format;
 }
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+/** Weekdays as the household counts them: 0 Monday … 6 Sunday. */
+export const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+export const WEEKDAY_LONG = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+] as const;
+
+/** "Mon" for 0 … "Sun" for 6. */
+export function weekdayShort(weekday: number): string {
+  return WEEKDAY_SHORT[((weekday % 7) + 7) % 7] ?? "";
+}
+
+/** "Monday" for 0 … "Sunday" for 6. */
+export function weekdayLong(weekday: number): string {
+  return WEEKDAY_LONG[((weekday % 7) + 7) % 7] ?? "";
+}
+
+/** The seven weekdays in the household's order: Sunday first (6) gives [6, 0, 1, 2, 3, 4, 5]. */
+export function orderedWeekdays(weekStartsOn: number): number[] {
+  return Array.from({ length: 7 }, (_, index) => (weekStartsOn + index) % 7);
+}
 
 export function zonedParts(moment: Date, timeZone = zone): ZonedParts {
   const parts: Record<string, string> = {};
@@ -60,7 +85,7 @@ export function zonedParts(moment: Date, timeZone = zone): ZonedParts {
     day: `${parts.year ?? "1970"}-${parts.month ?? "01"}-${parts.day ?? "01"}`,
     hour,
     minute: Number(parts.minute),
-    weekday: Math.max(0, WEEKDAYS.indexOf(parts.weekday ?? "Mon")),
+    weekday: Math.max(0, WEEKDAY_SHORT.indexOf((parts.weekday ?? "Mon") as "Mon")),
   };
 }
 
@@ -85,6 +110,27 @@ export function weekOf(day: string, weekStartsOn: number): string[] {
   const offset = (weekdayOf(day) - weekStartsOn + 7) % 7;
   const start = addDays(day, -offset);
   return Array.from({ length: 7 }, (_, index) => addDays(start, index));
+}
+
+export interface MonthGrid {
+  first: string; // the month's first day
+  days: string[]; // whole weeks covering the month
+  weeks: string[][];
+}
+
+/** The month `offset` months from `today`'s, as whole weeks starting on the household's day. */
+export function monthGrid(today: string, offset: number, weekStartsOn: number): MonthGrid {
+  const [year = 1970, month = 1] = today.split("-").map(Number);
+  const index = year * 12 + (month - 1) + offset;
+  const first = `${String(Math.floor(index / 12))}-${String((index % 12) + 1).padStart(2, "0")}-01`;
+  const start = weekOf(first, weekStartsOn)[0] ?? first;
+  const weeks: string[][] = [];
+  let day = start;
+  do {
+    weeks.push(Array.from({ length: 7 }, (_, n) => addDays(day, n)));
+    day = addDays(day, 7);
+  } while (day.slice(0, 7) === first.slice(0, 7));
+  return { first, days: weeks.flat(), weeks };
 }
 
 function dayFormat(options: Intl.DateTimeFormatOptions): (day: string) => string {

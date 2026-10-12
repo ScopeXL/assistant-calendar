@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import {
   addDays,
+  monthGrid,
   monthYear,
   shortDate,
   shortMonth,
@@ -25,7 +26,6 @@ import { AddPanel } from "../calendar/AddPanel";
 import { useEventSearch, useOccurrences } from "../calendar/data";
 import { DayView } from "../calendar/DayView";
 import { EventSheet } from "../calendar/EventSheet";
-import { monthGrid } from "../calendar/MonthView";
 import { Agenda, DayGroups, PhoneMonth, WeekStrip } from "../calendar/PhoneLists";
 import { useOpenOverlay } from "../calendar/overlays";
 import type { Occurrence } from "../calendar/types";

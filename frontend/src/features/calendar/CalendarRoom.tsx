@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import {
   addDays,
+  monthGrid,
   monthYear,
   shortDate,
   wallNow,
@@ -20,7 +21,7 @@ import { BoardControls, BoardToolbar } from "./BoardControls";
 import { useEventChanges, useOccurrences } from "./data";
 import { DayView } from "./DayView";
 import { EventSheet } from "./EventSheet";
-import { MonthView, monthGrid } from "./MonthView";
+import { MonthView } from "./MonthView";
 import { useOpenOverlay } from "./overlays";
 import { PeopleView } from "./PeopleView";
 import { ScopeChooser } from "./ScopeChooser";

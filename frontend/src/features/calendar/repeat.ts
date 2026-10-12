@@ -7,7 +7,7 @@
  * Monthly-by-date and yearly rules name no day of their own (they follow the start day), so the
  * server can still move them to another day.
  */
-import { monthDay, weekdayOf, zonedParts } from "../../lib/dates";
+import { monthDay, weekdayLong, weekdayOf, weekdayShort, zonedParts } from "../../lib/dates";
 
 export type Repeat =
   | { freq: "daily"; interval: number }
@@ -28,8 +28,6 @@ export interface RepeatPreset {
 }
 
 const CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
-const SHORT_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const LONG_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const NTH = ["first", "second", "third", "fourth"];
 const WORKWEEK = [0, 1, 2, 3, 4];
 const MAX_COUNT = 1000;
@@ -249,7 +247,7 @@ export function describeRepeat(repeat: Repeat, startDay: string, end?: RepeatEnd
       text =
         interval === 1 && days.join() === WORKWEEK.join()
           ? "Every weekday"
-          : `${every("week")} on ${listed(days.map((day) => pick(SHORT_DAYS, day)))}`;
+          : `${every("week")} on ${listed(days.map(weekdayShort))}`;
       break;
     }
     case "monthly":
@@ -258,7 +256,7 @@ export function describeRepeat(repeat: Repeat, startDay: string, end?: RepeatEnd
       } else {
         const position = weekdayPosition(startDay);
         const nth = position === -1 ? "last" : pick(NTH, position - 1);
-        text = `${every("month")} on the ${nth} ${pick(LONG_DAYS, weekdayOf(startDay))}`;
+        text = `${every("month")} on the ${nth} ${weekdayLong(weekdayOf(startDay))}`;
       }
       break;
     case "yearly":

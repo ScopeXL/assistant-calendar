@@ -5,10 +5,14 @@ import {
   clockSuffix,
   formatClock,
   formatTime,
+  monthGrid,
+  orderedWeekdays,
   setDatePreferences,
   weekOf,
   weekSpan,
+  weekdayLong,
   weekdayOf,
+  weekdayShort,
   zonedParts,
 } from "./dates";
 
@@ -65,5 +69,52 @@ describe("times in the household's zone", () => {
     setDatePreferences({ timezone: "America/Los_Angeles", timeFormat: "12h" });
     expect(zonedParts(new Date(Date.UTC(2026, 9, 8, 6, 59))).day).toBe("2026-10-07");
     expect(zonedParts(new Date(Date.UTC(2026, 9, 8, 7, 0))).day).toBe("2026-10-08");
+  });
+});
+
+describe("weekdays in the household's order", () => {
+  it("starts on the household's day", () => {
+    expect(orderedWeekdays(6)).toEqual([6, 0, 1, 2, 3, 4, 5]); // Sunday first
+    expect(orderedWeekdays(0)).toEqual([0, 1, 2, 3, 4, 5, 6]); // Monday first
+    expect(orderedWeekdays(5)).toEqual([5, 6, 0, 1, 2, 3, 4]); // Saturday first
+  });
+
+  it("names them, 0 Monday to 6 Sunday", () => {
+    expect(orderedWeekdays(6).map(weekdayShort)).toEqual([
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+    ]);
+    expect([0, 3, 6].map(weekdayLong)).toEqual(["Monday", "Thursday", "Sunday"]);
+    expect(weekdayShort(weekdayOf("2026-10-07"))).toBe("Wed");
+  });
+});
+
+describe("a month as whole weeks", () => {
+  it("starts on the household's day and covers the month", () => {
+    const sundays = monthGrid("2026-10-07", 0, 6);
+    expect(sundays.first).toBe("2026-10-01");
+    expect(sundays.days[0]).toBe("2026-09-27");
+    expect(sundays.weeks).toHaveLength(5);
+    expect(sundays.days.at(-1)).toBe("2026-10-31");
+    const mondays = monthGrid("2026-10-07", 0, 0);
+    expect(mondays.days[0]).toBe("2026-09-28");
+    expect(mondays.weeks).toHaveLength(5);
+    expect(mondays.days.at(-1)).toBe("2026-11-01");
+  });
+
+  it("pages across a year's end, and holds a six-week month", () => {
+    const january = monthGrid("2026-12-15", 1, 6);
+    expect(january.first).toBe("2027-01-01");
+    expect(january.days[0]).toBe("2026-12-27");
+    const before = monthGrid("2026-01-15", -1, 6);
+    expect(before.first).toBe("2025-12-01");
+    // August 2026 starts on a Saturday: six Sunday-first weeks.
+    expect(monthGrid("2026-08-10", 0, 6).weeks).toHaveLength(6);
+    for (const week of monthGrid("2026-08-10", 0, 6).weeks) expect(week).toHaveLength(7);
   });
 });

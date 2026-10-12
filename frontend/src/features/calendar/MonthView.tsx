@@ -1,29 +1,8 @@
-import { addDays, dayNumber, formatWallTime, shortWeekday, weekOf } from "../../lib/dates";
+import { dayNumber, formatWallTime, shortWeekday, type MonthGrid } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { byDay, shownFor } from "./layout";
 import { coreOverlayOf, useOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
-
-export interface MonthGrid {
-  first: string; // the month's first day
-  days: string[]; // whole weeks covering the month
-  weeks: string[][];
-}
-
-/** The month `offset` months from today's, as whole weeks starting on the household's day. */
-export function monthGrid(today: string, offset: number, weekStartsOn: number): MonthGrid {
-  const [year = 1970, month = 1] = today.split("-").map(Number);
-  const index = year * 12 + (month - 1) + offset;
-  const first = `${String(Math.floor(index / 12))}-${String((index % 12) + 1).padStart(2, "0")}-01`;
-  const start = weekOf(first, weekStartsOn)[0] ?? first;
-  const weeks: string[][] = [];
-  let day = start;
-  do {
-    weeks.push(Array.from({ length: 7 }, (_, n) => addDays(day, n)));
-    day = addDays(day, 7);
-  } while (day.slice(0, 7) === first.slice(0, 7));
-  return { first, days: weeks.flat(), weeks };
-}
 
 const SHOWN = 3;
 

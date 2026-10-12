@@ -7,13 +7,13 @@ import {
   shortDate,
   shortWeekday,
   wallNow,
+  type MonthGrid,
 } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { occurrenceLabel, peopleOf } from "./EventChip";
 import { coreOverlayOf, useOverlayOf } from "./overlays";
 import { byDay, isPast, shownFor } from "./layout";
-import type { MonthGrid } from "./MonthView";
 import type { Occurrence } from "./types";
 
 const DOTS = 4;
