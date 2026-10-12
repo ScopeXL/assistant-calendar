@@ -1,8 +1,9 @@
 /**
  * What the wall screen is showing right now, beyond the URL: the board's view, which week, day
- * or month, the person filter, whether the Today panel is hidden on this screen, the Week
- * layout and zoom chosen on it, and the event sheet or Add panel that's open. The idle machine puts it back after 2 minutes, so the next
- * person who glances sees this week (UX §1 "Idle, wake and reset").
+ * or month, the person filter, whether the Today panel is hidden and the rail folded on this
+ * screen, the Week layout and zoom chosen on it, and the event sheet or Add panel that's open.
+ * The idle machine puts it back after 2 minutes, so the next person who glances sees this week
+ * (UX §1 "Idle, wake and reset").
  */
 import { createStore } from "./store";
 
@@ -37,6 +38,8 @@ export interface DisplayState {
   monthOffset: number;
   /** null: as the household set it in Settings → Display. */
   panelShown: boolean | null;
+  /** The rail folded to its icons on this screen; null: the household's Compact rail setting. */
+  railCollapsed: boolean | null;
   /** null: the household's Week layout (Settings → Display). */
   weekLayout: WeekLayout | null;
   hoursZoom: HoursZoom;
@@ -51,6 +54,7 @@ const INITIAL: DisplayState = {
   day: null,
   monthOffset: 0,
   panelShown: null,
+  railCollapsed: null,
   weekLayout: null,
   hoursZoom: "24h",
   people: [],
@@ -92,6 +96,7 @@ export function resetBoard(): void {
     state.day === null &&
     state.monthOffset === 0 &&
     state.panelShown === null &&
+    state.railCollapsed === null &&
     state.weekLayout === null &&
     state.hoursZoom === "24h" &&
     state.people.length === 0 &&
