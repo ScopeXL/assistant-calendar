@@ -453,6 +453,7 @@ function WhoDidIt({
         members={members}
         value={chosen ? [chosen] : []}
         everyone={false}
+        wrap
         onChange={(ids) => {
           const [id] = ids;
           if (!id) return;

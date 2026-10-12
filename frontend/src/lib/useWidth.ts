@@ -21,3 +21,30 @@ export function useWidth<T extends HTMLElement>(): [RefObject<T | null>, number]
   }, []);
   return [ref, width];
 }
+
+function rootScale(): number {
+  if (typeof document === "undefined") return 1;
+  return (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
+}
+
+/** The wall's text size as a factor of Standard (16 px): 0.875 at Small, 1.3 at Extra large.
+ * It follows the setting when it changes, for layout worked out in px. */
+export function useRootScale(): number {
+  const [scale, setScale] = useState(rootScale);
+  useEffect(() => {
+    const read = () => {
+      setScale(rootScale());
+    };
+    read();
+    if (typeof MutationObserver === "undefined") return;
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-text-size"],
+    });
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  return scale;
+}
