@@ -10,7 +10,7 @@ import { fetchSession } from "../../lib/session";
 import { useMinute } from "../../lib/time";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
-import { Chip, ChipRow } from "../../ui/Chip";
+import { DayField } from "../../ui/DayField";
 import { SidePanel } from "../../ui/SidePanel";
 import { useShell } from "../../ui/shell";
 import { useEventActions } from "../usePluginModules";
@@ -218,6 +218,7 @@ export function EventSheet({
           ) : null}
           {moving ? (
             <MovePicker
+              weekStartsOn={settings?.week_starts_on ?? 6}
               today={today}
               onPick={(day) => {
                 if (repeats) setAsking({ verb: "Move", toDay: day });
@@ -249,54 +250,34 @@ export function EventSheet({
   );
 }
 
-/** Move to another day (UX §4): the next 14 days as chips, or any date. */
+/** Move to another day (UX §4): the week's days, Previous and Next week, or any date from a
+ * month grid. A tap on a day moves it there. */
 function MovePicker({
   today,
+  weekStartsOn,
   onPick,
   onCancel,
 }: {
   today: string;
+  weekStartsOn: number;
   onPick: (day: string) => void;
   onCancel: () => void;
 }) {
-  const display = useShell() === "display";
-  const days = Array.from({ length: 14 }, (_, n) => addDays(today, n));
   return (
     <div className="flex flex-col gap-3 border-t border-line pt-4">
-      <p className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>Move to</p>
-      <ChipRow label="Move to">
-        {days.map((day) => (
-          <Chip
-            key={day}
-            on={false}
-            onClick={() => {
-              onPick(day);
-            }}
-          >
-            {day === today ? "Today" : day === addDays(today, 1) ? "Tomorrow" : shortDate(day)}
-          </Chip>
-        ))}
-      </ChipRow>
-      <label className="flex flex-col gap-2">
-        <span
-          className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}
-        >
-          Another day
-        </span>
-        <input
-          type="date"
-          min={today}
-          className={`rounded-button border-2 border-line bg-surface ${
-            display ? "min-h-16 px-4 text-d-body" : "min-h-12 px-3 text-body"
-          }`}
-          onChange={(event) => {
-            if (event.target.value) onPick(event.target.value);
-          }}
-        />
-      </label>
-      <Button variant="quiet" onClick={onCancel}>
-        Don't move
-      </Button>
+      <DayField
+        label="Move to"
+        value={null}
+        today={today}
+        weekStartsOn={weekStartsOn}
+        min={today}
+        onChange={onPick}
+      />
+      <div>
+        <Button variant="quiet" onClick={onCancel}>
+          Don't move
+        </Button>
+      </div>
     </div>
   );
 }

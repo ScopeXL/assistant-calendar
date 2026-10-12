@@ -2,14 +2,17 @@ import { useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
-import { addDays, shortWeekday, zonedParts } from "../../lib/dates";
-import { useMembers } from "../../lib/household";
+import { zonedParts } from "../../lib/dates";
+import { useMembers, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { DayField } from "../../ui/DayField";
+import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
 import { WhoPicker } from "../../ui/WhoPicker";
+import { useBoardDay } from "../calendar/useBoardDay";
 import type { AddEditorProps } from "../registry";
 import { useListChanges, useLists } from "./data";
 import { useWallActor } from "./ListItems";
@@ -17,13 +20,16 @@ import { SUGGESTED } from "./ListsRoom";
 import { splitItems } from "./words";
 
 /**
- * Add → Item (UX §4 "The Add panel for other things"): which list (the open one first), what
- * (commas make several: "Milk, eggs, bread"), and, if it matters, who and which day.
+ * Add → Item (UX §4 "The Add panel for other things", ADR 0029): what (commas make several:
+ * "Milk, eggs, bread"), which list (the open one first), and, if it matters, who and which day:
+ * each on its own row, with the button pinned above the keyboard. A day tapped on the board
+ * while the panel is open sets the day.
  */
 export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
   const display = useShell() === "display";
   const { data: lists = [] } = useLists();
   const { data: members = [] } = useMembers();
+  const { data: settings } = useSettings();
   const { addItems, createList } = useListChanges();
   const [actor] = useWallActor();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -33,14 +39,13 @@ export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
   const [text, setText] = useState("");
   const [who, setWho] = useState<string | null>(null);
   const [day, setDay] = useState<string | null>(boardDay);
+  useBoardDay(boardDay, setDay);
   const chosen =
     lists.find((list) => list.id === listId) ??
     lists.find((list) => list.id === openList) ??
     lists.find((list) => list.kind === "grocery") ??
     lists[0];
   const texts = splitItems(text);
-  const label = (d: string) =>
-    d === today ? "Today" : d === addDays(today, 1) ? "Tomorrow" : shortWeekday(d);
   const gap = display ? "gap-6" : "gap-5";
   const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
 
@@ -75,6 +80,16 @@ export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
         );
       }}
     >
+      <TextField
+        label="What"
+        hint="Commas add several: milk, eggs, bread."
+        autoComplete="off"
+        autoFocus
+        value={text}
+        onChange={(event) => {
+          setText(event.target.value);
+        }}
+      />
       <div className="flex flex-col gap-2">
         <p className={heading}>Which list</p>
         <ChipRow label="Which list">
@@ -91,16 +106,6 @@ export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
           ))}
         </ChipRow>
       </div>
-      <TextField
-        label="What"
-        hint="Commas add several: milk, eggs, bread."
-        autoComplete="off"
-        autoFocus
-        value={text}
-        onChange={(event) => {
-          setText(event.target.value);
-        }}
-      />
       <div className="flex flex-col gap-2">
         <p className={heading}>Who</p>
         <WhoPicker
@@ -112,41 +117,28 @@ export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
           }}
         />
       </div>
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Day</p>
-        <ChipRow label="Day">
-          <Chip
-            on={day === null}
-            onClick={() => {
-              setDay(null);
-            }}
-          >
-            No day
-          </Chip>
-          {[0, 1, 2, 3, 4, 5, 6].map((n) => {
-            const d = addDays(today, n);
-            return (
-              <Chip
-                key={d}
-                on={day === d}
-                onClick={() => {
-                  setDay(d);
-                }}
-              >
-                {label(d)}
-              </Chip>
-            );
-          })}
-        </ChipRow>
-      </div>
+      <DayField
+        value={day}
+        today={today}
+        weekStartsOn={settings?.week_starts_on ?? 6}
+        onChange={setDay}
+        optional={{
+          label: "No day",
+          onChoose: () => {
+            setDay(null);
+          },
+        }}
+      />
       {addItems.isError ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(addItems.error)}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!texts.length} pending={addItems.isPending}>
-        {texts.length > 1 ? `Add ${String(texts.length)} items` : "Add item"}
-      </Button>
+      <PanelActions>
+        <Button type="submit" block disabled={!texts.length} pending={addItems.isPending}>
+          {texts.length > 1 ? `Add ${String(texts.length)} items` : "Add item"}
+        </Button>
+      </PanelActions>
     </form>
   );
 }

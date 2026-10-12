@@ -1,18 +1,21 @@
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
+import { COLORS } from "../../lib/colors";
 import { addDays, zonedParts } from "../../lib/dates";
-import { useMembers } from "../../lib/household";
+import { useMembers, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
-import { DayChooser } from "../../ui/DayChooser";
+import { DayField } from "../../ui/DayField";
+import { PanelActions } from "../../ui/PanelActions";
+import { ScrollRow } from "../../ui/ScrollRow";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { WhoPicker } from "../../ui/WhoPicker";
+import { useBoardDay } from "../calendar/useBoardDay";
 import type { AddEditorProps } from "../registry";
-import { COLORS } from "../../lib/colors";
 import { useCountdownChanges, type Countdown, type CountdownIn } from "./data";
 
 const EMOJI = ["🎂", "🎉", "🏖️", "⛺", "✈️", "🎃", "🎄", "🏫", "⚽", "🎁"];
@@ -41,11 +44,16 @@ export function CountdownEditor({
   const display = useShell() === "display";
   const today = zonedParts(useMinute()).day;
   const { data: members = [] } = useMembers();
+  const { data: settings } = useSettings();
   const changes = useCountdownChanges();
   const [title, setTitle] = useState(countdown?.title ?? startTitle);
   const [day, setDay] = useState(
     countdown?.date ?? (startDay && startDay >= today ? startDay : addDays(today, 7)),
   );
+  // A day tapped on the board while Add is open moves a new countdown's day (never to the past).
+  useBoardDay(startDay, (tapped) => {
+    if (!countdown && tapped >= today) setDay(tapped);
+  });
   const [who, setWho] = useState<string[]>(countdown?.member_id ? [countdown.member_id] : []);
   const [emoji, setEmoji] = useState<string | null>(countdown?.emoji ?? null);
   const [color, setColor] = useState<NonNullable<CountdownIn["color"]> | null>(
@@ -110,10 +118,13 @@ export function CountdownEditor({
           setTitle(event.target.value);
         }}
       />
-      <DayChooser
+      {/* The month is open from the start: what's counted down to is rarely this week. */}
+      <DayField
         value={day}
-        days={Array.from({ length: 8 }, (_, n) => addDays(today, n))}
-        {...(yearly ? {} : { min: today })}
+        today={today}
+        weekStartsOn={settings?.week_starts_on ?? 6}
+        grid="open"
+        min={yearly ? undefined : today}
         onChange={setDay}
       />
       <div className="flex flex-col gap-2">
@@ -122,7 +133,7 @@ export function CountdownEditor({
       </div>
       <div className="flex flex-col gap-2">
         <p className={heading}>Emoji</p>
-        <ChipRow label="Emoji">
+        <ScrollRow label="Emoji">
           <Chip
             on={emoji === null}
             onClick={() => {
@@ -142,7 +153,7 @@ export function CountdownEditor({
               {mark}
             </Chip>
           ))}
-        </ChipRow>
+        </ScrollRow>
       </div>
       <div className="flex flex-col gap-2">
         <p className={heading}>Color</p>
@@ -185,9 +196,11 @@ export function CountdownEditor({
           {errorMessage(error)}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!ready} pending={pending}>
-        {countdown ? "Save changes" : "Add countdown"}
-      </Button>
+      <PanelActions>
+        <Button type="submit" block disabled={!ready} pending={pending}>
+          {countdown ? "Save changes" : "Add countdown"}
+        </Button>
+      </PanelActions>
     </form>
   );
 }

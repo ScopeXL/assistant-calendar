@@ -2,16 +2,18 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
-import { addDays, weekOf, zonedParts } from "../../lib/dates";
+import { weekOf, zonedParts } from "../../lib/dates";
 import { useMembers, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
-import { DayChooser } from "../../ui/DayChooser";
+import { DayField } from "../../ui/DayField";
+import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { WhoPicker } from "../../ui/WhoPicker";
+import { useBoardDay } from "../calendar/useBoardDay";
 import type { AddEditorProps } from "../registry";
 import {
   SLOT_WORDS,
@@ -66,6 +68,10 @@ export function MealEditor({
   const [text, setText] = useState(entry?.text ?? startText);
   const [picked, setPicked] = useState<Saved | null>(null);
   const [day, setDay] = useState(entry?.day ?? startDay ?? today);
+  // A day tapped on the board while Add is open moves a new meal's day.
+  useBoardDay(startDay, (tapped) => {
+    if (!entry) setDay(tapped);
+  });
   const [slot, setSlot] = useState<Slot>(entry?.slot ?? startSlot ?? "dinner");
   const [cook, setCook] = useState<string[]>(entry?.member_id ? [entry.member_id] : []);
   const [shop, setShop] = useState(true);
@@ -169,9 +175,11 @@ export function MealEditor({
           setText(event.target.value);
         }}
       />
-      <DayChooser
+      <DayField
         value={day}
-        days={Array.from({ length: 7 }, (_, n) => addDays(weekStart, n))}
+        today={today}
+        weekStartsOn={settings?.week_starts_on ?? 6}
+        anchor={weekStart}
         onChange={setDay}
       />
       {slots.length > 1 ? (
@@ -209,9 +217,11 @@ export function MealEditor({
           {errorMessage(changes.save.error)}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!ready} pending={changes.save.isPending}>
-        {verb}
-      </Button>
+      <PanelActions>
+        <Button type="submit" block disabled={!ready} pending={changes.save.isPending}>
+          {verb}
+        </Button>
+      </PanelActions>
     </form>
   );
 }
