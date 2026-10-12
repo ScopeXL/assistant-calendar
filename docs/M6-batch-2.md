@@ -269,7 +269,8 @@ around each word."
 
 ### T4 The global header
 
-- [ ] Done (commit: )
+- [x] Done (commits: "frontend: the room header slot and the rail's state", "frontend: the global
+  header", "frontend: every room's title and controls in the header")
 
 **Owner's note.** "Make the header global. Reorganize the components so the top bar of the app
 shows today's information horizontally. Example: Fri, Oct 8 9:00 AM <Weather>. Then the right
@@ -395,6 +396,20 @@ room bodies):
 `SavedMeals.tsx` and `RewardsPage.tsx` serve both shells (they branch on `useShell()`), so they
 mount `<RoomHeader>` only on the display branch. Meals' and Tasks' links (`min-h-16
 rounded-button`, `MealsRoom.tsx:125`) become `min-h-14 rounded-button-d` so the row is one height.
+
+**As built.** The plan's width budget assumed four bare icons (15.5rem) for the view switch, but
+the decision table asks for the chosen view's word beside its icon (about 22rem). With the title
+and the week's span side by side that no longer fit one row at 1920 px Standard, and in portrait
+the switch dropped to a third line. So the title's quiet line sits **under** the title (32 px over
+18 px, 57 px tall): the worst case measured (late September, "12:30 PM", Month) fits with room to
+spare, the subtitle never hides, and the plan's "hide it below 64rem" rule wasn't needed. The
+header pads 10 px top and bottom so it is 80 px with or without a subtitle. A thin rule separates
+today from the room in the one-row form. `HeaderBack` and `HeaderLink` (`shell/HeaderLinks`) are
+the header's links, made with the router's `createLink`; a `createLink` component must merge the
+`className` the router hands it after its own, or its styles vanish (a CLAUDE.md gotcha now).
+The Photos room's Start screensaver became an ordinary button on the kiosk so the row is one
+height. With the Today panel beside Settings, tests that find a Settings page by its h2 need
+`exact: true` ("Tasks" also matched the panel's "Tasks Today").
 
 **Tests.** e2e `shell.spec.ts:22-31` (`steadyDigits` inside `getByRole("banner")`); `:110-139`
 (keep the 192 px rail and the panel checks; add `banner.x ≈ 192`, `banner.width ≈ viewport −

@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
   BookOpen,
@@ -21,6 +20,8 @@ import {
 } from "../../lib/dates";
 import { useMembers, useSettings, type Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
+import { HeaderLink } from "../../shell/HeaderLinks";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
@@ -78,59 +79,62 @@ function MealsWeek() {
     setPanel(null);
   };
   return (
-    <section aria-labelledby="meals-title" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-4">
-        <h1 id="meals-title" className="text-d-title font-bold">
-          Meals · {weekSpan(days)}
-        </h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="secondary"
-            aria-label="Last week"
-            onClick={() => {
-              setOffset(offset - 1);
-            }}
-          >
-            <ChevronLeft aria-hidden="true" className="size-7" />
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={offset === 0}
-            onClick={() => {
-              setOffset(0);
-            }}
-          >
-            This Week
-          </Button>
-          <Button
-            variant="secondary"
-            aria-label="Next week"
-            onClick={() => {
-              setOffset(offset + 1);
-            }}
-          >
-            <ChevronRight aria-hidden="true" className="size-7" />
-          </Button>
-          <Button
-            variant="secondary"
-            pending={changes.copyWeek.isPending}
-            onClick={() => {
-              changes.copyWeek.mutate({ from: addDays(start, -7), to: start });
-            }}
-          >
-            <Copy aria-hidden="true" className="size-7" />
-            Copy last week
-          </Button>
-          <Link
-            to="/$room/$"
-            params={{ room: "meals", _splat: "saved" }}
-            className="press inline-flex min-h-16 items-center gap-2 rounded-button border-2 border-line bg-surface px-5 text-d-body font-semibold"
-          >
-            <BookOpen aria-hidden="true" className="size-7" />
-            Saved Meals
-          </Link>
-        </div>
-      </header>
+    <section aria-label="Meals" className="flex min-h-0 flex-1 flex-col">
+      <RoomHeader
+        title="Meals"
+        subtitle={weekSpan(days)}
+        controls={
+          <>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                icon
+                aria-label="Last week"
+                onClick={() => {
+                  setOffset(offset - 1);
+                }}
+              >
+                <ChevronLeft aria-hidden="true" className="size-8" />
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={offset === 0}
+                onClick={() => {
+                  setOffset(0);
+                }}
+              >
+                This Week
+              </Button>
+              <Button
+                variant="secondary"
+                icon
+                aria-label="Next week"
+                onClick={() => {
+                  setOffset(offset + 1);
+                }}
+              >
+                <ChevronRight aria-hidden="true" className="size-8" />
+              </Button>
+            </div>
+            <div className="ml-auto flex flex-wrap items-center gap-3">
+              <Button
+                variant="secondary"
+                pending={changes.copyWeek.isPending}
+                onClick={() => {
+                  changes.copyWeek.mutate({ from: addDays(start, -7), to: start });
+                }}
+              >
+                <Copy aria-hidden="true" className="size-7" />
+                Copy last week
+              </Button>
+              <HeaderLink to="/$room/$" params={{ room: "meals", _splat: "saved" }}>
+                <BookOpen aria-hidden="true" className="size-7" />
+                Saved Meals
+              </HeaderLink>
+            </div>
+          </>
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto" tabIndex={0}>
         {isSuccess && entries.length === 0 ? (
           <div className="px-6 pt-2">

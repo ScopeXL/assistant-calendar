@@ -243,13 +243,15 @@ test.describe("the wall screen", () => {
     await page.goto("/settings/display");
     await expect(page.getByRole("heading", { name: "Display", level: 2 })).toBeVisible();
     const header = page.getByRole("banner");
+    await expect(header.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
     const today = page.getByRole("complementary", { name: "Today" });
     await expect(today).toBeVisible();
     await header.getByRole("button", { name: "Hide the Today panel" }).click();
     await expect(today).toBeHidden();
     // It stays hidden from room to room, until someone shows it or the screen sits idle.
     await page.getByRole("link", { name: "Lists" }).click();
-    await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await expect(header.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await expect(header.getByRole("button", { name: "New list" })).toBeVisible();
     await expect(today).toBeHidden();
     await header.getByRole("button", { name: "Show the Today panel" }).click();
     await expect(today).toBeVisible();

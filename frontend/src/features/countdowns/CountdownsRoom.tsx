@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { formatWallTime, shortDate } from "../../lib/dates";
 import { useMembers, type Member } from "../../lib/household";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
@@ -180,21 +181,22 @@ function Tiles({ onAdd }: { onAdd: () => void }) {
 export function CountdownsRoom() {
   const [adding, setAdding] = useState(false);
   return (
-    <section aria-labelledby="countdowns-title" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center justify-between gap-4 border-b border-line px-6 py-4">
-        <h1 id="countdowns-title" className="text-d-title font-bold">
-          Countdowns
-        </h1>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setAdding(true);
-          }}
-        >
-          <Plus aria-hidden="true" className="size-7" />
-          Add countdown
-        </Button>
-      </header>
+    <section aria-label="Countdowns" className="flex min-h-0 flex-1 flex-col">
+      <RoomHeader
+        title="Countdowns"
+        controls={
+          <Button
+            variant="secondary"
+            className="ml-auto"
+            onClick={() => {
+              setAdding(true);
+            }}
+          >
+            <Plus aria-hidden="true" className="size-7" />
+            Add countdown
+          </Button>
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto p-6" tabIndex={0}>
         <Tiles
           onAdd={() => {

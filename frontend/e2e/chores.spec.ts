@@ -20,7 +20,7 @@ function toast(page: Page, message: string): Locator {
 async function choresRoom(page: Page): Promise<void> {
   await pairWall(page);
   await page.goto("/chores");
-  await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
 }
 
 /** Whether the celebration canvas has anything painted on it right now. */
@@ -131,7 +131,7 @@ test("Leo runs his bedtime routine to its finish", async ({ page, request }) => 
   await expect(runner).toContainText("All done, Leo! Night night.");
   await expect(runner).toContainText("+5 stars");
   await runner.getByRole("button", { name: "Back to Tasks" }).click();
-  await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
 });
 
 test("a reward asked for on the wall shows on a parent's phone; Approve on the wall asks for the PIN", async ({

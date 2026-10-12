@@ -164,14 +164,14 @@ context stays, so the routes keep answering while the plugin is errored.
 
   | Slot | Where it shows |
   |---|---|
-  | `rooms` | A room on the wall's rail and a phone tab (or a row in More) at `/<key>`; `Display` and `Phone` get the rest of the address as `path`. Orders so far: Lists 20, Tasks 30, Meals 40, Countdowns 50, Photos 60. The key must not be an address core already uses (`frontend/src/router.tsx`), nor `api` or `assets` |
+  | `rooms` | A room on the wall's rail and a phone tab (or a row in More) at `/<key>`; `Display` and `Phone` get the rest of the address as `path`. Orders so far: Lists 20, Tasks 30, Meals 40, Countdowns 50, Photos 60. A room's `Display` draws no title row of its own: it hands its title, a quiet line, a way back and its buttons to the wall's header with `<RoomHeader title="Lists" controls={…} />` (or `useRoomHeader`, from `shell/roomHeader`; `HeaderBack` and `HeaderLink` in `shell/HeaderLinks` for links), and puts `ml-auto` on what belongs at the right (ADR 0029). `Phone` keeps its own `ui/Screen` title. The key must not be an address core already uses (`frontend/src/router.tsx`), nor `api` or `assets` |
   | `today` | A block of the wall's Today panel and a section of a phone's Today. Orders so far: Tasks Today 10, Tonight 20, To do 30, Coming up 40 |
   | `add` | A kind of thing the Add panel makes beside Event; with `room`, it's the first choice in that room |
   | `calendarOverlays` | Quiet chips on the board; `key` is the overlay's key on the backend (the plugin id unless given) |
   | `removed` | Rows in Settings → Household → Recently removed; it reports how many with `onCount` |
   | `settingsPages` | A page of its own in Settings, after Calendars & accounts |
   | `settings.household` | A section in Settings → Household |
-  | `personColumn`, `railBlock`, `dayHeader`, `saverCorner`, `eventAction`, `boardPill`, `overlay` | Under a person in the People view; by the clock; in a board day's header; on the screensaver's date line; a button on an event's sheet; a pill in the board's header; over the whole wall |
+  | `personColumn`, `railBlock`, `dayHeader`, `saverCorner`, `eventAction`, `boardPill`, `overlay` | Under a person in the People view; by the clock (in the wall's header since ADR 0029, `place="header"`; at the top of a phone's Today); in a board day's header; on the screensaver's date line; a button on an event's sheet; a pill in the board's toolbar; over the whole wall |
   | `onboarding`, `settings.accounts` | **Not generic.** `features/onboarding/SetupWizard.tsx` asks for a plugin by id (weather in step 3, calendar_sync in step 7), and `CalendarsPage.tsx` shows only calendar_sync's accounts. A new first-run step means changing the wizard, and UX §6 |
 
 - **Data.** A `data.ts` with TanStack Query hooks. Every call goes through the generated client

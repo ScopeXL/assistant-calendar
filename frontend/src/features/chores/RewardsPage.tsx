@@ -1,9 +1,10 @@
-import { Link } from "@tanstack/react-router";
-import { ChevronLeft, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 
 import { errorMessage } from "../../api/client";
 import { useMembers } from "../../lib/household";
+import { HeaderBack } from "../../shell/HeaderLinks";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { celebrate } from "../../ui/Celebration";
@@ -36,20 +37,15 @@ export function RewardsPage() {
     );
   }
   return (
-    <section aria-labelledby="rewards-title" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center gap-6 border-b border-line px-6 py-4">
-        <Link
-          to="/$room"
-          params={{ room: "chores" }}
-          className="press -ml-2 inline-flex min-h-tap items-center gap-1 rounded-button-d pr-4 pl-2 text-d-body font-semibold"
-        >
-          <ChevronLeft aria-hidden="true" className="size-7" />
-          Tasks
-        </Link>
-        <h1 id="rewards-title" className="text-d-title font-bold">
-          Stars & Rewards
-        </h1>
-      </header>
+    <section aria-label="Stars & Rewards" className="flex min-h-0 flex-1 flex-col">
+      <RoomHeader
+        title="Stars & Rewards"
+        back={
+          <HeaderBack to="/$room" params={{ room: "chores" }}>
+            Tasks
+          </HeaderBack>
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">{body}</div>
     </section>
   );

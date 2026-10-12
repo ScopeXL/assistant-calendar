@@ -184,7 +184,7 @@ frontend/src/
   api/         openapi.json, schema.d.ts (generated), client.ts, keys.ts
   lib/         events, eventRouter, store, toast, motion (helpers over `motion`), wakeLock, platform, idle (screensaver timer), theme (data-theme + auto schedule), keyboard (on-screen keyboard context), time (a ticking `now` store), night (sleep and the evening dim), dimmer (who dims: the page or the Pi's helper), fly ("+2" to the person's avatar), longPress
   ui/          Button, IconButton, Sheet (native dialog), Chip, PersonBadge, Avatar, Segmented, Skeleton, EmptyState, Toast, Keyboard, Celebration (canvas), ProgressRing, DatePicker, TimePicker, ColorPicker
-  shell/       DisplayShell (kiosk: rail + board + today panel), PhoneShell (tab bar), nav.ts (built from the plugin registry), Screensaver
+  shell/       DisplayShell (kiosk: rail + header + board + today panel), Header + roomHeader (the room's title and controls, a store: ADR 0029), PhoneShell (tab bar), nav.ts (built from the plugin registry), Screensaver
   features/
     registry.ts            the plugin registry: id → {rooms, today, add, personColumn, removed, settingsPages, …} (§6.5)
     calendar/              week/day/month/agenda views, event editor, quick add, occurrence sheet
@@ -301,7 +301,7 @@ export interface PluginModule {
   settings?: Record<string, ComponentType>;  // sections inside core pages (accounts; household)
   overlay?: ComponentType<{ asleep: boolean; home: string }>;  // over the whole wall: the screensaver
   calendarOverlays?: { key: string; icon: LucideIcon; room: string }[];  // quiet chips on the board
-  railBlock?: ComponentType<{ place: "rail" | "band" | "phone" }>;  // by the clock: the weather
+  railBlock?: ComponentType<{ place: "header" | "phone" }>;  // by the clock, in the wall's header: the weather
   dayHeader?: ComponentType<{ day: string }>;  // a mark in a board day's header
   saverCorner?: ComponentType;     // beside the date on the screensaver
   eventAction?: ComponentType<{ occurrence: Occurrence; onDone: () => void }>;  // "Add a countdown"
@@ -396,7 +396,7 @@ Fourteen ICS fixtures with golden expected occurrences, cross-checked against `r
 | `meals` | `meal_entries`, `saved_meals` | A week grid of breakfast / lunch / dinner / snack entries (the household picks which; Dinner by default): free text with an optional emoji, link and the person cooking; every meal typed is kept as a saved meal for one-tap re-adding, with its ingredients for "Add ingredients to Groceries" while Lists is on; Swap days; copy last week. Dinner appears on the calendar as an all-day overlay chip when the household turns it on. `source_url` is reserved for a later Dinner Bell link (§19) | Room "Meals" (and Saved meals); Today panel block "Tonight" | In More |
 | `countdowns` | `countdowns` | "12 days until the beach trip" with an emoji, optional person and color, yearly repeat, and "not on the kitchen screen" for a surprise; birthdays come from members automatically (counted down here; on the board they're the core's `birthdays` overlay, §7.6); "Add a countdown" from an event's sheet; the big celebration on the day | Room "Countdowns"; Today panel block "Coming Up" (the nearest 3); a star on the board's day | In More |
 | `screensaver` | `photo_sources` (+ core `photos`) | Photo slideshow when the display is idle (idle minutes, seconds per photo, shuffle, the clock and Up next); Night wins over it; sources: phone upload and the inbox folder on the volume, later Immich and Nextcloud | The overlay; room "Photos"; Settings → Photos & screensaver | Photos in More: add, remove, Start screensaver |
-| `weather` | `weather_cache` | Open-Meteo current conditions, the next hours and a 7-day forecast for the household's place (searched by name at first run or in Settings → Household → Location); units (auto by the time zone); refreshed every 30 min; "as of 9:10" when stale | Rail block (in portrait's band) and day-header icons; the screensaver's date line | Today header |
+| `weather` | `weather_cache` | Open-Meteo current conditions, the next hours and a 7-day forecast for the household's place (searched by name at first run or in Settings → Household → Location); units (auto by the time zone); refreshed every 30 min; "as of 9:10" when stale | A block by the clock in the wall's header, and day-header icons; the screensaver's date line | Today header |
 
 Each plugin's full endpoint list is in §11.3.
 

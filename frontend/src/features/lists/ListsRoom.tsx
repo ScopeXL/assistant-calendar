@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
@@ -7,6 +7,8 @@ import { zonedParts } from "../../lib/dates";
 import { useMembers, type Member } from "../../lib/household";
 import { useLongPress } from "../../lib/longPress";
 import { useMinute } from "../../lib/time";
+import { HeaderBack } from "../../shell/HeaderLinks";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { EmptyState } from "../../ui/EmptyState";
@@ -34,21 +36,22 @@ function ListTiles() {
   const [held, setHeld] = useState<{ id: string; open: boolean } | null>(null);
   const heldList = lists?.find((list) => list.id === held?.id);
   return (
-    <section aria-labelledby="lists-title" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center justify-between gap-4 border-b border-line px-6 py-4">
-        <h1 id="lists-title" className="text-d-title font-bold">
-          Lists
-        </h1>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setMaking(true);
-          }}
-        >
-          <Plus aria-hidden="true" className="size-7" />
-          New list
-        </Button>
-      </header>
+    <section aria-label="Lists" className="flex min-h-0 flex-1 flex-col">
+      <RoomHeader
+        title="Lists"
+        controls={
+          <Button
+            variant="secondary"
+            className="ml-auto"
+            onClick={() => {
+              setMaking(true);
+            }}
+          >
+            <Plus aria-hidden="true" className="size-7" />
+            New list
+          </Button>
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {isSuccess && lists.length === 0 ? (
           <EmptyState
@@ -200,6 +203,7 @@ function ListPage({ listId }: { listId: string }) {
   if (isError) {
     return (
       <section className="p-6">
+        <RoomHeader title="Lists" />
         <EmptyState
           message="That list isn't here any more."
           action={
@@ -218,42 +222,39 @@ function ListPage({ listId }: { listId: string }) {
   if (!detail) return null;
   const { list } = detail;
   return (
-    <section aria-labelledby="list-title" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line px-6 py-4">
-        <Link
-          to="/$room"
-          params={{ room: "lists" }}
-          className="press -ml-2 inline-flex min-h-tap items-center gap-1 rounded-button-d pr-4 pl-2 text-d-body font-semibold"
-        >
-          <ChevronLeft aria-hidden="true" className="size-7" />
-          Lists
-        </Link>
-        <h1 id="list-title" className="text-d-title font-bold">
-          {list.name}
-        </h1>
-        <p className="text-d-body font-semibold text-ink-soft">{tileCount(list)}</p>
-        <div className="ml-auto flex gap-3">
-          {list.done_count > 0 ? (
+    <section aria-label={list.name} className="flex min-h-0 flex-1 flex-col">
+      <RoomHeader
+        title={list.name}
+        subtitle={tileCount(list)}
+        back={
+          <HeaderBack to="/$room" params={{ room: "lists" }}>
+            Lists
+          </HeaderBack>
+        }
+        controls={
+          <div className="ml-auto flex gap-3">
+            {list.done_count > 0 ? (
+              <Button
+                variant="secondary"
+                pending={clearDone.isPending}
+                onClick={() => {
+                  clearDone.mutate({ listId: list.id });
+                }}
+              >
+                Clear done
+              </Button>
+            ) : null}
             <Button
               variant="secondary"
-              pending={clearDone.isPending}
               onClick={() => {
-                clearDone.mutate({ listId: list.id });
+                setChanging(true);
               }}
             >
-              Clear done
+              Change list
             </Button>
-          ) : null}
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setChanging(true);
-            }}
-          >
-            Change list
-          </Button>
-        </div>
-      </header>
+          </div>
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-2">
         {detail.items.length === 0 && detail.done.length === 0 ? (
           <EmptyState message={`Nothing on ${list.name} yet. Add the first thing.`} />

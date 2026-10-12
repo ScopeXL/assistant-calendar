@@ -6,6 +6,7 @@ import { useState } from "react";
 import { qk } from "../../api/keys";
 import { askForPin } from "../../lib/parent";
 import { fetchSession } from "../../lib/session";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
 import { QrCode } from "../../ui/QrCode";
@@ -36,41 +37,37 @@ export function PhotosRoom() {
   const shown = manifest?.photos.length ?? 0;
   const address = `${window.location.origin}/photos`;
   return (
-    <section aria-labelledby="photos-title" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-4">
-        <h1 id="photos-title" className="text-d-title font-bold">
-          Photos
-          {library.isSuccess ? (
-            <span className="ml-4 text-d-body font-semibold text-ink-soft">
-              {photosCount(shown)}
-            </span>
-          ) : null}
-        </h1>
-        <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              void (async () => {
-                if (!session?.is_parent && !(await askForPin())) return;
-                await navigate({ to: "/settings/$page", params: { page: "screensaver" } });
-              })();
-            }}
-          >
-            <Settings aria-hidden="true" className="size-7" />
-            Settings
-          </Button>
-          <Button
-            variant={kiosk ? "primary" : "secondary"}
-            onClick={() => {
-              startSaver();
-            }}
-          >
-            <Play aria-hidden="true" className="size-7" />
-            Start screensaver
-          </Button>
-          {kiosk ? null : <AddPhotosButton />}
-        </div>
-      </header>
+    <section aria-label="Photos" className="flex min-h-0 flex-1 flex-col">
+      <RoomHeader
+        title="Photos"
+        subtitle={library.isSuccess ? photosCount(shown) : undefined}
+        controls={
+          <div className="ml-auto flex flex-wrap gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                void (async () => {
+                  if (!session?.is_parent && !(await askForPin())) return;
+                  await navigate({ to: "/settings/$page", params: { page: "screensaver" } });
+                })();
+              }}
+            >
+              <Settings aria-hidden="true" className="size-7" />
+              Settings
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                startSaver();
+              }}
+            >
+              <Play aria-hidden="true" className="size-7" />
+              Start screensaver
+            </Button>
+            {kiosk ? null : <AddPhotosButton />}
+          </div>
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto p-6" tabIndex={0}>
         {kiosk ? (
           <div className="mb-6 flex items-center gap-6 rounded-panel border border-line bg-surface p-5">

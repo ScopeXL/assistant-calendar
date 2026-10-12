@@ -420,7 +420,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
       await check(page, "display: groceries");
       await page.getByRole("link", { name: "Tasks" }).click();
-      await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
       await check(page, "display: chores");
       await page.getByRole("checkbox", { name: /^Empty the dishwasher/ }).click();
       await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
@@ -432,7 +432,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
       await check(page, "display: stars and rewards");
       await page.getByRole("link", { name: "Meals" }).click();
-      await expect(page.getByRole("heading", { name: /^Meals · /, level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /^Meals /, level: 1 })).toBeVisible();
       await check(page, "display: meals");
       await page.getByRole("table").getByRole("button", { name: /Tacos/ }).click();
       await check(page, "display: a meal");
@@ -535,7 +535,7 @@ for (const scheme of ["light", "dark"] as const) {
       await check(page, "display at Small: add");
       await add.getByRole("button", { name: "Close" }).click();
       await page.getByRole("link", { name: "Tasks" }).click();
-      await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
       await check(page, "display at Small: tasks");
       await page.getByRole("link", { name: "Lists" }).click();
       await page.getByRole("link", { name: /^Groceries/ }).click();

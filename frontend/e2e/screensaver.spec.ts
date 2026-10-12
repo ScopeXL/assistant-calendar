@@ -52,7 +52,7 @@ test("the photos fade in after the idle minutes, and a tap goes back to where th
   });
   expect(stay.ok()).toBe(true);
   await page.goto("/chores");
-  await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
   await expect(saver(page)).toHaveCount(0);
 
   await page.clock.fastForward("10:30");
@@ -63,7 +63,7 @@ test("the photos fade in after the idle minutes, and a tap goes back to where th
   // The waking tap lands on the saver, not on what's under it.
   await saver(page).click({ position: { x: 960, y: 300 } });
   await expect(saver(page)).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
 });
 
 test("a parent's phone starts the screensaver on the wall", async ({ page, browser, watch }) => {

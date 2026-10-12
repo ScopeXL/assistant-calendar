@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Check, Minus, Star } from "lucide-react";
 import { useState } from "react";
 
@@ -6,6 +5,8 @@ import { dayNumber, shortWeekday, weekOf, zonedParts } from "../../lib/dates";
 import { updateDisplay } from "../../lib/displayState";
 import { useMembers, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
+import { HeaderLink } from "../../shell/HeaderLinks";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
@@ -40,31 +41,34 @@ function ChoresBoard() {
     updateDisplay({ panel: { kind: "add", day: null, hour: null, type: "chore" } });
   };
   return (
-    <section aria-labelledby="chores-title" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line px-6 py-4">
-        <h1 id="chores-title" className="text-d-title font-bold">
-          {mode === "today" ? "Tasks · Today" : "Tasks · This Week"}
-        </h1>
-        <Segmented
-          label="Show"
-          value={mode}
-          options={[
-            { value: "today", label: "Today" },
-            { value: "week", label: "This Week" },
-          ]}
-          onChange={setMode}
-        />
-        {day?.stars_on || day?.rewards_on ? (
-          <Link
-            to="/$room/$"
-            params={{ room: "chores", _splat: "rewards" }}
-            className="press ml-auto inline-flex min-h-tap items-center gap-2 rounded-button-d border-2 border-line bg-surface px-6 text-d-body font-semibold"
-          >
-            <Star aria-hidden="true" className="size-7 fill-sun stroke-sun-ink" />
-            {day.rewards_on ? "Stars & Rewards" : "Stars"}
-          </Link>
-        ) : null}
-      </header>
+    <section aria-label="Tasks" className="flex min-h-0 flex-1 flex-col">
+      <RoomHeader
+        title="Tasks"
+        subtitle={mode === "today" ? "Today" : "This Week"}
+        controls={
+          <>
+            <Segmented
+              label="Show"
+              value={mode}
+              options={[
+                { value: "today", label: "Today" },
+                { value: "week", label: "This Week" },
+              ]}
+              onChange={setMode}
+            />
+            {day?.stars_on || day?.rewards_on ? (
+              <HeaderLink
+                to="/$room/$"
+                params={{ room: "chores", _splat: "rewards" }}
+                className="ml-auto"
+              >
+                <Star aria-hidden="true" className="size-7 fill-sun stroke-sun-ink" />
+                {day.rewards_on ? "Stars & Rewards" : "Stars"}
+              </HeaderLink>
+            ) : null}
+          </>
+        }
+      />
       {day?.waiting.length ? (
         <div className="px-6 pt-4">
           <WaitingStrip waiting={day.waiting} />

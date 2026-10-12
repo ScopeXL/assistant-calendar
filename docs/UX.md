@@ -24,7 +24,7 @@ Wireframes show structure, not styling. The display is drawn at 1920×1080 (and 
 
 ## 1. Rules for every screen
 
-**Two distances on one display.** Every element is either a *glance element* (read from 2–3 m) or an *arm's-length element* (read and tapped from 50 cm), and the two never share a size. Glance elements, big and few: the rail clock and date; Now and Up Next in the Today panel; today's day number and the lit column; task progress per person ("Mia 2 of 3"); Tonight; countdown numbers; the screensaver clock and next event. At Standard text size on a 24" 1080p monitor a glance element reads at 3 m (about 15 mm cap height, 40 px Lexend or larger); on a 15.6" monitor at 2 m. Glance elements are never truncated mid-word and never share a line with secondary text. Everything else (chips, headers, lists, task rows, meal cells, buttons, the keyboard, settings, sheets) is arm's-length.
+**Two distances on one display.** Every element is either a *glance element* (read from 2–3 m) or an *arm's-length element* (read and tapped from 50 cm), and the two never share a size. Glance elements, big and few: the header's clock and date; Now and Up Next in the Today panel; today's day number and the lit column; task progress per person ("Mia 2 of 3"); Tonight; countdown numbers; the screensaver clock and next event. At Standard text size on a 24" 1080p monitor a glance element reads at 3 m (about 15 mm cap height, 40 px Lexend or larger); on a 15.6" monitor at 2 m. Glance elements are never truncated mid-word and never share a line with secondary text. Everything else (chips, headers, lists, task rows, meal cells, buttons, the keyboard, settings, sheets) is arm's-length.
 
 **Type sizes on the display** (CSS px at Standard; Large multiplies by 1.15, Extra large by 1.3 and Small by 0.875 through the root font size; nothing on the display is smaller than 18 px, or 16 px at Small, the size for a screen around 1920×1080 that is read up close: ADR 0029):
 
@@ -35,7 +35,7 @@ Wireframes show structure, not styling. The display is drawn at 1920×1080 (and 
 | Body | 24 | 32 | Chip titles, list items, task titles, meal names, button labels (600) |
 | Title | 32 | 40 | Board title ("October 2026"), room titles, panel titles, day headers |
 | Glance | 40 | 48 | The Up Next title, "All done, Mia!" |
-| Rail clock | 56 | 56 | Weight 800, digits in fixed-width boxes (ADR 0021), as large as the rail allows up to this; no AM/PM in the rail |
+| Header clock | 40 | 48 | Weight 800, digits in fixed-width boxes (ADR 0021); AM or PM at 20 beside it |
 | Big number | 72 | 72 | Countdown tiles, star balances |
 | Step title | 64 | 72 | The routine runner's current step |
 | Wall clock | 200 | 200 | Screensaver and Night (does not scale) |
@@ -63,7 +63,7 @@ Nothing a finger taps is under 56 px on the display or 44 px on phones, with at 
 
 **Button groups.** A few short choices side by side, the chosen one filled with ink (a segmented control). Each word has 20 px of room on either side on the display and 16 on phones (it was 12; ADR 0029), with 4 px between cells. A group that can't fit one line (the four text sizes on a phone) wraps onto a second row and keeps a fixed corner radius, so it still reads as one control: it never scrolls and never spills past its card. Where words won't fit at all (the header's views, the Week's layout in a narrow header) the group is icons: round 56 px cells with 8 px between them and no border, each named for screen readers, lining up with the icon buttons beside them. A setting's choices are a group up to six options and 40 letters in all; more, or longer ones, are chips.
 
-**Spacing and surfaces.** An 8 px grid; display gutters 24 px; board column gaps 8 px; chip padding 12 px vertical and 16 px horizontal; rows 64 px (72 with a second line); section gaps 32 px. Shell widths in landscape: rail 192 px, Today panel 400 px (both in rem, so they widen with the text size), the board gets the rest (1328 px: seven columns of about 190 px with the panel, about 245 px without). The rail is 192 px rather than the planned 176 because Lexend's figures are wide and the clock must fit (ADR 0021). Portrait: a 400 px Today band on top, a 112 px bottom bar, board rows between. The rail, the board and the Today panel are three flat surfaces that differ by tint only; sheets and panels are a fourth; cards exist only where something really is a card (a list tile, a countdown tile, a reward, a photo); no shadows except on a lifted chip and an open panel. Corner radius follows hierarchy: panels and sheets 24 px (20 on phones), buttons 16 (12), event chips 12 (8), avatars and filter chips round. Today's column is one step lighter than the wall; past chips sit above the now line and are dimmed; the in-progress chip is filled solid in its person's color. Reading width on laptops is capped at about 72 characters.
+**Spacing and surfaces.** An 8 px grid; display gutters 24 px; board column gaps 8 px; chip padding 12 px vertical and 16 px horizontal; rows 64 px (72 with a second line); section gaps 32 px. Shell widths in landscape: rail 192 px, Today panel 400 px (both in rem, so they widen with the text size), the header 80 px tall over the board and the panel, the board gets the rest (1328 px wide: seven columns of about 190 px with the panel, about 245 px without). Portrait: the header (two rows) on top, a 384 px Today band under it, a 112 px bottom bar, board rows between. The rail, the header, the board and the Today panel are flat surfaces that differ by tint only; sheets and panels are a fourth; cards exist only where something really is a card (a list tile, a countdown tile, a reward, a photo); no shadows except on a lifted chip and an open panel. Corner radius follows hierarchy: panels and sheets 24 px (20 on phones), buttons 16 (12), event chips 12 (8), avatars and filter chips round. Today's column is one step lighter than the wall; past chips sit above the now line and are dimmed; the in-progress chip is filled solid in its person's color. Reading width on laptops is capped at about 72 characters.
 
 **The on-screen keyboard (display).** Sunroom's own (ADR 0022). Appears only when a text field is focused, slides up in 220 ms, never on first paint and never on a laptop that sent a physical key event in the last 5 s. In landscape it is 960 px wide and docks bottom-right under the side panel (bottom-left when the rail is on the right); in portrait it is full width. It never covers the focused field or the panel's primary button: the panel scrolls so the field sits 16 px above the keys, and the primary button stays pinned above them. Layouts: letters; numbers and symbols; a numeric pad for times, PINs and codes; a code layout for pair codes; long-press for accents. A suggestion row above the keys shows what the field most likely wants as chips: recent event titles, Usuals on a list, saved meals, member names when the parser sees a name beginning. Shift is automatic for a title's first letter; no autocorrect. **Done** lowers the keyboard and keeps the draft; ↵ in a quick-add field saves, elsewhere it is Done; tapping outside a field lowers the keyboard and keeps the draft.
 
@@ -95,41 +95,52 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 
 ## 3. Navigation and layout
 
-**The display shell (landscape, 1920×1080).** Three surfaces: the rail (left, 192 px), the board, the Today panel (right, 400 px, hideable per screen).
+**The display shell (landscape, 1920×1080).** Four surfaces: the rail (left, 192 px, the full height), the header (80 px, over the board and the Today panel), the board, the Today panel (right, 400 px, hideable per screen from any room).
 
 ```
-+----------+----------------------------------------------------------------------------+------------------------+
-| 9:41     | October 2026  Oct 5–11           [Week] [Day] [Month] [People]             | Up Next                |
-| Tue      | [<]  [This Week]  [>]     Show (All) (M) (L) (A) (S)       [Today panel ⇥]|                        |
-| Oct 7    |----------------------------------------------------------------------------| 4:00 PM                |
-| ☼ 64°    |  Sun 5   |  Mon 6   |  TUE 7   |  Wed 8   |  Thu 9   |  Fri 10  |  Sat 11  | Soccer practice        |
-| H 72 L 55|          |          |  today   |          |          |          |          | (M) Mia · Field 3      |
-|          |----------|----------|----------|----------|----------|----------|----------|                        |
-|----------| Columbus |          | Pajama   |          |          |          | Hike     |------------------------|
-| [cal]    | Day (All)|          | day (L)  |          |          |          | (All)    | Later Today            |
-| Calendar |----------|----------|----------|----------|----------|----------|----------| 6:30 PM  Dinner at     |
-|          | 10:00 AM | 8:00 AM  | 8:00 AM  | 9:00 AM  | 2:30 PM  | 3:30 PM  | 9:00 AM  |          Grandma's     |
-| [list]   | Church   | Dentist  | School   | Vet      | Dentist  | Pickup   | Soccer   |          (All)         |
-| Lists    | (All)    | (S)      | drop-off | (A)      | (M)      | (L)      | game (M) | 7:30 PM  Leo's bedtime |
-|          |          |          | (A)      |          |          |          |          |          routine       |
-| [check]  | 2:00 PM  | 4:00 PM  |· now 9:41|          | 4:00 PM  | 6:00 PM  | 12:00 PM |                        |
-| Tasks    | Grandma  | Piano    | 4:00 PM  |          | Soccer   | Pizza    | Lunch at |------------------------|
++----------+-----------------------------------------------------------------------------------------------------+
+| [cal]    | Tue, Oct 7  9:41 AM  ☼ 64° 72°/55° | October 2026  [<] [This Week] [>]    [▦ Week][1][▤][☺]  [⇥] (≈) |
+| Calendar |                                    | Oct 5–11                                                       |
+|          |----------------------------------------------------------------------------+------------------------|
+| [list]   | Show (All) (M) (L) (A) (S)                             [Agenda] [Hours]    | Up Next                |
+| Lists    |----------------------------------------------------------------------------|                        |
+|          |  Sun 5   |  Mon 6   |  TUE 7   |  Wed 8   |  Thu 9   |  Fri 10  |  Sat 11  | 4:00 PM                |
+| [check]  |          |          |  today   |          |          |          |          | Soccer practice        |
+| Tasks    |----------|----------|----------|----------|----------|----------|----------| (M) Mia · Field 3      |
+|          | Columbus |          | Pajama   |          |          |          | Hike     |                        |
+| [meal]   | Day (All)|          | day (L)  |          |          |          | (All)    |------------------------|
+| Meals    |----------|----------|----------|----------|----------|----------|----------| Later Today            |
+|          | 10:00 AM | 8:00 AM  | 8:00 AM  | 9:00 AM  | 2:30 PM  | 3:30 PM  | 9:00 AM  | 6:30 PM  Dinner at     |
+| [photo]  | Church   | Dentist  | School   | Vet      | Dentist  | Pickup   | Soccer   |          Grandma's     |
+| Photos   | (All)    | (S)      | drop-off | (A)      | (M)      | (L)      | game (M) |          (All)         |
+|          |          |          | (A)      |          |          |          |          | 7:30 PM  Leo's bedtime |
+|          | 2:00 PM  | 4:00 PM  |· now 9:41|          | 4:00 PM  | 6:00 PM  | 12:00 PM |          routine       |
+|          | Grandma  | Piano    | 4:00 PM  |          | Soccer   | Pizza    | Lunch at |------------------------|
 |          | visit    | (L)      | Soccer   |          | practice | night    | Nana's   | Tasks Today            |
-| [meal]   | (All)    |          | practice |          | (M)      | (All)    | (All)    | (M) Mia   2 of 3       |
-| Meals    |          | 6:30 PM  | (M)      |          |          |          |          | (L) Leo   1 of 1 done  |
+|          | (All)    |          | practice |          | (M)      | (All)    | (All)    | (M) Mia   2 of 3       |
+|          |          | 6:30 PM  | (M)      |          |          |          |          | (L) Leo   1 of 1 done  |
 |          |          | Book club|          |          |          |          |          | (S) Sam   0 of 1       |
-| [photo]  |          | (A)      | 6:30 PM  |          |          |          |          |------------------------|
-| Photos   |          |          | Dinner at|          |          |          |          | Tonight                |
+|          |          | (A)      | 6:30 PM  |          |          |          |          |------------------------|
+|          |          |          | Dinner at|          |          |          |          | Tonight                |
 |          |          |          | Grandma's|          |          |          |          | Tacos · Sam cooks      |
-|          |          |          | (All)    |          |          |          |          |------------------------|
-|  ( + )   |          |          | 7:30 PM  |          |          |          |          | Coming Up              |
-|  Add     |          |          | Bedtime  |          |          |          |          | 12 days  Mia's birthday|
-|          |          |          | routine  |          |          |          |          | 31 days  Beach trip    |
-| [lock]   |          |          | (L)      |          |          |          |          |                        |
+|  ( + )   |          |          | (All)    |          |          |          |          |------------------------|
+|  Add     |          |          | 7:30 PM  |          |          |          |          | Coming Up              |
+|          |          |          | Bedtime  |          |          |          |          | 12 days  Mia's birthday|
+| [lock]   |          |          | routine  |          |          |          |          | 31 days  Beach trip    |
 +----------+----------+----------+----------+----------+----------+----------+----------+------------------------+
 ```
 
-`(M) (L) (A) (S)` are 28 px avatar circles with initials in each person's color; `(All)` is the neutral Everyone mark; "TUE 7 · today" is the lit column; the 8:00 AM chip in today's column sits above the now line, dimmed. Rail contents, top to bottom: the clock (56 px, 800, digits in fixed-width boxes), weekday and date (20 px), weather (icon and temperature at 24 px, high and low at 18; tap for the day's hours and the week), a divider, the rooms in the household's order (36 px icon, 20 px label, 96 px tall each; at most six, the rest fold into More), a flexible gap, **Add** (a 64 px circle with a plus), the lock (its screen-reader name is "Settings"). Board header on every view: the title (month and span), the arrows and "This Week" (or Today, This month), the view switch (Week · Day · Month · People), the person filter row ("Show" and avatars, multi-select, clears after 2 min idle), the Today panel toggle (an icon, like the arrows), and the live-updates icon at the right, the board's top-right corner; on the Week, its own tools end the second line: the zoom (**24h · 12h · 1h · 15m**, while Hours is on) and the layout switch (**Agenda · Hours**, two icons in a narrow header), both back to the household's after 2 min idle; off this week, the title gains a quiet "Back to this week" chip. Today panel, top to bottom, each section only with content and its plugin on: **Now** (an event in progress, "until 5:00 PM"), **Up Next** (time at 24 px, title at 40, person and location at 20), **Later Today**, **Tomorrow** (only after 6 PM), **Tasks Today** (a line per person with a small progress ring), **Tonight**, **To Do** (list items due today), **Coming Up** (the two nearest countdowns). Tapping any line opens its thing.
+`(M) (L) (A) (S)` are 28 px avatar circles with initials in each person's color; `(All)` is the neutral Everyone mark; "TUE 7 · today" is the lit column; the 8:00 AM chip in today's column sits above the now line, dimmed.
+
+**The header** (ADR 0029) is the same bar in every room. At its left, today: the date ("Tue, Oct 7", 24 px), the time (40 px, weight 800, digits in fixed-width boxes, AM or PM at 20 px beside it), and the weather (the sky's icon, the temperature at 32 px, the day's high over its low at 18; "as of 9:10" in their place when the forecast is old; a tap opens the day's hours and the week). Then the room's own part, handed over by whichever room is on screen: an optional way back ("‹ Lists"), the title at 32 px with one quiet line under it (the week's span, "4 to get", "Today"), and the room's controls, with what belongs at the right pushed there. At the far right, the same in every room: the Today panel's button (an icon; not in portrait, where the band has none) and the live-updates icon, which stays the screen's top-right corner. From 104rem of its own width (1920 px at Standard and Small) it is one row, with a thin rule between today and the room; narrower (Large, Extra large, a laptop, portrait) the room's title and controls take a second row and the corner stays where it was. A row that still can't hold everything wraps rather than clips. Nothing in the header animates in. The title's quiet line sits under it, not beside it: side by side, late September's "Sep 27 – Oct 3" pushed the Calendar's view switch off the row at 1920 px.
+
+**The Calendar's part of the header:** the title (the month, or the day, or "People"), the span under it, the arrows around "This Week" (or Today, This Month), and at the right the view switch: four icons (Week · Day · Month · People) with the chosen view's word beside its icon, or, under 64rem of header (portrait at Large and Extra large, a small laptop), one **View** button that says the current view ("View: Week") and opens the four as a menu. Either way the current view is written out. While a chip is being dragged the title reads "Drop on a day".
+
+**The board's toolbar**, above its days: the person filter ("Show" and avatars, multi-select, clears after 2 min idle), the plugins' quiet pills ("Google hasn't answered since 9:10 AM"), and at the right the Week's own tools: the zoom (**24h · 12h · 1h · 15m**, while Hours is on) and the layout switch (**Agenda · Hours**, two icons in a narrow board), both back to the household's after 2 min idle.
+
+**The rail**, top to bottom: the rooms in the household's order (36 px icon, 20 px label, 96 px tall each; at most six, the rest fold into More), a flexible gap, **Add** (a 64 px circle with a plus), the lock (its screen-reader name is "Settings"). The clock and the weather left it for the header.
+
+**The Today panel**, top to bottom, each section only with content and its plugin on: **Now** (an event in progress, "until 5:00 PM"), **Up Next** (time at 24 px, title at 40, person and location at 20), **Later Today**, **Tomorrow** (only after 6 PM), **Tasks Today** (a line per person with a small progress ring), **Tonight**, **To Do** (list items due today), **Coming Up** (the two nearest countdowns). Tapping any line opens its thing. It shows beside every room, Settings included, until its button in the header hides it on this screen.
 
 **Tips** (ADR 0028): with Settings → Display → Show tips on (it's off until someone turns it on), a 56 px strip runs along the bottom of the board, between the rail and the Today panel (above the bottom bar in portrait): a lightbulb, one thing Sunroom can do on one line, and **Next tip** at the right. A new tip comes every half hour and on Next tip, never the same twice in a row, and only about rooms that are on. The board gives it the room (Hours at 24h still fits), and toasts rise above it. The wall and laptops show it; phones never do.
 
@@ -145,11 +156,13 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 
 **Decision:** A is the default board; B is the **Today** view (selectable, and the default on screens narrower than 1280 px); C is **People**; Month is the fourth view. The Today panel can be hidden per screen.
 
-**Portrait (1080×1920).** The Today panel becomes a band at the top (28rem, about 450 px, so it grows with the text size) with the clock, date and weather in its header strip, and its blocks in three columns: Now, Up Next, Later Today and Tomorrow in the first; the plugins' blocks flowing through the other two (Tasks Today, Tonight on one line, To Do without its detail line, the next countdown); the rail becomes a 112 px bottom bar; the week shows **days as rows** (seven 150 px columns would truncate every title): the same two-line chips, 224 px wide, four per line, two lines per row before "+N more" (all-day chips first, then the timed ones, sharing the lines, so a dinner never pushes the day's events off its row; "+N more" only as wide as its words); today's row is lit and the now line is a vertical divider that moves right as events end. Orientation is detected from the viewport and can be forced in Settings → Display. Panels become bottom sheets at two-thirds height; the keyboard is full width.
+**Portrait (1080×1920).** The header runs across the top, in two rows: today and the live-updates icon, then the room's title and controls. Under it the Today panel is a band (24rem, about 384 px, so it grows with the text size) with its blocks in three columns: Now, Up Next, Later Today and Tomorrow in the first; the plugins' blocks flowing through the other two (Tasks Today, Tonight on one line, To Do without its detail line, the next countdown). The rail becomes a 112 px bottom bar; the week shows **days as rows** (seven 150 px columns would truncate every title): the same two-line chips, 224 px wide, four per line, two lines per row before "+N more" (all-day chips first, then the timed ones, sharing the lines, so a dinner never pushes the day's events off its row; "+N more" only as wide as its words); today's row is lit and the now line is a vertical divider that moves right as events end. Orientation is detected from the viewport and can be forced in Settings → Display. Panels become bottom sheets at two-thirds height; the keyboard is full width.
 
 ```
 +------------------------------------------------------------------+
-| 9:41   Tue, Oct 7                            ☼ 64°  H 72  L 55   |
+| Tue, Oct 7  9:41 AM  ☼ 64° 72°/55°                           (≈) |
+| October 2026  [<] [This Week] [>]          [▦ Week] [1] [▤] [☺]  |
+| Oct 5–11                                                         |
 |------------------------------------------------------------------|
 | Up Next                  | Later Today            | Tasks Today   |
 | 4:00 PM                  | 6:30 PM  Dinner at     | (M) Mia 2 of 3|
@@ -158,8 +171,7 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 |                          |          routine       | Tonight       |
 |                          |                        | Tacos · Sam   |
 |------------------------------------------------------------------|
-| October 2026  Oct 5–11        [Week] [Day] [Month] [People]      |
-| [<]  [This Week]  [>]         Show (All) (M) (L) (A) (S)         |
+| Show (All) (M) (L) (A) (S)                    [Agenda] [Hours]   |
 |------------------------------------------------------------------|
 | Sun 5  | [Columbus   ] [10:00 AM  ] [2:00 PM   ]                 |
 |        | [Day   (All)] [Church    ] [Grandma   ]                 |
@@ -192,7 +204,7 @@ The user-facing glossary is PLAN §2; a few words only the UI uses: **Room** (a 
 | Meals | Meals | Tonight | An all-day overlay chip if enabled | Meals (which slots) |
 | Countdowns | Countdowns | Coming Up | A quiet day marker | — |
 | Photos & Screensaver | Photos | — | The screensaver | Photos & Screensaver |
-| Weather | the rail block | — | The screensaver corner; day-header icons | Household → Location |
+| Weather | the header's block, by the clock | — | The screensaver corner; day-header icons | Household → Location |
 
 ## 4. Display screens
 
@@ -219,7 +231,7 @@ The code is six characters from the no-look-alike alphabet, rotates every 10 min
 
 ```
 +----------+----------------------------------------------------------------------------+------------------------+
-| rail     | Tuesday, Oct 7 · today     [<] [Today] [>]       [Week] [Day] [Month] [Who] | Today panel            |
+| rail     | header: Tue, Oct 7 / today    [<] [Today] [>]       [Week][▣ Day][Month][People] | Today panel       |
 |          |----------------------------------------------------------------------------|                        |
 |          | all day  | [ Pajama day · Leo ]                                            |                        |
 |          |  8 AM    | [ 8:00–8:30 AM   School drop-off · Ana ]              (dimmed)  |                        |
@@ -285,7 +297,7 @@ Quick add parses as you type, locally (chrono-node plus a small grammar for peop
 
 ```
 +----------+----------------------------------------------------------------------------+------------------------+
-| rail     | Lists                                                        [+ New list]   | Today panel            |
+| rail     | header: Lists                                               [+ New list]   | Today panel            |
 |          |----------------------------------------------------------------------------|                        |
 |          | +-------------------------------+  +-------------------------------+        |                        |
 |          | | Groceries                     |  | To do                         |        |                        |
@@ -299,13 +311,13 @@ Quick add parses as you type, locally (chrono-node plus a small grammar for peop
 +----------+----------------------------------------------------------------------------+------------------------+
 ```
 
-Tiles 400 × 160 px, two or three across: the name at title size, the count at body, the last change at secondary. **New list** asks for a name with chips (Groceries, To do, Packing, Costco, Pharmacy) and opens it. **Change list** in a list's header renames or removes it (removing confirms when the list has items; otherwise Undo); a long press on a tile (500 ms, held still) is a shortcut to it, and its release doesn't open the list.
+Tiles 400 × 160 px, two or three across: the name at title size, the count at body, the last change at secondary. **New list** asks for a name with chips (Groceries, To do, Packing, Costco, Pharmacy) and opens it. **Change list**, among a list's buttons in the header, renames or removes it (removing confirms when the list has items; otherwise Undo); a long press on a tile (500 ms, held still) is a shortcut to it, and its release doesn't open the list.
 
 **List detail**
 
 ```
 +----------+----------------------------------------------------------------------------+------------------------+
-| rail     | [< Lists]   Groceries                     12 to get           [Clear done]  | Today panel            |
+| rail     | header: [< Lists]  Groceries / 12 to get      [Clear done] [Change list]    | Today panel            |
 |          |----------------------------------------------------------------------------|                        |
 |          | [ ]  Milk                                             Added by Mia          |                        |
 |          | [ ]  Eggs                                                                   |                        |
@@ -324,7 +336,7 @@ Rows 72 px; a 64 px checkbox at the left in a 96 px tap column; the name at body
 
 ```
 +----------+----------------------------------------------------------------------------+------------------------+
-| rail     | Tasks · Today                  [Today] [This Week]       [Stars & Rewards]  | Today panel            |
+| rail     | header: Tasks / Today          [Today] [This Week]       [Stars & Rewards]  | Today panel            |
 |          |----------------------------------------------------------------------------|                        |
 |          | (M) Mia  2 of 3   ★ 42  | (L) Leo  1 of 1   ★ 18  | (S) Sam  0 of 1  | Anyone 0 of 2  |            |
 |          |-------------------------|-------------------------|------------------|----------------|            |
@@ -362,7 +374,7 @@ The step title is 64 px; the icon comes from the step library (toothbrush, bed, 
 
 ```
 +----------+----------------------------------------------------------------------------+------------------------+
-| rail     | Meals · Oct 5–11        [<] [This Week] [>]                 [Saved Meals]   | Today panel            |
+| rail     | header: Meals / Oct 5–11  [<] [This Week] [>]  [Copy last week] [Saved Meals] | Today panel          |
 |          |----------------------------------------------------------------------------|                        |
 |          |          | Dinner                                            | Who cooks     |                        |
 |          | Sun 5    | Roast chicken                                     | (A) Ana       |                        |
@@ -373,11 +385,11 @@ The step title is 64 px; the icon comes from the step library (toothbrush, bed, 
 +----------+----------------------------------------------------------------------------+------------------------+
 ```
 
-Rows are days (120 px), columns are the enabled meal slots (Dinner only by default); today's row is lit; a cell shows the meal name (with its emoji) at body size and who cooks, in their color. The header has the week's arrows, This Week, **Copy last week** (Undo) and **Saved Meals**. Tapping a filled cell: Change, Swap days (the week's other days as chips; whatever was there takes its place), Add ingredients to Groceries (when the saved meal has ingredients and Lists is on), Remove (Undo). **Saved Meals** is the library: every meal the family has typed, most made first, as tiles with the name, "Made 6 times", its ingredients and recipe link; New saved meal; a tile opens its name, emoji, recipe link, ingredients (with commas) and Archive. The add panel offers saved meals first (most made first, with search), then "Or type a new meal", Day, Which meal (when there's more than dinner), Who cooks, and "Add 5 items to Groceries" as a switch. A countdown's photo and a saved meal's photo wait for a later milestone (ADR 0026).
+Rows are days (120 px), columns are the enabled meal slots (Dinner only by default); today's row is lit; a cell shows the meal name (with its emoji) at body size and who cooks, in their color. Its part of the header has the week's arrows, This Week, **Copy last week** (Undo) and **Saved Meals**. Tapping a filled cell: Change, Swap days (the week's other days as chips; whatever was there takes its place), Add ingredients to Groceries (when the saved meal has ingredients and Lists is on), Remove (Undo). **Saved Meals** is the library: every meal the family has typed, most made first, as tiles with the name, "Made 6 times", its ingredients and recipe link; New saved meal; a tile opens its name, emoji, recipe link, ingredients (with commas) and Archive. The add panel offers saved meals first (most made first, with search), then "Or type a new meal", Day, Which meal (when there's more than dinner), Who cooks, and "Add 5 items to Groceries" as a switch. A countdown's photo and a saved meal's photo wait for a later milestone (ADR 0026).
 
 **Countdowns room**: tiles 400 × 280 px sorted by date, the number at 72 px ("12 days", "Tomorrow", "Today!"), the emoji and name, the date (and "Turns 9" for a child's birthday), and the person, in their color. Birthdays come from Family by themselves (Settings → Features can turn that off). A tile opens Change and Remove; a birthday's says it comes from Family. Add countdown asks what it counts down to, the day, whose, an emoji, a color, **Every year**, and **Show it on the kitchen screen** (off for a surprise: phones only). Past countdowns leave the next day into Recently Removed. On the day, the Today panel reads "Today: Mia's birthday!" and the first touch of the day plays the big celebration once.
 
-**Photos room**: "124 photos", **Start screensaver**, **Settings** (the screensaver part of Display settings, behind the PIN: start after 5, 10, 15, 30 minutes or Never; change photo every 15 s, 30 s, 1 or 2 min; show the clock and next event; shuffle; sources). On the kitchen screen, a line "Add photos from a phone: open Sunroom, then More, then Photos" with a QR; on a computer, **Add photos** in the header instead (several at once, from its files; ADR 0028). Then a grid of 200 px thumbnails, newest first. Tapping one opens it full screen with Previous, Next and Hide from screensaver; the display can hide photos but never deletes them (phones delete, with Undo).
+**Photos room**: "124 photos", **Start screensaver**, **Settings** (the screensaver part of Display settings, behind the PIN: start after 5, 10, 15, 30 minutes or Never; change photo every 15 s, 30 s, 1 or 2 min; show the clock and next event; shuffle; sources). On the kitchen screen, a line "Add photos from a phone: open Sunroom, then More, then Photos" with a QR; on a computer, **Add photos** among the room's buttons in the header instead (several at once, from its files; ADR 0028). Then a grid of 200 px thumbnails, newest first. Tapping one opens it full screen with Previous, Next and Hide from screensaver; the display can hide photos but never deletes them (phones delete, with Undo).
 
 **Screensaver**
 
@@ -395,9 +407,9 @@ The photo fits inside the screen (never cropped; the letterbox takes the wall's 
 
 **Night** (from Settings → Display → Sleep: from, to, and **Dim clock** or **Screen off**): Dim clock is a black screen with the clock at 200 px in a 35% ink-soft and tomorrow's first event under it, and the Pi's helper turns the panel down to 20%; Screen off is fully black, and the helper switches the screen itself off (PLAN §13.5). A tap wakes it for 2 minutes in the dark theme, at full brightness; routines and tasks still work in those minutes. **Dim in the evening** (only with sleep times): from its time until sleep starts the screen is less bright, **A little**, **Half** or **Low** (60, 40 or 20%). The helper turns the panel down where it can (DDC/CI, or a backlight); anywhere else the page draws a dark veil over itself, so the two never both dim.
 
-**Parent PIN** (a centred dialog whenever the display needs a parent): four to six dots, a 3 × 4 keypad with 80 px keys, Cancel, and the line "Forgot it? Change it from a parent's phone: More → Settings → Family → Parent PIN." The dialog accepts as soon as the right length matches; a wrong PIN shakes the dots once and says "That PIN didn't match. Try again."; five wrong in a row: "Too many tries. Wait 1 minute." with a countdown. A correct PIN opens Settings for 10 minutes of activity (the rail lock shows open; **Lock** in the Settings header ends it; Settings auto-lock after 2 minutes idle). With no PIN set, the lock opens Settings directly and the Family page says "Set a parent PIN so children can't open Settings on this screen."
+**Parent PIN** (a centred dialog whenever the display needs a parent): four to six dots, a 3 × 4 keypad with 80 px keys, Cancel, and the line "Forgot it? Change it from a parent's phone: More → Settings → Family → Parent PIN." The dialog accepts as soon as the right length matches; a wrong PIN shakes the dots once and says "That PIN didn't match. Try again."; five wrong in a row: "Too many tries. Wait 1 minute." with a countdown. A correct PIN opens Settings for 10 minutes of activity (the rail lock shows open; **Lock**, Settings' own button in the header, ends it; Settings auto-lock after 2 minutes idle). With no PIN set, the lock opens Settings directly and the Family page says "Set a parent PIN so children can't open Settings on this screen."
 
-**Settings (display)**: a list-and-detail layout; the Today panel hides. Passwords and calendar addresses are typed here on the on-screen keyboard, masked, behind the PIN (ADR 0028); only what needs a file or Google's own page says "Do this from a phone" with a QR code to that page.
+**Settings (display)**: a list-and-detail layout under the header, which reads "Settings"; the Today panel stays beside it until its button hides it (the pages are capped at a reading width anyway; ADR 0029). Passwords and calendar addresses are typed here on the on-screen keyboard, masked, behind the PIN (ADR 0028); only what needs a file or Google's own page says "Do this from a phone" with a QR code to that page.
 
 | Page | Contents |
 |---|---|
@@ -581,7 +593,7 @@ A wrong code: "That code didn't work. Codes change every 10 minutes; read the on
 
 "Just this one" makes an exception (the chip gets a small "changed" dot; its sheet reads "Changed from the usual time"); "This and the ones after" splits the series; "All of them" edits it. The toast says "Changes saved · Undo" and Undo reverses the whole choice. **Remove** and **Move** (and a drop) ask the same three.
 
-**Drag a chip to another day.** Press and hold 400 ms: the chip lifts (scale 1.04, a shadow), its column closes the gap, the board header reads "Drop on a day". The column under the finger lights (rows in portrait); hovering the board's edge for 600 ms pages the week. Release on a day: the chip settles in time order; "Moved Soccer practice to Thu · Undo" (a repeating event asks "Move Which?" first while the chip waits, lifted). Release elsewhere: it springs back. Every drag has a button twin, **Move** in the sheet. Read-only synced chips do not lift; the header reads "From iCloud · Work · can't be moved here" for 2 s.
+**Drag a chip to another day.** Press and hold 400 ms: the chip lifts (scale 1.04, a shadow), its column closes the gap, the header's title reads "Drop on a day". The column under the finger lights (rows in portrait); hovering the board's edge for 600 ms pages the week. Release on a day: the chip settles in time order; "Moved Soccer practice to Thu · Undo" (a repeating event asks "Move Which?" first while the chip waits, lifted). Release elsewhere: it springs back. Every drag has a button twin, **Move** in the sheet. Read-only synced chips do not lift; the header reads "From iCloud · Work · can't be moved here" for 2 s.
 
 **Complete a task on the display.** Mia taps the box next to **Feed the dog** in her column (no attribution tap: it is assigned to her). The signature moment (§9) plays: the box fills in her color, the stamp lands, the burst radiates, "Done by Mia · 4:12 PM" appears, the header pops to "3 of 3 · ★44", the row eases under Done. Her last task adds "All done, Mia!" with the bigger burst. Toast "Done by Mia · Undo" for 8 s; Undo puts the row back, lifts the stamp and takes the stars back. An **Anyone** task opens "Who did it?" with avatar chips beside the box; "Mia's turn" tasks preselect Mia and leave the chips for 2 s so someone else can claim it.
 
@@ -655,7 +667,7 @@ Everything else is quiet: one typeface, few surfaces, no decorative gradients, n
 - Shared ("Everyone") items use `ink` edge and a `line`-tinted background.
 - Synced calendars that belong to no person (a shared "Family" Google calendar, the school ICS feed) get a calendar color from the same eight, chosen at connection time with "already used by Mia" hints.
 
-**Type.** One family, **Lexend** (variable, self-hosted via fontsource), chosen because it was designed to make reading easier and its open, wide letters hold up at a distance; weights 400 (body), 600 (emphasis, times), 700 (titles, chip titles) and 800 (the clock, countdown numbers, the routine step). The display's scale is in §1 (caption 18, secondary 20, body 24, title 32, glance 40, rail clock 56, big number 72, step title 64, wall clock 200); phones keep Dinner Bell's scale (13 / 14 / 16 / 18 / 24 / 30). Sizes are rem on a root size the display's Text size setting controls (Small ×0.875, Standard 16 px, Large ×1.15, Extra large ×1.3; phones use the browser's default so the OS text size applies). Anything typed into is at least 16 px on phones and 24 px on the display. Lexend has no tabular figures (checked in M0), so times and counters that change in place sit in fixed-width digit boxes (`ui/Digits`, ADR 0021). Title Case for titles, headings and navigation; sentence case for everything else (§2); never all caps; no letterspaced eyebrows; day names read "Mon 13", not "MON".
+**Type.** One family, **Lexend** (variable, self-hosted via fontsource), chosen because it was designed to make reading easier and its open, wide letters hold up at a distance; weights 400 (body), 600 (emphasis, times), 700 (titles, chip titles) and 800 (the clock, countdown numbers, the routine step). The display's scale is in §1 (caption 18, secondary 20, body 24, title 32, glance 40, header clock 40, big number 72, step title 64, wall clock 200); phones keep Dinner Bell's scale (13 / 14 / 16 / 18 / 24 / 30). Sizes are rem on a root size the display's Text size setting controls (Small ×0.875, Standard 16 px, Large ×1.15, Extra large ×1.3; phones use the browser's default so the OS text size applies). Anything typed into is at least 16 px on phones and 24 px on the display. Lexend has no tabular figures (checked in M0), so times and counters that change in place sit in fixed-width digit boxes (`ui/Digits`, ADR 0021). Title Case for titles, headings and navigation; sentence case for everything else (§2); never all caps; no letterspaced eyebrows; day names read "Mon 13", not "MON".
 
 **Space and shape.** An 8 px grid; the widths, gaps, targets and radii are in §1 (rail 192 px, Today panel 400 px, chips 12 px radius, panels 24 px). The board itself is square-cornered: it is the wall, not a card. The board is one `wall` surface with `line` grid lines; today's column is a `surface` panel; chips are the only card-like objects and sit flat with a 6 px person edge on the left over a 12% tint (24% in dark); the Today panel is stacked blocks separated by 32 px of space, not boxed. Focus: a 4 px `ink` outline with a 2 px offset on every display control (3 px on phones); inverse surfaces set the ring to `wall`.
 
@@ -715,7 +727,7 @@ Quiet states, never error walls:
 
 | State | What shows |
 |---|---|
-| A synced calendar hasn't answered | A one-line pill in the board header: "Google hasn't answered since 9:10 AM. Showing what we had." Tapping it opens the Calendars page. The calendar's events stay |
+| A synced calendar hasn't answered | A one-line pill in the board's toolbar: "Google hasn't answered since 9:10 AM. Showing what we had." Tapping it opens the Calendars page. The calendar's events stay |
 | Server has no internet | "Updated 9:10 AM" on synced calendars only; everything else normal |
 | Display can't reach the server | Header pill "Can't reach Sunroom · showing 9:10 AM"; a write says "Not saved — the screen can't reach Sunroom. It will try again." and retries every 10 s |
 | Phone offline | Pill "Offline · showing what we had"; a write says "Not saved — you're offline. Try again when you have signal." (an offline queue is a PLAN §19 idea) |
@@ -729,7 +741,7 @@ Quiet states, never error walls:
 | Photos folder nearly full | A line in Photos and About: "2 GB free" |
 | Backup older than 7 days | A line in Backup; never a pill on the board |
 | A plugin stopped | A line in Settings → Features: "Weather stopped working. Retry" |
-| Live updates | One icon at the board's top-right corner, at the right end of a phone Calendar's Show row (the header has no room beside its arrows) and in About → Connection, told apart by shape: connected (a Wi-Fi mark, quiet), reconnecting (a slowly turning arrow; still with Reduce Motion), checking every 30 seconds (a clock: something between here and the server holds the stream back), offline (Wi-Fi crossed out, in ink); nothing once signed out. Anything but connected shows only after 2 s, so a reconnect on a room switch never flickers. A tap says it in words: "Live updates are on.", "Reconnecting to Sunroom…", "Live updates are off for now; checking every 30 seconds.", "Can't reach Sunroom." |
+| Live updates | One icon at the wall's top-right corner (the right end of the header, in every room), at the right end of a phone Calendar's Show row (the header has no room beside its arrows) and in About → Connection, told apart by shape: connected (a Wi-Fi mark, quiet), reconnecting (a slowly turning arrow; still with Reduce Motion), checking every 30 seconds (a clock: something between here and the server holds the stream back), offline (Wi-Fi crossed out, in ink); nothing once signed out. Anything but connected shows only after 2 s, so a reconnect on a room switch never flickers. A tap says it in words: "Live updates are on.", "Reconnecting to Sunroom…", "Live updates are off for now; checking every 30 seconds.", "Can't reach Sunroom." |
 | Update available | The server was updated: every open screen says "Sunroom was updated to 0.7.0. Refreshing…" and reloads itself 4 s later, fresh (ADR 0028), once per version, waiting while an editor, a routine, a sheet or a save is open (10 minutes at most). Without the live stream, phones still show "New version · Refresh" and the wall reloads at 3 AM |
 | Loading | Grey placeholder shapes after 300 ms, with "Loading…" for screen readers; the board's first paint from cache is instant, placeholders apply to panels and settings only |
 | Night | The dim clock or black screen (§4) |
@@ -796,11 +808,12 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 
 **Screenshot review checklist.** `just screenshots` captures the key screens in fake mode at 1920×1080 and 1080×1920 (Standard, Extra large and Small), 390×844 and 1440×900, light and dark, at 09:40, 16:10 and 21:30 so the tint and theme stops show. Then check:
 
-- [ ] At 25% zoom (standing in for 3 m) the rail clock, today's day number, the Up Next title and the task counts still read; nothing else needs to.
+- [ ] At 25% zoom (standing in for 3 m) the header's clock, today's day number, the Up Next title and the task counts still read; nothing else needs to.
 - [ ] Display body text is 24 px, secondary 20, captions 18, nothing smaller than 18; phone body 16, inputs at least 16.
 - [ ] Every display tap target is at least 56 px (checkboxes and primary buttons 64, keys 80×64) with 8 px between neighbours; phone targets at least 44 (primary 48, checkboxes 48 in 72×80); the axe checks pass.
+- [ ] The header (ADR 0029): at 1920×1080 Standard and Small it is one row (today, a thin rule, the room's title over its quiet line, the room's buttons, the Today panel's button, the live icon in the corner), in late September too; at Large, Extra large, on a laptop and in portrait it is two rows with the corner unmoved; the Calendar's views are four icons with the chosen one's word, or the View menu in portrait at Extra large; every room's title is in it (Lists, a list with its way back, Tasks, Stars & Rewards, Meals, Saved Meals, Countdowns, Photos, Settings) and no room draws a second title row; the Today panel's button works from Settings.
 - [ ] Today's column is lit, the now line sits between the right chips with its time label, past chips are dimmed, an in-progress chip is solid.
-- [ ] Hours (both display sizes, light and dark): at 24h the whole day fits with nothing to scroll and the gutter's hours line up with the grid; chips sit at their times with tap-sized buttons; the now line's label reads over a solid in-progress chip; at 15m a 15-minute event has a full chip; the header stays three lines in landscape (four in portrait at Extra large).
+- [ ] Hours (both display sizes, light and dark): at 24h the whole day fits with nothing to scroll and the gutter's hours line up with the grid; chips sit at their times with tap-sized buttons; the now line's label reads over a solid in-progress chip; at 15m a 15-minute event has a full chip; the board's toolbar (Show, the zoom, the layout switch) is one line in landscape and wraps to two in portrait at Extra large.
 - [ ] With Show tips on, the strip sits under the board between the rail and the Today panel (above the bottom bar in portrait), its tip on one line with an ellipsis and Next tip at 56 px; toasts sit above it; Hours at 24h still fits with nothing to scroll, and no chip in a column is covered to less than 24 px.
 - [ ] A person's birthday shows on its day as an all-day chip in their color with the cake mark (the seed's Mia, on Friday), on the Week, Day, Month and People views and in the phone's Calendar lists.
 - [ ] With six calendars in fake mode no column overflows without "+N more", the person filter fades the rest without hiding it, and the Today panel has at most nine lines.
@@ -809,7 +822,7 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 - [ ] No `title=` attributes, no hover-only controls, no all-caps, no IDs or feed URLs, no emoji in the app's own copy.
 - [ ] Empty states say what goes there and offer one button; quiet pills are one line.
 - [ ] The screensaver's photo is uncropped and the clock band is the only overlay; Night is black with the dim clock; the evening dim darkens the whole page evenly and nothing else changes.
-- [ ] Portrait: the Today band is on top with the clock and weather in its header and every Today block fits in its three columns (Tasks Today, Tonight, To Do, Coming Up), the rail is a bottom bar with labels, days are rows with four two-line chips per line, today's row is lit, sheets rise to two-thirds height, the keyboard never covers the field or the button.
+- [ ] Portrait: the header is on top in two rows (today and the live icon, then the room's title and controls), the Today band is under it and every Today block fits in its three columns (Tasks Today, Tonight, To Do, Coming Up), the rail is a bottom bar with labels, days are rows with four two-line chips per line, today's row is lit, sheets rise to two-thirds height, the keyboard never covers the field or the button.
 - [ ] Motion, by hand in `just dev`: the done moment plays, its "+2" flies to the person's avatar in the Today panel, and Undo reverses all of it; a long press on a list's tile opens Change list without opening the list; a week swipe follows the finger and a flick moves exactly one week; a long-press lifts a chip and a drop moves it with a toast; a panel slides in with the keyboard and the field in view; the theme crossfades at the forced sunset in fake mode; the screensaver fades in after the test idle (30 s in fake mode) and a tap wakes it without triggering what's under the finger; with Reduce Motion on, all of it is instant and the done moment still reads as done.
 - [ ] Nothing comes from real household data; fake mode only; `.screenshots/` is gitignored.
 
@@ -817,7 +830,7 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 
 | Refinement | Reason |
 |---|---|
-| The Today panel's **Up Next** is the biggest text on the board; the rail clock is 56 px and the 200 px clock lives on the screensaver and Night | A glance from the sink wants "what's next" more than the time |
+| The Today panel's **Up Next** is the biggest text on the board; the header's clock is 40 px and the 200 px clock lives on the screensaver and Night | A glance from the sink wants "what's next" more than the time |
 | **Stacked chips, no hour grid, on the week board** (still the default, Agenda; Hours is the household's opt-in grid since M6, with a zoom for when a slot is too small); the now line is a divider that drops as events end; the Day view is the only timeline, with collapsed free time | At 1080p a 30-minute slot is about 30 px: too small for a 56 px target or 24 px text. Stacked chips are what a paper calendar does |
 | **Portrait shows days as rows**, four two-line chips per line | Seven 150 px columns truncate every title |
 | **Tapping empty space on a day adds an event on that day**; the editor is a side panel so the board stays visible | "Events are hard to add on-screen" is a top complaint; the common case is two taps and one line of typing |

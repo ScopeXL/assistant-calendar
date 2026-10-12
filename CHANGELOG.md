@@ -15,6 +15,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - Chores are now Tasks everywhere you read it, and Who's Doing What is now People.
 - Button groups have more room around each word.
+- The top of the kitchen screen is one bar: the date, time and weather at the left, the page's
+  buttons at the right, and the Today panel's button in every room, Settings included. The
+  calendar's views (Week, Day, Month, People) are icons there, with the one you're on written
+  out.
 
 ## [0.7.0] - 2026-10-09
 

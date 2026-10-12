@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { api } from "../../api/client";
 import { qk } from "../../api/keys";
 import { fetchSession } from "../../lib/session";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
 import { Screen } from "../../ui/Screen";
 import { useShell } from "../../ui/shell";
@@ -107,11 +108,27 @@ function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
   });
   return (
     <div className="flex min-h-0 flex-1">
+      <RoomHeader
+        title="Settings"
+        controls={
+          session?.grant_expires_at ? (
+            <Button
+              variant="secondary"
+              className="ml-auto"
+              onClick={() => {
+                lock.mutate();
+              }}
+            >
+              <Lock aria-hidden="true" className="size-7" />
+              Lock
+            </Button>
+          ) : null
+        }
+      />
       <nav
         aria-label="Settings"
         className="w-80 shrink-0 overflow-y-auto border-r border-line py-4"
       >
-        <h1 className="px-7 pb-4 text-d-title font-bold">Settings</h1>
         {/* Inset from the rail: neighbouring targets keep 8 px apart (UX §1). */}
         <ul className="flex flex-col gap-1 px-3">
           {pages.map((page) => (
@@ -134,22 +151,9 @@ function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
         tabIndex={0}
         className="min-w-0 flex-1 overflow-y-auto px-10 py-8"
       >
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <h2 id="settings-page" className="text-d-title font-bold">
-            {current.title}
-          </h2>
-          {session?.grant_expires_at ? (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                lock.mutate();
-              }}
-            >
-              <Lock aria-hidden="true" className="size-7" />
-              Lock
-            </Button>
-          ) : null}
-        </header>
+        <h2 id="settings-page" className="mb-8 text-d-title font-bold">
+          {current.title}
+        </h2>
         <div className="max-w-4xl">{current.render()}</div>
       </section>
     </div>

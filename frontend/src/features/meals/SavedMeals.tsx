@@ -3,6 +3,8 @@ import { ChevronLeft, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
+import { HeaderBack } from "../../shell/HeaderLinks";
+import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
 import { useShell } from "../../ui/shell";
@@ -85,48 +87,56 @@ export function SavedMeals() {
       />
     </>
   );
+  const add = (
+    <Button
+      variant="secondary"
+      className={display ? "ml-auto" : ""}
+      onClick={() => {
+        setEditing("new");
+      }}
+    >
+      <Plus aria-hidden="true" className={display ? "size-7" : "size-5"} />
+      New saved meal
+    </Button>
+  );
+  if (display) {
+    // The wall: the title, the way back and New saved meal are in the header.
+    return (
+      <section aria-label="Saved Meals" className="flex min-h-0 flex-1 flex-col">
+        <RoomHeader
+          title="Saved Meals"
+          back={
+            <HeaderBack to="/$room" params={{ room: "meals" }}>
+              Meals
+            </HeaderBack>
+          }
+          controls={add}
+        />
+        <div className="min-h-0 flex-1 overflow-y-auto p-6" tabIndex={0}>
+          {body}
+        </div>
+      </section>
+    );
+  }
   return (
     <section aria-labelledby="saved-title" className="flex min-h-0 flex-1 flex-col">
-      <header
-        className={`flex flex-wrap items-center justify-between gap-4 ${
-          display ? "border-b border-line px-6 py-4" : "pb-4"
-        }`}
-      >
+      <header className="flex flex-wrap items-center justify-between gap-4 pb-4">
         <div className="flex items-center gap-3">
           <Link
             to="/$room"
             params={{ room: "meals" }}
             aria-label="Back to Meals"
-            className={`press inline-flex items-center justify-center rounded-button border-2 border-line bg-surface ${
-              display ? "size-16" : "size-11"
-            }`}
+            className="press inline-flex size-11 items-center justify-center rounded-button border-2 border-line bg-surface"
           >
-            <ChevronLeft aria-hidden="true" className={display ? "size-8" : "size-6"} />
+            <ChevronLeft aria-hidden="true" className="size-6" />
           </Link>
-          <h1
-            id="saved-title"
-            className={display ? "text-d-title font-bold" : "text-title font-bold"}
-          >
+          <h1 id="saved-title" className="text-title font-bold">
             Saved Meals
           </h1>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setEditing("new");
-          }}
-        >
-          <Plus aria-hidden="true" className={display ? "size-7" : "size-5"} />
-          New saved meal
-        </Button>
+        {add}
       </header>
-      {display ? (
-        <div className="min-h-0 flex-1 overflow-y-auto p-6" tabIndex={0}>
-          {body}
-        </div>
-      ) : (
-        body
-      )}
+      {body}
     </section>
   );
 }

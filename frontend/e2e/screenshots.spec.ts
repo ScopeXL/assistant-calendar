@@ -506,7 +506,7 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
     await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
     await shot(page, `lists-groceries-${theme}`);
     await page.goto("/chores");
-    await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
     await shot(page, `chores-${theme}`);
     await page.getByRole("checkbox", { name: /^Water the plants/ }).click();
     await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
@@ -558,7 +558,7 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
   for (const theme of ["light", "dark"]) {
     await change(page, { theme });
     await page.goto("/meals");
-    await expect(page.getByRole("heading", { name: /^Meals · /, level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Meals /, level: 1 })).toBeVisible();
     await shot(page, `meals-${theme}`);
     await page.getByRole("table").getByRole("button", { name: /Tacos/ }).click();
     await shot(page, `meals-a-meal-${theme}`);

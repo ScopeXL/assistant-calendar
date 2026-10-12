@@ -92,16 +92,18 @@ function RowAnchor({
   title,
   subtitle,
   value,
+  className,
   ...props
-}: RowParts & Omit<ComponentPropsWithRef<"a">, "title" | "children" | "className">) {
+}: RowParts & Omit<ComponentPropsWithRef<"a">, "title" | "children">) {
   const display = useShell() === "display";
   const subtitleId = useId();
   return (
+    // The router's Link hands its own className down: merged after the spread, not replaced.
     <a
+      {...props}
       aria-label={label}
       aria-describedby={subtitle ? subtitleId : undefined}
-      className={rowClass(display)}
-      {...props}
+      className={`${rowClass(display)} ${className ?? ""}`}
     >
       <RowBody
         leading={leading}
