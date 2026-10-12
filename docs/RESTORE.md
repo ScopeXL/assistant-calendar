@@ -10,6 +10,7 @@ you can always go back.
 |---|---|---|
 | Nightly copies | `backups/sunroom.YYYY-MM-DD.db` in the `sunroom_data` volume (14 daily and 8 weekly are kept) | The database |
 | The copy before each upgrade | `backups/pre-migrate/sunroom.<revision>.<time>.db` in the volume | The database |
+| The copy before **Erase everything** | `backups/pre-erase/sunroom.<time>.db` in the volume. Never tidied away: delete it yourself once you're sure | The database, as it was just before it was erased |
 | **Download backup** | Settings → Backup on a phone or computer: the newest nightly copy, a few MB | The database |
 | **Download everything** | Settings → Backup on a phone or computer: `sunroom-YYYY-MM-DD.zip` | The database, every photo, and a `manifest.json` |
 
@@ -23,6 +24,11 @@ On a new volume Sunroom makes a new key, so synced calendars (Google, iCloud, ot
 servers, calendar addresses) and a photo source such as Immich ask to be connected again. If the
 server's settings set `APP_SECRET_KEY`, use the same value on the new server and they keep
 working.
+
+**After Erase everything** (Settings → Backup → Start Over) a restore brings the household back:
+restore the `pre-erase` copy, or a zip from Download everything made before it, which has the
+photos too. The `pre-erase` copy has no photos: erasing deletes them for good, except what is in
+the `photos/inbox` folder.
 
 ## 1. Download everything, now and then
 
@@ -39,7 +45,8 @@ the Sunroom version, and how many photos and events it has.
 
 ## 2. Pick the backup
 
-To see the copies in the volume (the ones before upgrades are listed under `pre-migrate`):
+To see the copies in the volume (the ones before upgrades are listed under `pre-migrate`, and
+the one made before Erase everything under `pre-erase`):
 
 ```bash
 docker run --rm -v sunroom_data:/data --entrypoint ls scopexl/sunroom:latest -R /data/backups

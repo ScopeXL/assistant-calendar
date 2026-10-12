@@ -420,6 +420,17 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByRole("button", { name: "Add a phone" }).click();
     await expect(page.getByRole("dialog", { name: "Add a phone" })).toBeVisible();
     await shot(page, `settings-add-a-phone-${scheme}`);
+    // Erase everything: both steps of its sheet (nothing is erased here).
+    await page.goto("/settings/backup");
+    await page.getByRole("button", { name: "Erase everything…" }).click();
+    const erase = page.getByRole("dialog", { name: "Erase Everything?" });
+    await expect(erase.getByText("Keep a copy first?")).toBeVisible();
+    await shot(page, `settings-erase-copy-${scheme}`);
+    await erase.getByRole("button", { name: "I have a copy" }).click();
+    await expect(erase.getByLabel("Household password")).toBeVisible();
+    await shot(page, `settings-erase-password-${scheme}`);
+    await erase.getByRole("button", { name: "Keep everything" }).click();
+    await expect(erase).toBeHidden();
     await page.goto("/install?from=more");
     await shot(page, `install-${scheme}`);
     await page.context().clearCookies();

@@ -74,7 +74,14 @@ when someone signs in. Tailscale doesn't: it's encrypted from end to end
 - **Remove a synced account:** Settings → Calendars & Accounts → the account's row → Remove
   account. Its sign-in is deleted at once.
 - **Sign out a phone or unpair a screen:** Settings → Phones & screens.
-- **Delete all data:** whoever runs the server removes the `sunroom_data` volume.
+- **Erase everything:** Settings → Backup → Start Over → Erase everything, from a parent's phone
+  or a computer, with the household password. Every person, calendar, event, list, task, meal,
+  countdown, photo and setting is removed, and every phone and screen is signed out. One copy of
+  the database from just before stays on the server in `backups/pre-erase`, so a mistake can be
+  put right (docs/RESTORE.md); earlier nightly copies stay too. Delete those files to be rid of
+  them as well.
+- **Delete all data, backups included:** whoever runs the server removes the `sunroom_data`
+  volume.
 
 ## Contact
 

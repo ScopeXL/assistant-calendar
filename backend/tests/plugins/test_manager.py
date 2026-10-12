@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 import pytest
 from fastapi import FastAPI
+from sqlalchemy import text
 
 from sunroom.app import create_app
 from sunroom.core.clock import FakeClock
@@ -273,6 +274,54 @@ async def test_a_household_from_the_last_release_keeps_what_it_chose(
     finally:
         conn.close()
     assert stored == ("1.1.0", '{"slots": ["dinner"], "calendar_slots": ["dinner"]}')
+
+
+async def test_reset_returns_every_plugin_to_its_default(
+    plugin_app: FastAPI, home: httpx.AsyncClient, plugins: dict[str, SamplePlugin]
+) -> None:
+    await home.post("/api/plugins/sample/enable", headers=CSRF)
+    await home.put("/api/plugins/sample/settings", json={"values": {"interval": 90}}, headers=CSRF)
+    await eventually(lambda: plugins["sample"].ticks > 0)
+    state = state_of(plugin_app)
+    manager = state.plugins
+
+    async def erase() -> None:
+        # While everything is being erased no plugin runs, so no job writes into its tables.
+        assert plugins["sample"].disabled == 1
+        assert manager.status("sample") is PluginStatus.DISABLED
+        async with state.db.write() as tx:
+            await tx.session.execute(text("DELETE FROM plugin_state"))
+
+    await manager.reset(erase)
+    # A new install's rows: the sample starts off, with its default settings.
+    assert not manager.is_enabled("sample")
+    assert manager.status("sample") is PluginStatus.DISABLED
+    assert manager.settings("sample")["interval"] == 60
+    listed = (await home.get("/api/plugins")).json()
+    assert [(p["id"], p["enabled"], p["settings"]["interval"]) for p in listed] == [
+        ("sample", False, 60),
+        ("other", False, 60),
+    ]
+
+
+async def test_a_reset_that_fails_starts_the_plugins_as_they_were(
+    plugin_app: FastAPI, home: httpx.AsyncClient, plugins: dict[str, SamplePlugin]
+) -> None:
+    await home.post("/api/plugins/sample/enable", headers=CSRF)
+    await home.put("/api/plugins/sample/settings", json={"values": {"interval": 90}}, headers=CSRF)
+    await eventually(lambda: plugins["sample"].ticks > 0)
+    manager = state_of(plugin_app).plugins
+
+    async def erase() -> None:
+        raise RuntimeError("the disk is full")
+
+    with pytest.raises(RuntimeError, match="the disk is full"):
+        await manager.reset(erase)
+    assert manager.is_enabled("sample")
+    assert manager.settings("sample")["interval"] == 90
+    ticks = plugins["sample"].ticks
+    await eventually(lambda: plugins["sample"].ticks > ticks)
+    assert manager.status("sample") is PluginStatus.RUNNING
 
 
 async def test_only_a_parent_turns_features_on_and_off(

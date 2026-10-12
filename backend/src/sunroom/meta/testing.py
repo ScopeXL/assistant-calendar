@@ -16,19 +16,17 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select, update
 
 from sunroom.auth.deps import Actor
-from sunroom.auth.models import Device, JoinCode
 from sunroom.auth.password import hash_password, hash_pin
 from sunroom.auth.sessions import pin_epoch_of
 from sunroom.calendar import service as calendar_service
-from sunroom.calendar.models import Calendar, Event, EventMember, EventReminder, EventRevision
+from sunroom.calendar.models import Event, EventRevision
 from sunroom.calendar.schemas import CalendarCreate, EventCreate
 from sunroom.core.clock import ShiftableClock
 from sunroom.core.errors import AppError
-from sunroom.db.models import Base
 from sunroom.domain.timeparts import to_local
 from sunroom.household import service as household_service
-from sunroom.household.models import AppMeta, Household, KioskPanel, Member, NetworkAllowEntry
-from sunroom.photos.models import Photo
+from sunroom.household.models import AppMeta, Member
+from sunroom.meta import erase
 from sunroom.state import AppState, StateDep
 
 E2E_PASSWORD = "e2e-household-passphrase"  # noqa: S105 - synthetic, also in .gitleaks.toml
@@ -52,66 +50,14 @@ router = APIRouter(
 @router.post("/reset", status_code=204)
 async def reset(state: StateDep) -> None:
     """Back to a server that has never been set up."""
-    async with state.db.write() as tx:
-        # Every plugin's tables first, children before parents (they point at core rows).
-        owned = {t for plugin in state.plugins.registry.values() for t in plugin.manifest.tables}
-        for table in reversed(Base.metadata.sorted_tables):
-            if table.name in owned:
-                await tx.session.execute(table.delete())
-        for model in (EventMember, EventReminder, EventRevision):
-            await tx.session.execute(delete(model))
-        await tx.session.execute(update(Event).values(parent_event_id=None))
-        await tx.session.execute(delete(Event))
-        for model in (JoinCode, Device, NetworkAllowEntry, KioskPanel):
-            await tx.session.execute(delete(model))
-        await tx.session.execute(delete(Household))
-        await tx.session.execute(delete(Calendar))
-        await tx.session.execute(update(Member).values(avatar_photo_id=None))
-        await tx.session.execute(delete(Member))
-        await tx.session.execute(delete(Photo))
-        home_calendar = Calendar(name="Home", color="sky", created_at=state.clock.now())
-        tx.session.add(home_calendar)
-        await tx.session.flush()
-        tx.session.add(
-            Household(
-                id=1,
-                name="Our home",
-                default_calendar_id=home_calendar.id,
-                updated_at=state.clock.now(),
-            )
-        )
-        tx.session.add(KioskPanel(panel_key="calendar.today", position=0, visible=True, size="m"))
-        await tx.session.execute(
-            update(AppMeta).values(password_hash=None, auth_epoch=AppMeta.auth_epoch + 1)
-        )
-        meta = await tx.session.get(AppMeta, 1)
-        epoch = meta.auth_epoch if meta else state.auth.epoch + 1
+    # The plugins keep their switches and settings: end-to-end tests set them once.
+    epoch = await erase.empty_tables(state, plugin_state=False)
     if isinstance(state.clock, ShiftableClock):
         state.clock.reset()
     await asyncio.to_thread(shutil.rmtree, state.photos.root, True)
     state.photos.ensure_folders()
-    state.auth.epoch = epoch
-    state.auth.devices.clear()
-    state.auth.revoked_devices.clear()
-    state.auth.last_seen_written.clear()
-    state.auth.has_pin = False
-    state.auth.pin_epoch = 0
-    state.login_limiter.reset()
-    state.pin_limiter.reset()
-    state.uploads.clear()
-    state.calendar.cache.clear()
-    # What lives only in memory: the update check's last answer, and a wall screen's wake.
-    state.updates.latest = state.updates.checked_at = state.updates.problem = None
-    state.screen.awake_until = None
-    state.screen.notify()
     state.hello_version.stand_in = None
-    state.household.setup_complete = False
-    state.household.password_set = state.settings.app_password is not None
-    state.household.members.clear()
-    state.household.zone = household_service.effective_zone(
-        Household(timezone=None), state.settings
-    )
-    state.hub.drop_all()
+    erase.forget(state, epoch)
 
 
 @router.post("/drop-streams", status_code=204)

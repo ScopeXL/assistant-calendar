@@ -5,9 +5,11 @@ import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { formatTime, shortDate, zonedParts } from "../../lib/dates";
 import { asParent } from "../../lib/parent";
+import { fetchSession } from "../../lib/session";
 import { showToast } from "../../lib/toast";
 import { Button } from "../../ui/Button";
 import { useShell } from "../../ui/shell";
+import { EraseSheet } from "./EraseSheet";
 import { Group, Row, Text } from "./parts";
 
 /** "Wed, Oct 7, 3:00 AM", in the household's zone and clock (not the device's). */
@@ -19,17 +21,30 @@ function when(iso: string | null): string {
 
 /** The downloads are plain links: the browser saves the file itself, however big it is. */
 const DOWNLOAD_LINK =
-  "press inline-flex min-h-11 items-center rounded-button border-2 border-line bg-surface px-5 text-body font-semibold";
+  "press inline-flex items-center border-2 border-line bg-surface font-semibold";
 
 /**
  * Settings → Backup (UX §4; PLAN §13.7): the nightly copies, a copy on demand, the newest copy or
- * everything (photos too) to download on a phone, and the household's data to take away.
- * Restoring is a runbook step with the server stopped (docs/RESTORE.md).
+ * everything (photos too) to download, the household's data to take away, and Start Over.
+ * Restoring is a runbook step with the server stopped (docs/RESTORE.md). What saves a file, and
+ * Erase everything, go by what the device is, not its size: a laptop has them, the kitchen
+ * screen (which has no files, and which a child can reach) doesn't.
  */
 export function BackupPage() {
   const display = useShell() === "display";
   const queryClient = useQueryClient();
+  const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
+  const kiosk = session?.device_kind === "kiosk";
+  // Until the session is known, neither the downloads nor the wall's line shows.
+  const own = session !== undefined && !kiosk;
   const [exporting, setExporting] = useState(false);
+  const [erasing, setErasing] = useState(false);
+  const link = `${DOWNLOAD_LINK} ${
+    display
+      ? "min-h-tap rounded-button-d px-7 text-d-body"
+      : "min-h-11 rounded-button px-5 text-body"
+  }`;
+  const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
   const { data: status, error } = useQuery({
     queryKey: qk.backups(),
     queryFn: () => asParent(async () => unwrap(await api.GET("/api/admin/backups"))),
@@ -86,23 +101,23 @@ export function BackupPage() {
             >
               Back up now
             </Button>
-            {newest && !display ? (
-              <a href={`/api/admin/backups/${newest.name}`} download className={DOWNLOAD_LINK}>
+            {newest && own ? (
+              <a href={`/api/admin/backups/${newest.name}`} download className={link}>
                 Download backup
               </a>
             ) : null}
-            {status && !display ? (
-              <a href="/api/admin/backups/full.zip" download className={DOWNLOAD_LINK}>
+            {status && own ? (
+              <a href="/api/admin/backups/full.zip" download className={link}>
                 Download everything
               </a>
             ) : null}
           </div>
-          {display ? (
-            <p className="mt-4 text-d-secondary text-ink-soft">
+          {kiosk ? (
+            <p className={`mt-4 ${soft}`}>
               Download a backup from a phone or computer: More, then Settings, then Backup.
             </p>
-          ) : status ? (
-            <p className="mt-3 text-secondary text-ink-soft">
+          ) : status && own ? (
+            <p className={`mt-3 ${soft}`}>
               Everything, photos included: this can take a while and be large.
             </p>
           ) : null}
@@ -113,9 +128,9 @@ export function BackupPage() {
         note="Everything you added, in one file anyone can read."
       >
         <div className={display ? "py-5" : "py-4"}>
-          {display ? (
+          {kiosk ? (
             <Text soft>Export from a phone or computer: More, then Settings, then Backup.</Text>
-          ) : (
+          ) : own ? (
             <Button
               variant="secondary"
               pending={exporting}
@@ -125,9 +140,32 @@ export function BackupPage() {
             >
               Export everything
             </Button>
-          )}
+          ) : null}
         </div>
       </Group>
+      {own ? (
+        <Group
+          title="Start Over"
+          note="Erase everything Sunroom knows and set it up again from the start. Only from a phone or computer."
+        >
+          <div className={display ? "py-5" : "py-4"}>
+            <Button
+              variant="quiet-danger"
+              onClick={() => {
+                setErasing(true);
+              }}
+            >
+              Erase everything…
+            </Button>
+          </div>
+        </Group>
+      ) : null}
+      <EraseSheet
+        open={erasing}
+        onClose={() => {
+          setErasing(false);
+        }}
+      />
       {(error ?? run.error) ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(error ?? run.error)}

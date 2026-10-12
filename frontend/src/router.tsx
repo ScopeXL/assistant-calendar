@@ -49,6 +49,9 @@ export function handleSignedOut(): void {
   const session = queryClient.getQueryData<Session | null>(qk.session());
   rememberSignedIn(false);
   queryClient.setQueryData(qk.session(), null);
+  // Signed out can mean the household started over (Erase everything, ADR 0029): ask again
+  // whether Sunroom is set up, so the wall shows its welcome and a phone the wizard.
+  void queryClient.invalidateQueries({ queryKey: qk.setupStatus() });
   // A wall screen that lost its sign-in shows its pair code again; a phone signs in again.
   void router.navigate({ to: session?.device_kind === "kiosk" ? "/display" : "/sign-in" });
 }

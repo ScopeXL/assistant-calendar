@@ -1,9 +1,10 @@
 /**
  * M0's flow (PLAN §15 M0 Verify): first run on a phone, pair the wall screen, the PIN gate on the
  * wall, sign out. One test drives both: a phone context and the wall (this project's page).
- * Synthetic names only.
+ * And the way back to a first run (ADR 0029): Erase everything, from a computer and never from
+ * the wall. Synthetic names only.
  */
-import { expect, phone, PIN, PASSWORD, test, wall } from "./fixtures";
+import { expect, pairWall, phone, PIN, PASSWORD, seed, signInPhone, test, wall } from "./fixtures";
 
 const ONLY = "display-1080p";
 const WHY = "drives its own phone and wall contexts";
@@ -162,5 +163,54 @@ test("a wall screen typed in with the password, and a toast that leaves under th
   await toast.getByRole("button", { name: "Undo" }).click();
   await expect(toast).toHaveCount(0);
   await expect(screen.getByRole("button", { name: "Edit Mia" })).toBeVisible();
+  await context.close();
+});
+
+test("Erase everything starts Sunroom over: from a computer, never from the wall", async ({
+  page,
+  request,
+  browser,
+  watch,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a computer, with a wall screen beside it");
+  await seed(request);
+  // The wall's Backup page has no Start Over (no PIN here, so it opens Settings itself).
+  const { page: screen, context } = await wall(browser, watch);
+  await pairWall(screen);
+  await screen.goto("/settings/backup");
+  await expect(screen.getByRole("heading", { name: "Backups", exact: true })).toBeVisible();
+  await expect(screen.getByRole("button", { name: "Back up now" })).toBeVisible();
+  await expect(screen.getByRole("heading", { name: "Start Over" })).toHaveCount(0);
+  await expect(screen.getByRole("button", { name: /^Erase everything/ })).toHaveCount(0);
+  await screen.goto("/display");
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
+
+  // A computer has it, with the downloads the wall can't use.
+  await signInPhone(page);
+  await page.goto("/settings/backup");
+  await expect(page.getByRole("link", { name: "Download everything" })).toBeVisible();
+  await page.getByRole("button", { name: "Erase everything…" }).click();
+  const sheet = page.getByRole("dialog", { name: "Erase Everything?" });
+  await expect(sheet.getByText("Keep a copy first?")).toBeVisible();
+  await expect(sheet.getByRole("link", { name: "Download everything" })).toHaveAttribute(
+    "href",
+    "/api/admin/backups/full.zip",
+  );
+  await sheet.getByRole("button", { name: "I have a copy" }).click();
+  const password = sheet.getByLabel("Household password");
+  await password.fill("not-the-household-password");
+  await sheet.getByRole("button", { name: "Erase everything" }).click();
+  await expect(sheet.getByText("That password didn't match. Try again.")).toBeVisible();
+  await password.fill(PASSWORD);
+  await sheet.getByRole("button", { name: "Erase everything" }).click();
+
+  // This computer lands on a first run, and so does the wall, by itself.
+  await expect(page.getByRole("heading", { name: "Welcome to Sunroom" })).toBeVisible();
+  await expect(page).toHaveURL(/\/setup/);
+  await expect(screen.getByRole("heading", { name: "Set Up Sunroom on Your Phone" })).toBeVisible();
+  const status = (await (await request.get("/api/setup/status")).json()) as {
+    setup_complete: boolean;
+  };
+  expect(status.setup_complete).toBe(false);
   await context.close();
 });

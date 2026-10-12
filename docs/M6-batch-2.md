@@ -1029,7 +1029,18 @@ lines in the family voice.
 
 ### T12 Erase everything
 
-- [ ] Done (commit: )
+- [x] Done (commit: `backup: Erase everything, from a phone or computer`)
+
+**As built.** A wrong password answers 403 `wrong_password` (a 401 would sign the phone out).
+The tables are emptied generically, every table in the metadata but `app_meta`, children first,
+so a table added later is covered without a list to keep; the test reset uses the same function
+with `plugin_state` kept, and the same `forget()` for what the process holds. `PluginManager.reset`
+takes the erase as a callback, so the plugins are stopped while the tables empty and start again
+even if it fails. Open streams hear `session.expired` because the erased devices are marked
+revoked before the streams drop. A wall whose session ended asked for a pair code a server with
+no household can't give: being signed out now asks again whether Sunroom is set up. The line
+after Download everything reads "The download has started. Continue once it's saved.", since
+the zip may still be arriving. `.orphans` (photos set aside) is deleted with the rest.
 
 **Owner's note.** "Add a setting to 'reset' the app which would clear all data, settings, etc and
 start fresh. Confirmation is required before it wipes the data, and asks if the user wants to

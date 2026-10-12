@@ -30,6 +30,7 @@ log = get_logger(__name__)
 STEM = "sunroom"
 NIGHTLY_RE = re.compile(rf"^{STEM}\.(\d{{4}}-\d{{2}}-\d{{2}})\.db$")
 PRE_MIGRATE_DIR = "pre-migrate"
+PRE_ERASE_DIR = "pre-erase"  # the copy Erase everything makes first; never rotated
 KEEP_DAILY = 14
 KEEP_WEEKLY = 8
 KEEP_PRE_MIGRATE = 5
@@ -154,6 +155,10 @@ def nightly_name(day: date) -> str:
 
 def pre_migrate_name(revision: str | None, at: datetime) -> str:
     return f"{STEM}.{revision or 'empty'}.{at.strftime('%Y%m%dT%H%M%SZ')}.db"
+
+
+def pre_erase_name(at: datetime) -> str:
+    return f"{STEM}.{at.strftime('%Y%m%dT%H%M%SZ')}.db"
 
 
 def nightly_files(backup_dir: Path) -> list[tuple[date, Path]]:

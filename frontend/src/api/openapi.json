@@ -2488,6 +2488,32 @@
         "title": "EntrySaved",
         "type": "object"
       },
+      "EraseIn": {
+        "properties": {
+          "password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "EraseIn",
+        "type": "object"
+      },
+      "EraseOut": {
+        "properties": {
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "title": "EraseOut",
+        "type": "object"
+      },
       "EventCreate": {
         "properties": {
           "all_day": {
@@ -9256,6 +9282,48 @@
           }
         },
         "summary": "Diagnostics",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/erase": {
+      "post": {
+        "description": "Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a phone or a\ncomputer, with the household password. Never from a wall screen, which a child can reach.\nThe password is checked as at sign-in, wrong tries counting against the same limiter.",
+        "operationId": "erase_api_admin_erase_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EraseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EraseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Erase",
         "tags": [
           "meta"
         ]

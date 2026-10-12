@@ -8,6 +8,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Added
 
+- Settings → Backup → Erase everything starts Sunroom over, after a backup and your household
+  password. Not from the kitchen screen.
 - Settings → Display → Text size has a Small choice for screens around 1920×1080. Buttons stay
   finger-sized at every text size.
 - Custom repeats for events and tasks: every few days, weeks, months or years, on the days you
@@ -61,6 +63,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   no longer drops its repeat when you save. It shows as "As it is" and stays untouched.
 - The Add panel on the kitchen screen opens at its top, with what you can add in view.
 - Export everything no longer includes Google's client secret.
+- A laptop's Backup page has its downloads: Download backup, Download everything and Export
+  everything used to show on phones only.
 
 ## [0.7.0] - 2026-10-09
 

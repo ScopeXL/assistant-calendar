@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from typing import Any, cast
 
@@ -266,6 +266,20 @@ class PluginManager:
         await asyncio.gather(
             *(self._stop_runner(plugin_id) for plugin_id in self._live), return_exceptions=True
         )
+
+    async def reset(self, erase: Callable[[], Awaitable[None]]) -> None:
+        """Erase everything (meta/erase.py): stop every plugin, let ``erase`` empty the tables
+        (``plugin_state`` with them), then start as a new install does: each plugin's default
+        switch and settings. If ``erase`` fails, the plugins start again from the rows still
+        there."""
+        async with self._lock:
+            await self.stop_all()
+            for live in self._live.values():
+                live.status, live.enabled, live.error = PluginStatus.DISABLED, False, None
+            try:
+                await erase()
+            finally:
+                await self.boot()
 
     # ---- changes (parent-only routes) ----------------------------------------------------
 

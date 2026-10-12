@@ -93,6 +93,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/erase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Erase
+         * @description Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a phone or a
+         *     computer, with the household password. Never from a wall screen, which a child can reach.
+         *     The password is checked as at sign-in, wrong tries counting against the same limiter.
+         */
+        post: operations["erase_api_admin_erase_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/update": {
         parameters: {
             query?: never;
@@ -3211,6 +3233,19 @@ export interface components {
             entry: components["schemas"]["EntryOut"];
             replaced: components["schemas"]["EntryOut"] | null;
         };
+        /** EraseIn */
+        EraseIn: {
+            /** Password */
+            password: string;
+        };
+        /** EraseOut */
+        EraseOut: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
         /** EventCreate */
         EventCreate: {
             /** All Day */
@@ -5344,6 +5379,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DiagnosticsOut"];
+                };
+            };
+        };
+    };
+    erase_api_admin_erase_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EraseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

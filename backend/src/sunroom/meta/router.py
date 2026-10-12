@@ -5,21 +5,23 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import shutil
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 from starlette.types import Receive, Scope, Send
 
 from sunroom.auth.deps import ParentDep
+from sunroom.auth.service import check_rate, client_ip, password_ok
 from sunroom.core.errors import AppError
 from sunroom.core.logging import get_logger
 from sunroom.core.version import build_info
 from sunroom.db import full_backup, migrate
-from sunroom.db.backup import NIGHTLY_RE, NoRoomError
+from sunroom.db.backup import NIGHTLY_RE, BackupError, NoRoomError
 from sunroom.db.export import export_data
+from sunroom.meta.erase import erase_everything
 from sunroom.state import StateDep
 from sunroom.web.hosts import host_name, is_ip_literal
 
@@ -246,6 +248,41 @@ async def download_backup(name: str, state: StateDep, actor: ParentDep) -> FileR
         filename=name,
         headers={"Cache-Control": "no-store"},
     )
+
+
+class EraseIn(BaseModel):
+    password: Annotated[str, Field(min_length=1, max_length=200)]
+
+
+class EraseOut(BaseModel):
+    ok: bool = True
+
+
+@router.post("/admin/erase")
+async def erase(body: EraseIn, request: Request, state: StateDep, actor: ParentDep) -> EraseOut:
+    """Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a phone or a
+    computer, with the household password. Never from a wall screen, which a child can reach.
+    The password is checked as at sign-in, wrong tries counting against the same limiter."""
+    if actor.is_kiosk:
+        raise AppError(403, "not_on_a_screen", "Erase everything from a phone or computer.")
+    ip = client_ip(request)
+    check_rate(state.login_limiter, ip)
+    async with state.db.read() as db:
+        matched = await password_ok(state, db, body.password)
+    if not matched:
+        state.login_limiter.record_failure(ip)
+        log.info("erase.wrong_password")
+        raise AppError(403, "wrong_password", "That password didn't match. Try again.")
+    state.login_limiter.record_success(ip)
+    try:
+        await erase_everything(state)
+    except BackupError as exc:
+        raise AppError(
+            500,
+            "backup_failed",
+            f"Nothing was erased: the copy to keep first couldn't be made ({exc}).",
+        ) from exc
+    return EraseOut()
 
 
 @router.get("/export")
