@@ -51,7 +51,7 @@ export function TipsBar() {
   return (
     <div
       data-tips=""
-      className="flex h-14 shrink-0 items-center gap-3 border-t border-line bg-surface pl-6"
+      className="flex h-tap shrink-0 items-center gap-3 border-t border-line bg-surface pl-6"
     >
       <Lightbulb aria-hidden="true" className="size-6 shrink-0 text-ink-soft" />
       <p className="min-w-0 flex-1 truncate text-d-secondary">

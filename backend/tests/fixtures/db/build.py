@@ -343,6 +343,14 @@ def _v0_7_0() -> list[Statement]:
     ]
 
 
+def _v0_8_0() -> list[Statement]:
+    """0.8.0 (M6 batch 2): 0.7.0's household with the rail folded to its icons and Small text."""
+    return [
+        *_v0_7_0(),
+        "UPDATE household SET display_rail_compact = 1, text_size = 'small'",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
@@ -352,6 +360,7 @@ SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610082056": _v0_5_0,
     "202610082231": _v0_6_0,
     "202610091752": _v0_7_0,
+    "202610121749": _v0_8_0,
 }
 
 

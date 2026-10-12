@@ -28,7 +28,7 @@ export function Chip({
       disabled={disabled}
       onClick={onClick}
       className={`press select-fill inline-flex items-center gap-2 rounded-full border-2 border-line bg-surface font-semibold disabled:opacity-60 aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-on-ink ${
-        display ? "min-h-14 px-6 text-d-body" : "min-h-11 px-4 text-secondary"
+        display ? "min-h-tap px-6 text-d-body" : "min-h-11 px-4 text-secondary"
       }`}
     >
       {children}

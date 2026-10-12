@@ -35,7 +35,7 @@ export function DisplayPage() {
             ]}
           />
         </Row>
-        <Row label="Text size">
+        <Row label="Text size" hint="Small suits a screen around 1920×1080 that's read up close.">
           <Segmented
             label="Text size"
             value={settings.text_size}
@@ -43,6 +43,7 @@ export function DisplayPage() {
               update.mutate({ text_size });
             }}
             options={[
+              { value: "small", label: "Small" },
               { value: "standard", label: "Standard" },
               { value: "large", label: "Large" },
               { value: "xl", label: "Extra large" },

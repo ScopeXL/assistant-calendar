@@ -4739,6 +4739,8 @@ export interface components {
              * @enum {string}
              */
             display_orientation: "auto" | "landscape" | "portrait";
+            /** Display Rail Compact */
+            display_rail_compact: boolean;
             /**
              * Display Rail Side
              * @enum {string}
@@ -4788,7 +4790,7 @@ export interface components {
              * Text Size
              * @enum {string}
              */
-            text_size: "standard" | "large" | "xl";
+            text_size: "small" | "standard" | "large" | "xl";
             /**
              * Theme
              * @enum {string}
@@ -4826,6 +4828,8 @@ export interface components {
             display_home_view?: ("week" | "today" | "people") | null;
             /** Display Orientation */
             display_orientation?: ("auto" | "landscape" | "portrait") | null;
+            /** Display Rail Compact */
+            display_rail_compact?: boolean | null;
             /** Display Rail Side */
             display_rail_side?: ("left" | "right") | null;
             /** Display Reduce Motion */
@@ -4857,7 +4861,7 @@ export interface components {
             /** Sleep To */
             sleep_to?: string | null;
             /** Text Size */
-            text_size?: ("standard" | "large" | "xl") | null;
+            text_size?: ("small" | "standard" | "large" | "xl") | null;
             /** Theme */
             theme?: ("auto" | "light" | "dark") | null;
             /** Time Format */

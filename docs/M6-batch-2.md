@@ -176,7 +176,7 @@ now Tasks everywhere you read it, and Who's Doing What is now People."
 
 ### T2 The migration and the two new settings
 
-- [ ] Done (commit: )
+- [x] Done (commit: "household: the compact rail setting and Small text")
 
 **Build.** After the fixture gotcha, `just db-revision "household: compact rail"` modelled on
 `migrations/versions/202610091752_household_week_layout_and_tips.py`: `display_rail_compact
@@ -201,6 +201,13 @@ smaller screen meets the same finger. So targets don't shrink: two tokens in `to
 `min-h-tap` / `size-tap` / `min-h-tap-primary` utilities (`@utility`), used by `ui/Button`,
 `Chip`, `Segmented`, `TickBox`, `WhoPicker`, the rail's rooms and the keyboard's keys in place of
 `min-h-14` / `size-14` / `min-h-16`. Small shrinks text and spacing, never a target.
+
+**As built.** The tokens are in the theme's spacing scale (`--spacing-tap`, `--spacing-tap-primary`),
+so `min-h-tap`, `size-tap`, `h-tap` and `min-w-tap` all exist with no `@utility`. The 8 px between
+two targets shrank to 7 at Small and failed the a11y check, so `--spacing-2` is `max(0.5rem, 8px)`:
+every `*-2` utility keeps 8 px. The Hours grid sizes its chips in JS from the root size, so
+`hours.ts` got `tapPx(rem)`. The caption token stops at 16 px. The revision's fixture database
+(`202610121749.sql`, `_v0_8_0`) is built here, so the next batch's first migration has its test.
 
 **Tests.** Vitest `theme.test.ts` (small sets the attribute). e2e `shell.spec.ts`: PATCH
 `text_size: "small"` from a phone and the wall's root font size is 14 px within 3 s;

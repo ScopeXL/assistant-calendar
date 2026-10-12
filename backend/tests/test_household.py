@@ -20,6 +20,8 @@ async def test_settings_start_with_the_household_defaults(parent: httpx.AsyncCli
     assert settings["display_home_view"] == "week"
     assert settings["display_week_layout"] == "agenda"  # stacked chips until a parent picks Hours
     assert settings["show_tips"] is False
+    assert settings["text_size"] == "standard"
+    assert settings["display_rail_compact"] is False  # the full rail until a parent folds it
     assert settings["has_pin"] is False
     assert settings["pin_length"] is None
     assert settings["setup_complete"] is True
@@ -63,6 +65,17 @@ async def test_the_week_layout_and_tips_are_a_parents_to_change(
     assert (again["display_week_layout"], again["show_tips"]) == ("hours", True)
 
 
+async def test_a_parent_folds_the_rail_and_picks_small_text(parent: httpx.AsyncClient) -> None:
+    compact = await parent.patch("/api/settings", json={"display_rail_compact": True}, headers=CSRF)
+    assert compact.status_code == 200, compact.text
+    assert compact.json()["display_rail_compact"] is True
+    small = await parent.patch("/api/settings", json={"text_size": "small"}, headers=CSRF)
+    assert small.status_code == 200, small.text
+    assert (small.json()["text_size"], small.json()["display_rail_compact"]) == ("small", True)
+    again = (await parent.get("/api/settings")).json()
+    assert (again["text_size"], again["display_rail_compact"]) == ("small", True)
+
+
 async def test_bad_settings_are_refused(parent: httpx.AsyncClient) -> None:
     zone = await parent.patch("/api/settings", json={"timezone": "Mars/Base"}, headers=CSRF)
     assert zone.status_code == 422
@@ -72,6 +85,8 @@ async def test_bad_settings_are_refused(parent: httpx.AsyncClient) -> None:
     assert minutes.status_code == 422
     grid = await parent.patch("/api/settings", json={"display_week_layout": "grid"}, headers=CSRF)
     assert grid.status_code == 422
+    tiny = await parent.patch("/api/settings", json={"text_size": "tiny"}, headers=CSRF)
+    assert tiny.status_code == 422
 
 
 async def test_people_get_the_next_color_and_names_stay_unique(

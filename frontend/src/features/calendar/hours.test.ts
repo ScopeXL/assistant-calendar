@@ -64,6 +64,8 @@ describe("where a chip sits (chipBox)", () => {
     const quick = chipBox(timed("call", "09:00", "09:15"), DAY, 30, REM);
     expect([quick.visible, quick.height]).toEqual([7.5, 56]);
     expect(chipBox(timed("soccer", "16:00", "17:00"), DAY, 30, 20.8).height).toBeCloseTo(72.8);
+    // Small text (a 14 px root) keeps the 56 px tap target.
+    expect(chipBox(timed("soccer", "16:00", "17:00"), DAY, 30, 14).height).toBe(56);
   });
 
   it("ends at midnight, sliding up when its button would run past it", () => {

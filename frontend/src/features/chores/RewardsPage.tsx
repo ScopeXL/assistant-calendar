@@ -41,7 +41,7 @@ export function RewardsPage() {
         <Link
           to="/$room"
           params={{ room: "chores" }}
-          className="press -ml-2 inline-flex min-h-14 items-center gap-1 rounded-button-d pr-4 pl-2 text-d-body font-semibold"
+          className="press -ml-2 inline-flex min-h-tap items-center gap-1 rounded-button-d pr-4 pl-2 text-d-body font-semibold"
         >
           <ChevronLeft aria-hidden="true" className="size-7" />
           Tasks

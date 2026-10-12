@@ -703,7 +703,7 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
         {/* The app's own button, not the browser's "Choose File" (as Add photos). */}
         <label
           className={`press inline-flex cursor-pointer items-center justify-center self-start border-2 border-line bg-surface font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink ${
-            display ? "min-h-14 rounded-button-d px-7" : "min-h-11 rounded-button px-5"
+            display ? "min-h-tap rounded-button-d px-7" : "min-h-11 rounded-button px-5"
           } ${text.body}`}
         >
           Upload the key file

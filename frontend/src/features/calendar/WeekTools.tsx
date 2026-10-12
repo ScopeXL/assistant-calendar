@@ -56,7 +56,7 @@ export function WeekTools({
               onClick={() => {
                 onLayout(value);
               }}
-              className="press select-fill flex size-14 items-center justify-center rounded-full aria-pressed:bg-ink aria-pressed:text-on-ink"
+              className="press select-fill flex size-tap items-center justify-center rounded-full aria-pressed:bg-ink aria-pressed:text-on-ink"
             >
               <Icon aria-hidden="true" className="size-8" />
             </button>

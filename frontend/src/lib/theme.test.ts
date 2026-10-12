@@ -63,4 +63,19 @@ describe("the theme (ADR 0008)", () => {
     expect(root.dataset.reduceMotion).toBeUndefined();
     expect(root.dataset.daypart).toBe("midday");
   });
+
+  it("marks every text size but Standard on the wall screen", () => {
+    const root = document.createElement("html");
+    const sized = (textSize: "small" | "standard" | "large" | "xl") => {
+      applyAppearance(
+        { theme: "light", daylightTint: false, textSize, reduceMotion: false, display: true },
+        at(11),
+        root,
+      );
+      return root.dataset.textSize;
+    };
+    expect(sized("small")).toBe("small");
+    expect(sized("standard")).toBeUndefined();
+    expect(sized("large")).toBe("large");
+  });
 });

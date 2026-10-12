@@ -58,7 +58,7 @@ function ChoresBoard() {
           <Link
             to="/$room/$"
             params={{ room: "chores", _splat: "rewards" }}
-            className="press ml-auto inline-flex min-h-14 items-center gap-2 rounded-button-d border-2 border-line bg-surface px-6 text-d-body font-semibold"
+            className="press ml-auto inline-flex min-h-tap items-center gap-2 rounded-button-d border-2 border-line bg-surface px-6 text-d-body font-semibold"
           >
             <Star aria-hidden="true" className="size-7 fill-sun stroke-sun-ink" />
             {day.rewards_on ? "Stars & Rewards" : "Stars"}

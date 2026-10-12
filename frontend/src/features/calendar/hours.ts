@@ -27,6 +27,12 @@ const LABEL_REM = 1.75;
 const LANE_GAP = 8;
 const DAY_MINUTES = 24 * 60;
 
+/** A tap target in px: it grows with the text size and never goes under 56 px (the --tap
+ * token), so Small text keeps a finger-sized chip. */
+export function tapPx(rem: number): number {
+  return Math.max(TAP_REM * rem, 56);
+}
+
 /** Pixels per hour. `gridHeight` is what the grid has under its sticky heads. */
 export function pixelsPerHour(zoom: HoursZoom, gridHeight: number, rem: number): number {
   if (zoom === "24h") return gridHeight / 24;
@@ -66,7 +72,7 @@ export function chipBox(occurrence: Placed, day: string, pph: number, rem: numbe
   const end = endLocal.slice(0, 10) > day ? DAY_MINUTES : minuteOfDay(endLocal);
   const at = minutesToPixels(start, pph);
   const visible = Math.max(2, minutesToPixels(end, pph) - at);
-  const height = Math.max(visible, TAP_REM * rem);
+  const height = Math.max(visible, tapPx(rem));
   const top = Math.max(0, Math.min(at, 24 * pph - height));
   return { top, visible, height, offset: at - top };
 }
@@ -86,7 +92,7 @@ export function chipTier(visible: number, rem: number): { tier: ChipTier; titleL
 
 /** How many chips, each at least a tap target wide with 8 px between, fit side by side. */
 export function laneCount(columnWidth: number, rem: number, max = 3): number {
-  const lanes = Math.floor((columnWidth + LANE_GAP) / (TAP_REM * rem + LANE_GAP));
+  const lanes = Math.floor((columnWidth + LANE_GAP) / (tapPx(rem) + LANE_GAP));
   return Math.max(1, Math.min(max, lanes));
 }
 
@@ -158,7 +164,7 @@ export function placeTimed<T extends Placed>(
       const boxes = items.map((occurrence) => chipBox(occurrence, day, pph, rem));
       const top = Math.min(...boxes.map((box) => box.top + box.offset));
       const bottom = Math.max(...boxes.map((box) => box.top + box.offset + box.visible));
-      const height = Math.max(bottom - top, TAP_REM * rem);
+      const height = Math.max(bottom - top, tapPx(rem));
       out.push({
         kind: "more",
         hidden: items.slice(lanes - 1),

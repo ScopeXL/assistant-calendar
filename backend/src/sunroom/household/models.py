@@ -38,6 +38,7 @@ class Theme(StrEnum):
 
 
 class TextSize(StrEnum):
+    SMALL = "small"  # for a 1080p screen read up close (ADR 0029)
     STANDARD = "standard"
     LARGE = "large"
     XL = "xl"
@@ -78,6 +79,8 @@ class Household(Base):
     display_home_view: Mapped[str] = mapped_column(String(10), default=HomeView.WEEK)
     display_return_minutes: Mapped[int] = mapped_column(Integer, default=5)  # 0 = never
     display_rail_side: Mapped[str] = mapped_column(String(8), default="left")
+    # Settings → Display → Compact rail: only the rooms' icons, for a wider board (ADR 0029).
+    display_rail_compact: Mapped[bool] = mapped_column(Boolean, default=False)
     display_controls_bottom: Mapped[bool] = mapped_column(Boolean, default=False)
     display_show_today_panel: Mapped[bool] = mapped_column(Boolean, default=True)
     display_orientation: Mapped[str] = mapped_column(String(10), default="auto")

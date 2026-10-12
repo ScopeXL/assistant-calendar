@@ -6,6 +6,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Settings → Display → Text size has a Small choice for screens around 1920×1080. Buttons stay
+  finger-sized at every text size.
+
 ### Changed
 
 - Chores are now Tasks everywhere you read it, and Who's Doing What is now People.

@@ -7500,6 +7500,10 @@
             "title": "Display Orientation",
             "type": "string"
           },
+          "display_rail_compact": {
+            "title": "Display Rail Compact",
+            "type": "boolean"
+          },
           "display_rail_side": {
             "enum": [
               "left",
@@ -7628,6 +7632,7 @@
           },
           "text_size": {
             "enum": [
+              "small",
               "standard",
               "large",
               "xl"
@@ -7685,6 +7690,7 @@
           "display_home_view",
           "display_return_minutes",
           "display_rail_side",
+          "display_rail_compact",
           "display_controls_bottom",
           "display_show_today_panel",
           "display_orientation",
@@ -7805,6 +7811,17 @@
               }
             ],
             "title": "Display Orientation"
+          },
+          "display_rail_compact": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Rail Compact"
           },
           "display_rail_side": {
             "anyOf": [
@@ -8002,6 +8019,7 @@
             "anyOf": [
               {
                 "enum": [
+                  "small",
                   "standard",
                   "large",
                   "xl"

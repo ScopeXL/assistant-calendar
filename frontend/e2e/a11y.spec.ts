@@ -477,6 +477,51 @@ for (const scheme of ["light", "dark"] as const) {
       }
     });
 
+    test("the wall screen at the Small text size", async ({ page, request }, testInfo) => {
+      test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
+      await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
+      await seed(request);
+      const paired = await page.request.post("/api/auth/kiosk/pair-with-password", {
+        headers: CSRF,
+        data: { password: PASSWORD, label: "Kitchen screen" },
+      });
+      expect(paired.ok()).toBe(true);
+      // No PIN in this household: the wall may change its own settings.
+      const small = await page.request.patch("/api/settings", {
+        headers: CSRF,
+        data: { text_size: "small", theme: scheme },
+      });
+      expect(small.ok()).toBe(true);
+      await page.goto("/display");
+      const board = page.getByRole("region", { name: "This Week" });
+      await expect(board).toBeVisible();
+      await expect(page.locator("html")).toHaveAttribute("data-text-size", "small");
+      await check(page, "display at Small: board");
+      await page.getByRole("button", { name: "Hours", exact: true }).click();
+      await expect(page.locator("[data-hours] [data-now-line]")).toBeVisible();
+      await check(page, "display at Small: hours");
+      await page.getByRole("button", { name: "Agenda", exact: true }).click();
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      const add = page.getByRole("dialog", { name: "Add" });
+      await add.getByLabel("What, when, who").fill("Dentist every Thu 2:30pm Mia");
+      await check(page, "display at Small: add");
+      await add.getByRole("button", { name: "Close" }).click();
+      await page.getByRole("link", { name: "Tasks" }).click();
+      await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
+      await check(page, "display at Small: tasks");
+      await page.getByRole("link", { name: "Lists" }).click();
+      await page.getByRole("link", { name: /^Groceries/ }).click();
+      await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
+      await check(page, "display at Small: groceries");
+      await page.getByRole("button", { name: "Settings" }).click();
+      await page
+        .getByRole("navigation", { name: "Settings" })
+        .getByRole("link", { name: "Display", exact: true })
+        .click();
+      await expect(page.getByRole("heading", { name: "Display", level: 2 })).toBeVisible();
+      await check(page, "display at Small: Settings → Display");
+    });
+
     test("a laptop", async ({ page, request }, testInfo) => {
       test.skip(testInfo.project.name !== "desktop", "a laptop");
       // The board's "Up next" needs events still to come today: the server's 10 AM.

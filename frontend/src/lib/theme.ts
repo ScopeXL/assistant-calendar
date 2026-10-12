@@ -18,7 +18,7 @@ export type Daypart = "dawn" | "midday" | "afternoon" | "dusk" | "evening" | "ni
 export interface Appearance {
   theme: ThemeChoice;
   daylightTint: boolean;
-  textSize: "standard" | "large" | "xl";
+  textSize: "small" | "standard" | "large" | "xl";
   reduceMotion: boolean;
   /** The wall display (and laptops showing the display shell) resolve Auto by the clock. */
   display: boolean;

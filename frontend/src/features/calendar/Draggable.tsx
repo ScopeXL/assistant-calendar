@@ -72,7 +72,7 @@ export function MoreButton({
         onMore(day);
       }}
       // In portrait's rows it's only as wide as its words, so another chip fits on its line.
-      className="press min-h-14 w-full rounded-chip-d px-3 text-left text-d-secondary font-semibold whitespace-nowrap text-ink-soft portrait:w-auto portrait:px-5"
+      className="press min-h-tap w-full rounded-chip-d px-3 text-left text-d-secondary font-semibold whitespace-nowrap text-ink-soft portrait:w-auto portrait:px-5"
     >
       {`+${String(count)} more`}
     </button>

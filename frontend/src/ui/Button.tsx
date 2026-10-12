@@ -16,13 +16,13 @@ const PHONE: Record<Variant, string> = {
     "min-h-11 text-alert underline decoration-alert/40 decoration-2 underline-offset-4 active:opacity-70",
 };
 const DISPLAY: Record<Variant, string> = {
-  primary: "min-h-16 bg-ink text-on-ink active:opacity-85",
-  secondary: "min-h-14 border-2 border-line bg-surface text-ink active:bg-wall",
+  primary: "min-h-tap-primary bg-ink text-on-ink active:opacity-85",
+  secondary: "min-h-tap border-2 border-line bg-surface text-ink active:bg-wall",
   quiet:
-    "min-h-14 text-ink underline decoration-ink-soft/60 decoration-2 underline-offset-4 active:opacity-70",
-  danger: "min-h-14 border-2 border-line bg-surface text-alert active:bg-wall",
+    "min-h-tap text-ink underline decoration-ink-soft/60 decoration-2 underline-offset-4 active:opacity-70",
+  danger: "min-h-tap border-2 border-line bg-surface text-alert active:bg-wall",
   "quiet-danger":
-    "min-h-14 text-alert underline decoration-alert/40 decoration-2 underline-offset-4 active:opacity-70",
+    "min-h-tap text-alert underline decoration-alert/40 decoration-2 underline-offset-4 active:opacity-70",
 };
 
 export interface ButtonProps extends ComponentPropsWithRef<"button"> {
@@ -50,7 +50,7 @@ export function Button({
     display ? "rounded-button-d text-d-body" : "rounded-button text-body",
     // Padding is chosen here, never overridden by className: in the built CSS a later utility
     // for the same property wins, whatever the class order.
-    icon ? (display ? "size-14 shrink-0" : "size-12 shrink-0") : display ? "px-7" : "px-5",
+    icon ? (display ? "size-tap shrink-0" : "size-12 shrink-0") : display ? "px-7" : "px-5",
     "disabled:cursor-not-allowed disabled:opacity-60",
     (display ? DISPLAY : PHONE)[variant],
     block ? "w-full" : "",

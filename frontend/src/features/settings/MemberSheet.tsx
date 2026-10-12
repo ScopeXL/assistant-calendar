@@ -233,7 +233,7 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
           <label
             className={`press inline-flex cursor-pointer items-center border-2 border-line bg-surface font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink ${
               display
-                ? "min-h-14 rounded-button-d px-7 text-d-body"
+                ? "min-h-tap rounded-button-d px-7 text-d-body"
                 : "min-h-11 rounded-button px-4 text-body"
             }`}
           >

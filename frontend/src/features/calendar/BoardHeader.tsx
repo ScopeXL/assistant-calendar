@@ -148,7 +148,7 @@ export function BoardHeader({
                   onClick={() => {
                     toggle(member.id);
                   }}
-                  className={`press flex size-14 items-center justify-center rounded-full ${
+                  className={`press flex size-tap items-center justify-center rounded-full ${
                     on ? "ring-4 ring-ink" : people.length ? "opacity-50" : ""
                   }`}
                 >

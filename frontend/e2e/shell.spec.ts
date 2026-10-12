@@ -292,6 +292,35 @@ test.describe("the wall screen", () => {
     ).toBeLessThanOrEqual(0);
   });
 
+  test("takes the Small text size from another device at once, and keeps its tap targets", async ({
+    page,
+    request,
+  }) => {
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/display");
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    const rootPx = () =>
+      page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    expect(await rootPx()).toBe(16);
+    // A parent's phone (its own cookies) picks Small in Settings → Display.
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    const small = await request.patch("/api/settings", {
+      headers: CSRF,
+      data: { text_size: "small" },
+    });
+    expect(small.ok()).toBe(true);
+    await expect.poll(rootPx, { timeout: 3_000 }).toBe(14);
+    // Text and spacing shrink; a target never does (UX §1).
+    const arrow = await page.getByRole("button", { name: "Next week" }).boundingBox();
+    expect(Math.round(arrow?.height ?? 0)).toBeGreaterThanOrEqual(56);
+    expect(Math.round(arrow?.width ?? 0)).toBeGreaterThanOrEqual(56);
+  });
+
   test("sleeps on schedule and wakes at a touch", async ({ page, request }) => {
     // 11:30 PM in the household's zone, inside a 10 PM to 6 AM sleep schedule. No PIN: the wall
     // screen may change settings itself.

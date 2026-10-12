@@ -61,7 +61,7 @@ const ROOM_LINK =
 // A room is 6rem tall, and gives way down to a tap target (3.5rem) when the screen is short
 // (Extra large text, a laptop), so Add and the lock always stay on screen.
 const ROOM_ITEM =
-  "portrait:max-w-40 portrait:min-w-0 portrait:flex-1 landscape:flex landscape:min-h-14 landscape:flex-[0_1_6rem] landscape:flex-col";
+  "portrait:max-w-40 portrait:min-w-0 portrait:flex-1 landscape:flex landscape:min-h-tap landscape:flex-[0_1_6rem] landscape:flex-col";
 
 /**
  * The display's rail (UX §3): clock and date, the Calendar room then each enabled plugin's

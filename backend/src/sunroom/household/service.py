@@ -73,6 +73,7 @@ def settings_out(home: Household, settings: Settings) -> SettingsOut:
             "display_home_view": home.display_home_view,
             "display_return_minutes": home.display_return_minutes,
             "display_rail_side": home.display_rail_side,
+            "display_rail_compact": home.display_rail_compact,
             "display_controls_bottom": home.display_controls_bottom,
             "display_show_today_panel": home.display_show_today_panel,
             "display_orientation": home.display_orientation,

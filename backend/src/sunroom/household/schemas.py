@@ -13,7 +13,7 @@ Clock24 = Annotated[str, StringConstraints(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
 PersonColor = Literal["clay", "olive", "moss", "sea", "sky", "iris", "berry", "rose"]
 RoleName = Literal["parent", "kid"]
 ThemeName = Literal["auto", "light", "dark"]
-TextSizeName = Literal["standard", "large", "xl"]
+TextSizeName = Literal["small", "standard", "large", "xl"]
 HomeViewName = Literal["week", "today", "people"]
 WeekLayoutName = Literal["agenda", "hours"]
 TimeFormat = Literal["12h", "24h"]
@@ -60,6 +60,7 @@ class SettingsOut(BaseModel):
     display_home_view: HomeViewName
     display_return_minutes: int
     display_rail_side: RailSide
+    display_rail_compact: bool  # the rail shows only its icons (ADR 0029)
     display_controls_bottom: bool
     display_show_today_panel: bool
     display_orientation: Orientation
@@ -95,6 +96,7 @@ class SettingsUpdate(BaseModel):
     display_home_view: HomeViewName | None = None
     display_return_minutes: Literal[0, 2, 5, 10] | None = None
     display_rail_side: RailSide | None = None
+    display_rail_compact: bool | None = None
     display_controls_bottom: bool | None = None
     display_show_today_panel: bool | None = None
     display_orientation: Orientation | None = None

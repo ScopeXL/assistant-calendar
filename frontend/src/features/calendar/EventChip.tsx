@@ -103,7 +103,7 @@ export function EventChip({
         tabIndex={measuring ? -1 : undefined}
         onClick={onOpen}
         className={`press flex w-full min-w-0 items-center gap-2 border border-line bg-surface/50 px-3 py-1.5 text-left text-ink ${
-          display ? "min-h-14 rounded-chip-d" : "min-h-11 rounded-chip"
+          display ? "min-h-tap rounded-chip-d" : "min-h-11 rounded-chip"
         }`}
       >
         <Icon aria-hidden="true" className="size-5 shrink-0 text-ink-soft" strokeWidth={2.25} />
@@ -133,7 +133,7 @@ export function EventChip({
       onClick={onOpen}
       className={`press relative flex w-full min-w-0 flex-col gap-0.5 overflow-hidden py-2 pr-2 text-left ${
         display ? "rounded-chip-d" : "rounded-chip"
-      } ${tone.className} ${compact ? `${display ? "min-h-14" : "min-h-11"} justify-center` : display ? "min-h-16" : "min-h-14"}`}
+      } ${tone.className} ${compact ? `${display ? "min-h-tap" : "min-h-11"} justify-center` : display ? "min-h-16" : "min-h-14"}`}
     >
       {compact || !time ? (
         <span className="flex min-w-0 items-center gap-2">

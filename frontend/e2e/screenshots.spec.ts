@@ -1,6 +1,6 @@
 /**
  * Captures the key screens for review (`just screenshots`, UX §10): the wall screen at 1920×1080
- * and 1080×1920 (Standard and Extra large text), phones at 390×844 and a laptop at 1440×900, in
+ * and 1080×1920 (Standard, Extra large and Small text), phones at 390×844 and a laptop at 1440×900, in
  * light and dark, at 09:40, 16:10 and 21:30 so the tint and theme stops show. Synthetic data
  * only; files go to the gitignored .screenshots/ folder and are never committed.
  */
@@ -91,9 +91,11 @@ test("the wall screen", async ({ page }) => {
   await page.getByRole("button", { name: "Done" }).click();
 
   const board = page.getByRole("region", { name: "This Week" });
-  for (const size of ["standard", "xl"]) {
+  for (const size of ["standard", "xl", "small"]) {
     for (const theme of ["light", "dark"]) {
       for (const stop of STOPS) {
+        // Small text: one look in each theme is enough (the tints are the same).
+        if (size === "small" && stop !== STOPS[1]) continue;
         await moveClock(page, stop.at);
         await change(page, { theme, text_size: size });
         await page.reload();
@@ -138,6 +140,12 @@ test("the wall screen", async ({ page }) => {
   await expect(root).toHaveAttribute("data-text-size", "xl");
   await expect(board.locator("[data-now-line]")).toBeVisible();
   await shot(page, "board-hours-24h-xl");
+  // At Small the whole day still fits, and every chip stays a 56 px target.
+  await change(page, { text_size: "small" });
+  await page.reload();
+  await expect(root).toHaveAttribute("data-text-size", "small");
+  await expect(board.locator("[data-now-line]")).toBeVisible();
+  await shot(page, "board-hours-24h-small");
   // Tips under the board: Agenda, then the whole day in Hours above the strip.
   await change(page, { text_size: "standard", show_tips: true });
   await page.reload();

@@ -68,6 +68,10 @@
   --band-h: 28rem; /* portrait's Today band: room for every block in three columns */
   --keyboard-w: 960px;
   --tabbar-h: 3.5rem;
+  /* The wall's tap targets (UX §1): 56 px, 64 for a primary button. They grow with the text
+     size and never shrink under it: Small makes text and spacing smaller, not a target. */
+  --tap: max(3.5rem, 56px);
+  --tap-primary: max(4rem, 64px);
 }
 
 :root[data-theme="light"] {
@@ -188,8 +192,9 @@
   --text-big: 1.875rem;
   --text-big--line-height: 2.25rem;
 
-  /* The wall display (UX §1): nothing under 18 px; Large and Extra large scale the root. */
-  --text-d-caption: 1.125rem;
+  /* The wall display (UX §1): nothing under 18 px; Large and Extra large scale the root, and
+     Small shrinks it, where the caption stops at 16 px. */
+  --text-d-caption: max(1.125rem, 16px);
   --text-d-caption--line-height: 1.5rem;
   --text-d-secondary: 1.25rem;
   --text-d-secondary--line-height: 1.75rem;
@@ -216,6 +221,13 @@
   --text-wall-clock: 200px;
   --text-wall-clock--line-height: 200px;
 
+  /* min-h-tap, size-tap, min-h-tap-primary… (the wall's tap sizes above). */
+  --spacing-tap: var(--tap);
+  --spacing-tap-primary: var(--tap-primary);
+  /* gap-2 is the least room between two tap targets on a line (UX §1): 8 px at every text
+     size, Small included, where 0.5rem alone would be 7. */
+  --spacing-2: max(0.5rem, 8px);
+
   --radius-panel: 24px;
   --radius-sheet: 20px;
   --radius-button-d: 16px;
@@ -230,11 +242,15 @@
     color: var(--ink);
     font-family: var(--font-sans);
     /* The browser's default (16 px): Tailwind's spacing means what it says. On the wall
-       display, Text size scales everything from here (UX §10). */
+       display, Text size scales everything from here (UX §10): Small for a screen around
+       1920×1080 read up close, Large and Extra large for one read from across the room. */
     font-size: 100%;
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+  }
+  html[data-text-size="small"] {
+    font-size: 87.5%;
   }
   html[data-text-size="large"] {
     font-size: 115%;
@@ -379,7 +395,7 @@ input[type="search"]::-webkit-search-decoration {
 
 /* The tips strip under the board (features/tips): while it shows, the wall's toasts sit above it. */
 :root:has([data-tips]) {
-  --tips-h: 3.5rem;
+  --tips-h: var(--tap);
 }
 
 /* A focused field stays 16 px above the keyboard (the shell scrolls it into view). A sheet
@@ -405,7 +421,8 @@ dialog [data-osk] {
 }
 
 /* A day's column on the board sizes its heading and the now label to its own width, so seven
-   columns hold at Extra large on one line each (UX §10). Never under the display's 18 px. */
+   columns hold at Extra large on one line each (UX §10). Never under the display's 18 px
+   (16 at Small). */
 .day-column {
   container-type: inline-size;
 }
@@ -413,7 +430,7 @@ dialog [data-osk] {
   font-size: min(var(--text-d-title), 20cqi);
 }
 .now-label {
-  font-size: max(1.125rem, min(var(--text-d-caption), 12cqi));
+  font-size: max(1.125rem, 16px, min(var(--text-d-caption), 12cqi));
 }
 
 /* A box as wide as Lexend's widest digit, the 0, at the text's weight (measured at M0), so a

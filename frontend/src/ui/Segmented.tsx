@@ -41,7 +41,7 @@ export function Segmented<T extends string>({
             onChange(option.value);
           }}
           className={`press select-fill flex flex-auto items-center justify-center rounded-full px-3 font-semibold whitespace-nowrap aria-pressed:bg-ink aria-pressed:text-on-ink ${
-            display ? "min-h-14 min-w-14" : "min-h-11 min-w-11"
+            display ? "min-h-tap min-w-tap" : "min-h-11 min-w-11"
           }`}
         >
           {option.label}

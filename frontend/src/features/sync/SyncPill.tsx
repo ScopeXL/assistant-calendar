@@ -38,7 +38,7 @@ export function SyncPill() {
         void navigate({ to: "/settings/$page", params: { page: "calendars" } });
       }}
       className={`press inline-flex items-center gap-2 rounded-full border-2 border-line bg-surface font-semibold text-ink-soft ${
-        display ? "min-h-14 px-5 text-d-secondary" : "min-h-11 px-4 text-secondary"
+        display ? "min-h-tap px-5 text-d-secondary" : "min-h-11 px-4 text-secondary"
       }`}
     >
       <CloudOff aria-hidden="true" className={display ? "size-6" : "size-5"} />

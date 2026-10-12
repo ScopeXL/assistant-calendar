@@ -129,7 +129,7 @@ export function DayView({
                   onAdd(Math.min(23, startHour));
                 }}
                 className={`press border-2 border-dashed border-line px-4 text-left ${soft} font-semibold text-ink-soft ${
-                  display ? "min-h-14 rounded-chip-d" : "min-h-11 rounded-chip"
+                  display ? "min-h-tap rounded-chip-d" : "min-h-11 rounded-chip"
                 }`}
               >
                 {label}
