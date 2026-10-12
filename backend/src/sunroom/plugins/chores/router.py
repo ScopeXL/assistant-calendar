@@ -57,7 +57,7 @@ IncludeInactive = Annotated[bool, Query()]
 def build(router: APIRouter, plugin: Chores) -> None:
     def ctx() -> PluginContext:
         if plugin.ctx is None:
-            raise AppError(503, "starting", "Chores are still starting. Try again.")
+            raise AppError(503, "starting", "Tasks are still starting. Try again.")
         return plugin.ctx
 
     # ---- chores ------------------------------------------------------------------------------

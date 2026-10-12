@@ -57,7 +57,7 @@ export function ChoresTodayWall() {
   return (
     <section aria-labelledby="today-chores" className="flex flex-col gap-2">
       <h2 id="today-chores" className="text-d-body font-bold text-ink-soft">
-        Chores Today
+        Tasks Today
       </h2>
       {people.map((column) => {
         const person = personOf(members, column.member_id);
@@ -120,7 +120,7 @@ export function ChoresTodayPhone() {
   return (
     <section aria-labelledby="phone-chores" className="flex flex-col gap-2">
       <h2 id="phone-chores" className="text-row font-bold text-ink-soft">
-        Chores
+        Tasks
       </h2>
       {asked.length ? <AskedStrip asked={asked} /> : null}
       {day.waiting.length ? <WaitingStrip waiting={day.waiting} /> : null}
@@ -137,7 +137,7 @@ export function ChoresTodayPhone() {
           >
             <Avatar member={person} size="sm" />
             <span className="flex-1 text-body font-bold">{`${person.name} · ${statusOf(column)}`}</span>
-            <span className="text-secondary font-semibold text-ink-soft">See chores</span>
+            <span className="text-secondary font-semibold text-ink-soft">See tasks</span>
           </Link>
         );
       })}

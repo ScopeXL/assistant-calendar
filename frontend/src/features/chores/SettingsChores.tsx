@@ -61,7 +61,7 @@ export function SettingsChores() {
   return (
     <>
       {plugin ? (
-        <Group title="What Chores Include">
+        <Group title="What Tasks Include">
           <PluginSettingsForm
             pluginId="chores"
             spec={plugin.settings_spec}

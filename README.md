@@ -11,7 +11,7 @@ computer at home, with no account anywhere and no subscription.
 - **Your data stays home,** in one Docker container with nightly backups.
 
 **Status:** working, and still growing toward 1.0. It has the calendar (with iCloud, Google and
-other calendars synced in), lists, chores with stars and routines, meals, countdowns, a photo
+other calendars synced in), lists, tasks with stars and routines, meals, countdowns, a photo
 screensaver and the weather. The [plan](docs/PLAN.md#15-milestones) lists what each milestone
 adds, and [CHANGELOG.md](CHANGELOG.md) what each release did.
 

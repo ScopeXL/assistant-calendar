@@ -80,7 +80,7 @@ async def test_a_chore_must_make_sense(parent: httpx.AsyncClient, family: Family
         "invalid",
         "A repeat happens daily, weekly, monthly or yearly.",
     )
-    assert await refused() == (422, "invalid", "Pick who does this chore.")
+    assert await refused() == (422, "invalid", "Pick who does this task.")
     assert await refused(assignee_mode="rotate", assignee_member_ids=[family.mia]) == (
         422,
         "invalid",
@@ -193,7 +193,7 @@ async def test_the_wall_screen_credits_whoever_tapped_and_a_phone_ignores_the_he
     phone = await complete(parent, plants["id"], headers=tapped(family.mia))
     assert phone.json()["completion"]["member_id"] == family.ana
     not_hers = await complete(parent, bed["id"], headers=tapped(family.mia))
-    assert error(not_hers) == (409, "not_theirs", "That isn't Ana's chore.")
+    assert error(not_hers) == (409, "not_theirs", "That isn't Ana's task.")
     # A parent's phone may tick someone else's box.
     for_mia = await complete(parent, bed["id"], member_id=family.mia)
     assert for_mia.json()["completion"]["member_id"] == family.mia
@@ -403,7 +403,7 @@ async def test_a_kids_phone_cant_change_a_chore_or_tick_another_kids_box(
     assert error(await complete(kid_phone, hers["id"])) == (
         409,
         "not_theirs",
-        "That isn't Leo's chore.",
+        "That isn't Leo's task.",
     )
     assert (await complete(kid_phone, his["id"])).json()["completion"]["member_id"] == family.leo
     # Someone else's tick on an anyone chore is theirs to take back, or a parent's.
@@ -592,7 +592,7 @@ async def test_a_removed_chore_waits_in_recently_removed_for_a_week(
     clock.advance(days=8)
     assert (await parent.get("/api/chores/removed")).json() == []
     gone = await parent.patch(f"/api/chores/{bed['id']}", json={"title": "X"}, headers=CSRF)
-    assert error(gone) == (404, "not_found", "That chore isn't here any more.")
+    assert error(gone) == (404, "not_found", "That task isn't here any more.")
 
 
 # ---- live events -------------------------------------------------------------------------------

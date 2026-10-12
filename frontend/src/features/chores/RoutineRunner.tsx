@@ -79,7 +79,7 @@ export function RoutineRunner({
         <p className={display ? "text-d-title font-bold" : "text-title font-bold"}>
           That routine isn't on today.
         </p>
-        <Button onClick={back}>Back to Chores</Button>
+        <Button onClick={back}>Back to Tasks</Button>
       </div>
     ) : null;
   }
@@ -151,7 +151,7 @@ export function RoutineRunner({
           </span>
         ) : null}
         <Button variant="secondary" onClick={back}>
-          {finished ? "Back to Chores" : "Stop"}
+          {finished ? "Back to Tasks" : "Stop"}
         </Button>
       </header>
       {finished || !current ? (

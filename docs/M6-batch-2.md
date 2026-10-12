@@ -127,7 +127,7 @@ outside the Tasks board. T14 builds the ones that answer what someone did.
 
 ### T1 Words: Tasks for Chores, People for Who's Doing What
 
-- [ ] Done (commit: )
+- [x] Done (commit: "words: Tasks for Chores, People for Who's Doing What")
 
 **Owner's notes.** "Rename Chores to Tasks." "Think of another title for the Who's Doing What
 view. It doesn't quite flow with Week | Day | Month."

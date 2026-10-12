@@ -90,7 +90,7 @@ export function DisplayPage() {
             options={[
               { value: "week", label: "Week" },
               { value: "today", label: "Today" },
-              { value: "people", label: "Who's Doing What" },
+              { value: "people", label: "People" },
             ]}
           />
         </Row>

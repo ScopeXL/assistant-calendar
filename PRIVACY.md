@@ -16,7 +16,7 @@ photo files.
 - Household members' names, whether each is a parent or a child, their color, and optionally a
   birthday and a photo.
 - What the family adds: calendars and events (with their places, notes, people and reminders),
-  lists, chores, stars, rewards and routines, meals, and countdowns. Removed things wait in
+  lists, tasks, stars, rewards and routines, meals, and countdowns. Removed things wait in
   Recently removed before they're deleted, and an event's earlier versions are kept for 30 days,
   for Undo.
 - Copies of the events in calendars you connect (below), so the screen works when they can't be

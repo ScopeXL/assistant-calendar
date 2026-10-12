@@ -43,7 +43,7 @@ function ChoresBoard() {
     <section aria-labelledby="chores-title" className="flex min-h-0 flex-1 flex-col">
       <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line px-6 py-4">
         <h1 id="chores-title" className="text-d-title font-bold">
-          {mode === "today" ? "Chores · Today" : "Chores · This Week"}
+          {mode === "today" ? "Tasks · Today" : "Tasks · This Week"}
         </h1>
         <Segmented
           label="Show"
@@ -73,8 +73,8 @@ function ChoresBoard() {
       {isSuccess && day.columns.length === 0 ? (
         <div className="px-6">
           <EmptyState
-            message="Chores live here. Give each person a few, and watch them get stamped."
-            action={<Button onClick={add}>Add chore</Button>}
+            message="Tasks live here. Give each person a few, and watch them get stamped."
+            action={<Button onClick={add}>Add task</Button>}
           />
         </div>
       ) : mode === "today" && day ? (

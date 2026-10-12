@@ -6,6 +6,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Chores are now Tasks everywhere you read it, and Who's Doing What is now People.
+
 ## [0.7.0] - 2026-10-09
 
 ### Added

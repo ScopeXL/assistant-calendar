@@ -293,7 +293,7 @@ export function ChoreEditor({
         </p>
       ) : null}
       <Button type="submit" block disabled={!ready} pending={pending}>
-        {chore ? "Save changes" : "Add chore"}
+        {chore ? "Save changes" : "Add task"}
       </Button>
     </form>
   );

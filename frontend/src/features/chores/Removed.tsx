@@ -16,7 +16,7 @@ export function RemovedChoreRows({ onCount }: { onCount: (count: number) => void
         <RemovedRow
           key={chore.id}
           title={chore.title}
-          detail="A chore"
+          detail="A task"
           removedAt={chore.deleted_at}
           pending={restoreChore.isPending && restoreChore.variables.choreId === chore.id}
           onPutBack={() => {

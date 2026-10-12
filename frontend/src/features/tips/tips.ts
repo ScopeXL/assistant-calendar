@@ -23,7 +23,7 @@ export const TIPS: readonly Tip[] = [
     id: "show",
     text: "Show: tap a person's picture to see only their week. It clears after two minutes.",
   },
-  { id: "who", text: "Who's Doing What gives each person their own column." },
+  { id: "who", text: "People gives each person their own column." },
   { id: "hours", text: "Hours draws each day from midnight to midnight. Zoom in when it's busy." },
   { id: "undo", text: "Removed something by mistake? Tap Undo on the message before it goes." },
   {
@@ -41,7 +41,7 @@ export const TIPS: readonly Tip[] = [
     text: "Lists: Usuals are the things you add most. One tap puts one back on the list.",
     needs: ["lists"],
   },
-  { id: "chores", text: "Chores: one tap on the box marks it done.", needs: ["chores"] },
+  { id: "chores", text: "Tasks: one tap on the box marks it done.", needs: ["chores"] },
   {
     id: "routines",
     text: "Routines walk a child through a morning or bedtime list, one step at a time.",

@@ -13,7 +13,7 @@ you can always go back.
 | **Download backup** | Settings → Backup on a phone or computer: the newest nightly copy, a few MB | The database |
 | **Download everything** | Settings → Backup on a phone or computer: `sunroom-YYYY-MM-DD.zip` | The database, every photo, and a `manifest.json` |
 
-The database holds everything the family added: people, calendars and events, lists, chores,
+The database holds everything the family added: people, calendars and events, lists, tasks,
 meals, countdowns, settings and the household password. Photos are files beside it, so only
 **Download everything** (or a copy of the whole volume) has them.
 

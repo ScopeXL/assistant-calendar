@@ -106,11 +106,11 @@ describe("design rules", () => {
 
   it("knows Title Case when it sees it (UX §2)", () => {
     for (const title of [
-      "Who's Doing What",
+      "Who's Using This",
       "Take Your Data with You",
       "Google: The Secret Address",
       "Calendars & Accounts",
-      "Chores · This Week",
+      "Tasks · This Week",
       "You’re Set",
       "Set a Parent PIN?",
       "Connect iCloud",

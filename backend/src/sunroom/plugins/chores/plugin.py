@@ -1,4 +1,8 @@
-"""The chores plugin object: its manifest, routes and jobs (ADR 0019, ADR 0025)."""
+"""The chores plugin object: its manifest, routes and jobs (ADR 0019, ADR 0025).
+
+Shown to the family as Tasks (M6 batch 2, ADR 0029): only the words changed. The plugin id
+`chores`, its routes, tables and events stay.
+"""
 
 from __future__ import annotations
 
@@ -22,14 +26,14 @@ HOUR_S = 3600
 MANIFEST = PluginManifest(
     id="chores",
     version="1.0.0",
-    name="Chores",
-    description="Chores for each person or anyone, with stars, rewards and routines.",
+    name="Tasks",
+    description="Tasks for each person or anyone, with stars, rewards and routines.",
     settings_spec=(
         ParamField(
             "stars",
             "Stars",
             "bool",
-            help="Chores give stars, and children see their own.",
+            help="Tasks give stars, and children see their own.",
             default=True,
         ),
         ParamField(
@@ -48,19 +52,19 @@ MANIFEST = PluginManifest(
         ),
         ParamField(
             "approval",
-            "A parent checks finished chores",
+            "A parent checks finished tasks",
             "bool",
-            help="Stars arrive once a parent says a chore is done. Each chore can say otherwise.",
+            help="Stars arrive once a parent says a task is done. Each task can say otherwise.",
             default=False,
         ),
     ),
     tables=TABLES,
     export_tables=EXPORT_TABLES,
     contributes=Contributions(
-        display_panels=(DisplayPanel("today", "Chores Today"),),
-        display_rooms=(DisplayRoom("chores", "Chores", "check", order=30),),
-        phone_tabs=(PhoneTab("chores", "Chores", "check", "/chores", order=30),),
-        settings_sections=(SettingsSection("chores", "Chores"),),
+        display_panels=(DisplayPanel("today", "Tasks Today"),),
+        display_rooms=(DisplayRoom("chores", "Tasks", "check", order=30),),
+        phone_tabs=(PhoneTab("chores", "Tasks", "check", "/chores", order=30),),
+        settings_sections=(SettingsSection("chores", "Tasks"),),
     ),
     default_enabled=True,
 )

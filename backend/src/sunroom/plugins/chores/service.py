@@ -154,7 +154,7 @@ def _checked_people(mode: str, people: Sequence[str]) -> list[str]:
     if len(set(people)) != len(people):
         raise invalid("Each person can be picked once.", "assignee_member_ids")
     if mode == FIXED and not people:
-        raise invalid("Pick who does this chore.", "assignee_member_ids")
+        raise invalid("Pick who does this task.", "assignee_member_ids")
     if mode == ROTATE and len(people) < 2:
         raise invalid("Pick at least two people to take turns.", "assignee_member_ids")
     return list(people)
@@ -206,7 +206,7 @@ async def add_chore(ctx: PluginContext, actor: Actor, body: ChoreIn) -> ChoreOut
 async def _chore(session: AsyncSession, chore_id: str) -> Chore:
     chore = await session.get(Chore, chore_id)
     if chore is None or chore.deleted_at is not None:
-        raise gone("chore")
+        raise gone("task")
     return chore
 
 
@@ -271,7 +271,7 @@ async def restore_chore(ctx: PluginContext, chore_id: str) -> ChoreOut:
     async with ctx.write() as tx:
         chore = await tx.session.get(Chore, chore_id)
         if chore is None:
-            raise gone("chore")
+            raise gone("task")
         if chore.deleted_at is not None:
             chore.deleted_at = None
             chore.updated_at = ctx.now()
@@ -485,7 +485,7 @@ async def complete(
         )
         if chore.assignee_mode == FIXED:
             if member.id not in rule.assignees:
-                raise AppError(409, "not_theirs", f"That isn't {possessive(member.name)} chore.")
+                raise AppError(409, "not_theirs", f"That isn't {possessive(member.name)} task.")
         else:
             other = next(
                 (r for r in rows if r.member_id != member.id and r.status in COUNTING), None
@@ -534,7 +534,7 @@ async def undo(ctx: PluginContext, actor: Actor, chore_id: str, body: CompleteIn
     async with ctx.write() as tx:
         chore = await tx.session.get(Chore, chore_id)
         if chore is None:
-            raise gone("chore")
+            raise gone("task")
         rows = list(
             await tx.session.scalars(
                 select(ChoreCompletion)
@@ -566,12 +566,12 @@ async def decide(
     async with ctx.write() as tx:
         row = await tx.session.get(ChoreCompletion, completion_id)
         if row is None:
-            raise AppError(404, "not_found", "That chore isn't waiting any more.")
+            raise AppError(404, "not_found", "That task isn't waiting any more.")
         target = CompletionStatus.DONE if approve else CompletionStatus.REJECTED
         if row.status == target:
             return completion_out(row)
         if approve and row.status != CompletionStatus.PENDING:
-            raise AppError(409, "not_waiting", "That chore isn't waiting any more.")
+            raise AppError(409, "not_waiting", "That task isn't waiting any more.")
         row.status = target
         row.approved_by_member_id = actor.member_id if approve else None
         row.approved_at = ctx.now() if approve else None

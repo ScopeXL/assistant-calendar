@@ -44,7 +44,7 @@ export function RewardsPage() {
           className="press -ml-2 inline-flex min-h-14 items-center gap-1 rounded-button-d pr-4 pl-2 text-d-body font-semibold"
         >
           <ChevronLeft aria-hidden="true" className="size-7" />
-          Chores
+          Tasks
         </Link>
         <h1 id="rewards-title" className="text-d-title font-bold">
           Stars & Rewards

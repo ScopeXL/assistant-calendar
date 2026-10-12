@@ -63,7 +63,7 @@ async def test_off_every_route_is_404_and_on_again_the_data_is_there(
         assert response.status_code == 404, (method, path)
         assert response.json()["error"] == {
             "code": "plugin_disabled",
-            "message": "Chores is turned off. A parent can turn it on in Settings.",
+            "message": "Tasks is turned off. A parent can turn it on in Settings.",
         }
     on = await parent.post("/api/plugins/chores/enable", headers=CSRF)
     assert on.status_code == 200, on.text

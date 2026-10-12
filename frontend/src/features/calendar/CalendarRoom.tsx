@@ -140,7 +140,7 @@ export function CalendarRoom() {
       },
     },
     people: {
-      title: "Who's Doing What",
+      title: "People",
       subtitle: shortDate(today),
       homeLabel: "Today",
       atHome: true,

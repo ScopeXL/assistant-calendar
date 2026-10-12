@@ -66,7 +66,7 @@ The app uses these words consistently in the UI, code and docs.
 | Occurrence | computed, never stored | One instance of an event on a date, as rendered in a view. Edits to one occurrence create an override row |
 | Up next / Today | computed | The next things for the household or a person |
 | List | `List`, `ListItem` (plugin `lists`) | A shared checklist: groceries, to-dos, packing. Items can have a person and a due date |
-| Chore | `Chore`, `ChoreCompletion` (plugin `chores`) | A recurring responsibility assigned to people, with optional points. Completing one is the signature moment of the app |
+| Task (stored as `chore`) | `Chore`, `ChoreCompletion` (plugin `chores`) | A recurring responsibility assigned to people, with optional points. Completing one is the signature moment of the app |
 | Routine | `Routine`, `RoutineStep` (plugin `chores`) | An ordered checklist a person runs through (morning, bedtime) |
 | Reward | `Reward`, `Redemption` (plugin `chores`) | Something points can be spent on, approved by a parent |
 | Meal | `MealEntry` (plugin `meals`) | What's for breakfast, lunch, dinner or snack on a day; free text or a saved meal |
@@ -274,7 +274,7 @@ One asyncio task and queue per enabled plugin (the earlier project's pattern, §
 |---|---|
 | Storage | `plugin_state(plugin_id, enabled, settings_json, settings_version, plugin_version, enabled_at, disabled_at, updated_at)` |
 | Boot | Insert a row per registered plugin if missing (`default_enabled`; `calendar_sync`, `lists`, `chores`, `weather` default on; `meals`, `countdowns`, `screensaver` default on too, since the wizard asks "Which features do you want?" and writes the answers) |
-| Enable / disable | Parent-gated. Disable stops the runner (10 s budget) and **keeps all data**; routes answer 404 `plugin_disabled` ("Chores is turned off. A parent can turn it on in Settings."); the frontend hides the plugin's rooms, tabs and panels |
+| Enable / disable | Parent-gated. Disable stops the runner (10 s budget) and **keeps all data**; routes answer 404 `plugin_disabled` ("Tasks is turned off. A parent can turn it on in Settings."); the frontend hides the plugin's rooms, tabs and panels |
 | Settings | `settings_json` is spec-typed JSON validated by `coerce_params` on every read and write (an earlier project's strategy-settings precedent; the one place Sunroom departs from "no key-value blobs", because a plugin setting must not require a core migration). `PUT /api/plugins/{id}/settings` bumps `settings_version`, publishes `plugins.changed`; plugins react in `on_event` |
 | Migrations | **One Alembic history** for core and plugins; plugin tables are created regardless of enablement; slugs start with the plugin id (`202610151200_chores_routines.py`). Why not per-plugin branches: the single-head assert, exit 65, pre-migration backup naming, `released.lock` and the fixture-DB upgrade tests all key on one revision, and forward-only migrations mean a disabled plugin's schema can never be unapplied anyway |
 | Third-party later | Would need: Python entry points, per-branch migrations with a core `depends_on`, a per-package `released.lock`, settings-shape migrations in `on_enable`, frontend chunks served same-origin (the strict `script-src 'self'` allows it) with a version handshake, and an API stability policy keyed on `manifest.version`. Not built; the contract above already avoids raw engine access and declares its tables, so the step stays incremental |
@@ -295,7 +295,7 @@ export interface PluginModule {
   rooms?: PluginRoom[];            // {key, label, icon, order, Display, Phone}: a rail room and a phone tab at /<key>
   today?: TodayBlock[];            // {key, order, Display?, Phone?}: Today panel blocks and phone Today sections
   add?: AddType[];                 // {key, label, order, room?, Editor}: kinds Add makes beside Event
-  personColumn?: ComponentType<{ memberId: string | null; day: string }>;   // under a person in Who's doing what
+  personColumn?: ComponentType<{ memberId: string | null; day: string }>;   // under a person in the People view
   removed?: ComponentType<{ onCount: (n: number) => void }>;                 // rows in Recently removed
   settingsPages?: SettingsPage[];  // whole pages in Settings, after Calendars & accounts
   settings?: Record<string, ComponentType>;  // sections inside core pages (accounts; household)
@@ -392,7 +392,7 @@ Fourteen ICS fixtures with golden expected occurrences, cross-checked against `r
 | Plugin | Tables | What it does | Display | Phone |
 |---|---|---|---|---|
 | `lists` | `lists`, `list_items` | Shared checklists (grocery, to-do, packing, custom) with items that can carry a quantity, a note, a person and a due date; reorder; clear checked (with Undo); optional auto-clear after N days. Items with a due date appear in the `chores` overlay as tasks | Room "Lists"; Today panel block "Needs doing" (due or assigned items) | Tab "Lists" |
-| `chores` | `chores`, `chore_completions`, `point_adjustments`, `rewards`, `redemptions`, `routines`, `routine_steps`, `routine_checks` | Recurring responsibilities (RRULE, due time, fixed / rotating / anyone assignment) computed into a due list per day; completion with attribution, optional parent approval, points, streaks (computed); rewards a person can request and a parent approves; routines (morning, bedtime) as step-by-step checklists per child that reset daily. All optional: points, rewards and routines each have a switch | Room "Chores" (today per person), Today panel blocks "Chores today" and "Points"; the routine runner is full-screen | Tab "Chores" |
+| `chores` | `chores`, `chore_completions`, `point_adjustments`, `rewards`, `redemptions`, `routines`, `routine_steps`, `routine_checks` | Recurring responsibilities (RRULE, due time, fixed / rotating / anyone assignment) computed into a due list per day; completion with attribution, optional parent approval, points, streaks (computed); rewards a person can request and a parent approves; routines (morning, bedtime) as step-by-step checklists per child that reset daily. All optional: points, rewards and routines each have a switch | Room "Tasks" (today per person; the family reads Tasks, the id stays `chores`: ADR 0029), Today panel blocks "Tasks Today" and "Points"; the routine runner is full-screen | Tab "Tasks" |
 | `meals` | `meal_entries`, `saved_meals` | A week grid of breakfast / lunch / dinner / snack entries (the household picks which; Dinner by default): free text with an optional emoji, link and the person cooking; every meal typed is kept as a saved meal for one-tap re-adding, with its ingredients for "Add ingredients to Groceries" while Lists is on; Swap days; copy last week. Dinner appears on the calendar as an all-day overlay chip when the household turns it on. `source_url` is reserved for a later Dinner Bell link (§19) | Room "Meals" (and Saved meals); Today panel block "Tonight" | In More |
 | `countdowns` | `countdowns` | "12 days until the beach trip" with an emoji, optional person and color, yearly repeat, and "not on the kitchen screen" for a surprise; birthdays come from members automatically (counted down here; on the board they're the core's `birthdays` overlay, §7.6); "Add a countdown" from an event's sheet; the big celebration on the day | Room "Countdowns"; Today panel block "Coming Up" (the nearest 3); a star on the board's day | In More |
 | `screensaver` | `photo_sources` (+ core `photos`) | Photo slideshow when the display is idle (idle minutes, seconds per photo, shuffle, the clock and Up next); Night wins over it; sources: phone upload and the inbox folder on the volume, later Immich and Nextcloud | The overlay; room "Photos"; Settings → Photos & screensaver | Photos in More: add, remove, Start screensaver |
@@ -825,7 +825,7 @@ Numbers stay fixed because other sections cite them; settled items leave gaps.
 | Suggestion | Why | Where |
 |---|---|---|
 | Parent PIN and children's devices | Children use the wall screen; Skylight and Hearth both ship a lock; DAKboard added "Child Lock" in 2026 | §12 |
-| "Who's doing what" people view (a column per person for today and the week) | Hearth's most-praised view | UX |
+| The People view (a column per person for today and the week; first named "Who's doing what") | Hearth's most-praised view | UX |
 | Routines (morning, bedtime) with a full-screen step runner and a bigger celebration at the end | Hearth; Skylight's "explosion of emojis" on a finished list is what families remember | §9, UX |
 | Rewards with parent approval, streaks | Skylight charges $79/yr for stars; Hearth $9/mo | §9 |
 | Sync health: "Updated 2 min ago", "Sync now", a plain-English fix for expired passwords | The top complaint across every competitor is sync | §8 |

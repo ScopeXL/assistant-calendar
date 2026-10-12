@@ -104,7 +104,7 @@ export function ChoreColumn({
       // On its own (the Chores room) the column is a region named for its person; inside a
       // person's column elsewhere (Who's doing what, a phone's section) it's just a group.
       role={header ? undefined : "group"}
-      aria-label={header ? name : `${name}'s chores`}
+      aria-label={header ? name : `${name}'s tasks`}
       data-person={color}
       className={`flex min-h-0 flex-col ${display ? "gap-2" : "gap-1"}`}
     >

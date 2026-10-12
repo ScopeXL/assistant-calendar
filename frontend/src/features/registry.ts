@@ -48,7 +48,7 @@ export interface AddEditorProps {
 /** A kind of thing Add makes, beside Event (UX §4 "The Add panel for other things"). */
 export interface AddType {
   key: string;
-  /** The chip's word: "Item", "Chore". */
+  /** The chip's word: "Item", "Task". */
   label: string;
   order: number;
   /** The room where it's the first choice when Add opens. */

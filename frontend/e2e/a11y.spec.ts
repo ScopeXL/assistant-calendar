@@ -24,7 +24,7 @@ const SETTINGS = [
   "Family",
   "Features",
   "Calendars & Accounts",
-  "Chores",
+  "Tasks",
   "Meals",
   "Photos & Screensaver",
   "Display",
@@ -267,8 +267,8 @@ for (const scheme of ["light", "dark"] as const) {
         .getByRole("dialog", { name: "Eggs" })
         .getByRole("button", { name: "Close" })
         .click();
-      await page.getByRole("link", { name: "Chores" }).click();
-      await expect(page.getByRole("heading", { name: "Chores", level: 1 })).toBeVisible();
+      await page.getByRole("link", { name: "Tasks" }).click();
+      await expect(page.getByRole("heading", { name: "Tasks", level: 1 })).toBeVisible();
       await check(page, "chores");
       await sheet(page, "Add", "chores: add");
       await page.getByRole("link", { name: "Stars & Rewards" }).click();
@@ -376,7 +376,7 @@ for (const scheme of ["light", "dark"] as const) {
       await add.getByRole("button", { name: "Every week on Thu" }).click();
       await check(page, "display: add, the repeat picker");
       await add.getByRole("button", { name: "Close" }).click();
-      for (const view of ["Day", "Month", "Who's Doing What"]) {
+      for (const view of ["Day", "Month", "People"]) {
         await page.getByRole("button", { name: view, exact: true }).click();
         await check(page, `display: ${view}`);
       }
@@ -394,8 +394,8 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("link", { name: /^Groceries/ }).click();
       await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
       await check(page, "display: groceries");
-      await page.getByRole("link", { name: "Chores" }).click();
-      await expect(page.getByRole("heading", { name: "Chores · Today", level: 1 })).toBeVisible();
+      await page.getByRole("link", { name: "Tasks" }).click();
+      await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
       await check(page, "display: chores");
       await page.getByRole("checkbox", { name: /^Empty the dishwasher/ }).click();
       await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
@@ -439,11 +439,11 @@ for (const scheme of ["light", "dark"] as const) {
         .getByRole("dialog", { name: "Add" })
         .getByRole("button", { name: "Close" })
         .click();
-      await page.getByRole("link", { name: "Chores" }).click();
+      await page.getByRole("link", { name: "Tasks" }).click();
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await page
         .getByRole("dialog", { name: "Add" })
-        .getByRole("button", { name: "Chore", exact: true })
+        .getByRole("button", { name: "Task", exact: true })
         .click();
       await check(page, "display: add a chore");
       await page

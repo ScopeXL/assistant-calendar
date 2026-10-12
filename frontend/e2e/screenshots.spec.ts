@@ -31,7 +31,7 @@ const PAGES = [
   { key: "family", title: "Family" },
   { key: "features", title: "Features" },
   { key: "calendars", title: "Calendars & Accounts" },
-  { key: "chores", title: "Chores" },
+  { key: "chores", title: "Tasks" },
   { key: "meals", title: "Meals" },
   { key: "screensaver", title: "Photos & Screensaver" },
   { key: "display", title: "Display" },
@@ -99,7 +99,7 @@ test("the wall screen", async ({ page }) => {
         await page.reload();
         await expect(board).toBeVisible();
         // The Today panel's plugin blocks arrive a moment after the board.
-        await expect(page.getByRole("heading", { name: "Chores Today" }).first()).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Tasks Today" }).first()).toBeVisible();
         // Mia's birthday, the core's own chip, on Friday (at Extra large, portrait's short rows
         // keep it behind "+3 more").
         if (size === "standard") {
@@ -115,7 +115,7 @@ test("the wall screen", async ({ page }) => {
   await moveClock(page, STOPS[1]?.at ?? "");
   await page.reload();
   await expect(board).toBeVisible();
-  for (const view of ["Day", "Month", "Who's Doing What"]) {
+  for (const view of ["Day", "Month", "People"]) {
     await page.getByRole("button", { name: view, exact: true }).click();
     await shot(page, `view-${view.split(" ")[0]?.toLowerCase() ?? view}`);
   }
@@ -491,7 +491,7 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
     await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
     await shot(page, `lists-groceries-${theme}`);
     await page.goto("/chores");
-    await expect(page.getByRole("heading", { name: "Chores · Today", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tasks · Today", level: 1 })).toBeVisible();
     await shot(page, `chores-${theme}`);
     await page.getByRole("checkbox", { name: /^Water the plants/ }).click();
     await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
@@ -503,11 +503,11 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
     await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
     await shot(page, `chores-rewards-${theme}`);
     await page.goto("/display");
-    await page.getByRole("button", { name: "Who's Doing What", exact: true }).click();
+    await page.getByRole("button", { name: "People", exact: true }).click();
     await shot(page, `chores-people-${theme}`);
     await page.getByRole("button", { name: "Add", exact: true }).click();
     const add = page.getByRole("dialog", { name: "Add" });
-    await add.getByRole("button", { name: "Chore", exact: true }).click();
+    await add.getByRole("button", { name: "Task", exact: true }).click();
     await shot(page, `add-chore-${theme}`);
     await add.getByRole("button", { name: "Item", exact: true }).click();
     await shot(page, `add-item-${theme}`);
@@ -618,8 +618,8 @@ test("a phone's lists and chores", async ({ page, isMobile }) => {
     await page.getByRole("link", { name: /^Groceries/ }).click();
     await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
     await shot(page, `lists-groceries-${scheme}`);
-    await page.getByRole("link", { name: "Chores" }).click();
-    await expect(page.getByRole("heading", { name: "Chores", level: 1 })).toBeVisible();
+    await page.getByRole("link", { name: "Tasks" }).click();
+    await expect(page.getByRole("heading", { name: "Tasks", level: 1 })).toBeVisible();
     await shot(page, `chores-${scheme}`);
     await page.getByRole("link", { name: "Stars & Rewards" }).click();
     await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();

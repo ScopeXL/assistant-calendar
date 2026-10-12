@@ -54,8 +54,8 @@ export function FeaturesPage() {
       <Group title="In This Version">
         <div className="py-5">
           <Text>
-            This version has the family calendar. Synced calendars, lists, chores, meals,
-            countdowns, photos and weather each arrive as a feature you can turn on here.
+            This version has the family calendar. Synced calendars, lists, tasks, meals, countdowns,
+            photos and weather each arrive as a feature you can turn on here.
           </Text>
         </div>
       </Group>

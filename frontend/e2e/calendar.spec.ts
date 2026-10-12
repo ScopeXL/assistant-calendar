@@ -139,9 +139,9 @@ test("the views, the event sheet and Recently removed", async ({ page }) => {
   await month.getByRole("button", { name: /^Fri 9: .*Pajama day/ }).click();
   await expect(page.getByRole("region", { name: "Fri, Oct 9" })).toContainText("Pajama day");
 
-  // Who's Doing What: a column per person, Everyone first.
-  await page.getByRole("button", { name: "Who's Doing What", exact: true }).click();
-  const people = page.getByRole("region", { name: "Who's Doing What" });
+  // People: a column per person, Everyone first.
+  await page.getByRole("button", { name: "People", exact: true }).click();
+  const people = page.getByRole("region", { name: "People" });
   await expect(people.getByRole("region", { name: "Ana" })).toContainText("Vet");
   await expect(people.getByRole("region", { name: "Leo" })).toContainText("Piano lesson");
 

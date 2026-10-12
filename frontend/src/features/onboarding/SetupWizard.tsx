@@ -459,7 +459,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
     <Page title="Set a Parent PIN?" step="5 of 7">
       <p className="text-body text-ink-soft">
         It keeps children out of Settings on the kitchen screen. Adding events and checking off
-        chores never ask for it.
+        tasks never ask for it.
       </p>
       <form
         className="flex flex-col gap-4"
