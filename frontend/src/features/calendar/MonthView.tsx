@@ -1,5 +1,7 @@
+import { useArrived } from "../../lib/arrivals";
 import { dayNumber, formatWallTime, shortWeekday, type MonthGrid } from "../../lib/dates";
 import type { Member } from "../../lib/household";
+import { arrivalKey } from "./EventChip";
 import { byDay, shownFor } from "./layout";
 import { coreOverlayOf, useOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
@@ -95,11 +97,13 @@ export function MonthView({
 
 function MonthEntry({ occurrence, members }: { occurrence: Occurrence; members: Member[] }) {
   const overlay = useOverlayOf(occurrence);
+  const arrive = useArrived(arrivalKey(occurrence)) ? "" : undefined;
   if (overlay) {
     const Icon = overlay.icon;
     return (
       <span
         aria-hidden="true"
+        data-arrive={arrive}
         data-overlay={occurrence.overlay ?? undefined}
         className="flex min-w-0 items-center gap-1.5 px-1.5 text-d-caption text-ink-soft"
       >
@@ -120,6 +124,7 @@ function MonthEntry({ occurrence, members }: { occurrence: Occurrence; members: 
     <span
       aria-hidden="true"
       data-person={color}
+      data-arrive={arrive}
       data-overlay={occurrence.overlay ?? undefined}
       className="flex min-w-0 items-center gap-1.5 rounded-sm border-l-4 border-p bg-p-tint px-1.5 text-d-caption"
     >

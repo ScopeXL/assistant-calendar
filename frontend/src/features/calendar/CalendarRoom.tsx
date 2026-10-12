@@ -10,8 +10,10 @@ import {
   weekSpan,
   zonedParts,
 } from "../../lib/dates";
+import { Arrivals, useArrivals } from "../../lib/arrivals";
 import { displayState, updateDisplay, type BoardView } from "../../lib/displayState";
 import { useMembers, useSettings } from "../../lib/household";
+import { usePageTurn } from "../../lib/motion";
 import { usePluginModules } from "../usePluginModules";
 import { useStore } from "../../lib/store";
 import { useMinute } from "../../lib/time";
@@ -20,6 +22,7 @@ import { AddPanel } from "./AddPanel";
 import { BoardControls, BoardToolbar } from "./BoardControls";
 import { useEventChanges, useOccurrences } from "./data";
 import { DayView } from "./DayView";
+import { arrivalKey } from "./EventChip";
 import { EventSheet } from "./EventSheet";
 import { MonthView } from "./MonthView";
 import { useOpenOverlay } from "./overlays";
@@ -54,6 +57,7 @@ export function CalendarRoom() {
   const layout = state.weekLayout ?? settings?.display_week_layout ?? "agenda";
   const dimPast = settings?.display_dim_past ?? true;
   const changes = useEventChanges();
+  const pages = usePageTurn();
   const pills = usePluginModules().flatMap((module) =>
     module.boardPill ? [{ id: module.id, Pill: module.boardPill }] : [],
   );
@@ -76,8 +80,14 @@ export function CalendarRoom() {
           : view === "people"
             ? { from: today, to: addDays(today, 1) }
             : { from: week[0] ?? today, to: addDays(week[6] ?? today, 1) };
-  const { data } = useOccurrences(range.from, range.to, { overlays: true });
+  const { data, isPlaceholderData } = useOccurrences(range.from, range.to, { overlays: true });
   const occurrences = data?.occurrences ?? [];
+  // A chip added or moved while this week (day, month) shows eases in; paging or another view
+  // is a new scope, and the events of the last one still up while it loads are nobody's news.
+  const arrived = useArrivals(
+    occurrences.map(arrivalKey),
+    data && !isPlaceholderData ? `${view} ${range.from} ${range.to}` : null,
+  );
   const openOverlay = useOpenOverlay();
 
   const open = (occurrence: Occurrence) => {
@@ -121,6 +131,7 @@ export function CalendarRoom() {
   };
 
   const page = (step: -1 | 1) => {
+    pages.turn(step);
     if (view === "day") updateDisplay({ day: addDays(focusDay, step) });
     else if (view === "month") updateDisplay({ monthOffset: state.monthOffset + step });
     else updateDisplay({ weekOffset: state.weekOffset + step });
@@ -132,6 +143,7 @@ export function CalendarRoom() {
       homeLabel: "This Week",
       atHome: state.weekOffset === 0,
       home: () => {
+        pages.turn(-state.weekOffset);
         updateDisplay({ weekOffset: 0 });
       },
     },
@@ -141,6 +153,7 @@ export function CalendarRoom() {
       homeLabel: "Today",
       atHome: focusDay === today,
       home: () => {
+        pages.turn(focusDay > today ? -1 : 1);
         updateDisplay({ day: null });
       },
     },
@@ -150,6 +163,7 @@ export function CalendarRoom() {
       homeLabel: "This Month",
       atHome: state.monthOffset === 0,
       home: () => {
+        pages.turn(-state.monthOffset);
         updateDisplay({ monthOffset: 0 });
       },
     },
@@ -179,6 +193,7 @@ export function CalendarRoom() {
       <BoardControls
         view={view}
         onView={(next) => {
+          pages.rest();
           updateDisplay({ view: next });
         }}
         homeLabel={header.homeLabel}
@@ -194,141 +209,145 @@ export function CalendarRoom() {
       aria-label={view === "week" ? "This Week" : header.title}
       className="@container flex min-h-0 flex-1 flex-col"
     >
-      <BoardToolbar
-        members={members}
-        people={state.people}
-        onPeople={(people) => {
-          updateDisplay({ people });
-        }}
-        pills={pills.map(({ id, Pill }) => (
-          <Pill key={id} />
-        ))}
-        tools={
-          view === "week" ? (
-            <WeekTools
+      <Arrivals value={arrived}>
+        <BoardToolbar
+          members={members}
+          people={state.people}
+          onPeople={(people) => {
+            updateDisplay({ people });
+          }}
+          pills={pills.map(({ id, Pill }) => (
+            <Pill key={id} />
+          ))}
+          tools={
+            view === "week" ? (
+              <WeekTools
+                layout={layout}
+                zoom={state.hoursZoom}
+                onLayout={(weekLayout) => {
+                  updateDisplay({ weekLayout });
+                }}
+                onZoom={(hoursZoom) => {
+                  updateDisplay({ hoursZoom });
+                }}
+              />
+            ) : null
+          }
+        />
+        <div {...pages.attrs} className="flex min-h-0 flex-1 flex-col">
+          {view === "week" ? (
+            <WeekView
+              days={week}
+              today={today}
+              now={now}
+              occurrences={occurrences}
+              members={members}
+              dimPast={dimPast}
+              people={state.people}
               layout={layout}
               zoom={state.hoursZoom}
-              onLayout={(weekLayout) => {
-                updateDisplay({ weekLayout });
-              }}
               onZoom={(hoursZoom) => {
                 updateDisplay({ hoursZoom });
               }}
+              onOpen={open}
+              onAdd={(day, hour, minute) => {
+                add(day, hour ?? null, minute ?? null);
+              }}
+              onMore={(day) => {
+                updateDisplay({ view: "day", day });
+              }}
+              onMove={move}
+              onSwipe={page}
+              onDragging={setDragging}
+              lit={state.panel?.kind === "add" || state.panel?.kind === "edit" ? draftDay : null}
             />
-          ) : null
-        }
-      />
-      {view === "week" ? (
-        <WeekView
-          days={week}
+          ) : view === "day" ? (
+            <DayView
+              day={focusDay}
+              now={now}
+              occurrences={occurrences}
+              members={members}
+              dimPast={dimPast}
+              people={state.people}
+              onOpen={open}
+              onAdd={(hour) => {
+                add(focusDay, hour);
+              }}
+            />
+          ) : view === "month" ? (
+            <MonthView
+              grid={month}
+              today={today}
+              occurrences={occurrences}
+              members={members}
+              people={state.people}
+              onDay={(day) => {
+                updateDisplay({ view: "day", day });
+              }}
+            />
+          ) : view === "people" ? (
+            <PeopleView
+              today={today}
+              now={now}
+              occurrences={occurrences}
+              members={members}
+              dimPast={dimPast}
+              onOpen={open}
+            />
+          ) : (
+            <TodayView
+              today={today}
+              now={now}
+              occurrences={occurrences}
+              loading={data === undefined}
+              members={members}
+              onOpen={open}
+            />
+          )}
+        </div>
+        <EventSheet
+          panel={state.panel?.kind === "event" ? state.panel : null}
+          onClose={() => {
+            updateDisplay({ panel: null });
+          }}
+          onChange={(eventId, recurrenceId) => {
+            updateDisplay({ panel: { kind: "edit", eventId, recurrenceId } });
+          }}
+        />
+        <AddPanel
+          panel={state.panel?.kind === "add" || state.panel?.kind === "edit" ? state.panel : null}
           today={today}
-          now={now}
-          occurrences={occurrences}
-          members={members}
-          dimPast={dimPast}
-          people={state.people}
-          layout={layout}
-          zoom={state.hoursZoom}
-          onZoom={(hoursZoom) => {
-            updateDisplay({ hoursZoom });
+          onDay={setDraftDay}
+          onClose={() => {
+            updateDisplay({ panel: null });
           }}
-          onOpen={open}
-          onAdd={(day, hour, minute) => {
-            add(day, hour ?? null, minute ?? null);
-          }}
-          onMore={(day) => {
-            updateDisplay({ view: "day", day });
-          }}
-          onMove={move}
-          onSwipe={page}
-          onDragging={setDragging}
-          lit={state.panel?.kind === "add" || state.panel?.kind === "edit" ? draftDay : null}
-        />
-      ) : view === "day" ? (
-        <DayView
-          day={focusDay}
-          now={now}
-          occurrences={occurrences}
-          members={members}
-          dimPast={dimPast}
-          people={state.people}
-          onOpen={open}
-          onAdd={(hour) => {
-            add(focusDay, hour);
+          onType={(type) => {
+            if (state.panel?.kind === "add") updateDisplay({ panel: { ...state.panel, type } });
           }}
         />
-      ) : view === "month" ? (
-        <MonthView
-          grid={month}
-          today={today}
-          occurrences={occurrences}
-          members={members}
-          people={state.people}
-          onDay={(day) => {
-            updateDisplay({ view: "day", day });
+        <ScopeChooser
+          open={pendingMove !== null}
+          verb="Move"
+          title={pendingMove?.occurrence.title ?? ""}
+          onChoose={(scope: Scope) => {
+            const pending = pendingMove;
+            setPendingMove(null);
+            if (!pending?.occurrence.event_id) return;
+            changes.move.mutate({
+              target: {
+                eventId: pending.occurrence.event_id,
+                recurrenceId: pending.occurrence.recurrence_id ?? null,
+              },
+              scope,
+              toDate: pending.toDay,
+              title: pending.occurrence.title,
+            });
+          }}
+          onCancel={() => {
+            setPendingMove(null);
           }}
         />
-      ) : view === "people" ? (
-        <PeopleView
-          today={today}
-          now={now}
-          occurrences={occurrences}
-          members={members}
-          dimPast={dimPast}
-          onOpen={open}
-        />
-      ) : (
-        <TodayView
-          today={today}
-          now={now}
-          occurrences={occurrences}
-          loading={data === undefined}
-          members={members}
-          onOpen={open}
-        />
-      )}
-      <EventSheet
-        panel={state.panel?.kind === "event" ? state.panel : null}
-        onClose={() => {
-          updateDisplay({ panel: null });
-        }}
-        onChange={(eventId, recurrenceId) => {
-          updateDisplay({ panel: { kind: "edit", eventId, recurrenceId } });
-        }}
-      />
-      <AddPanel
-        panel={state.panel?.kind === "add" || state.panel?.kind === "edit" ? state.panel : null}
-        today={today}
-        onDay={setDraftDay}
-        onClose={() => {
-          updateDisplay({ panel: null });
-        }}
-        onType={(type) => {
-          if (state.panel?.kind === "add") updateDisplay({ panel: { ...state.panel, type } });
-        }}
-      />
-      <ScopeChooser
-        open={pendingMove !== null}
-        verb="Move"
-        title={pendingMove?.occurrence.title ?? ""}
-        onChoose={(scope: Scope) => {
-          const pending = pendingMove;
-          setPendingMove(null);
-          if (!pending?.occurrence.event_id) return;
-          changes.move.mutate({
-            target: {
-              eventId: pending.occurrence.event_id,
-              recurrenceId: pending.occurrence.recurrence_id ?? null,
-            },
-            scope,
-            toDate: pending.toDay,
-            title: pending.occurrence.title,
-          });
-        }}
-        onCancel={() => {
-          setPendingMove(null);
-        }}
-      />
+      </Arrivals>
     </section>
   );
 }

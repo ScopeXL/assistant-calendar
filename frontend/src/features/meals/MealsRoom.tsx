@@ -19,6 +19,7 @@ import {
   zonedParts,
 } from "../../lib/dates";
 import { useMembers, useSettings, type Member } from "../../lib/household";
+import { usePageTurn } from "../../lib/motion";
 import { useMinute } from "../../lib/time";
 import { HeaderLink } from "../../shell/HeaderLinks";
 import { RoomHeader } from "../../shell/roomHeader";
@@ -66,6 +67,7 @@ export function MealsRoom({ path }: { path: string[] }) {
 
 function MealsWeek() {
   const [offset, setOffset] = useState(0);
+  const pages = usePageTurn();
   const { today, days, start } = useMealWeek(offset);
   const { data: week, isSuccess } = useWeek(start);
   const { data: members = [] } = useMembers();
@@ -91,6 +93,7 @@ function MealsWeek() {
                 icon
                 aria-label="Last week"
                 onClick={() => {
+                  pages.turn(-1);
                   setOffset(offset - 1);
                 }}
               >
@@ -100,6 +103,7 @@ function MealsWeek() {
                 variant="secondary"
                 disabled={offset === 0}
                 onClick={() => {
+                  pages.turn(-offset);
                   setOffset(0);
                 }}
               >
@@ -110,6 +114,7 @@ function MealsWeek() {
                 icon
                 aria-label="Next week"
                 onClick={() => {
+                  pages.turn(1);
                   setOffset(offset + 1);
                 }}
               >
@@ -141,7 +146,7 @@ function MealsWeek() {
             <EmptyState message={EMPTY} />
           </div>
         ) : null}
-        <table className="w-full table-fixed border-collapse">
+        <table {...pages.attrs} className="w-full table-fixed border-collapse">
           <caption className="sr-only">Meals for the week of {shortDate(start)}</caption>
           <thead>
             <tr className="border-b border-line">

@@ -270,6 +270,7 @@ function DayColumn({
             events(hidden) ? <MoreButton count={events(hidden)} day={day} onMore={onMore} /> : null
           }
           pinned={(row) => row.kind === "now"}
+          leaving
           listClassName={`flex flex-col gap-2 ${PORTRAIT_ROW}`}
           itemClassName={(row) =>
             row.kind === "now" ? "portrait:mb-2 portrait:self-stretch" : PORTRAIT_CELL

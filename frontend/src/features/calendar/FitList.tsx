@@ -1,4 +1,7 @@
+import { AnimatePresence, motion } from "motion/react";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+
+import { LEAVE, useMotionReduced } from "../../lib/motion";
 
 /** Where an item of the invisible copy landed (px, inside the list). */
 export interface Box {
@@ -100,6 +103,7 @@ export function FitList<T>({
   render,
   renderMore,
   pinned = () => false,
+  leaving = false,
   listClassName = "flex flex-col gap-2",
   itemClassName = () => "",
   moreClassName = "",
@@ -112,6 +116,9 @@ export function FitList<T>({
   renderMore: (hidden: readonly T[]) => ReactNode;
   /** The one item that always shows (the now line): never left out, never counted. */
   pinned?: (item: T) => boolean;
+  /** An item taken off the list fades and shrinks away first (UX §9 "Chips leave"); the rest
+   * close up when it has gone. Not the pinned one, and not under Reduce Motion. */
+  leaving?: boolean;
   listClassName?: string;
   itemClassName?: (item: T) => string;
   moreClassName?: string;
@@ -156,14 +163,29 @@ export function FitList<T>({
   const pin = pinnedIndex >= fits ? items[pinnedIndex] : undefined;
   if (pin !== undefined) shown.push(pin);
   const hidden = items.filter((_, index) => index >= fits && index !== pinnedIndex);
+  const reduced = useMotionReduced();
   return (
     <div ref={box} className="relative min-h-0 flex-1 overflow-hidden">
       <div className={listClassName}>
-        {shown.map((item, index) => (
-          <div key={itemKey(item)} className={itemClassName(item)}>
-            {render(item, index, false)}
-          </div>
-        ))}
+        {leaving ? (
+          <AnimatePresence initial={false}>
+            {shown.map((item, index) => (
+              <motion.div
+                key={itemKey(item)}
+                className={itemClassName(item)}
+                {...(reduced || pinned(item) ? {} : { exit: LEAVE })}
+              >
+                {render(item, index, false)}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        ) : (
+          shown.map((item, index) => (
+            <div key={itemKey(item)} className={itemClassName(item)}>
+              {render(item, index, false)}
+            </div>
+          ))
+        )}
         {hidden.length > 0 ? <div className={moreClassName}>{renderMore(hidden)}</div> : null}
       </div>
       <div

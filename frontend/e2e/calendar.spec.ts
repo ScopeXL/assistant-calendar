@@ -251,3 +251,80 @@ test("a birthday from Family is a chip in its person's color, and moves when it'
   await expect(sheet.getByRole("button", { name: "Change" })).toHaveCount(0);
   await context.close();
 });
+
+test("an event added from a phone eases onto the wall, and one removed fades away", async ({
+  page,
+  browser,
+  watch,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  await expect(board.getByRole("button", { name: /^Vet, / })).toBeVisible();
+  // Nothing arrives on first paint.
+  await expect(board.locator("[data-arrive]")).toHaveCount(0);
+  // Nor when the week is paged: the whole week slides in from its side instead.
+  await page.getByRole("button", { name: "Next week" }).click();
+  const body = board.locator("[data-page]");
+  await expect(body).toHaveAttribute("data-page", "next");
+  expect(await body.evaluate((node) => getComputedStyle(node).animationName)).toMatch(
+    /^page-next-/,
+  );
+  await page.getByRole("button", { name: "This Week" }).click();
+  await expect(body).toHaveAttribute("data-page", "prev");
+  await expect(board.getByRole("button", { name: /^Vet, / })).toBeVisible();
+  await expect(board.locator("[data-arrive]")).toHaveCount(0);
+
+  // A parent's phone adds an event: its chip, and only it, eases in.
+  const { page: phonePage, context } = await phone(browser, watch);
+  await signInPhone(phonePage);
+  const added = await phonePage.request.post("/api/calendar/events", {
+    headers: CSRF,
+    data: { title: "Library day", start_date: "2026-10-08" },
+  });
+  expect(added.status()).toBe(201);
+  const { event } = (await added.json()) as { event: { id: string } };
+  const chip = board.getByRole("button", { name: /^Library day/ });
+  await expect(chip).toHaveAttribute("data-arrive", "", { timeout: 3_000 });
+  expect(await chip.evaluate((node) => getComputedStyle(node).animationName)).toBe("arrive");
+  await expect(board.locator("[data-arrive]")).toHaveCount(1);
+  // The mark goes once it has arrived, so drawing the board again doesn't replay it.
+  await expect(board.locator("[data-arrive]")).toHaveCount(0, { timeout: 3_000 });
+
+  // Removed from the phone: the chip fades and shrinks before it goes (motion, under the CSP).
+  await page.evaluate(() => {
+    const seen = window as unknown as { faded?: boolean };
+    seen.faded = false;
+    const chip = document.querySelector('[data-chip][aria-label^="Library day"]');
+    const watch = () => {
+      const box = chip?.parentElement?.parentElement;
+      if (box && Number(getComputedStyle(box).opacity) < 1) seen.faded = true;
+      if (chip?.isConnected) requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+  const removed = await phonePage.request.delete(`/api/calendar/events/${event.id}`, {
+    headers: CSRF,
+  });
+  expect(removed.ok()).toBe(true);
+  await expect(chip).toHaveCount(0, { timeout: 3_000 });
+  expect(await page.evaluate(() => (window as unknown as { faded?: boolean }).faded)).toBe(true);
+
+  // With Reduce motion on (Settings → Display), a newcomer has no animation at all.
+  const calm = await phonePage.request.patch("/api/settings", {
+    headers: CSRF,
+    data: { display_reduce_motion: true },
+  });
+  expect(calm.ok()).toBe(true);
+  await expect(page.locator("html[data-reduce-motion]")).toHaveCount(1, { timeout: 3_000 });
+  const again = await phonePage.request.post("/api/calendar/events", {
+    headers: CSRF,
+    data: { title: "Dentist", start_date: "2026-10-08" },
+  });
+  expect(again.status()).toBe(201);
+  const calmChip = board.getByRole("button", { name: /^Dentist/ });
+  await expect(calmChip).toBeVisible({ timeout: 3_000 });
+  expect(await calmChip.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  await context.close();
+});

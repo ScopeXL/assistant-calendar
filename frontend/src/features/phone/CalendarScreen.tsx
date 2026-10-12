@@ -11,6 +11,8 @@ import {
   weekOf,
   zonedParts,
 } from "../../lib/dates";
+import { Arrivals, useArrivals } from "../../lib/arrivals";
+import { usePageTurn } from "../../lib/motion";
 import type { BoardPanel } from "../../lib/displayState";
 import { useMembers, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
@@ -24,6 +26,7 @@ import { Sheet } from "../../ui/Sheet";
 import { TextField } from "../../ui/TextField";
 import { AddPanel } from "../calendar/AddPanel";
 import { useEventSearch, useOccurrences } from "../calendar/data";
+import { arrivalKey } from "../calendar/EventChip";
 import { DayView } from "../calendar/DayView";
 import { EventSheet } from "../calendar/EventSheet";
 import { Agenda, DayGroups, PhoneMonth, WeekStrip } from "../calendar/PhoneLists";
@@ -95,6 +98,7 @@ export function CalendarScreen() {
   const weekStartsOn = settings?.week_starts_on ?? 6;
   const dimPast = settings?.display_dim_past ?? true;
   const [mode, setModeState] = useState<Mode>(() => remembered(MODE_KEY, "week", isMode));
+  const pages = usePageTurn();
   const [people, setPeopleState] = useState<string[]>(() => remembered(PEOPLE_KEY, [], isIds));
   const [showPeople, setShowPeople] = useState(false);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -105,6 +109,7 @@ export function CalendarScreen() {
   const grid = monthGrid(selected, 0, weekStartsOn);
 
   const setMode = (next: Mode) => {
+    pages.rest();
     setModeState(next);
     remember(MODE_KEY, next);
   };
@@ -121,8 +126,14 @@ export function CalendarScreen() {
         : mode === "month"
           ? { from: grid.days[0] ?? selected, to: addDays(grid.days.at(-1) ?? selected, 1) }
           : { from: week[0] ?? selected, to: addDays(selected, LIST_DAYS) };
-  const { data } = useOccurrences(range.from, range.to, { overlays: true });
+  const { data, isPlaceholderData } = useOccurrences(range.from, range.to, { overlays: true });
   const occurrences = data?.occurrences ?? [];
+  // An event added or moved while this list shows eases in (lib/arrivals); another mode or day
+  // is a new scope.
+  const arrived = useArrivals(
+    occurrences.map(arrivalKey),
+    data && !isPlaceholderData ? `${mode} ${range.from} ${range.to}` : null,
+  );
   const openOverlay = useOpenOverlay();
 
   const open = (occurrence: Occurrence) => {
@@ -135,6 +146,7 @@ export function CalendarScreen() {
     });
   };
   const step = (direction: -1 | 1) => {
+    pages.turn(direction);
     if (mode === "day") setChosen(addDays(selected, direction));
     else if (mode === "month") setChosen(monthStep(selected, direction));
     else setChosen(addDays(selected, direction * 7));
@@ -148,230 +160,234 @@ export function CalendarScreen() {
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-40">
-      <header className="flex items-center justify-between gap-2">
-        <h1 className="text-title font-bold">
-          <button
-            type="button"
-            aria-haspopup="dialog"
-            onClick={() => {
-              setPicker(true);
-            }}
-            className="press flex min-h-11 items-center gap-1 rounded-button text-left"
-          >
-            {monthYear(mode === "week" ? (week[3] ?? selected) : selected)}
-            <ChevronDown aria-hidden="true" className="size-6" />
-          </button>
-        </h1>
-        <div className="flex items-center gap-2">
-          {selected !== today ? (
-            <Button
-              variant="secondary"
+      <Arrivals value={arrived}>
+        <header className="flex items-center justify-between gap-2">
+          <h1 className="text-title font-bold">
+            <button
+              type="button"
+              aria-haspopup="dialog"
               onClick={() => {
-                setChosen(null);
+                setPicker(true);
+              }}
+              className="press flex min-h-11 items-center gap-1 rounded-button text-left"
+            >
+              {monthYear(mode === "week" ? (week[3] ?? selected) : selected)}
+              <ChevronDown aria-hidden="true" className="size-6" />
+            </button>
+          </h1>
+          <div className="flex items-center gap-2">
+            {selected !== today ? (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setChosen(null);
+                }}
+              >
+                Today
+              </Button>
+            ) : null}
+            {mode === "agenda" ? null : (
+              <>
+                <Button
+                  variant="secondary"
+                  icon
+                  aria-label={`Previous ${stepLabel}`}
+                  onClick={() => {
+                    step(-1);
+                  }}
+                >
+                  <ChevronLeft aria-hidden="true" className="size-6" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  icon
+                  aria-label={`Next ${stepLabel}`}
+                  onClick={() => {
+                    step(1);
+                  }}
+                >
+                  <ChevronRight aria-hidden="true" className="size-6" />
+                </Button>
+              </>
+            )}
+          </div>
+        </header>
+        <Segmented label="View" options={MODES} value={mode} onChange={setMode} />
+        <div className="flex flex-col gap-2">
+          {/* The live-updates icon at the right: the header has no room beside the arrows. */}
+          <div className="flex items-center justify-between gap-2">
+            <Chip
+              on={showPeople}
+              onClick={() => {
+                setShowPeople(!showPeople);
               }}
             >
-              Today
-            </Button>
+              Show: {chosenPeople.length ? chosenPeople.map((m) => m.name).join(", ") : "everyone"}
+            </Chip>
+            <LiveStatusButton />
+          </div>
+          {showPeople ? (
+            <div role="group" aria-label="Show" className="flex flex-wrap gap-2">
+              {members.map((member) => {
+                const on = people.includes(member.id);
+                return (
+                  <button
+                    key={member.id}
+                    type="button"
+                    aria-pressed={on}
+                    aria-label={member.name}
+                    onClick={() => {
+                      setPeople(
+                        on ? people.filter((id) => id !== member.id) : [...people, member.id],
+                      );
+                    }}
+                    className={`press flex size-12 items-center justify-center rounded-full ${
+                      on ? "ring-[3px] ring-ink" : people.length ? "opacity-50" : ""
+                    }`}
+                  >
+                    <Avatar member={member} size="sm" />
+                  </button>
+                );
+              })}
+              {people.length ? (
+                <Button
+                  variant="quiet"
+                  onClick={() => {
+                    setPeople([]);
+                  }}
+                >
+                  Everyone
+                </Button>
+              ) : null}
+            </div>
           ) : null}
-          {mode === "agenda" ? null : (
+        </div>
+
+        <div {...pages.attrs} className="flex flex-col gap-4">
+          {mode === "week" ? (
             <>
-              <Button
-                variant="secondary"
-                icon
-                aria-label={`Previous ${stepLabel}`}
-                onClick={() => {
-                  step(-1);
+              <WeekStrip
+                days={week}
+                today={today}
+                selected={selected}
+                occurrences={occurrences}
+                members={members}
+                people={people}
+                onSelect={setChosen}
+              />
+              <DayGroups
+                days={listDays}
+                today={today}
+                now={now}
+                occurrences={occurrences}
+                members={members}
+                people={people}
+                dimPast={dimPast}
+                onOpen={open}
+              />
+            </>
+          ) : mode === "day" ? (
+            <section aria-label={shortDate(selected)} className="flex flex-col">
+              <h2 className="text-row font-bold">
+                {selected === today ? `${shortDate(selected)} · today` : shortDate(selected)}
+              </h2>
+              <DayView
+                day={selected}
+                now={now}
+                occurrences={occurrences}
+                members={members}
+                dimPast={dimPast}
+                people={people}
+                onOpen={open}
+                onAdd={(hour) => {
+                  setPanel({ kind: "add", day: selected, hour });
                 }}
-              >
-                <ChevronLeft aria-hidden="true" className="size-6" />
-              </Button>
-              <Button
-                variant="secondary"
-                icon
-                aria-label={`Next ${stepLabel}`}
-                onClick={() => {
-                  step(1);
-                }}
-              >
-                <ChevronRight aria-hidden="true" className="size-6" />
-              </Button>
+              />
+            </section>
+          ) : mode === "agenda" ? (
+            <Agenda
+              days={agendaDays}
+              today={today}
+              now={now}
+              occurrences={occurrences}
+              members={members}
+              people={people}
+              dimPast={dimPast}
+              onOpen={open}
+            />
+          ) : (
+            <>
+              <PhoneMonth
+                grid={grid}
+                today={today}
+                selected={selected}
+                occurrences={occurrences}
+                members={members}
+                people={people}
+                onSelect={setChosen}
+              />
+              <DayGroups
+                days={[selected]}
+                today={today}
+                now={now}
+                occurrences={occurrences}
+                members={members}
+                people={people}
+                dimPast={dimPast}
+                keepEmpty
+                onOpen={open}
+              />
             </>
           )}
         </div>
-      </header>
-      <Segmented label="View" options={MODES} value={mode} onChange={setMode} />
-      <div className="flex flex-col gap-2">
-        {/* The live-updates icon at the right: the header has no room beside the arrows. */}
-        <div className="flex items-center justify-between gap-2">
-          <Chip
-            on={showPeople}
+
+        <ActionBar>
+          <Button
+            block
             onClick={() => {
-              setShowPeople(!showPeople);
+              setPanel({ kind: "add", day: selected, hour: null });
             }}
           >
-            Show: {chosenPeople.length ? chosenPeople.map((m) => m.name).join(", ") : "everyone"}
-          </Chip>
-          <LiveStatusButton />
-        </div>
-        {showPeople ? (
-          <div role="group" aria-label="Show" className="flex flex-wrap gap-2">
-            {members.map((member) => {
-              const on = people.includes(member.id);
-              return (
-                <button
-                  key={member.id}
-                  type="button"
-                  aria-pressed={on}
-                  aria-label={member.name}
-                  onClick={() => {
-                    setPeople(
-                      on ? people.filter((id) => id !== member.id) : [...people, member.id],
-                    );
-                  }}
-                  className={`press flex size-12 items-center justify-center rounded-full ${
-                    on ? "ring-[3px] ring-ink" : people.length ? "opacity-50" : ""
-                  }`}
-                >
-                  <Avatar member={member} size="sm" />
-                </button>
-              );
-            })}
-            {people.length ? (
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setPeople([]);
-                }}
-              >
-                Everyone
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-
-      {mode === "week" ? (
-        <>
-          <WeekStrip
-            days={week}
-            today={today}
-            selected={selected}
-            occurrences={occurrences}
-            members={members}
-            people={people}
-            onSelect={setChosen}
-          />
-          <DayGroups
-            days={listDays}
-            today={today}
-            now={now}
-            occurrences={occurrences}
-            members={members}
-            people={people}
-            dimPast={dimPast}
-            onOpen={open}
-          />
-        </>
-      ) : mode === "day" ? (
-        <section aria-label={shortDate(selected)} className="flex flex-col">
-          <h2 className="text-row font-bold">
-            {selected === today ? `${shortDate(selected)} · today` : shortDate(selected)}
-          </h2>
-          <DayView
-            day={selected}
-            now={now}
-            occurrences={occurrences}
-            members={members}
-            dimPast={dimPast}
-            people={people}
-            onOpen={open}
-            onAdd={(hour) => {
-              setPanel({ kind: "add", day: selected, hour });
-            }}
-          />
-        </section>
-      ) : mode === "agenda" ? (
-        <Agenda
-          days={agendaDays}
-          today={today}
-          now={now}
-          occurrences={occurrences}
-          members={members}
-          people={people}
-          dimPast={dimPast}
-          onOpen={open}
-        />
-      ) : (
-        <>
-          <PhoneMonth
-            grid={grid}
-            today={today}
-            selected={selected}
-            occurrences={occurrences}
-            members={members}
-            people={people}
-            onSelect={setChosen}
-          />
-          <DayGroups
-            days={[selected]}
-            today={today}
-            now={now}
-            occurrences={occurrences}
-            members={members}
-            people={people}
-            dimPast={dimPast}
-            keepEmpty
-            onOpen={open}
-          />
-        </>
-      )}
-
-      <ActionBar>
-        <Button
-          block
-          onClick={() => {
-            setPanel({ kind: "add", day: selected, hour: null });
+            <Plus aria-hidden="true" className="size-5" />
+            Add
+          </Button>
+        </ActionBar>
+        <EventSheet
+          panel={panel?.kind === "event" ? panel : null}
+          onClose={() => {
+            setPanel(null);
           }}
-        >
-          <Plus aria-hidden="true" className="size-5" />
-          Add
-        </Button>
-      </ActionBar>
-      <EventSheet
-        panel={panel?.kind === "event" ? panel : null}
-        onClose={() => {
-          setPanel(null);
-        }}
-        onChange={(eventId, recurrenceId) => {
-          setPanel({ kind: "edit", eventId, recurrenceId });
-        }}
-      />
-      <AddPanel
-        panel={panel?.kind === "add" || panel?.kind === "edit" ? panel : null}
-        today={today}
-        onClose={() => {
-          setPanel(null);
-        }}
-        onType={(type) => {
-          setPanel((open) => (open?.kind === "add" ? { ...open, type } : open));
-        }}
-      />
-      <MonthPicker
-        open={picker}
-        selected={selected}
-        onPick={(day) => {
-          setChosen(day);
-          setPicker(false);
-        }}
-        onFound={(day) => {
-          setChosen(day);
-          setMode("day");
-          setPicker(false);
-        }}
-        onClose={() => {
-          setPicker(false);
-        }}
-      />
+          onChange={(eventId, recurrenceId) => {
+            setPanel({ kind: "edit", eventId, recurrenceId });
+          }}
+        />
+        <AddPanel
+          panel={panel?.kind === "add" || panel?.kind === "edit" ? panel : null}
+          today={today}
+          onClose={() => {
+            setPanel(null);
+          }}
+          onType={(type) => {
+            setPanel((open) => (open?.kind === "add" ? { ...open, type } : open));
+          }}
+        />
+        <MonthPicker
+          open={picker}
+          selected={selected}
+          onPick={(day) => {
+            setChosen(day);
+            setPicker(false);
+          }}
+          onFound={(day) => {
+            setChosen(day);
+            setMode("day");
+            setPicker(false);
+          }}
+          onClose={() => {
+            setPicker(false);
+          }}
+        />
+      </Arrivals>
     </main>
   );
 }

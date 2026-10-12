@@ -190,6 +190,61 @@ dialog[data-closing] [data-keyboard] {
   }
 }
 
+/* A chip that just joined the board (lib/arrivals): it fades in and grows from 96 %. Only one
+   added or moved while the board was showing, never on first paint, paging or a view switch.
+   Not at all under Reduce Motion: the two guards here, so the chip has no animation to end. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduce-motion]) [data-arrive] {
+    animation: arrive var(--motion-enter) var(--ease-arrive);
+  }
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Paging (lib/motion's usePageTurn): the page an arrow, Home or a swipe brings slides in a little
+   from its side and fades up. Each side has two names for one keyframe, so paging the same way
+   twice plays twice. Never on first paint or a view switch (no attribute then). */
+[data-page="next"][data-turn="0"] {
+  animation: page-next-a var(--motion-enter) var(--ease-arrive);
+}
+[data-page="next"][data-turn="1"] {
+  animation: page-next-b var(--motion-enter) var(--ease-arrive);
+}
+[data-page="prev"][data-turn="0"] {
+  animation: page-prev-a var(--motion-enter) var(--ease-arrive);
+}
+[data-page="prev"][data-turn="1"] {
+  animation: page-prev-b var(--motion-enter) var(--ease-arrive);
+}
+@keyframes page-next-a {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+@keyframes page-next-b {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+@keyframes page-prev-a {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+}
+@keyframes page-prev-b {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+}
+
 /* A count that just changed pops once (re-keyed by lib/motion's useChangeCount). */
 .pop {
   display: inline-block;

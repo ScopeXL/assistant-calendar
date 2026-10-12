@@ -1,4 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
+import { AnimatePresence, motion } from "motion/react";
 import {
   useEffect,
   useLayoutEffect,
@@ -9,10 +10,19 @@ import {
   type MouseEvent,
 } from "react";
 
+import { useArrived } from "../../lib/arrivals";
 import { dayNumber, formatWallTime, longWeekday, shortWeekday } from "../../lib/dates";
 import type { Member } from "../../lib/household";
+import { LEAVE, useMotionReduced } from "../../lib/motion";
 import { Draggable, MoreButton } from "./Draggable";
-import { EventChip, PeopleMarks, chipTone, occurrenceLabel, peopleOf } from "./EventChip";
+import {
+  EventChip,
+  PeopleMarks,
+  arrivalKey,
+  chipTone,
+  occurrenceLabel,
+  peopleOf,
+} from "./EventChip";
 import {
   chipTier,
   gridStepMinutes,
@@ -245,6 +255,7 @@ function HoursColumn({
   width: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: day });
+  const reduced = useMotionReduced();
   const filter = new Set(people);
   const allDay = column?.allDay ?? [];
   const timed = column?.timed ?? [];
@@ -345,58 +356,63 @@ function HoursColumn({
         className={`hour-lines relative min-w-0 @container ${lighted ? "bg-sun/15" : isToday ? "bg-lit" : ""}`}
       >
         <div className="absolute inset-y-0 inset-x-1">
-          {placed.map((item) => {
-            if (item.kind === "more") {
+          {/* A chip taken off the day fades and shrinks away (UX §9 "Chips leave"). */}
+          <AnimatePresence initial={false}>
+            {placed.map((item) => {
+              if (item.kind === "more") {
+                return (
+                  <button
+                    key={`more-${item.hidden[0]?.key ?? ""}`}
+                    type="button"
+                    onClick={() => {
+                      onMore(day);
+                    }}
+                    className="press absolute rounded-chip-d bg-line/60 px-1 text-center text-d-secondary font-semibold text-ink [touch-action:manipulation]"
+                    style={{
+                      top: `${String(item.top)}px`,
+                      height: `${String(item.height)}px`,
+                      ...laneStyle(item.lane, item.lanes),
+                    }}
+                    aria-label={`${String(item.hidden.length)} more on ${longWeekday(day)}`}
+                  >
+                    {`+${String(item.hidden.length)}`}
+                  </button>
+                );
+              }
+              const entry = entries.get(item.occurrence.key);
+              if (!entry) return null;
               return (
-                <button
-                  key={`more-${item.hidden[0]?.key ?? ""}`}
-                  type="button"
-                  onClick={() => {
-                    onMore(day);
-                  }}
-                  className="press absolute rounded-chip-d bg-line/60 px-1 text-center text-d-secondary font-semibold text-ink [touch-action:manipulation]"
+                <Draggable
+                  key={item.occurrence.key}
+                  entry={entry}
+                  day={day}
+                  faded={!shownFor(item.occurrence, filter)}
+                  lifted={lifted}
+                  className="absolute"
                   style={{
-                    top: `${String(item.top)}px`,
-                    height: `${String(item.height)}px`,
+                    top: `${String(item.box.top)}px`,
+                    height: `${String(item.box.height)}px`,
                     ...laneStyle(item.lane, item.lanes),
                   }}
-                  aria-label={`${String(item.hidden.length)} more on ${longWeekday(day)}`}
                 >
-                  {`+${String(item.hidden.length)}`}
-                </button>
+                  <motion.div className="h-full" {...(reduced ? {} : { exit: LEAVE })}>
+                    <HoursChip
+                      entry={entry}
+                      box={item.box}
+                      rem={rem}
+                      members={members}
+                      now={now}
+                      dimPast={dimPast && isToday}
+                      day={day}
+                      onOpen={() => {
+                        onOpen(item.occurrence);
+                      }}
+                    />
+                  </motion.div>
+                </Draggable>
               );
-            }
-            const entry = entries.get(item.occurrence.key);
-            if (!entry) return null;
-            return (
-              <Draggable
-                key={item.occurrence.key}
-                entry={entry}
-                day={day}
-                faded={!shownFor(item.occurrence, filter)}
-                lifted={lifted}
-                className="absolute"
-                style={{
-                  top: `${String(item.box.top)}px`,
-                  height: `${String(item.box.height)}px`,
-                  ...laneStyle(item.lane, item.lanes),
-                }}
-              >
-                <HoursChip
-                  entry={entry}
-                  box={item.box}
-                  rem={rem}
-                  members={members}
-                  now={now}
-                  dimPast={dimPast && isToday}
-                  day={day}
-                  onOpen={() => {
-                    onOpen(item.occurrence);
-                  }}
-                />
-              </Draggable>
-            );
-          })}
+            })}
+          </AnimatePresence>
         </div>
         {y !== null ? <NowMinute key={`${String(zoom)}:${String(pph)}`} y={y} now={now} /> : null}
       </div>
@@ -430,6 +446,7 @@ function HoursChip({
 }) {
   const { occurrence } = entry;
   const people = peopleOf(occurrence, members);
+  const arrived = useArrived(arrivalKey(occurrence));
   const tone = chipTone(occurrence, people, now, dimPast, "bg-line/60");
   const { tier, titleLines } = chipTier(box.visible, rem);
   const time = occurrence.start_local ? formatWallTime(occurrence.start_local) : "";
@@ -437,6 +454,7 @@ function HoursChip({
     <button
       type="button"
       data-chip=""
+      data-arrive={arrived ? "" : undefined}
       data-key={occurrence.key}
       aria-label={occurrenceLabel(occurrence, people, day)}
       onClick={onOpen}

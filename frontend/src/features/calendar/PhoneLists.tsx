@@ -1,3 +1,4 @@
+import { useArrived } from "../../lib/arrivals";
 import { useState } from "react";
 
 import {
@@ -11,7 +12,7 @@ import {
 } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
-import { occurrenceLabel, peopleOf } from "./EventChip";
+import { arrivalKey, occurrenceLabel, peopleOf } from "./EventChip";
 import { coreOverlayOf, useOverlayOf } from "./overlays";
 import { byDay, isPast, shownFor } from "./layout";
 import type { Occurrence } from "./types";
@@ -44,6 +45,7 @@ export function PhoneRow({
 }) {
   const people = peopleOf(occurrence, members);
   const overlay = useOverlayOf(occurrence);
+  const arrived = useArrived(arrivalKey(occurrence));
   const Mark = overlay?.icon;
   // A birthday keeps its person's bar, with a cake before its title (ADR 0028).
   const TitleMark = coreOverlayOf(occurrence)?.icon;
@@ -57,6 +59,7 @@ export function PhoneRow({
     <button
       type="button"
       data-person={color}
+      data-arrive={arrived ? "" : undefined}
       aria-label={occurrenceLabel(occurrence, people, day)}
       onClick={onOpen}
       className={`press-row flex min-h-14 w-full items-start gap-3 rounded-chip px-2 py-2 text-left ${

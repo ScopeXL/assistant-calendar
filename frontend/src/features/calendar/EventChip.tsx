@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 
+import { useArrived } from "../../lib/arrivals";
 import { formatWallRange, formatWallTime, longMonthDay, longWeekday } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { Avatar } from "../../ui/Avatar";
@@ -19,6 +20,12 @@ export function occurrenceLabel(occurrence: Occurrence, people: Member[], day?: 
   const onDay = day ?? occurrence.start_date ?? occurrence.start_local?.slice(0, 10) ?? "";
   const date = onDay ? `${longWeekday(onDay)} ${longMonthDay(onDay)}` : "";
   return [occurrence.title, when, who, date].filter(Boolean).join(", ");
+}
+
+/** What makes a chip a newcomer (lib/arrivals): the event, where it now starts. Moved to
+ * another day or time, it arrives there. */
+export function arrivalKey(occurrence: Occurrence): string {
+  return `${occurrence.key}@${occurrence.start_local ?? occurrence.start_date ?? ""}`;
 }
 
 export function peopleOf(occurrence: Occurrence, members: Member[]): Member[] {
@@ -90,6 +97,7 @@ export function EventChip({
   const display = useShell() === "display";
   const people = peopleOf(occurrence, members);
   const overlay = useOverlayOf(occurrence);
+  const arrive = useArrived(arrivalKey(occurrence)) && !measuring ? "" : undefined;
   if (overlay) {
     // A plugin's (a day's dinner, a countdown): quiet, with its mark; a tap opens its room.
     const Icon = overlay.icon;
@@ -97,6 +105,7 @@ export function EventChip({
       <button
         type="button"
         data-chip=""
+        data-arrive={arrive}
         data-overlay={occurrence.overlay ?? undefined}
         data-key={occurrence.key}
         aria-label={occurrenceLabel(occurrence, people, day)}
@@ -126,6 +135,7 @@ export function EventChip({
       type="button"
       data-person={tone.person}
       data-chip=""
+      data-arrive={arrive}
       data-overlay={occurrence.overlay ?? undefined}
       data-key={occurrence.key}
       aria-label={occurrenceLabel(occurrence, people, day)}
