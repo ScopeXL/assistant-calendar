@@ -388,8 +388,6 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByRole("button", { name: "Next", exact: true }).click();
     await shot(page, `setup-pin-${scheme}`);
     await page.getByRole("button", { name: "Later" }).click();
-    await shot(page, `setup-pair-${scheme}`);
-    await page.getByRole("button", { name: "Do this later" }).click();
     await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
     await shot(page, `setup-calendars-${scheme}`);
     await page.getByRole("button", { name: "Skip for now" }).click();

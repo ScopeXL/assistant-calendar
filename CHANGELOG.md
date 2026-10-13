@@ -17,7 +17,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - The live-updates icon shows only while the screen is reconnecting, checking every 30 seconds,
   or can't reach Sunroom. Connected, the corner is clear.
 - Setup asks for your city and finds it as you type. So does Settings → Household → Location.
+- Setup no longer stops to pair the kitchen screen: pair it whenever it shows its code, from
+  More → Pair a Display.
 - On a paired screen the mouse pointer disappears a few seconds after it stops moving.
+
 ### Fixed
 
 - In development the city search answers any name (it made up only two).

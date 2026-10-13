@@ -6,7 +6,6 @@ import { useState, type ReactNode } from "react";
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { useMembers } from "../../lib/household";
-import { normalizeCode } from "../../lib/joinCode";
 import { rememberSignedIn } from "../../lib/session";
 import { Avatar } from "../../ui/Avatar";
 import { AddPersonRow, type RoleChoice } from "../settings/AddPersonRow";
@@ -19,8 +18,8 @@ import { TextField } from "../../ui/TextField";
 import { usePluginModules } from "../usePluginModules";
 
 export type SetupStep =
-  "welcome" | "password" | "household" | "place" | "people" | "pin" | "pair" | "calendars" | "done";
-export const SIGNED_IN_STEPS: SetupStep[] = ["place", "people", "pin", "pair", "calendars", "done"];
+  "welcome" | "password" | "household" | "place" | "people" | "pin" | "calendars" | "done";
+export const SIGNED_IN_STEPS: SetupStep[] = ["place", "people", "pin", "calendars", "done"];
 
 function phoneZone(): string {
   try {
@@ -80,8 +79,10 @@ function Page({
 /**
  * First run (UX §6, PLAN §12.1): on whatever device opened Sunroom first, usually a phone. The
  * password and the household are set together in one request that closes setup for good and
- * signs this phone in as a parent; the rest (people, the PIN, pairing the screen) uses the
- * normal routes, and each step can be done later from Settings.
+ * signs this phone in as a parent; the rest (the city, people, the PIN, calendars) uses the
+ * normal routes, and each step can be done later from Settings. Pairing the kitchen screen
+ * isn't a step (ADR 0030): the screen shows its code by itself once setup is done, and it's
+ * paired from More → Pair a Display, or with the household password on the screen.
  */
 export function SetupWizard({ step }: { step: SetupStep }) {
   const navigate = useNavigate();
@@ -148,14 +149,6 @@ export function SetupWizard({ step }: { step: SetupStep }) {
       return (
         <PinStep
           onNext={() => {
-            go("pair");
-          }}
-        />
-      );
-    case "pair":
-      return (
-        <PairStep
-          onNext={() => {
             go("calendars");
           }}
         />
@@ -174,6 +167,10 @@ export function SetupWizard({ step }: { step: SetupStep }) {
           <p className="text-body">
             Everyone at home can sign in with the household password, or with a code from Settings,
             then Phones & Screens.
+          </p>
+          <p className="text-body">
+            To put Sunroom on a kitchen screen, open More, then Pair a Display, when the screen
+            shows its code. Or type the household password on the screen itself.
           </p>
           <Button
             block
@@ -207,7 +204,7 @@ function PasswordStep({
   return (
     <Page
       title={fromServer ? "Type the Household Password" : "Set a Household Password"}
-      step="1 of 7"
+      step="1 of 6"
     >
       <p className="text-body text-ink-soft">
         {fromServer
@@ -287,7 +284,7 @@ function HouseholdStep({
   });
   if (!password) {
     return (
-      <Page title="Name Your Household" step="2 of 7">
+      <Page title="Name Your Household" step="2 of 6">
         <p className="text-body">Choose the household password first.</p>
         <Button block onClick={onBack}>
           Back
@@ -296,7 +293,7 @@ function HouseholdStep({
     );
   }
   return (
-    <Page title="Name Your Household" step="2 of 7">
+    <Page title="Name Your Household" step="2 of 6">
       <form
         className="flex flex-col gap-5"
         onSubmit={(event) => {
@@ -405,7 +402,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
     },
   });
   return (
-    <Page title="Who Lives Here?" step="4 of 7" wide>
+    <Page title="Who Lives Here?" step="4 of 6" wide>
       <p className="text-body text-ink-soft">
         {first
           ? "Start with you. Each person gets a color, used everywhere they appear."
@@ -455,7 +452,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
     onSuccess: onNext,
   });
   return (
-    <Page title="Set a Parent PIN?" step="5 of 7">
+    <Page title="Set a Parent PIN?" step="5 of 6">
       <p className="text-body text-ink-soft">
         It keeps children out of Settings on the kitchen screen. Adding events and checking off
         tasks never ask for it.
@@ -495,7 +492,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
 function PlaceStep({ onNext }: { onNext: () => void }) {
   const Setup = usePluginModules().find((m) => m.id === "weather")?.onboarding;
   return (
-    <Page title="Where’s Home?" step="3 of 7">
+    <Page title="Where’s Home?" step="3 of 6">
       {Setup ? (
         <Setup onDone={onNext} />
       ) : (
@@ -507,12 +504,12 @@ function PlaceStep({ onNext }: { onNext: () => void }) {
   );
 }
 
-/** Step 7 (UX first run): bring in calendars, through the calendar_sync plugin's own flows.
+/** Step 6 (UX first run): bring in calendars, through the calendar_sync plugin's own flows.
  * With the plugin off, the step skips itself. */
 function CalendarsStep({ onNext }: { onNext: () => void }) {
   const Setup = usePluginModules().find((m) => m.id === "calendar_sync")?.onboarding;
   return (
-    <Page title="Bring in Your Calendars" step="7 of 7">
+    <Page title="Bring in Your Calendars" step="6 of 6">
       {Setup ? (
         <Setup onDone={onNext} />
       ) : (
@@ -520,51 +517,6 @@ function CalendarsStep({ onNext }: { onNext: () => void }) {
           Next
         </Button>
       )}
-    </Page>
-  );
-}
-
-function PairStep({ onNext }: { onNext: () => void }) {
-  const [code, setCode] = useState("");
-  const pair = useMutation({
-    mutationFn: async (value: string) =>
-      unwrap(
-        await api.POST("/api/auth/kiosk/pair", { body: { code: value, label: "Kitchen screen" } }),
-      ),
-    onSuccess: onNext,
-  });
-  const valid = normalizeCode(code);
-  return (
-    <Page title="Pair the Kitchen Screen" step="6 of 7">
-      <p className="text-body text-ink-soft">
-        On the screen, Sunroom now shows a code. Type it here.
-      </p>
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (valid) pair.mutate(valid);
-        }}
-      >
-        <TextField
-          label="The code on the screen"
-          value={code}
-          maxLength={10}
-          autoComplete="one-time-code"
-          autoCapitalize="characters"
-          className="text-title font-bold tracking-widest uppercase"
-          error={pair.isError ? errorMessage(pair.error) : null}
-          onChange={(event) => {
-            setCode(event.target.value);
-          }}
-        />
-        <Button type="submit" block pending={pair.isPending} disabled={!valid}>
-          Pair
-        </Button>
-      </form>
-      <Button variant="quiet" block onClick={onNext}>
-        Do this later
-      </Button>
     </Page>
   );
 }

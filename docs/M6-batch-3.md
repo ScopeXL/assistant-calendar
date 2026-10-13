@@ -359,7 +359,8 @@ Filter button.
 
 ### T4 Setup: the city, the search as you type, no pairing step, the test server's places
 
-- [ ] Done (commits: )
+- [x] Done (commits: "weather: the city search as you type", "weather: the test server's places
+  answer any name", "onboarding: pairing a screen leaves the wizard")
 
 **Owner's notes.** "During setup, change 'Your Town' to 'Your City'. And have it autocomplete as
 the user types in the input." "Pairing a screen should not be part of the setup process, rather
@@ -428,6 +429,18 @@ wording still holds).
 **CHANGELOG.** "Setup asks for your city and finds it as you type." "Setup no longer stops to pair
 the kitchen screen: pair it whenever it shows its code, from More → Pair a Display." Under
 Fixed: "In development the city search answers any name (it made up only two)."
+
+**As built.** *a.* A plain labelled field over a list of buttons, with a live status line, not
+an ARIA combobox (the plan allowed either): the rows stay ordinary buttons for the tests and a
+screen reader, and ArrowDown and ArrowUp still walk between the field and the list. The status
+line is always in the page so its changes are announced, and drops out of the flow (`sr-only`,
+"3 places") once the list shows. `autoFocus` on the Settings field, as the other forms do. A
+`useDebounced` test. *b.* The fake makes up a place only when no sample place matches, so
+"Sample" still gives exactly the two, and a name starting with "Nowhere" still finds nothing: the
+"Nothing by that name" line would otherwise be unreachable in development and in tests. The
+offset is from `zlib.crc32` (Python's `hash()` changes per process). *c.* README's step 4 already
+said More → Pair a display; unchanged. The first-run test finishes the wizard, then pairs from
+More.
 
 ### T5 The rail: the mark, one height with the header, the fold that eases, the toggle in the header
 

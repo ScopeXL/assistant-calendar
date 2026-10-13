@@ -107,7 +107,6 @@ const STEPS: SetupStep[] = [
   "place",
   "people",
   "pin",
-  "pair",
   "calendars",
   "done",
 ];

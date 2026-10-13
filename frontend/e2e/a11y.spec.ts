@@ -209,9 +209,6 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Set a parent PIN?" })).toBeVisible();
       await check(page, "setup: PIN");
       await page.getByRole("button", { name: "Later" }).click();
-      await expect(page.getByRole("heading", { name: "Pair the kitchen screen" })).toBeVisible();
-      await check(page, "setup: pair");
-      await page.getByRole("button", { name: "Do this later" }).click();
       await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
       await check(page, "setup: calendars");
       await page.getByRole("button", { name: "Add a calendar" }).click();

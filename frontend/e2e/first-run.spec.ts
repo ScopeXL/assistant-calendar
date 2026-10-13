@@ -1,6 +1,6 @@
 /**
- * M0's flow (PLAN §15 M0 Verify): first run on a phone, pair the wall screen, the PIN gate on the
- * wall, sign out. One test drives both: a phone context and the wall (this project's page).
+ * M0's flow (PLAN §15 M0 Verify): first run on a phone, then the wall screen paired from More
+ * (the wizard has no pairing step, ADR 0030), the PIN gate on the wall, sign out. One test drives both: a phone context and the wall (this project's page).
  * And the way back to a first run (ADR 0029): Erase everything, from a computer and never from
  * the wall. Synthetic names only.
  */
@@ -32,7 +32,8 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.getByRole("button", { name: "Monday" }).click();
   await phonePage.getByRole("button", { name: "Next" }).click();
 
-  // Where's home? The test server's place search knows Sample Town.
+  // Where's home? The field searches as it's typed into, from two letters; there is no Search
+  // button. The test server's place search knows Sample Town.
   await expect(phonePage.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
   await expect(phonePage.getByRole("button", { name: "Search" })).toHaveCount(0);
   await phonePage.getByLabel("Your city").fill("S");
@@ -61,15 +62,29 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.getByLabel("PIN (4 to 6 digits)").fill(PIN);
   await phonePage.getByRole("button", { name: "Set a PIN" }).click();
 
-  // The wall now shows its pair code; the phone types it.
-  await expect(phonePage.getByRole("heading", { name: "Pair the kitchen screen" })).toBeVisible();
+  // No pairing step (ADR 0030): the wizard goes on to calendars, and its last page says where
+  // the kitchen screen is paired.
+  await expect(phonePage.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
+  await expect(phonePage.getByText("6 of 6")).toBeVisible();
+  await phonePage.getByRole("button", { name: "Skip for now" }).click();
+  await expect(phonePage.getByRole("heading", { name: "You’re set" })).toBeVisible();
+  await expect(phonePage.getByText(/open More, then Pair a Display/)).toBeVisible();
+  await phonePage.getByRole("button", { name: "Open Sunroom" }).click();
+  await expect(phonePage.getByRole("heading", { name: "Up next" })).toBeVisible();
+
+  // The wall shows its pair code by itself once setup is done; the phone types it in More.
   await expect(page.getByRole("heading", { name: "Pair this screen" })).toBeVisible({
     timeout: 15_000,
   });
   const code = (await page.getByTestId("pair-code").textContent()) ?? "";
   expect(code).toMatch(/^[A-Z2-9]{3} [A-Z2-9]{3}$/);
+  await phonePage.getByRole("link", { name: "More" }).click();
+  await phonePage.getByRole("link", { name: "Pair a display" }).click();
   await phonePage.getByLabel("The code on the screen").fill(code);
   await phonePage.getByRole("button", { name: "Pair", exact: true }).click();
+  await expect(
+    phonePage.locator("[data-toast]").filter({ hasText: "Kitchen screen paired" }),
+  ).toBeVisible();
 
   // The wall moves on by itself: name it, then the board.
   await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
@@ -83,12 +98,6 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await expect(page.getByRole("banner")).toContainText(/\d{1,2}:\d{2}/);
   // The household starts its week on Monday now.
   await expect(board.getByRole("heading", { level: 2 }).first()).toContainText("Mon");
-
-  await expect(phonePage.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
-  await phonePage.getByRole("button", { name: "Skip for now" }).click();
-  await expect(phonePage.getByRole("heading", { name: "You’re set" })).toBeVisible();
-  await phonePage.getByRole("button", { name: "Open Sunroom" }).click();
-  await expect(phonePage.getByRole("heading", { name: "Up next" })).toBeVisible();
 
   // Settings on the wall are behind the PIN.
   await page.getByRole("button", { name: "Settings" }).click();
@@ -111,10 +120,10 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
     .click();
 
   // The phone signs itself out from Phones & Screens.
-  await phonePage.getByRole("link", { name: "More" }).click();
+  await phonePage.getByRole("link", { name: "More", exact: true }).click();
   await phonePage.getByRole("link", { name: "Settings" }).click();
   await phonePage.getByRole("link", { name: "Phones & Screens" }).click();
-  await expect(phonePage.getByText("Kitchen screen")).toBeVisible();
+  await expect(phonePage.getByText("Kitchen screen", { exact: true })).toBeVisible();
   await phonePage.getByRole("button", { name: "Sign out of this phone" }).click();
   await expect(phonePage).toHaveURL(/\/sign-in/);
   await context.close();
