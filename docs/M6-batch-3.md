@@ -1007,7 +1007,7 @@ Checked and left as they are:
 
 ### T10 Wrap up the batch
 
-- [ ] Done (commit: `docs: M6 batch 3 wrapped up`)
+- [x] Done (commit: `docs: M6 batch 3 wrapped up`)
 
 1. ADR 0030 ("M6 batch 3: the owner's third notes": Status, Date, Context, a Decision table with
    one row per decision above, Consequences) is complete and listed in `docs/adr/README.md`; ADR
@@ -1033,6 +1033,15 @@ Checked and left as they are:
    - Settings' list on one line each; Add an account → Google → Sign in with Google asks for the
      keys there, and Features has no Google row;
    - Add: the three sections; Time, How long and Repeats as one button each; a meal from one box.
+
+**As built.** ADR 0030 is complete and in the index; ADR 0028's corner row, eight rows of ADR 0029
+(the header, its quiet line, the rail's top, the Hours zoom, one form per kind, picking a time,
+Google's keys, what stays with the board) and ADR 0006's first-run line each say what 0030
+changed. `CLAUDE.md` is 14.5 KB, so nothing had to move; this batch's gotchas went to
+`docs/GOTCHAS.md`. The batch is sixteen commits on `main`, from "frontend: the live-updates icon
+only while something's wrong" to this one, not pushed and not released: 0.9.0 is the owner's
+word. `just check`, the whole `just e2e` (100 passed on five projects) and `just scan` were
+green on the last code commit.
 
 ## Follow-ups noticed but not in this batch
 

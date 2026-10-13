@@ -13,7 +13,7 @@
 
 **First run** (PLAN §12.1, §13.4)
 - Until a household exists, every page leads to `/setup`. The display shows "Finish setting up Sunroom on a phone or computer" with a QR code.
-- The wizard sets the household password (12 or more characters, with a strength hint, stored with `hashlib.scrypt`), names the family, confirms the time zone, adds people, picks features and ends on "Pair the kitchen screen". The setup endpoint is public only until setup is done, then closes for good.
+- The wizard sets the household password (12 or more characters, with a strength hint, stored with `hashlib.scrypt`), names the family, confirms the time zone, adds people, picks features and ends on "Pair the kitchen screen" (the pairing step left the wizard in 0.9.0, ADR 0030: the screen shows its code by itself once setup is done, and is paired from a phone's More or with the household password). The setup endpoint is public only until setup is done, then closes for good.
 - `APP_PASSWORD` is optional. When set, it skips the wizard's password step and is authoritative at every boot. Without it, a lost password is reset with `sunroom reset-password` through `docker exec`.
 - When `APP_SECRET_KEY` is unset, a key is generated on first boot into `/data/secret.key`.
 
