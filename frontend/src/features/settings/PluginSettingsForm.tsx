@@ -152,6 +152,7 @@ function TypedField({
   return (
     <div className="flex flex-col gap-1">
       <TextField
+        strong
         {...input}
         value={draft ?? shown}
         data-setting={field.key}

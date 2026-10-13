@@ -301,6 +301,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
                     : "locked"
               }
               compact={railCompact}
+              side={railSide}
               settled={settings !== undefined}
               onAdd={() => {
                 if (room === "settings") void navigate({ to: home });

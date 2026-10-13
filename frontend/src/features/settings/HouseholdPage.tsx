@@ -65,6 +65,7 @@ function HouseholdForm({ settings }: { settings: Settings }) {
       <Group title="Household">
         <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
           <TextField
+            strong
             label="Name"
             value={name ?? settings.household_name}
             maxLength={80}

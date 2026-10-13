@@ -15,6 +15,7 @@ export function TextField({
   error,
   layout = "text",
   hideLabel = false,
+  strong = false,
   className,
   ...props
 }: Omit<ComponentPropsWithRef<"input">, "id"> & {
@@ -24,6 +25,9 @@ export function TextField({
   layout?: KeyboardLayout;
   /** Only for screen readers: the field's placeholder or context says it on screen. */
   hideLabel?: boolean;
+  /** A setting that is a row of a Settings page: labelled like the rows beside it, not like a
+   * form's field. */
+  strong?: boolean;
 }) {
   const display = useShell() === "display";
   const labelClass = useFieldLabel();
@@ -34,7 +38,18 @@ export function TextField({
   const described = [hint ? hintId : "", error ? errorId : ""].filter(Boolean).join(" ");
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className={hideLabel ? "sr-only" : labelClass}>
+      <label
+        htmlFor={id}
+        className={
+          hideLabel
+            ? "sr-only"
+            : strong
+              ? display
+                ? "text-d-body font-semibold"
+                : "text-body font-semibold"
+              : labelClass
+        }
+      >
         {label}
       </label>
       <input

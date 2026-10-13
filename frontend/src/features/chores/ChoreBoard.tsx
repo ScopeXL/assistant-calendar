@@ -602,6 +602,7 @@ function ChoreSheet({ open, box, onClose }: { open: boolean; box: Box; onClose: 
           ) : null}
           <Button
             block
+            variant="secondary"
             disabled={!chore}
             onClick={() => {
               setChanging(true);

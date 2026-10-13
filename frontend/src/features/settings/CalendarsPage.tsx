@@ -8,6 +8,7 @@ import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { ColorPicker, usedBy } from "../../ui/ColorPicker";
+import { useFieldLabel } from "../../ui/Field";
 import { ListRow } from "../../ui/ListRow";
 import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
@@ -173,7 +174,6 @@ function CalendarSheet({ editing, onClose }: { editing: Editing; onClose: () => 
 }
 
 function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onDone: () => void }) {
-  const display = useShell() === "display";
   const { data: members = [] } = useMembers();
   const refresh = useRefreshCalendars();
   const [name, setName] = useState(calendar?.name ?? "");
@@ -228,7 +228,7 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
       onDone();
     },
   });
-  const label = display ? "text-d-body font-semibold" : "text-body font-semibold";
+  const label = useFieldLabel();
   const error = save.error ?? remove.error;
   return (
     <form

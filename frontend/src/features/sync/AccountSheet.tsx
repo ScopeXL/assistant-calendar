@@ -8,6 +8,7 @@ import { asParent } from "../../lib/parent";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { useFieldLabel } from "../../ui/Field";
 import { ColorPicker, usedBy } from "../../ui/ColorPicker";
 import { ListRow } from "../../ui/ListRow";
 import { Sheet } from "../../ui/Sheet";
@@ -372,6 +373,7 @@ function CalendarPage({
   onBack: () => void;
 }) {
   const text = useText();
+  const label = useFieldLabel();
   const changes = useSyncChanges();
   const owner = members.find((member) => member.id === calendar.owner_member_id) ?? null;
   const map = (body: Parameters<typeof changes.map.mutate>[0]["body"]) => {
@@ -380,7 +382,7 @@ function CalendarPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <p className={`${text.body} font-semibold`}>Whose</p>
+        <p className={label}>Whose</p>
         <ChipRow label={`Whose is ${calendar.name}`}>
           <Chip
             on={owner === null}

@@ -36,6 +36,7 @@ export function Rail({
   rooms,
   lock,
   compact,
+  side,
   settled,
   onAdd,
   onLock,
@@ -48,6 +49,8 @@ export function Rail({
   lock: "locked" | "unlocked" | "open";
   /** Only the icons (landscape; the bottom bar keeps its words). */
   compact: boolean;
+  /** Which side of the screen it's on: its rule faces the board. */
+  side: "left" | "right";
   /** The household's settings have arrived: from the next frame on, a fold may animate. */
   settled: boolean;
   onAdd: () => void;
@@ -73,7 +76,9 @@ export function Rail({
       data-surface=""
       data-segmented=""
       data-rail-motion={moves ? "" : undefined}
-      className="flex flex-col bg-surface landscape:h-full landscape:w-[var(--rail-w)] landscape:overflow-clip landscape:border-r landscape:border-line portrait:h-28 portrait:flex-row portrait:items-center portrait:border-t portrait:border-line"
+      className={`flex flex-col bg-surface landscape:h-full landscape:w-[var(--rail-w)] landscape:overflow-clip landscape:border-line portrait:h-28 portrait:flex-row portrait:items-center portrait:border-t portrait:border-line ${
+        side === "right" ? "landscape:border-l" : "landscape:border-r"
+      }`}
     >
       {/* As tall as the header, with the same rule under it, so the two rules meet. */}
       <div className="flex h-[var(--header-h)] shrink-0 items-center justify-center border-b border-line portrait:hidden">

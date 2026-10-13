@@ -934,7 +934,7 @@ or tap a saved meal under it as you type."
 
 ### T9 The audit, again: the second pass
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: the second audit's fixes")
 
 **Owner's note.** "After the plan is executed perform the same UI/UX audit and make changes that
 further cleanup things that were missed during implementation."
@@ -963,6 +963,47 @@ built", and add a CLAUDE.md or GOTCHAS.md line for anything that cost time.
 
 **Done when** every item in UX §10's checklist (updated by the tasks above) passes at the three
 sizes, and the "As built" list is written.
+
+**As built.** `just screenshots` after T8 (the three wall sizes, portrait, phones, a laptop), read
+as contact sheets beside the 0.8.0 set kept in `.screenshots/before-0.8.0/`, plus the screens
+below shot again after their fix. Not done by this session: a hand walk in a real browser window
+and VoiceOver (the h1s are checked by role in the end-to-end tests). What the pass fixed:
+
+1. **Every editor's primary button is pinned** (`ui/PanelActions`), where five still sat inline
+   under their forms: a saved meal, Change list, an item's sheet, a reward and a routine. Remove
+   and Archive sit above it, in the flow. (New List got it in T8.)
+2. **A task's sheet** draws Change as a secondary button, as an event's, a meal's and a
+   countdown's do.
+3. **A saved meal's emoji is picked from a row** (twelve foods and None, the meal's own first),
+   as a countdown's is: the wall's keyboard has no emoji, so "Emoji (optional)" was a field the
+   kitchen screen couldn't fill.
+4. **Labels the forms still wrote by hand** got the quiet label: a routine's Whose, Days, Stars
+   for finishing and Steps, a reward's Costs, a calendar's Whose calendar, a synced calendar's
+   Whose, and `ui/ColorPicker`'s legend. In a routine's form they were bold beside the quiet
+   Name, Starts and Shows for.
+5. **A setting that is a row of a Settings page keeps the rows' bold label** (`TextField strong`):
+   Household's Name and a feature's text fields. T8 had turned them quiet beside "Time zone" and
+   "Week starts on".
+6. **"Add reward" and "Add routine"** as buttons are sentence case (the panels' titles keep Title
+   Case); they read "Add Reward" and "Add Routine".
+7. **The rail's rule faces the board when the rail is on the right** (it was on the screen's
+   edge; seen in T5's mirrored shot).
+8. **The phone Calendar's "Show: everyone"** is an opener (outlined, a chevron), not a chip that
+   fills while its row is open: the same rule as the forms'.
+9. The `add-event` screenshot waits out the keyboard's padding (done in T8).
+
+Checked and left as they are:
+- **The header's row when the live icon appears or Filter shows avatars.** Filter grows to its
+  left and the views stay put. The live icon takes 68 px from the room's part, so its controls
+  shift left when the stream has been down for two seconds; nothing is reserved, as planned.
+- **The zoom over an evening chip.** At Standard and Small it covers the last column from about
+  9:45 PM. At Extra large the fitted grid is short (an hour is about 22 px) and the control is
+  bigger, so it covers the last two columns from about 8 PM: a Saturday 7 PM chip keeps only its
+  top. Zooming in (the control's own job) clears it. Collapsing to Zoom in alone while fitted was
+  tried on paper and dropped: Zoom out tapped once too often would land on the grid and open Add.
+  A follow-up below.
+- **Settings at Extra large with the wider list**: the page beside it is 650 px; nothing clips.
+- **The Meal field with no saved meals** reads "Meals you add are kept here for next time."
 
 ### T10 Wrap up the batch
 
@@ -1001,3 +1042,11 @@ sizes, and the "As built" list is written.
 - Per-screen calendar visibility and the week swipe following the finger (batch 2's list).
 - `display_orientation` and `display_controls_bottom` are still stored but unread.
 - The Hours pinch on the kiosk's touch panel (batch 2, T6).
+- The Hours zoom at Extra large covers the last two columns' evening while the day is fitted
+  (T9): a smaller control there, or one that sits in the hours gutter.
+- A filter fades the other people's chips to 30%, which is under any contrast rule while they
+  stay tappable (UX §10 says "fade but keep their text"); 45% with a dashed edge would pass.
+- The header's controls shift when the live icon appears (T9): reserving its 68 px would cost the
+  one row its spare room.
+- A hand walk of this batch in `just display` and on a phone, and VoiceOver over the rooms whose
+  names left the header: this session reviewed screenshots and ran the tests, not a live screen.

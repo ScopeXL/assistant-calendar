@@ -218,7 +218,8 @@ export function CalendarScreen() {
               header has no room beside the arrows. */}
           <div className="flex items-center justify-between gap-2">
             <Chip
-              on={showPeople}
+              opener
+              expanded={showPeople}
               onClick={() => {
                 setShowPeople(!showPeople);
               }}

@@ -7,6 +7,8 @@ import { HeaderBack } from "../../shell/HeaderLinks";
 import { RoomHeader } from "../../shell/roomHeader";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
+import { useFieldLabel } from "../../ui/Field";
+import { PanelActions } from "../../ui/PanelActions";
 import { celebrate } from "../../ui/Celebration";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { EmptyState } from "../../ui/EmptyState";
@@ -359,6 +361,7 @@ function RewardForm({ reward, onClose }: { reward: Reward | null; onClose: () =>
   const { saveReward, removeReward } = useChoreChanges();
   const [title, setTitle] = useState(reward?.title ?? "");
   const [cost, setCost] = useState(reward?.cost_points ?? 20);
+  const label = useFieldLabel();
   return (
     <form
       className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
@@ -378,7 +381,7 @@ function RewardForm({ reward, onClose }: { reward: Reward | null; onClose: () =>
         }}
       />
       <div className="flex flex-col gap-2">
-        <p className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>Costs</p>
+        <p className={label}>Costs</p>
         <ChipRow label="Costs">
           {COSTS.map((value) => (
             <Chip
@@ -404,9 +407,6 @@ function RewardForm({ reward, onClose }: { reward: Reward | null; onClose: () =>
           {errorMessage(saveReward.error ?? removeReward.error)}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!title.trim()} pending={saveReward.isPending}>
-        {reward ? "Save changes" : "Add Reward"}
-      </Button>
       {reward ? (
         <Button
           variant="quiet-danger"
@@ -418,6 +418,11 @@ function RewardForm({ reward, onClose }: { reward: Reward | null; onClose: () =>
           Remove {reward.title}
         </Button>
       ) : null}
+      <PanelActions>
+        <Button type="submit" block disabled={!title.trim()} pending={saveReward.isPending}>
+          {reward ? "Save changes" : "Add reward"}
+        </Button>
+      </PanelActions>
     </form>
   );
 }

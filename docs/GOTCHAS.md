@@ -28,6 +28,15 @@ size limit.
 
 ## Layout and CSS
 
+- A backdrop under the header's menus covered only the header: the header is a size container
+  (`@container`), and a container contains `fixed` boxes. `ui/Menu` closes on a press outside
+  and swallows that click instead.
+- The rail's fold never eased: `:root[data-motion-ready] [data-surface]` resets `transition` on
+  every surface a moment after first paint, and out-ranked the rail's own rule. A surface that
+  moves needs a rule at least that specific, carrying the crossfade too.
+- The header was 9 px taller in Tasks than elsewhere: a bordered `Segmented` is 12 px taller
+  than a button. As one row the header pads 4 px, and `--header-h` follows `--tap`.
+
 - A select stayed 27 px tall in Safari: WebKit ignores `min-height` on a native select. Use
   `ui/Select` (appearance reset, its own chevron).
 - Hours' day columns stopped lining up: `container-type` adds layout containment, and a contained
@@ -45,6 +54,15 @@ size limit.
   reconnects. `ui/LiveStatus` shows anything but connected only after 2 s.
 
 ## End-to-end tests
+
+- The wall's keyboard didn't rise in an a11y run: an `Escape` earlier in the test counted as a
+  physical keyboard, which keeps the on-screen one down for 5 s. Close things with a tap.
+- The tap-target check flagged the buttons under an open menu as its neighbours. It looks only
+  inside an open `[role=menu]`'s box, as it does inside a modal dialog.
+- A screenshot showed the last shot's zoom: a wall screen remembers its view across a reload
+  (ADR 0030). The screenshot spec clears `sunroom.display.*` before every load.
+- A render prop that hands out a function touching a ref (`children(close)`) fails the React
+  compiler's refs lint. Pass it through a context, or call it only from a handler.
 
 - An e2e helper moved on before sign-in finished on a laptop: the Today panel's "Up next" shows
   beside Who's using this there. Wait for the URL, not a heading that two screens share.

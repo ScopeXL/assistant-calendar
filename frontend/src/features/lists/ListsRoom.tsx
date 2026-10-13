@@ -325,27 +325,23 @@ export function ChangeListPanel({
         onClose();
       }}
     >
-      <div className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}>
-        <form
-          className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!name.trim()) return;
-            renameList.mutate({ list, name: name.trim() }, { onSuccess: onClose });
+      {/* One form: Remove in its flow, Save changes pinned under it like every other editor. */}
+      <form
+        className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!name.trim()) return;
+          renameList.mutate({ list, name: name.trim() }, { onSuccess: onClose });
+        }}
+      >
+        <TextField
+          label="Name"
+          autoComplete="off"
+          value={name}
+          onChange={(event) => {
+            setName(event.target.value);
           }}
-        >
-          <TextField
-            label="Name"
-            autoComplete="off"
-            value={name}
-            onChange={(event) => {
-              setName(event.target.value);
-            }}
-          />
-          <Button type="submit" block disabled={!name.trim()} pending={renameList.isPending}>
-            Save changes
-          </Button>
-        </form>
+        />
         {removeList.isError ? (
           <p role="alert" className="font-semibold text-alert">
             {errorMessage(removeList.error)}
@@ -381,7 +377,12 @@ export function ChangeListPanel({
             Remove {list.name}
           </Button>
         )}
-      </div>
+        <PanelActions>
+          <Button type="submit" block disabled={!name.trim()} pending={renameList.isPending}>
+            Save changes
+          </Button>
+        </PanelActions>
+      </form>
     </SidePanel>
   );
 }

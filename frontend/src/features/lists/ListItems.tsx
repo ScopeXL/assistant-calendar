@@ -14,6 +14,7 @@ import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
 import { DayField } from "../../ui/DayField";
 import { Field } from "../../ui/Field";
+import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
@@ -420,9 +421,6 @@ function ItemEditor({ item, onClose }: { item: Item; onClose: () => void }) {
           {errorMessage(changes.removeItem.error)}
         </p>
       ) : null}
-      <Button block pending={changes.patchItem.isPending} onClick={save}>
-        Save changes
-      </Button>
       <Button
         variant="quiet-danger"
         pending={changes.removeItem.isPending}
@@ -432,6 +430,11 @@ function ItemEditor({ item, onClose }: { item: Item; onClose: () => void }) {
       >
         Remove {item.text}
       </Button>
+      <PanelActions>
+        <Button block pending={changes.patchItem.isPending} onClick={save}>
+          Save changes
+        </Button>
+      </PanelActions>
     </div>
   );
 }

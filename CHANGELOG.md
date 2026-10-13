@@ -29,6 +29,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   long and Repeats each show your choice on one button and open their picker under it; the row
   of suggested times is gone.
 - A meal is one box: type it, or tap a saved meal under it as you type.
+- The Save button stays in view at the bottom of every sheet, and a saved meal's emoji is
+  picked from a row (the kitchen screen's keyboard has none).
 - Settings' list is wider, so every page's name fits on one line.
 - Google's app keys are asked for inside Sign in with Google, where they're used, instead of
   on Features.

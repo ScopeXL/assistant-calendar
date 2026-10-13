@@ -6,7 +6,9 @@ import { zonedParts } from "../../lib/dates";
 import { useMembers, usePlugins, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
+import { PanelActions } from "../../ui/PanelActions";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { useFieldLabel } from "../../ui/Field";
 import { LengthField } from "../../ui/LengthField";
 import { ListRow } from "../../ui/ListRow";
 import { useShell } from "../../ui/shell";
@@ -205,7 +207,7 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
   );
   const [choosingIcon, setChoosingIcon] = useState<number | null>(null);
   const gap = display ? "gap-6" : "gap-5";
-  const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
+  const heading = useFieldLabel();
   const move = (from: number, to: number) => {
     if (to < 0 || to >= steps.length) return;
     const next = [...steps];
@@ -436,9 +438,6 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
           {errorMessage(saveRoutine.error ?? removeRoutine.error)}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!ready} pending={saveRoutine.isPending}>
-        {routine ? "Save changes" : "Add Routine"}
-      </Button>
       {routine ? (
         <Button
           variant="quiet-danger"
@@ -450,6 +449,11 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
           Remove {routine.title}
         </Button>
       ) : null}
+      <PanelActions>
+        <Button type="submit" block disabled={!ready} pending={saveRoutine.isPending}>
+          {routine ? "Save changes" : "Add routine"}
+        </Button>
+      </PanelActions>
     </form>
   );
 }

@@ -45,6 +45,7 @@
 | A meal | One field, "What's cooking": what's typed is the name and the search of the saved meals, which sit under it as one scrolling row of chips. Tapping one fills the field and links it; so does typing its name in full; changing the words unlinks it. No "Saved Meals" heading and no second box. Who cooks starts on Anyone. Opened from a day's cell, the day and the meal are value rows. New List has the same shape: one field, the usual names as chips that fill it |
 | The same pickers everywhere | An item's sheet picks its day with the Day strip (it had its own row of weekday chips), and a routine's Starts and Shows for are the time and length fields (it had seven fixed times) |
 | The keyboard's top row | The wall keyboard's row for accents takes no room until a key is held (it kept 56 px empty for suggestions that were never built); `--osk-h` follows the keys' measured height through a `ResizeObserver`, so the panels' padding follows |
+| The second audit | After the batch was built its screenshots were read again beside the 0.8.0 set (`docs/M6-batch-3.md`, T9). What it changed: every editor's primary button is pinned (`ui/PanelActions`), with Remove or Archive above it in the flow; a task's Change is a secondary button like the other sheets'; a saved meal's emoji is picked from a row, since the wall's keyboard has none; the labels the forms still wrote by hand took the quiet label; a text field that is itself a row of a Settings page keeps the rows' bold label (`TextField strong`); the rail's rule faces the board when the rail is on the right |
 
 ## Consequences
 
@@ -53,5 +54,12 @@
 - `just screenshots` clears a page's remembered view before every load (an init script in the
   spec): its shots are of screens as they first open, and a remembered zoom or fold would carry
   from one into the next.
+- New in `ui/`: `Menu` (the header's View and Filter), `Field` and `FormSection`, `ValueRow`
+  with `ChoiceList` and `ChoiceRow`, `LengthField`, `ColorDots`; `lib/pointer` and
+  `lib/useDebounced`. Gone: `WeekTools`, `hoursLimit`, the Features row for Google's keys, the
+  wizard's pairing step, `timeChips`.
+- Not built, and why, is in each task's "As built" note; the follow-ups are at the end of
+  `docs/M6-batch-3.md`. The largest: the Hours zoom covers the last two columns' evening at
+  Extra large while the day is fitted, and a filter's faded chips are under any contrast rule.
 - An end-to-end test that waits for a screen to hear live updates reads `html[data-stream="live"]`
   (`hearsLive` in `e2e/shell.spec.ts`), not the icon.

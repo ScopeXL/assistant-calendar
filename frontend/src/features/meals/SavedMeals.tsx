@@ -6,11 +6,18 @@ import { errorMessage } from "../../api/client";
 import { HeaderBack } from "../../shell/HeaderLinks";
 import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
+import { Chip } from "../../ui/Chip";
 import { EmptyState } from "../../ui/EmptyState";
+import { Field } from "../../ui/Field";
+import { PanelActions } from "../../ui/PanelActions";
+import { ScrollRow } from "../../ui/ScrollRow";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
 import { useMealChanges, useSaved, type Saved } from "./data";
+
+// What a saved meal can wear: picked from a row, since the wall's keyboard has no emoji.
+const EMOJI = ["🌮", "🍕", "🍝", "🍗", "🐟", "🥗", "🍲", "🍔", "🥪", "🍳", "🥘", "🍜"];
 
 const madeText = (count: number) =>
   count === 0 ? "Not made yet" : count === 1 ? "Made once" : `Made ${String(count)} times`;
@@ -215,15 +222,30 @@ function SavedForm({ meal, onDone }: { meal: Saved | null; onDone: () => void })
           setText(event.target.value);
         }}
       />
-      <TextField
-        label="Emoji (optional)"
-        autoComplete="off"
-        maxLength={16}
-        value={emoji}
-        onChange={(event) => {
-          setEmoji(event.target.value);
-        }}
-      />
+      {/* A row to pick from, as a countdown's: the wall's keyboard has no emoji to type. */}
+      <Field label="Emoji">
+        <ScrollRow label="Emoji">
+          <Chip
+            on={emoji === ""}
+            onClick={() => {
+              setEmoji("");
+            }}
+          >
+            None
+          </Chip>
+          {[...new Set([...(emoji ? [emoji] : []), ...EMOJI])].map((mark) => (
+            <Chip
+              key={mark}
+              on={emoji === mark}
+              onClick={() => {
+                setEmoji(mark);
+              }}
+            >
+              {mark}
+            </Chip>
+          ))}
+        </ScrollRow>
+      </Field>
       <TextField
         label="Recipe link (optional)"
         autoComplete="off"
@@ -247,9 +269,6 @@ function SavedForm({ meal, onDone }: { meal: Saved | null; onDone: () => void })
           {errorMessage(error)}
         </p>
       ) : null}
-      <Button type="submit" block disabled={!text.trim()} pending={pending}>
-        {meal ? "Save changes" : "Save meal"}
-      </Button>
       {meal ? (
         <Button
           variant="quiet-danger"
@@ -261,6 +280,11 @@ function SavedForm({ meal, onDone }: { meal: Saved | null; onDone: () => void })
           Archive
         </Button>
       ) : null}
+      <PanelActions>
+        <Button type="submit" block disabled={!text.trim()} pending={pending}>
+          {meal ? "Save changes" : "Save meal"}
+        </Button>
+      </PanelActions>
     </form>
   );
 }

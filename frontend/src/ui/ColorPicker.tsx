@@ -1,4 +1,5 @@
 import { COLORS, type PersonColor } from "../lib/colors";
+import { useFieldLabel } from "./Field";
 import { useShell } from "./shell";
 
 /** Whose each taken color is, by color: `{ rose: "Mia" }`. */
@@ -49,11 +50,10 @@ export function ColorPicker({
   initial?: string;
 }) {
   const display = useShell() === "display";
+  const labelClass = useFieldLabel();
   return (
     <fieldset className="@container flex flex-col gap-2">
-      <legend className={`mb-2 font-semibold ${display ? "text-d-body" : "text-body"}`}>
-        {label}
-      </legend>
+      <legend className={`mb-2 ${labelClass}`}>{label}</legend>
       <div className="grid grid-cols-2 gap-2 @xl:grid-cols-4">
         {colorOrder(used).map((option) => {
           const owner = used[option.value];
