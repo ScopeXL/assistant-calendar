@@ -145,21 +145,26 @@ test("the views, the event sheet and Recently Removed", async ({ page }) => {
   const today = page.getByRole("complementary", { name: "Today" });
   await expect(today.getByRole("region", { name: "Up next" })).toContainText("Piano lesson");
 
-  // Day: the vet is over, free time folds into one line.
+  // Day: the vet is over, free time folds into one line. The view names its own day: the
+  // header doesn't (ADR 0030).
   await page.getByRole("button", { name: "Day", exact: true }).click();
   const day = page.getByRole("region", { name: "Wed, Oct 7" });
+  await expect(day).toContainText("Wednesday, October 7");
+  await expect(page.getByRole("banner")).not.toContainText("October");
   await expect(day).toContainText("Vet");
   await expect(day.getByRole("button", { name: /^free until 3:30 PM/ })).toBeVisible();
 
   // Month: a cell opens its day.
   await page.getByRole("button", { name: "Month", exact: true }).click();
   const month = page.getByRole("region", { name: "October 2026" });
+  await expect(month.getByText("October 2026", { exact: true })).toBeVisible();
   await month.getByRole("button", { name: /^Fri 9: .*Pajama day/ }).click();
   await expect(page.getByRole("region", { name: "Fri, Oct 9" })).toContainText("Pajama day");
 
-  // People: a column per person, Everyone first.
+  // People: a column per person, Everyone first. Nothing to filter there.
   await page.getByRole("button", { name: "People", exact: true }).click();
   const people = page.getByRole("region", { name: "People" });
+  await expect(page.getByRole("banner").getByRole("button", { name: /^Filter/ })).toHaveCount(0);
   await expect(people.getByRole("region", { name: "Ana" })).toContainText("Vet");
   await expect(people.getByRole("region", { name: "Leo" })).toContainText("Piano lesson");
 
@@ -181,6 +186,66 @@ test("the views, the event sheet and Recently Removed", async ({ page }) => {
   await expect(toast(page, "Put back Vet")).toBeVisible();
   await page.getByRole("link", { name: "Calendar", exact: true }).click();
   await expect(board.getByRole("button", { name: /^Vet, / })).toBeVisible();
+});
+
+test("Filter is one button in the header: several people, a tap elsewhere, Everyone", async ({
+  page,
+}) => {
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  const header = page.getByRole("banner");
+  await expect(board.getByRole("button", { name: /^Vet, / })).toBeVisible();
+  // No row over the days any more: the board starts under the header.
+  await expect(page.getByRole("group", { name: "Show" })).toHaveCount(0);
+  // A chip that isn't one of the chosen people's fades; it keeps its words.
+  const faded = (name: RegExp) =>
+    board
+      .getByRole("button", { name })
+      .first()
+      .locator("xpath=ancestor::*[contains(@class, 'opacity-30')]");
+  await header.getByRole("button", { name: "Filter", exact: true }).click();
+  const menu = page.getByRole("menu", { name: "Filter" });
+  const everyone = menu.getByRole("menuitemradio", { name: "Everyone" });
+  await expect(everyone).toHaveAttribute("aria-checked", "true");
+  await expect(everyone).toBeFocused();
+  // Choosing a person keeps the menu open for the next, and the board already follows.
+  await menu.getByRole("menuitemcheckbox", { name: "Mia" }).click();
+  await expect(menu).toBeVisible();
+  await expect(faded(/^Vet, /)).toHaveCount(1);
+  await expect(faded(/^Soccer practice, /)).toHaveCount(0);
+  await expect(faded(/^Piano lesson, /)).toHaveCount(1);
+  await menu.getByRole("menuitemcheckbox", { name: "Leo" }).click();
+  await expect(faded(/^Piano lesson, /)).toHaveCount(0);
+  // Everyone's events always show (the seed's garbage night is nobody's in particular).
+  await expect(faded(/^Garbage night/)).toHaveCount(0);
+  const chosen = header.getByRole("button", { name: "Filter: Mia, Leo" });
+  await expect(chosen).toHaveAttribute("aria-expanded", "true");
+  // A tap on the board closes the menu and does nothing else: no event sheet, no Add panel.
+  await board.getByRole("button", { name: /^Vet, / }).click();
+  await expect(menu).toBeHidden();
+  await page.waitForTimeout(300);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  // The next tap is an ordinary one again.
+  await board.getByRole("button", { name: /^Vet, / }).click();
+  const sheet = page.getByRole("dialog", { name: "Vet" });
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole("button", { name: "Close" }).click();
+  // Escape closes it too, back to the button; the filter holds on the Day and Month views.
+  await chosen.click();
+  await expect(menu.getByRole("menuitemcheckbox", { name: "Mia" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(chosen).toBeFocused();
+  await header.getByRole("button", { name: "Month", exact: true }).click();
+  await expect(chosen).toBeVisible();
+  await header.getByRole("button", { name: "Week", exact: true }).click();
+  // Everyone clears the filter and closes the menu.
+  await chosen.click();
+  await everyone.click();
+  await expect(menu).toBeHidden();
+  await expect(header.getByRole("button", { name: "Filter", exact: true })).toBeVisible();
+  await expect(faded(/^Vet, /)).toHaveCount(0);
 });
 
 test("times follow the household's zone and its 12- or 24-hour clock", async ({

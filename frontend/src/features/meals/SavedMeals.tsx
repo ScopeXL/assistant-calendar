@@ -105,6 +105,7 @@ export function SavedMeals() {
       <section aria-label="Saved Meals" className="flex min-h-0 flex-1 flex-col">
         <RoomHeader
           title="Saved Meals"
+          visibleTitle
           back={
             <HeaderBack to="/$room" params={{ room: "meals" }}>
               Meals

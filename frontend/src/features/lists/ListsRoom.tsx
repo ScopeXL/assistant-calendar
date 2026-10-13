@@ -226,8 +226,7 @@ function ListPage({ listId }: { listId: string }) {
     <section aria-label={list.name} className="flex min-h-0 flex-1 flex-col">
       <RoomHeader
         title={list.name}
-        subtitle={tileCount(list)}
-        counts
+        visibleTitle
         back={
           <HeaderBack to="/$room" params={{ room: "lists" }}>
             Lists
@@ -258,6 +257,10 @@ function ListPage({ listId }: { listId: string }) {
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-2">
+        {/* How much is left, over the items: the header has the list's name and nothing under it. */}
+        <p className="pt-3 pb-1 text-d-secondary font-semibold text-ink-soft">
+          <Pop value={tileCount(list)} className="inline-block" />
+        </p>
         {detail.items.length === 0 && detail.done.length === 0 ? (
           <EmptyState message={`Nothing on ${list.name} yet. Add the first thing.`} />
         ) : (

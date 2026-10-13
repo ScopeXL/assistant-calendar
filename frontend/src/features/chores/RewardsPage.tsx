@@ -41,6 +41,7 @@ export function RewardsPage() {
     <section aria-label="Stars & Rewards" className="flex min-h-0 flex-1 flex-col">
       <RoomHeader
         title="Stars & Rewards"
+        visibleTitle
         back={
           <HeaderBack to="/$room" params={{ room: "chores" }}>
             Tasks

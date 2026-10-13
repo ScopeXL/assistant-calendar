@@ -533,7 +533,8 @@ nothing separates it from the board.
 
 ### T6 The header: the Calendar's part, Filter, no titles, the spacing audit
 
-- [ ] Done (commits: )
+- [x] Done (commit: "frontend: the header's room part: Filter, the layout and the views; titles
+  leave it; the zoom on the grid")
 
 **Owner's note.** "The main header needs more changes. I think my last request was
 misinterpreted. The header should be unique for each page/view you are on, just the header itself
@@ -671,6 +672,50 @@ Hours on the Week view); at the right a Filter button with the people, the views
 panel's button. The month's name and the week's dates left it (the days say when they are; the
 Month view says its month). The Hours zoom sits on the grid's corner." "Rooms the rail already
 names no longer repeat their name in the header."
+
+**As built.** One commit, not three. Parts a and c can't be split: taking `subtitle` and `counts`
+out of `RoomHeaderSpec` doesn't compile until every room stops passing them. And part b can't
+follow part a: the zoom's buttons lived in the toolbar that part a removes, so a commit between
+them would have an Hours board with no way to zoom.
+- **Measured at 1920×1080 Standard, the rail whole, the panel open, Wed Sep 30 12:30 PM**: the
+  room's part of the header is 1035 px; on the Week view it has 162 px to spare with nobody
+  filtered, 102 with two people and 58 with four (three avatars and "+1"). The live icon is 68,
+  so with four people filtered *and* the stream down the room's part wraps; with two it fits.
+  No gap had to shrink.
+- **The header is exactly 80 px in every room.** The Tasks room's Today · This Week group is a
+  bordered `Segmented`, 68 px tall, and with the header's 10 px padding it made the header 89 px,
+  9 px lower than the rule under the rail's mark (new in T5). As one row the header now pads 4 px,
+  and `--header-h` is `max(5rem, var(--tap) + 1.5rem)`: at Small, where a tap target doesn't
+  shrink, 5rem alone was 70 px and the header was already taller than it.
+- **Filter is its own `<button>`**, not `ui/Button` (whose padding is fixed and can't be
+  overridden by a class): it is a 56 px square until it has avatars or the word. It has no
+  `aria-pressed`: a menu button that is also a toggle is two roles, and its name ("Filter: Mia,
+  Leo") says the state. A darker border marks a filter that's on. The chosen people are kept in
+  the household's order.
+- **The menu has no backdrop.** The header is a size container, which contains `fixed` boxes, so
+  a backdrop inside it would cover only the header, and one outside it would sit over the menu.
+  A press outside closes the menu and its click is swallowed (`lib/idle`'s
+  `swallowFollowingClick`), which does what the backdrop was for. `MenuRadio` closes the menu
+  itself through a context: a render prop that hands out `close` trips the React compiler's
+  refs rule. The "People" heading is a named `role="group"`, which a `role="menu"` may hold.
+  Everyone and the people rows show a check at their end (a filled row for each of several
+  people was heavy beside their avatars); the View menu keeps its filled row.
+- **The zoom is a row, not a stack.** Stacked it was 204 px tall, and at the fitted zoom it
+  covered the last column from 6:30 PM. As a row it covers 10 PM to midnight, the plan's own
+  budget. `hoursLimit.ts` and `WeekTools.tsx` are gone: the grid hands the control its limit.
+- **The Day caption** writes "today" as its own quiet word beside the date, not after a "·".
+- **The section's name** stays "This Week" on the Week view whichever week is showing (as it
+  was): the tests find the board by it. The sr-only h1 is "This Week" at home and the span
+  otherwise.
+- **Tests.** The a11y run checks the Filter menu with nobody chosen: a filter fades the other
+  people's chips to 30% on purpose (UX §10), which axe's contrast rule fails, and the old "Show"
+  row was never part of that run either. It closes the menu with its button, not Escape: a key
+  press keeps the wall's own keyboard down for five seconds, and the run opens Add next. The
+  tap-target check looks only at an open menu and its button, as it already does for a sheet:
+  a tap elsewhere only closes the menu, so what's under it isn't its neighbour (at Extra large
+  in portrait the wider menu overlapped the Today band's rows by 21 px). `just screenshots`
+  now clears a page's remembered view before every load: T3's memory would otherwise carry one
+  shot's zoom or fold into the next.
 
 ### T7 Settings: the navigation's width; Google's keys where they're used
 

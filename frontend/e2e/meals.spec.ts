@@ -18,7 +18,9 @@ function toast(page: Page, message: string): Locator {
 async function mealsRoom(page: Page): Promise<Locator> {
   await pairWall(page);
   await page.goto("/meals");
-  await expect(page.getByRole("heading", { name: /^Meals Oct 4/, level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Meals", level: 1 })).toBeVisible();
+  // The header says no dates (ADR 0030): the rows carry them.
+  await expect(page.getByRole("table").getByRole("row", { name: /Sun 4/ })).toBeVisible();
   return page.getByRole("table");
 }
 
@@ -60,7 +62,7 @@ test("Swap days trades two dinners, and Undo trades them back", async ({ page })
 test("Copy last week fills next week, and Undo empties it again", async ({ page }) => {
   const grid = await mealsRoom(page);
   await page.getByRole("button", { name: "Next week" }).click();
-  await expect(page.getByRole("heading", { name: /^Meals Oct 11/, level: 1 })).toBeVisible();
+  await expect(grid.getByRole("row", { name: /Sun 11/ })).toBeVisible();
   await page.getByRole("button", { name: "Copy last week" }).click();
   await expect(toast(page, "Copied 6 meals")).toBeVisible();
   await expect(grid.getByRole("row", { name: /Wed 14/ })).toContainText("Tacos");

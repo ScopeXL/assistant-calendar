@@ -1,4 +1,4 @@
-import { formatWallTime } from "../../lib/dates";
+import { formatWallTime, longDate } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { useChangeCount } from "../../lib/motion";
 import { useShell } from "../../ui/shell";
@@ -13,7 +13,9 @@ const minutesBetween = (a: string, b: string) =>
   (Date.parse(`${b}Z`) - Date.parse(`${a}Z`)) / 60_000;
 
 /**
- * The Day view (UX §4), the only timeline: every event a full chip beside its hour, overlapping
+ * The Day view (UX §4), the only timeline: on the wall the day's name over it ("Wednesday,
+ * October 7", and "today" beside it: the header doesn't say which day, ADR 0030), then every
+ * event a full chip beside its hour, overlapping
  * ones side by side (three at most, then "+N more"), and empty stretches folded into one line
  * ("free until 4:00 PM") that adds an event at that time when tapped. The now line sits where
  * now is. Tap a time to add.
@@ -96,6 +98,15 @@ export function DayView({
         display ? "overflow-y-auto border-t border-line px-6 py-4" : "py-2"
       }`}
     >
+      {display ? (
+        // The room's h1 says it to a screen reader (shell/Header).
+        <p aria-hidden="true" className="flex items-baseline gap-3 pb-1">
+          <span className="text-d-title leading-tight font-bold">{longDate(day)}</span>
+          {isToday ? (
+            <span className="text-d-secondary font-semibold text-ink-soft">today</span>
+          ) : null}
+        </p>
+      ) : null}
       {allDay.length ? (
         <div className={`grid ${hours} items-start gap-4`}>
           <span className={`pt-4 ${soft} font-semibold text-ink-soft`}>all day</span>

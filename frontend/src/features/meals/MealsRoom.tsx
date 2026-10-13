@@ -9,15 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import {
-  addDays,
-  shortDate,
-  shortWeekday,
-  dayNumber,
-  weekOf,
-  weekSpan,
-  zonedParts,
-} from "../../lib/dates";
+import { addDays, shortDate, shortWeekday, dayNumber, weekOf, zonedParts } from "../../lib/dates";
 import { useMembers, useSettings, type Member } from "../../lib/household";
 import { usePageTurn } from "../../lib/motion";
 import { useMinute } from "../../lib/time";
@@ -84,7 +76,6 @@ function MealsWeek() {
     <section aria-label="Meals" className="flex min-h-0 flex-1 flex-col">
       <RoomHeader
         title="Meals"
-        subtitle={weekSpan(days)}
         controls={
           <>
             <div className="flex items-center gap-2">

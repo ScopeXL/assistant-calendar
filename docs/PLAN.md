@@ -184,7 +184,7 @@ frontend/src/
   api/         openapi.json, schema.d.ts (generated), client.ts, keys.ts
   lib/         events, eventRouter, store, toast, motion (helpers over `motion`), wakeLock, platform, idle (screensaver timer), theme (data-theme + auto schedule), keyboard (on-screen keyboard context), time (a ticking `now` store), night (sleep and the evening dim), dimmer (who dims: the page or the Pi's helper), fly ("+2" to the person's avatar), longPress
   ui/          Button, IconButton, Sheet (native dialog), Chip, PersonBadge, Avatar, Segmented, Skeleton, EmptyState, Toast, Keyboard, Celebration (canvas), ProgressRing, DatePicker, TimePicker, ColorPicker
-  shell/       DisplayShell (kiosk: rail + header + board + today panel), Header + roomHeader (the room's title and controls, a store: ADR 0029), PhoneShell (tab bar), nav.ts (built from the plugin registry), Screensaver
+  shell/       DisplayShell (kiosk: rail + header + board + today panel), Header + roomHeader (the room's name and controls, a store: ADR 0029; a rail room's name is for screen readers only, ADR 0030), PhoneShell (tab bar), nav.ts (built from the plugin registry), Screensaver
   features/
     registry.ts            the plugin registry: id → {rooms, today, add, personColumn, removed, settingsPages, …} (§6.5)
     calendar/              week/day/month/agenda views, event editor, quick add, occurrence sheet

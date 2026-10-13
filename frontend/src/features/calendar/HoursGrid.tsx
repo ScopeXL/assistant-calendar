@@ -40,9 +40,9 @@ import {
   ZOOM_STEP,
   type ChipBox,
 } from "./hours";
-import { hoursMaxZoom } from "./hoursLimit";
 import { shownFor, type DayColumn, type DayEntry } from "./layout";
 import type { Occurrence } from "./types";
+import { ZoomControl } from "./ZoomControl";
 
 const BAND_CHIPS = 3;
 
@@ -56,8 +56,8 @@ export interface HoursGridProps {
   people: string[];
   /** 1 fits the whole day; each Zoom in is half again (features/calendar/hours). */
   zoom: number;
-  /** A shortcut asked for another zoom (ctrl + wheel, a trackpad pinch); the buttons are in the
-   * board's toolbar. */
+  /** Another zoom was asked for: the buttons at the grid's corner (ZoomControl), or their
+   * shortcuts (ctrl + wheel, a trackpad pinch). */
   onZoom?: ((zoom: number) => void) | undefined;
   lifted: Occurrence | null;
   lit: string | null;
@@ -127,12 +127,8 @@ export function HoursGrid(props: HoursGridProps) {
   const max = measure && measure.fit > 0 ? maxZoom(measure.fit, measure.rem) : ZOOM_STEP;
   const zoom = Math.min(props.zoom, max);
   const pph = measure && measure.fit > 0 ? pixelsPerHour(zoom, measure.fit) : 0;
-  const measured = measure !== null && measure.fit > 0;
-  useEffect(() => {
-    if (measured) hoursMaxZoom.set(max);
-  }, [measured, max]);
 
-  // Shortcuts for the toolbar's Zoom in and Zoom out: ctrl + wheel, which is also what a
+  // Shortcuts for Zoom in and Zoom out: ctrl + wheel, which is also what a
   // trackpad pinch sends. One step per gesture tick, never faster than the eye can follow.
   const zoomRef = useRef({ zoom, max, onZoom });
   useEffect(() => {
@@ -181,49 +177,53 @@ export function HoursGrid(props: HoursGridProps) {
   } as CSSProperties;
 
   return (
-    <div
-      ref={scroller}
-      data-hours=""
-      style={style}
-      className="relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain border-t border-line [scrollbar-gutter:stable] [touch-action:pan-y]"
-    >
-      <div className="grid grid-cols-[6rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_var(--grid-h)]">
-        <div className="row-span-2 grid grid-rows-subgrid">
-          <div
-            ref={corner}
-            className="sticky top-0 z-20 flex items-end bg-wall px-3 pb-3 text-d-secondary font-semibold text-ink-soft"
-          >
-            all day
+    // The zoom floats over the grid's corner, outside the scroller: it never scrolls away.
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div
+        ref={scroller}
+        data-hours=""
+        style={style}
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain border-t border-line [scrollbar-gutter:stable] [touch-action:pan-y]"
+      >
+        <div className="grid grid-cols-[6rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_var(--grid-h)]">
+          <div className="row-span-2 grid grid-rows-subgrid">
+            <div
+              ref={corner}
+              className="sticky top-0 z-20 flex items-end bg-wall px-3 pb-3 text-d-secondary font-semibold text-ink-soft"
+            >
+              all day
+            </div>
+            <div aria-hidden="true" className="relative">
+              {pph > 0
+                ? gutterHours(pph, measure?.rem).map((hour) => (
+                    <span
+                      key={hour}
+                      className="absolute right-3 -translate-y-1/2 text-d-secondary whitespace-nowrap text-ink-soft"
+                      style={{ top: `${String(hour * pph)}px` }}
+                    >
+                      {formatWallTime(`2026-01-01T${String(hour).padStart(2, "0")}:00:00`, {
+                        compact: true,
+                      })}
+                    </span>
+                  ))
+                : null}
+            </div>
           </div>
-          <div aria-hidden="true" className="relative">
-            {pph > 0
-              ? gutterHours(pph, measure?.rem).map((hour) => (
-                  <span
-                    key={hour}
-                    className="absolute right-3 -translate-y-1/2 text-d-secondary whitespace-nowrap text-ink-soft"
-                    style={{ top: `${String(hour * pph)}px` }}
-                  >
-                    {formatWallTime(`2026-01-01T${String(hour).padStart(2, "0")}:00:00`, {
-                      compact: true,
-                    })}
-                  </span>
-                ))
-              : null}
-          </div>
+          {days.map((day) => (
+            <HoursColumn
+              key={day}
+              {...props}
+              day={day}
+              isToday={day === today}
+              column={props.columns.get(day)}
+              pph={pph}
+              rem={measure?.rem ?? 16}
+              width={measure?.width ?? 0}
+            />
+          ))}
         </div>
-        {days.map((day) => (
-          <HoursColumn
-            key={day}
-            {...props}
-            day={day}
-            isToday={day === today}
-            column={props.columns.get(day)}
-            pph={pph}
-            rem={measure?.rem ?? 16}
-            width={measure?.width ?? 0}
-          />
-        ))}
       </div>
+      {onZoom ? <ZoomControl zoom={zoom} max={max} onZoom={onZoom} /> : null}
     </div>
   );
 }

@@ -19,7 +19,7 @@ import { useStore } from "../../lib/store";
 import { useMinute } from "../../lib/time";
 import { useRoomHeader } from "../../shell/roomHeader";
 import { AddPanel } from "./AddPanel";
-import { BoardControls, BoardToolbar } from "./BoardControls";
+import { BoardControls, BoardPills } from "./BoardControls";
 import { useEventChanges, useOccurrences } from "./data";
 import { DayView } from "./DayView";
 import { arrivalKey } from "./EventChip";
@@ -30,7 +30,6 @@ import { PeopleView } from "./PeopleView";
 import { ScopeChooser } from "./ScopeChooser";
 import { TodayView } from "./TodayView";
 import type { Occurrence, Scope } from "./types";
-import { WeekTools } from "./WeekTools";
 import { WeekView } from "./WeekView";
 
 function homeView(setting: string | undefined): BoardView {
@@ -40,10 +39,10 @@ function homeView(setting: string | undefined): BoardView {
 }
 
 /**
- * The Calendar room on the wall screen (UX §3, §4): the board in its current view, its title and
- * controls in the wall's header, its own toolbar (Show, the Week's tools), and the side panel
- * (an event, or Add). What it shows lives in the display's shared state, so the idle machine can
- * put it back to this week (lib/displayState).
+ * The Calendar room on the wall screen (UX §3, §4): the board in its current view, its controls
+ * in the wall's header (the arrows, the Week's layout, Filter, the views), the plugins' quiet
+ * pills above the days, and the side panel (an event, or Add). What it shows lives in the
+ * display's shared state, so the idle machine can put it back to this week (lib/displayState).
  */
 export function CalendarRoom() {
   const state = useStore(displayState);
@@ -136,10 +135,11 @@ export function CalendarRoom() {
     else if (view === "month") updateDisplay({ monthOffset: state.monthOffset + step });
     else updateDisplay({ weekOffset: state.weekOffset + step });
   };
+  // The room's name, for a screen reader (the header draws none: the day heads carry the dates,
+  // and the Month and Day views say theirs), and what the middle button goes back to.
   const header = {
     week: {
-      title: monthYear(week[3] ?? today),
-      subtitle: weekSpan(week),
+      title: state.weekOffset === 0 ? "This Week" : weekSpan(week),
       homeLabel: "This Week",
       atHome: state.weekOffset === 0,
       home: () => {
@@ -149,7 +149,6 @@ export function CalendarRoom() {
     },
     day: {
       title: shortDate(focusDay),
-      subtitle: focusDay === today ? "today" : undefined,
       homeLabel: "Today",
       atHome: focusDay === today,
       home: () => {
@@ -159,7 +158,6 @@ export function CalendarRoom() {
     },
     month: {
       title: monthYear(month.first),
-      subtitle: undefined,
       homeLabel: "This Month",
       atHome: state.monthOffset === 0,
       home: () => {
@@ -169,14 +167,12 @@ export function CalendarRoom() {
     },
     people: {
       title: "People",
-      subtitle: shortDate(today),
       homeLabel: "Today",
       atHome: true,
       home: () => undefined,
     },
     today: {
-      title: shortDate(today),
-      subtitle: "today",
+      title: "Today",
       homeLabel: "This Week",
       atHome: true,
       home: () => {
@@ -184,10 +180,11 @@ export function CalendarRoom() {
       },
     },
   }[view];
+  // Someone who has since left the household may still be in a remembered filter.
+  const people = state.people.filter((id) => members.some((member) => member.id === id));
 
   useRoomHeader({
     title: header.title,
-    subtitle: header.subtitle,
     notice: dragging ? "Drop on a day" : null,
     controls: (
       <BoardControls
@@ -200,6 +197,15 @@ export function CalendarRoom() {
         atHome={header.atHome}
         onPage={page}
         onHome={header.home}
+        layout={layout}
+        onLayout={(weekLayout) => {
+          updateDisplay({ weekLayout });
+        }}
+        members={members}
+        people={people}
+        onPeople={(chosen) => {
+          updateDisplay({ people: chosen });
+        }}
       />
     ),
   });
@@ -210,29 +216,10 @@ export function CalendarRoom() {
       className="@container flex min-h-0 flex-1 flex-col"
     >
       <Arrivals value={arrived}>
-        <BoardToolbar
-          members={members}
-          people={state.people}
-          onPeople={(people) => {
-            updateDisplay({ people });
-          }}
+        <BoardPills
           pills={pills.map(({ id, Pill }) => (
             <Pill key={id} />
           ))}
-          tools={
-            view === "week" ? (
-              <WeekTools
-                layout={layout}
-                zoom={state.hoursZoom}
-                onLayout={(weekLayout) => {
-                  updateDisplay({ weekLayout });
-                }}
-                onZoom={(hoursZoom) => {
-                  updateDisplay({ hoursZoom });
-                }}
-              />
-            ) : null
-          }
         />
         <div {...pages.attrs} className="flex min-h-0 flex-1 flex-col">
           {view === "week" ? (
@@ -243,7 +230,7 @@ export function CalendarRoom() {
               occurrences={occurrences}
               members={members}
               dimPast={dimPast}
-              people={state.people}
+              people={people}
               layout={layout}
               zoom={state.hoursZoom}
               onZoom={(hoursZoom) => {
@@ -268,7 +255,7 @@ export function CalendarRoom() {
               occurrences={occurrences}
               members={members}
               dimPast={dimPast}
-              people={state.people}
+              people={people}
               onOpen={open}
               onAdd={(hour) => {
                 add(focusDay, hour);
@@ -280,7 +267,7 @@ export function CalendarRoom() {
               today={today}
               occurrences={occurrences}
               members={members}
-              people={state.people}
+              people={people}
               onDay={(day) => {
                 updateDisplay({ view: "day", day });
               }}

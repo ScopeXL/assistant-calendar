@@ -1,5 +1,11 @@
 import { useArrived } from "../../lib/arrivals";
-import { dayNumber, formatWallTime, shortWeekday, type MonthGrid } from "../../lib/dates";
+import {
+  dayNumber,
+  formatWallTime,
+  monthYear,
+  shortWeekday,
+  type MonthGrid,
+} from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { arrivalKey } from "./EventChip";
 import { byDay, shownFor } from "./layout";
@@ -9,8 +15,9 @@ import type { Occurrence } from "./types";
 const SHOWN = 3;
 
 /**
- * Month (UX §4): cells with the day number, up to three one-line entries with a color bar and
- * the person's initial, then "+N more". This week is lit a step and today two. A cell is one
+ * Month (UX §4): the month's name over the weekdays (the header doesn't say it: ADR 0030, and
+ * the cells alone are bare numbers), then cells with the day number, up to three one-line
+ * entries with a color bar and the person's initial, then "+N more". This week is lit a step and today two. A cell is one
  * button that opens its Day view, where every event is a full chip: three tappable entries
  * wouldn't fit a cell at the wall's tap-target size.
  */
@@ -34,6 +41,10 @@ export function MonthView({
   const month = grid.first.slice(0, 7);
   return (
     <div className="flex min-h-0 flex-1 flex-col border-t border-line px-2 pb-2">
+      {/* The room's h1 says it to a screen reader (shell/Header). */}
+      <p aria-hidden="true" className="px-3 pt-3 pb-1 text-d-title leading-tight font-bold">
+        {monthYear(grid.first)}
+      </p>
       <div className="grid grid-cols-7 border-b border-line" aria-hidden="true">
         {(grid.weeks[0] ?? []).map((day) => (
           <span key={day} className="px-3 py-2 text-d-secondary font-semibold text-ink-soft">

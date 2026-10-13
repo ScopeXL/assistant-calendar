@@ -11,7 +11,7 @@ let bump: () => void = () => undefined;
 
 function Counter() {
   const [count, setCount] = useState(1);
-  useRoomHeader({ title: "Lists", subtitle: `${String(count)} to get` });
+  useRoomHeader({ title: `List ${String(count)}`, visibleTitle: true });
   return (
     <button
       type="button"
@@ -31,11 +31,11 @@ describe("the room's slot in the wall's header", () => {
   it("holds the room's title from its first paint, and follows its state", () => {
     expect(roomHeader.get()).toBeNull();
     render(<Counter />);
-    expect(roomHeader.get()).toMatchObject({ title: "Lists", subtitle: "1 to get" });
+    expect(roomHeader.get()).toMatchObject({ title: "List 1", visibleTitle: true });
     act(() => {
       bump();
     });
-    expect(roomHeader.get()?.subtitle).toBe("2 to get");
+    expect(roomHeader.get()?.title).toBe("List 2");
   });
 
   it("is empty once the room leaves", () => {

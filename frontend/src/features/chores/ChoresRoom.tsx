@@ -44,7 +44,6 @@ function ChoresBoard() {
     <section aria-label="Tasks" className="flex min-h-0 flex-1 flex-col">
       <RoomHeader
         title="Tasks"
-        subtitle={mode === "today" ? "Today" : "This Week"}
         controls={
           <>
             <Segmented

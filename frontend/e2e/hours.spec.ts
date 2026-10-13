@@ -53,13 +53,21 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   await page.goto("/display");
   const board = page.getByRole("region", { name: "This Week" });
   await expect(board).toBeVisible();
-  await page.getByRole("button", { name: "Hours", exact: true }).click();
+  // The layout is two icons in the header, beside the arrows; there is no bar over the days.
+  await expect(board.getByRole("group", { name: "Zoom" })).toHaveCount(0);
+  await page.getByRole("banner").getByRole("button", { name: "Hours", exact: true }).click();
   const grid = board.locator("[data-hours]");
   await expect(grid).toBeVisible();
-  // No zoom is the default: the whole day, with nothing to zoom out of.
-  const zoomIn = page.getByRole("button", { name: "Zoom in" });
-  const zoomOut = page.getByRole("button", { name: "Zoom out" });
-  const fitDay = page.getByRole("button", { name: "Fit the day" });
+  // No zoom is the default: the whole day, with nothing to zoom out of. The zoom sits on the
+  // grid's own corner (ADR 0030), not in the header.
+  const zoom = board.getByRole("group", { name: "Zoom" });
+  const zoomIn = zoom.getByRole("button", { name: "Zoom in" });
+  const zoomOut = zoom.getByRole("button", { name: "Zoom out" });
+  const fitDay = zoom.getByRole("button", { name: "Fit the day" });
+  const corner = await boxOf(zoom);
+  const whole = await boxOf(grid);
+  expect(corner.x + corner.width).toBeGreaterThan(whole.x + whole.width - 60);
+  expect(corner.y + corner.height).toBeGreaterThan(whole.y + whole.height - 40);
   await expect(zoomIn).toBeEnabled();
   await expect(zoomOut).toBeDisabled();
   await expect(fitDay).toBeDisabled();
@@ -93,6 +101,16 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   expect(Math.abs((await scrolled()) - ((10 / 24) * 1.5 * fit - fit / 3))).toBeLessThanOrEqual(2);
   await expect(zoomOut).toBeEnabled();
   await expect(fitDay).toBeEnabled();
+  // The control stays put while the hours scroll under it.
+  const at = await scrolled();
+  await grid.evaluate((node) => {
+    node.scrollBy(0, 80);
+  });
+  expect(await scrolled()).not.toBe(at);
+  expect((await boxOf(zoom)).y).toBe(corner.y);
+  await grid.evaluate((node, top) => {
+    node.scrollTo(0, top);
+  }, at);
   // Again: 2.25 times the day, and the minute in the middle of the view stays put (12:40).
   await zoomIn.click();
   await expect

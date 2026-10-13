@@ -151,6 +151,8 @@ export const monthDay = dayFormat({ month: "short", day: "numeric" });
 export const longMonthDay = dayFormat({ month: "long", day: "numeric" });
 /** "Tue, Oct 7" */
 export const shortDate = dayFormat({ weekday: "short", month: "short", day: "numeric" });
+/** "Tuesday, October 7": the Day view's own caption, the one place a weekday is written out. */
+export const longDate = dayFormat({ weekday: "long", month: "long", day: "numeric" });
 /** "October 2026" */
 export const monthYear = dayFormat({ month: "long", year: "numeric" });
 /** "Oct" */

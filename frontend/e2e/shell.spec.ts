@@ -372,17 +372,23 @@ test.describe("the wall screen", () => {
     await pairWall(page);
     await page.goto("/display");
     const board = page.getByRole("region", { name: "This Week" });
-    // The room's title and its arrows live in the wall's header.
+    // The arrows live in the wall's header. It draws no title and no dates (ADR 0030: the day
+    // heads carry them); the room's name is still the page's heading for a screen reader.
     const header = page.getByRole("banner");
     const title = header.getByRole("heading", { level: 1 });
-    await expect(title).toContainText("2026");
-    const thisWeek = (await title.textContent()) ?? "";
+    await expect(title).toHaveText("This Week");
+    await expect(title).toHaveClass(/sr-only/);
+    await expect(header).not.toContainText("2026");
+    const firstDay = board.getByRole("heading", { level: 2 }).first();
+    const thisWeek = (await firstDay.textContent()) ?? "";
     await expect(header.getByRole("button", { name: "This week" })).toBeDisabled();
     await header.getByRole("button", { name: "Next week" }).click();
-    await expect(title).not.toHaveText(thisWeek);
+    await expect(title).not.toHaveText("This Week");
+    await expect(firstDay).not.toHaveText(thisWeek);
     await expect(board.locator("[aria-current=date]")).toHaveCount(0);
     await header.getByRole("button", { name: "This week" }).click();
-    await expect(title).toHaveText(thisWeek);
+    await expect(title).toHaveText("This Week");
+    await expect(firstDay).toHaveText(thisWeek);
     await expect(board.locator("[aria-current=date]")).toHaveCount(1);
   });
 
@@ -472,6 +478,7 @@ test.describe("the wall screen", () => {
     // It stays folded from room to room.
     await rail.getByRole("link", { name: "Lists", exact: true }).click();
     await expect(page.getByRole("banner").getByRole("heading", { name: "Lists" })).toBeVisible();
+    await expect(page.getByRole("banner").getByRole("button", { name: "New list" })).toBeVisible();
     expect(await width()).toBe(72);
     await rail.getByRole("link", { name: "Calendar", exact: true }).click();
     await expect(board).toBeVisible();
@@ -526,15 +533,16 @@ test.describe("the wall screen", () => {
     const rail = page.getByRole("navigation", { name: "Rooms" });
     const today = page.getByRole("complementary", { name: "Today" });
     const shell = page.locator("[data-shell]");
-    const show = page.getByRole("group", { name: "Show" });
     const pressed = (name: string) =>
       page.getByRole("button", { name, exact: true, pressed: true });
     await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     // Hours on the Week, zoomed in; then next month, two people, the rail folded, no Today panel.
     await page.getByRole("button", { name: "Hours", exact: true }).click();
     await page.getByRole("button", { name: "Zoom in" }).click();
-    await show.getByRole("button", { name: "Mia" }).click();
-    await show.getByRole("button", { name: "Leo" }).click();
+    await header.getByRole("button", { name: "Filter", exact: true }).click();
+    await page.getByRole("menuitemcheckbox", { name: "Mia" }).click();
+    await page.getByRole("menuitemcheckbox", { name: "Leo" }).click();
+    await page.keyboard.press("Escape");
     await header.getByRole("button", { name: "Month", exact: true }).click();
     await header.getByRole("button", { name: "Next month" }).click();
     await header.getByRole("button", { name: "Hide the rail" }).click();
@@ -546,9 +554,7 @@ test.describe("the wall screen", () => {
     await expect(header.getByRole("button", { name: "This month" })).toBeEnabled();
     await expect(shell).toHaveAttribute("data-rail", "compact");
     await expect(today).toBeHidden();
-    await expect(pressed("Mia")).toBeVisible();
-    await expect(pressed("Leo")).toBeVisible();
-    await expect(pressed("Ana")).toHaveCount(0);
+    await expect(header.getByRole("button", { name: "Filter: Mia, Leo" })).toBeVisible();
     // The Week's layout and its zoom came back with it.
     await header.getByRole("button", { name: "Week", exact: true }).click();
     await expect(pressed("Hours")).toBeVisible();
@@ -585,8 +591,7 @@ test.describe("the wall screen", () => {
       await expect(shell).toHaveAttribute("data-rail", "full");
       await expect(today).toBeVisible();
       await expect(pressed("Agenda")).toBeVisible();
-      await expect(pressed("Mia")).toHaveCount(0);
-      await expect(pressed("Leo")).toHaveCount(0);
+      await expect(header.getByRole("button", { name: "Filter", exact: true })).toBeVisible();
     } finally {
       await request.patch("/api/settings", { headers: CSRF, data: { display_start: "last" } });
     }

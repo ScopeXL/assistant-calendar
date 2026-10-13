@@ -9,6 +9,7 @@ import { fetchSession } from "../../lib/session";
 import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
+import { Pop } from "../../ui/Pop";
 import { QrCode } from "../../ui/QrCode";
 import { AddPhotosButton } from "./AddPhotosButton";
 import { useLibrary, useManifest, usePhotoChanges, type LibraryPhoto } from "./data";
@@ -40,7 +41,6 @@ export function PhotosRoom() {
     <section aria-label="Photos" className="flex min-h-0 flex-1 flex-col">
       <RoomHeader
         title="Photos"
-        subtitle={library.isSuccess ? photosCount(shown) : undefined}
         controls={
           <div className="ml-auto flex flex-wrap gap-3">
             <Button
@@ -84,36 +84,44 @@ export function PhotosRoom() {
         {library.isSuccess && photos.length === 0 ? (
           <EmptyState message="Photos added from a phone or a computer show here and on the screensaver." />
         ) : (
-          <ul
-            aria-label="Photos"
-            className="grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-3"
-          >
-            {photos.map((photo, index) => (
-              <li key={photo.id}>
-                <button
-                  type="button"
-                  aria-label={photo.hidden ? "A photo, hidden from the screensaver" : "A photo"}
-                  onClick={() => {
-                    setOpen(index);
-                  }}
-                  className="press relative block aspect-square w-full overflow-hidden rounded-chip-d bg-line"
-                >
-                  <img
-                    src={photo.thumb_url}
-                    alt=""
-                    loading="lazy"
-                    className={`size-full object-cover ${photo.hidden ? "opacity-40" : ""}`}
-                  />
-                  {photo.hidden ? (
-                    <EyeOff
-                      aria-hidden="true"
-                      className="absolute top-2 right-2 size-7 rounded-full bg-surface p-1"
+          <>
+            {/* How many the screensaver shows, over the grid: the header has no second line. */}
+            {library.isSuccess ? (
+              <p className="mb-3 text-d-secondary font-semibold text-ink-soft">
+                <Pop value={photosCount(shown)} className="inline-block" />
+              </p>
+            ) : null}
+            <ul
+              aria-label="Photos"
+              className="grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-3"
+            >
+              {photos.map((photo, index) => (
+                <li key={photo.id}>
+                  <button
+                    type="button"
+                    aria-label={photo.hidden ? "A photo, hidden from the screensaver" : "A photo"}
+                    onClick={() => {
+                      setOpen(index);
+                    }}
+                    className="press relative block aspect-square w-full overflow-hidden rounded-chip-d bg-line"
+                  >
+                    <img
+                      src={photo.thumb_url}
+                      alt=""
+                      loading="lazy"
+                      className={`size-full object-cover ${photo.hidden ? "opacity-40" : ""}`}
                     />
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
+                    {photo.hidden ? (
+                      <EyeOff
+                        aria-hidden="true"
+                        className="absolute top-2 right-2 size-7 rounded-full bg-surface p-1"
+                      />
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         {library.hasNextPage ? (
           <div className="mt-6">

@@ -1,15 +1,25 @@
 import type { ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3, List } from "lucide-react";
 
-import type { BoardView } from "../../lib/displayState";
+import type { BoardView, WeekLayout } from "../../lib/displayState";
 import type { Member } from "../../lib/household";
-import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
+import { IconSegmented, type IconSegmentOption } from "../../ui/Segmented";
+import { FilterButton } from "./FilterButton";
 import { ViewSwitch, type SwitchableView } from "./ViewSwitch";
 
+const LAYOUTS: IconSegmentOption<WeekLayout>[] = [
+  { value: "agenda", label: "Agenda", icon: List },
+  { value: "hours", label: "Hours", icon: Clock3 },
+];
+
 /**
- * The Calendar room's part of the wall's header (UX §3, ADR 0029): the arrows around "This Week"
- * (or Today, This Month), then the view switch at the right. The Today view has no switch.
+ * The Calendar room's part of the wall's header (UX §3, ADR 0030). After today: the arrows
+ * around "This Week" (or Today, This Month) and, on the Week view, its layout as two icons
+ * (Agenda · Hours), beside the arrows because it changes the same board they page. At the
+ * right: Filter (the people), then the view switch. No month and no span: the day heads carry
+ * the dates, and the Month and Day views name themselves. People and Today don't filter, and
+ * the Today view has no switch.
  */
 export function BoardControls({
   view,
@@ -18,6 +28,11 @@ export function BoardControls({
   atHome,
   onPage,
   onHome,
+  layout,
+  onLayout,
+  members,
+  people,
+  onPeople,
 }: {
   view: BoardView;
   onView: (view: SwitchableView) => void;
@@ -25,6 +40,11 @@ export function BoardControls({
   atHome: boolean;
   onPage: (step: -1 | 1) => void;
   onHome: () => void;
+  layout: WeekLayout;
+  onLayout: (layout: WeekLayout) => void;
+  members: Member[];
+  people: string[];
+  onPeople: (people: string[]) => void;
 }) {
   const span = view === "month" ? "month" : view === "day" ? "day" : "week";
   return (
@@ -54,77 +74,25 @@ export function BoardControls({
           <ChevronRight aria-hidden="true" className="size-8" />
         </Button>
       </div>
-      {view !== "today" ? (
-        <div className="ml-auto">
-          <ViewSwitch view={view} onView={onView} />
-        </div>
+      {view === "week" ? (
+        <IconSegmented label="Week layout" value={layout} onChange={onLayout} options={LAYOUTS} />
       ) : null}
+      <div className="ml-auto flex items-center gap-4">
+        {view !== "people" && view !== "today" ? (
+          <FilterButton members={members} people={people} onPeople={onPeople} />
+        ) : null}
+        {view !== "today" ? <ViewSwitch view={view} onView={onView} /> : null}
+      </div>
     </>
   );
 }
 
 /**
- * The board's own toolbar, above its days (UX §3): the person filter ("Show" and avatars,
- * several at once), the plugins' quiet pills ("Google hasn't answered since 9:10 AM"), and at
- * the right the view's own tools (the Week's zoom and layout). Nothing at all when there's one
- * person, no pill and no tool.
+ * The plugins' quiet pills above the board's days ("Google hasn't answered since 9:10 AM"),
+ * all that is left of the board's own toolbar (ADR 0030). A pill decides for itself whether it
+ * has anything to say, so the row takes no room until one does.
  */
-export function BoardToolbar({
-  members,
-  people,
-  onPeople,
-  pills,
-  tools,
-}: {
-  members: Member[];
-  people: string[];
-  onPeople: (people: string[]) => void;
-  pills?: ReactNode[];
-  tools?: ReactNode;
-}) {
-  const toggle = (id: string) => {
-    onPeople(people.includes(id) ? people.filter((p) => p !== id) : [...people, id]);
-  };
-  const show = members.length > 1;
-  if (!show && !pills?.length && !tools) return null;
-  return (
-    <div className="flex flex-wrap items-center gap-3 px-6 pt-4 pb-3">
-      {show ? (
-        <div role="group" aria-label="Show" className="flex items-center gap-3">
-          <span className="text-d-secondary font-semibold text-ink-soft">Show</span>
-          {members.map((member) => {
-            const on = people.includes(member.id);
-            return (
-              <button
-                key={member.id}
-                type="button"
-                aria-pressed={on}
-                aria-label={member.name}
-                onClick={() => {
-                  toggle(member.id);
-                }}
-                className={`press flex size-tap items-center justify-center rounded-full ${
-                  on ? "ring-4 ring-ink" : people.length ? "opacity-50" : ""
-                }`}
-              >
-                <Avatar member={member} size="md" />
-              </button>
-            );
-          })}
-          {people.length ? (
-            <Button
-              variant="quiet"
-              onClick={() => {
-                onPeople([]);
-              }}
-            >
-              Everyone
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-      {pills}
-      {tools ? <div className="ml-auto">{tools}</div> : null}
-    </div>
-  );
+export function BoardPills({ pills }: { pills: ReactNode[] }) {
+  if (!pills.length) return null;
+  return <div className="flex flex-wrap items-center gap-3 px-6 pt-3 empty:hidden">{pills}</div>;
 }

@@ -46,6 +46,19 @@ test.skip(!process.env.SCREENSHOTS, "run with `just screenshots`");
 // Playwright's WebKit screenshot code injects an inline <style>, which the CSP blocks and
 // reports. Every other spec keeps the guard on, so real violations are still caught.
 test.use({ cspGuard: false });
+// Every shot is of a screen as it first opens. A wall screen comes back to the view and the room
+// it was in (ADR 0030), which would carry one shot's zoom, fold or room into the next reload: so
+// here it remembers nothing.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      localStorage.removeItem("sunroom.display.view");
+      localStorage.removeItem("sunroom.display.room");
+    } catch {
+      // No storage on this page: nothing was remembered.
+    }
+  });
+});
 
 async function shot(page: Page, name: string): Promise<void> {
   await settled(page);
@@ -123,6 +136,15 @@ test("the wall screen", async ({ page }) => {
     await shot(page, `view-${view.split(" ")[0]?.toLowerCase() ?? view}`);
   }
   await page.getByRole("button", { name: "Week", exact: true }).click();
+  // Filter: its menu under the button with two people chosen, then the board they leave.
+  await page.getByRole("button", { name: "Filter", exact: true }).click();
+  await page.getByRole("menuitemcheckbox", { name: "Mia" }).click();
+  await page.getByRole("menuitemcheckbox", { name: "Leo" }).click();
+  await shot(page, "filter-menu");
+  await page.keyboard.press("Escape");
+  await shot(page, "board-filtered");
+  await page.getByRole("button", { name: "Filter: Mia, Leo" }).click();
+  await page.getByRole("menuitemradio", { name: "Everyone" }).click();
   // The Hours layout: the whole day, then four taps of Zoom in, light and dark.
   await page.getByRole("button", { name: "Hours", exact: true }).click();
   const root = page.locator("html");
@@ -136,7 +158,7 @@ test("the wall screen", async ({ page }) => {
     for (let tap = 0; tap < 4; tap++) await page.getByRole("button", { name: "Zoom in" }).click();
     await shot(page, `board-hours-zoomed-${theme}`);
   }
-  // At Extra large the header holds Show, the zoom and the switch on its second line.
+  // At Extra large the header's second line holds the arrows, the layout, Filter and the views.
   await change(page, { theme: "light", text_size: "xl", display_week_layout: "hours" });
   await page.reload();
   await expect(root).toHaveAttribute("data-text-size", "xl");
@@ -569,7 +591,7 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
     await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
     await shot(page, `lists-groceries-${theme}`);
     await page.goto("/chores");
-    await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tasks", level: 1 })).toBeVisible();
     await shot(page, `chores-${theme}`);
     await page.getByRole("checkbox", { name: /^Water the plants/ }).click();
     await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
@@ -621,7 +643,7 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
   for (const theme of ["light", "dark"]) {
     await change(page, { theme });
     await page.goto("/meals");
-    await expect(page.getByRole("heading", { name: /^Meals /, level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Meals", level: 1 })).toBeVisible();
     await shot(page, `meals-${theme}`);
     await page.getByRole("table").getByRole("button", { name: /Tacos/ }).click();
     await shot(page, `meals-a-meal-${theme}`);
@@ -637,7 +659,7 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
     await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
     await shot(page, `countdowns-${theme}`);
     await page.goto("/photos");
-    await expect(page.getByRole("heading", { name: /^Photos/, level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Photos", level: 1 })).toBeVisible();
     await shot(page, `photos-${theme}`);
     await page.getByRole("list", { name: "Photos" }).getByRole("button").first().click();
     await expect(page.getByRole("dialog", { name: "Photo" }).locator("img")).toHaveJSProperty(

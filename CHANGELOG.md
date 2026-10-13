@@ -20,6 +20,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Setup no longer stops to pair the kitchen screen: pair it whenever it shows its code, from
   More → Pair a Display.
 - On a paired screen the mouse pointer disappears a few seconds after it stops moving.
+- The kitchen screen's header is lighter: today at the left, then the week's arrows (and Agenda
+  or Hours on the Week view); at the right a Filter button with the people, the views and the
+  Today panel's button. The month's name and the week's dates left it (the days say when they
+  are; the Month view says its month). The Hours zoom sits on the grid's corner.
+- Rooms the rail already names no longer repeat their name in the header.
 - The rail shows the Sunroom mark alone at its top, as tall as the header; Hide the rail moved
   into the header beside the date, across from the Today panel's button; folded, Add is the
   size of a room's icon and the rail eases shut and open instead of jumping.

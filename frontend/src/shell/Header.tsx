@@ -7,13 +7,12 @@ import { useMinute } from "../lib/time";
 import { Button } from "../ui/Button";
 import { Digits } from "../ui/Digits";
 import { LiveStatusButton } from "../ui/LiveStatus";
-import { Pop } from "../ui/Pop";
 import { roomHeader } from "./roomHeader";
 
 /**
- * Today, at the header's left (UX §3): the date, the time at glance size (weight 800, digits in
- * fixed boxes so it never jiggles, AM or PM small beside it), then what the plugins put by the
- * clock (the weather).
+ * Today, at the header's left (UX §3): the date in bold on the time's baseline, the time at
+ * glance size (weight 800, digits in fixed boxes so it never jiggles, AM or PM small beside it),
+ * then what the plugins put by the clock (the weather), 24 px apart.
  */
 function HeaderToday() {
   const now = useMinute();
@@ -22,8 +21,8 @@ function HeaderToday() {
   const suffix = clockSuffix(now);
   const blocks = useRailBlocks();
   return (
-    <div className="flex shrink-0 items-center gap-x-4">
-      <p className="text-d-body font-semibold whitespace-nowrap">{shortDate(day)}</p>
+    <div className="mr-3 flex shrink-0 items-baseline gap-x-6 landscape:ml-3">
+      <p className="text-d-body font-bold whitespace-nowrap">{shortDate(day)}</p>
       <p className="text-d-glance font-extrabold whitespace-nowrap">
         <Digits value={time} spoken={suffix ? `${time} ${suffix}` : time} />
         {suffix ? (
@@ -32,9 +31,12 @@ function HeaderToday() {
           </span>
         ) : null}
       </p>
-      {blocks.map((Block, index) => (
-        <Block key={index} place="header" />
-      ))}
+      {/* The date sits on the time's baseline; the weather is a button, centred in the bar. */}
+      <div className="flex items-center gap-x-6 self-center empty:hidden">
+        {blocks.map((Block, index) => (
+          <Block key={index} place="header" />
+        ))}
+      </div>
     </div>
   );
 }
@@ -82,14 +84,21 @@ function PanelToggle({
 
 /**
  * The wall's header (UX §3, ADR 0029, 0030): one bar over the board and the Today panel, the
- * full width in portrait. Hide the rail at its start, then today; then the room's title and its
- * own controls, handed over through shell/roomHeader; the Today panel's button at its end and,
- * only while something is wrong, the live-updates icon in the corner (connected, the corner is
- * clear and nothing holds its place). The two toggles sit at the edge nearest their panels, so
- * in a mirrored shell (the rail on the right) they swap ends. One row from 104rem of its own
- * width (1920 px at Standard); narrower, the room's title and controls take a second row.
- * Nothing here animates in: it's part of the first paint. Portrait has neither toggle: its rail
- * is a bar that never folds, and its Today band has no button.
+ * full width in portrait. Hide the rail at its start, then today; after a thin rule, the room's
+ * own part, handed over through shell/roomHeader (a way back and a title for a page the rail
+ * can't name, then its controls); the Today panel's button at its end and, only while something
+ * is wrong, the live-updates icon in the corner (connected, the corner is clear and nothing
+ * holds its place). No room's name is written here when the rail already says it, and nothing
+ * has a second line: the h1 is still there for a screen reader. The two toggles sit at the edge
+ * nearest their panels, so in a mirrored shell (the rail on the right) they swap ends. One row
+ * from 104rem of its own width (1920 px at Standard); narrower, the room's part takes a second
+ * row. Nothing here animates in: it's part of the first paint. Portrait has neither toggle: its
+ * rail is a bar that never folds, and its Today band has no button.
+ *
+ * Spacing (ADR 0030): 24 px at the sides and between today's three things, a 2 px rule with
+ * 24 px either side, 16 px between the room's groups, 12 px before the end zone and inside it.
+ * As one row it is exactly `--header-h` tall whatever the room puts in it (a bordered group is
+ * taller than a button), so its rule always meets the one under the rail's mark.
  */
 export function Header({
   panelShown,
@@ -127,28 +136,33 @@ export function Header({
     <header
       data-header=""
       data-surface=""
-      className="@container/header flex min-h-[var(--header-h)] shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-line bg-surface px-6 py-2.5"
+      className="@container/header flex min-h-[var(--header-h)] shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface px-6 py-2.5 @min-[104rem]/header:py-1"
     >
       {railSide === "left" ? rail : panel}
       <HeaderToday />
       {room ? (
-        <div className="order-last flex min-w-0 grow-0 basis-full flex-wrap items-center gap-x-4 gap-y-2 @min-[104rem]/header:order-none @min-[104rem]/header:grow @min-[104rem]/header:basis-0 @min-[104rem]/header:border-l-2 @min-[104rem]/header:border-line @min-[104rem]/header:pl-5">
+        <div className="order-last flex min-w-0 grow-0 basis-full flex-wrap items-center gap-x-4 gap-y-2 @min-[104rem]/header:order-none @min-[104rem]/header:grow @min-[104rem]/header:basis-0 @min-[104rem]/header:border-l-2 @min-[104rem]/header:border-line @min-[104rem]/header:pl-6">
           {room.back}
-          {/* The title over its quiet line: side by side they'd crowd the room's controls off
-              the row (the week's span in late September is as long as the title). */}
-          <h1 aria-live="polite" className="flex min-w-0 flex-col justify-center">
-            <span className="truncate text-d-title leading-[1.1] font-bold">
-              {room.notice ?? room.title}
-            </span>
-            {room.subtitle && !room.notice ? (
-              <>
-                {" "}
-                <span className="truncate text-d-caption leading-tight font-semibold text-ink-soft">
-                  {room.counts ? <Pop value={room.subtitle} /> : room.subtitle}
-                </span>
-              </>
-            ) : null}
+          <h1
+            className={
+              room.visibleTitle
+                ? "min-w-0 truncate text-d-title leading-tight font-bold"
+                : "sr-only"
+            }
+          >
+            {room.title}
           </h1>
+          {/* Said as it appears: what a held chip is waiting for. */}
+          <p
+            aria-live="polite"
+            className={
+              room.notice
+                ? "flex min-h-tap items-center rounded-full border-2 border-line px-5 text-d-secondary font-semibold whitespace-nowrap"
+                : "sr-only"
+            }
+          >
+            {room.notice}
+          </p>
           {room.controls}
         </div>
       ) : null}

@@ -65,7 +65,10 @@
      wide figures need it for a glance-sized clock (ADR 0021). */
   --rail-w: 12rem;
   --panel-w: 25rem;
-  --header-h: 5rem; /* the wall's header at its least: one row of tap targets and its padding */
+  /* The wall's header as one row, and the rail's mark block beside it (they share a rule): a
+     tap target and 24 px around it, 80 px at Standard. Never under that at Small, where a target
+     doesn't shrink with the text. */
+  --header-h: max(5rem, calc(var(--tap) + 1.5rem));
   --band-h: 24rem; /* portrait's Today band: room for every block in three columns */
   --keyboard-w: 960px;
   --tabbar-h: 3.5rem;

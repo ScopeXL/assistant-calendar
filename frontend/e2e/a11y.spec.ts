@@ -65,14 +65,19 @@ async function typingFieldsAtLeast16px(page: Page, where: string): Promise<void>
  * single control with large cells. A control covered where it would be tapped (a chip under the
  * open side panel, a row scrolled under the tab bar) still has to be big enough, but it isn't
  * anyone's neighbour until it's uncovered; nor is the board across the side panel's edge, whose
- * 24 px padding keeps its own controls clear of the board.
+ * 24 px padding keeps its own controls clear of the board. While a menu is open only the menu
+ * and its button count: the rest of the page takes no taps until it closes.
  */
 async function tapTargets(page: Page, where: string): Promise<void> {
   const problems = await page.evaluate(() => {
     const display = document.querySelector("[data-shell=display]") !== null;
     const least = display ? 56 : 44;
-    // With a sheet or dialog open, the page behind it can't be tapped.
-    const scope = document.querySelector("dialog:modal") ?? document;
+    // With a sheet or dialog open, the page behind it can't be tapped. Nor with a menu open
+    // (the header's View and Filter): a tap anywhere else only closes it (ui/Menu).
+    const scope =
+      document.querySelector("dialog:modal") ??
+      document.querySelector("[role=menu]")?.parentElement ??
+      document;
     const controls = Array.from(
       scope.querySelectorAll("button, a[href], select, summary, [role=checkbox]"),
     ).filter((control) => {
@@ -348,6 +353,20 @@ for (const scheme of ["light", "dark"] as const) {
       const board = page.getByRole("region", { name: "This Week" });
       await expect(board).toBeVisible();
       await check(page, "display: board");
+      // Filter: its menu under the button. Checked with nobody chosen: a filter fades the
+      // other people's chips on purpose (UX §10), which no contrast rule would pass.
+      await page.getByRole("button", { name: "Filter", exact: true }).click();
+      await expect(page.getByRole("menu", { name: "Filter" })).toBeVisible();
+      await check(page, "display: the Filter menu");
+      await page.getByRole("menuitemcheckbox", { name: "Mia" }).click();
+      await page.getByRole("menuitemcheckbox", { name: "Leo" }).click();
+      // Closed by its own button, not Escape: a key press would keep the wall's own keyboard
+      // down for the next five seconds, and Add comes next.
+      await page.getByRole("button", { name: "Filter: Mia, Leo" }).click();
+      await expect(page.getByRole("menu")).toHaveCount(0);
+      await page.getByRole("button", { name: "Filter: Mia, Leo" }).click();
+      await page.getByRole("menuitemradio", { name: "Everyone" }).click();
+      await expect(page.getByRole("menu")).toHaveCount(0);
       // Tips on (a parent's phone turns them on): the strip stays under the board from here.
       const parent = await request.post("/api/auth/login", {
         headers: CSRF,
@@ -442,7 +461,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
       await check(page, "display: groceries");
       await page.getByRole("link", { name: "Tasks" }).click();
-      await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Tasks", level: 1 })).toBeVisible();
       await check(page, "display: chores");
       await page.getByRole("checkbox", { name: /^Empty the dishwasher/ }).click();
       await expect(page.getByRole("group", { name: "Who did it?" })).toBeVisible();
@@ -454,7 +473,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
       await check(page, "display: stars and rewards");
       await page.getByRole("link", { name: "Meals" }).click();
-      await expect(page.getByRole("heading", { name: /^Meals /, level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Meals", level: 1 })).toBeVisible();
       await check(page, "display: meals");
       await page.getByRole("table").getByRole("button", { name: /Tacos/ }).click();
       await check(page, "display: a meal");
@@ -469,7 +488,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
       await check(page, "display: countdowns");
       await page.getByRole("link", { name: "Photos" }).click();
-      await expect(page.getByRole("heading", { name: /^Photos/, level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Photos", level: 1 })).toBeVisible();
       await check(page, "display: photos");
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await page
@@ -558,7 +577,7 @@ for (const scheme of ["light", "dark"] as const) {
       await check(page, "display at Small: add");
       await add.getByRole("button", { name: "Close" }).click();
       await page.getByRole("link", { name: "Tasks" }).click();
-      await expect(page.getByRole("heading", { name: "Tasks Today", level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Tasks", level: 1 })).toBeVisible();
       await check(page, "display at Small: tasks");
       await page.getByRole("link", { name: "Lists" }).click();
       await page.getByRole("link", { name: /^Groceries/ }).click();
