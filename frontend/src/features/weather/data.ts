@@ -3,7 +3,7 @@
  * search, and setting the place (core settings: Settings → Household → Location). Searching and
  * setting are a parent's; the wall asks for the PIN.
  */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api, unwrap } from "../../api/client";
 import type { components } from "../../api/schema";
@@ -47,6 +47,8 @@ export function usePlaces(q: string) {
     enabled: words.length >= 2,
     staleTime: Infinity,
     retry: false,
+    // The field searches as you type: the last answer stays up until the next one arrives.
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -49,7 +49,7 @@ KEEP_FOR = timedelta(minutes=60)  # a forecast is good for an hour (PLAN §11.4)
 RETRY_AFTER = timedelta(minutes=5)  # after a failure
 STALE_AFTER = timedelta(hours=3)  # then the wall adds a hint to "as of 9:10"
 CHECK_EVERY = timedelta(minutes=1)  # Check now, at most once a minute
-SEARCHES = 10  # town searches a minute, for each device (PLAN §12.7)
+SEARCHES = 30  # city searches a minute, for each device: the field searches as you type
 SEARCH_WINDOW = timedelta(minutes=1)
 HOURS = 24
 DAYS = 7
@@ -384,12 +384,12 @@ async def check_now(ctx: PluginContext) -> WeatherOut:
     return await weather(ctx)
 
 
-# ---- the town search ---------------------------------------------------------------------------
+# ---- the city search ---------------------------------------------------------------------------
 
 
 class SearchLimit:
-    """At most SEARCHES town searches a minute for each device (PLAN §12.7). Memory is enough:
-    one process serves the API."""
+    """At most SEARCHES city searches a minute for each device (PLAN §12.7): the field searches
+    as you type, a few times a name (ADR 0030). Memory is enough: one process serves the API."""
 
     def __init__(self) -> None:
         self._recent: dict[str, deque[datetime]] = {}
@@ -414,7 +414,7 @@ class SearchLimit:
 
 
 async def search(ctx: PluginContext, query: str) -> list[PlaceOut]:
-    """Towns called ``query``, for Settings → Household → Location and onboarding."""
+    """Cities called ``query``, for Settings → Household → Location and onboarding."""
     name = " ".join(query.split())
     if len(name) < 2:
         return []

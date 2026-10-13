@@ -59,7 +59,9 @@ def forecast_url(latitude: float, longitude: float, units: Units, zone: str) -> 
 
 
 def search_url(name: str) -> str:
-    """Up to PLACES_MAX towns called ``name``, named in English."""
+    """Up to PLACES_MAX places called ``name``, named in English. Open-Meteo matches two
+    characters exactly and three or more loosely, which is why the field says "Keep typing…"
+    under three."""
     query: dict[str, str | int] = {
         "name": name,
         "count": PLACES_MAX,

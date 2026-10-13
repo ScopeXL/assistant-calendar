@@ -195,8 +195,7 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("button", { name: "Next" }).click();
       await expect(page.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
       await check(page, "setup: where's home");
-      await page.getByLabel("Your town").fill("Sample");
-      await page.getByRole("button", { name: "Search" }).click();
+      await page.getByLabel("Your city").fill("Sample");
       await expect(page.getByRole("list", { name: "Places" })).toBeVisible();
       await check(page, "setup: where's home, the places");
       await page.getByRole("button", { name: "Later" }).click();

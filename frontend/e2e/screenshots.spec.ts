@@ -374,8 +374,7 @@ test("a phone", async ({ page, isMobile }) => {
     await shot(page, `setup-household-${scheme}`);
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
-    await page.getByLabel("Your town").fill("Sample");
-    await page.getByRole("button", { name: "Search" }).click();
+    await page.getByLabel("Your city").fill("Sample");
     await expect(page.getByRole("list", { name: "Places" })).toBeVisible();
     await shot(page, `setup-place-${scheme}`);
     await page.getByRole("button", { name: /^Sample Town/ }).click();

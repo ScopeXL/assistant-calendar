@@ -34,8 +34,11 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
 
   // Where's home? The test server's place search knows Sample Town.
   await expect(phonePage.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
-  await phonePage.getByLabel("Your town").fill("Sample");
-  await phonePage.getByRole("button", { name: "Search" }).click();
+  await expect(phonePage.getByRole("button", { name: "Search" })).toHaveCount(0);
+  await phonePage.getByLabel("Your city").fill("S");
+  await expect(phonePage.getByText("Keep typing…")).toBeVisible();
+  await phonePage.getByLabel("Your city").fill("Sample T");
+  await expect(phonePage.getByRole("list", { name: "Places" })).toBeVisible();
   await phonePage.getByRole("button", { name: /^Sample Town/ }).click();
 
   // Who lives here? Start with you, then a child.

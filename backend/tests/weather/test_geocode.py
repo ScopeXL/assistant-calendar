@@ -103,7 +103,7 @@ async def test_a_search_that_finds_nothing_is_an_empty_list(
     assert (found.status_code, found.json()) == (200, [])
 
 
-async def test_ten_searches_a_minute_for_each_device(
+async def test_thirty_searches_a_minute_for_each_device(
     parent: httpx.AsyncClient,
     ctx: PluginContext,
     screen: httpx.AsyncClient,
@@ -111,13 +111,14 @@ async def test_ten_searches_a_minute_for_each_device(
     open_meteo: OpenMeteo,
     clock: FakeClock,
 ) -> None:
-    for _ in range(10):
+    # The field searches as you type (ADR 0030): a name is a few searches, so thirty a minute.
+    for _ in range(30):
         assert (await search(parent, "Sample")).status_code == 200
-    eleventh = await search(parent, "Sample")
-    assert error(eleventh) == TOO_MANY
-    assert eleventh.headers["retry-after"] == "60"
-    assert len(open_meteo.requests) == 10  # the refused one asked nothing
-    # Another device has its own ten (the wall, a parent while there's no PIN).
+    one_more = await search(parent, "Sample")
+    assert error(one_more) == TOO_MANY
+    assert one_more.headers["retry-after"] == "60"
+    assert len(open_meteo.requests) == 30  # the refused one asked nothing
+    # Another device has its own thirty (the wall, a parent while there's no PIN).
     assert (await search(screen, "Sample", tapped(family.sam))).status_code == 200
     clock.advance(seconds=30)
     assert error(await search(parent, "Sample")) == TOO_MANY

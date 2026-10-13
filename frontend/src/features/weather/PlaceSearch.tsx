@@ -1,81 +1,131 @@
 import { MapPin } from "lucide-react";
-import { useState } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 import { errorMessage } from "../../api/client";
 import { useSettings } from "../../lib/household";
+import { useDebounced } from "../../lib/useDebounced";
 import { Button } from "../../ui/Button";
 import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
 import { Group, Text } from "../settings/parts";
 import { usePlaces, useSetPlace, type Place } from "./data";
 
-/** Find the household's town by name and pick it (Open-Meteo's place search). */
-function PlaceSearch({ onPicked }: { onPicked: (place: Place) => void }) {
+/**
+ * Find the household's city by name and pick it (Open-Meteo's place search, ADR 0030). The field
+ * searches as you type, 350 ms after the last key and from two letters, and lists what it found
+ * under itself: in the page's flow, never a floating list, because the wall's keyboard and a
+ * phone's sheet both need the page to make room for it. On a laptop the arrow keys walk the
+ * list from the field.
+ */
+function PlaceSearch({
+  onPicked,
+  focus = false,
+}: {
+  onPicked: (place: Place) => void;
+  focus?: boolean;
+}) {
   const display = useShell() === "display";
   const [words, setWords] = useState("");
-  const [query, setQuery] = useState("");
-  const { data: places, isFetching, error } = usePlaces(query);
+  const listId = useId();
+  const list = useRef<HTMLUListElement>(null);
+  const typed = words.trim();
+  const query = useDebounced(typed, 350);
+  const { data, isFetching, error } = usePlaces(query);
   const setPlace = useSetPlace();
   const text = display ? "text-d-body" : "text-body";
+
+  // The last answer stays up while the next one is fetched (no blink between keys), but not
+  // once the field is too short to search.
+  const places = typed.length < 2 ? [] : (data ?? []);
+  const searching = typed.length >= 2 && (typed !== query || isFetching);
+  const status = error
+    ? ""
+    : places.length
+      ? places.length === 1
+        ? "1 place"
+        : `${String(places.length)} places`
+      : searching
+        ? "Searching…"
+        : typed.length === 0
+          ? ""
+          : // Open-Meteo matches two letters exactly and three or more loosely.
+            typed.length < 3
+            ? "Keep typing…"
+            : "Nothing by that name. Try the nearest city.";
+
+  const rows = () => Array.from(list.current?.querySelectorAll<HTMLElement>("button") ?? []);
+  const move = (event: KeyboardEvent<HTMLElement>, field: HTMLElement | null) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    const all = rows();
+    if (!all.length) return;
+    const at = all.findIndex((row) => row === document.activeElement);
+    const to = at + (event.key === "ArrowDown" ? 1 : -1);
+    event.preventDefault();
+    if (to < 0) field?.focus();
+    else all[Math.min(to, all.length - 1)]?.focus();
+  };
+  const field = useRef<HTMLInputElement>(null);
+
   return (
     <div className="flex flex-col gap-4">
-      <form
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setQuery(words.trim());
+      <TextField
+        ref={field}
+        label="Your city"
+        value={words}
+        maxLength={80}
+        // The browser's own address suggestions would cover the list.
+        autoComplete="off"
+        autoFocus={focus}
+        aria-controls={listId}
+        onChange={(event) => {
+          setWords(event.target.value);
         }}
-      >
-        <div className="min-w-56 flex-1">
-          <TextField
-            label="Your town"
-            value={words}
-            maxLength={80}
-            autoComplete="address-level2"
-            onChange={(event) => {
-              setWords(event.target.value);
-            }}
-          />
-        </div>
-        <Button
-          type="submit"
-          variant="secondary"
-          pending={isFetching}
-          disabled={words.trim().length < 2}
-        >
-          Search
-        </Button>
-      </form>
-      {error ? (
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown") move(event, null);
+        }}
+      />
+      {error && !places.length ? (
         <p role="alert" className={`${text} font-semibold text-alert`}>
           {errorMessage(error)}
         </p>
-      ) : places?.length === 0 ? (
-        <p className={`${text} text-ink-soft`}>Nothing by that name. Try the nearest town.</p>
-      ) : places ? (
-        <ul aria-label="Places" className="flex flex-col gap-2">
-          {places.map((place) => (
-            <li key={`${String(place.latitude)},${String(place.longitude)}`}>
-              <button
-                type="button"
-                onClick={() => {
-                  setPlace.mutate(place, {
-                    onSuccess: () => {
-                      onPicked(place);
-                    },
-                  });
-                }}
-                className={`press-row flex w-full items-center gap-3 rounded-chip border border-line bg-surface px-4 text-left ${
-                  display ? "min-h-16 text-d-body" : "min-h-12 text-body"
-                } font-semibold`}
-              >
-                <MapPin aria-hidden="true" className="size-6 shrink-0 text-ink-soft" />
-                {place.label}
-              </button>
-            </li>
-          ))}
-        </ul>
       ) : null}
+      {/* Always here, so a screen reader hears it change; out of the flow once the list shows. */}
+      <p
+        aria-live="polite"
+        className={places.length || !status ? "sr-only" : `${text} text-ink-soft`}
+      >
+        {status}
+      </p>
+      <ul
+        ref={list}
+        id={listId}
+        aria-label="Places"
+        className={places.length ? "flex flex-col gap-2" : "hidden"}
+        onKeyDown={(event) => {
+          move(event, field.current);
+        }}
+      >
+        {places.map((place) => (
+          <li key={`${String(place.latitude)},${String(place.longitude)}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setPlace.mutate(place, {
+                  onSuccess: () => {
+                    onPicked(place);
+                  },
+                });
+              }}
+              className={`press-row flex w-full items-center gap-3 rounded-chip border border-line bg-surface px-4 text-left ${
+                display ? "min-h-16 text-d-body" : "min-h-12 text-body"
+              } font-semibold`}
+            >
+              <MapPin aria-hidden="true" className="size-6 shrink-0 text-ink-soft" />
+              {place.label}
+            </button>
+          </li>
+        ))}
+      </ul>
       {setPlace.isError ? (
         <p role="alert" className={`${text} font-semibold text-alert`}>
           {errorMessage(setPlace.error)}
@@ -90,7 +140,7 @@ export function PlaceOnboarding({ onDone }: { onDone: () => void }) {
   return (
     <>
       <p className="text-body">
-        Sunroom shows your weather and turns dark at sunset. Type your town, or a town nearby.
+        Sunroom shows your weather and turns dark at sunset. Type your city, or one nearby.
       </p>
       <PlaceSearch onPicked={onDone} />
       <Button variant="quiet" block onClick={onDone}>
@@ -100,7 +150,7 @@ export function PlaceOnboarding({ onDone }: { onDone: () => void }) {
   );
 }
 
-/** Settings → Household → Location (UX §4): the town, Change and Remove. */
+/** Settings → Household → Location (UX §4): the city, Change and Remove. */
 export function LocationSettings() {
   const display = useShell() === "display";
   const { data: settings } = useSettings();
@@ -110,7 +160,7 @@ export function LocationSettings() {
   return (
     <Group
       title="Location"
-      note="For the weather and the sunset. The town you search for and where it is go to Open-Meteo; nothing else does."
+      note="For the weather and the sunset. The city you search for and where it is go to Open-Meteo; nothing else does."
     >
       <div className={`flex flex-col gap-4 ${display ? "py-5" : "py-4"}`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -123,7 +173,7 @@ export function LocationSettings() {
                   setChanging(true);
                 }}
               >
-                {label ? "Change" : "Set the town"}
+                {label ? "Change" : "Set the city"}
               </Button>
             ) : null}
             {label && !changing ? (
@@ -141,6 +191,7 @@ export function LocationSettings() {
         </div>
         {changing ? (
           <PlaceSearch
+            focus
             onPicked={() => {
               setChanging(false);
             }}

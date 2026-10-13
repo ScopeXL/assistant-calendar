@@ -553,7 +553,7 @@ The Host rule and the CSRF check are specified in §13.4: every request's `Host`
 
 ### 12.7 Secrets, logs, limits
 
-Secrets at rest: Fernet under HKDF subkeys (`session-v1`, `parent-grant-v1`, `join-code-v1`, `plugin-secrets-v1`); a changed `APP_SECRET_KEY` wipes every `credentials_enc` column and marks the owners `needs_reconnect`. Logs: structlog with the redactor extended for `app_password`, `refresh_token`, `api_key`, `pin`; ICS URLs logged host-only; never VEVENT bodies. Rate limits: login and pairing 5/15 min per IP; PIN per device; `sync now` 1/min per account; ICS minimum 5 min; geocode 10/min; photo upload 60/h per device. The export is parent-gated and `no-store`.
+Secrets at rest: Fernet under HKDF subkeys (`session-v1`, `parent-grant-v1`, `join-code-v1`, `plugin-secrets-v1`); a changed `APP_SECRET_KEY` wipes every `credentials_enc` column and marks the owners `needs_reconnect`. Logs: structlog with the redactor extended for `app_password`, `refresh_token`, `api_key`, `pin`; ICS URLs logged host-only; never VEVENT bodies. Rate limits: login and pairing 5/15 min per IP; PIN per device; `sync now` 1/min per account; ICS minimum 5 min; geocode 30/min per device (the city field searches as you type, ADR 0030); photo upload 60/h per device. The export is parent-gated and `no-store`.
 
 ## 13. Setup, deployment and the Raspberry Pi kiosk
 
