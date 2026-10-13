@@ -259,6 +259,15 @@ three seconds after the mouse stops; labwc 0.8.4 and `unclutter` keep it hidden 
 loads"); PLAN §13.2 one line. CHANGELOG: "On a paired screen the mouse pointer disappears a few
 seconds after it stops moving."
 
+**As built.** The mark is on the page's root (`html[data-pointer="hidden"]`), not the shell's
+`div`: the Add panel, the PIN pad, the toasts and the keyboard are drawn beside the shell, and the
+pointer would have shown over them. `watchPointer(root = document.documentElement)` keeps the
+parameter for the tests. Two things the plan didn't foresee: the kiosk remounts its shell on a
+room switch, which would have shown the pointer for three seconds after every tap on the rail, so
+a root remembers that it was hidden (a `WeakSet`); and Chromium sends a pointermove of its own when
+the page changes under a resting pointer, so a move to the same place is ignored. PLAN's line is
+in §13.10's table ("A visible cursor"), where the cursor already was.
+
 ### T3 Remember the view: the migration, the setting, the per-screen memory
 
 - [ ] Done (commits: )

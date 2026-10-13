@@ -10,6 +10,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - The live-updates icon shows only while the screen is reconnecting, checking every 30 seconds,
   or can't reach Sunroom. Connected, the corner is clear.
+- On a paired screen the mouse pointer disappears a few seconds after it stops moving.
 
 ## [0.8.0] - 2026-10-12
 

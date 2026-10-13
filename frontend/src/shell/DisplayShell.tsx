@@ -26,6 +26,7 @@ import { reloadFresh, useServerUpdate } from "../lib/update";
 import { noteDimmer } from "../lib/dimmer";
 import { dimmedTo, isNight } from "../lib/night";
 import { askForPin } from "../lib/parent";
+import { watchPointer } from "../lib/pointer";
 import { useQuietTheme } from "../lib/quietTheme";
 import { fetchSession } from "../lib/session";
 import { useStore } from "../lib/store";
@@ -149,10 +150,13 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     allowAppearanceMotion();
     const stopActivity = watchActivity();
     const stopKeyboard = kiosk ? watchKeyboardFields() : () => undefined;
+    // A paired screen hides a resting pointer; a laptop has a person behind its mouse.
+    const stopPointer = kiosk ? watchPointer() : () => undefined;
     return () => {
       setToastProfile(false);
       stopActivity();
       stopKeyboard();
+      stopPointer();
     };
   }, [kiosk]);
 

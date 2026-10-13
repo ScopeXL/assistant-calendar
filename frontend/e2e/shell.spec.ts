@@ -288,6 +288,38 @@ test.describe("the wall screen", () => {
     });
   });
 
+  test("hides the pointer three seconds after the mouse stops, and at once on a touch", async ({
+    page,
+    request,
+  }) => {
+    await seed(request);
+    const root = page.locator("html");
+    // Before it's paired, too: the pair code is on a wall like everything else.
+    await page.goto("/display");
+    await expect(page.getByTestId("pair-code")).toBeVisible();
+    await page.mouse.move(600, 400);
+    await expect(root).not.toHaveAttribute("data-pointer", "hidden");
+    await expect(root).toHaveAttribute("data-pointer", "hidden", { timeout: 5_000 });
+    await pairWall(page);
+    await page.goto("/display");
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    await page.mouse.move(620, 420);
+    await expect(root).not.toHaveAttribute("data-pointer", "hidden");
+    await expect(root).toHaveAttribute("data-pointer", "hidden", { timeout: 5_000 });
+    const arrow = page.getByRole("button", { name: "Next week" });
+    expect(await arrow.evaluate((node) => getComputedStyle(node).cursor)).toBe("none");
+    // A move brings it back, as a video player does.
+    await page.mouse.move(640, 440);
+    await expect(root).not.toHaveAttribute("data-pointer", "hidden");
+    expect(await arrow.evaluate((node) => getComputedStyle(node).cursor)).not.toBe("none");
+    // A finger hides it at once, and it stays hidden in the room the tap opened (the wall
+    // remounts its shell there).
+    await page.getByRole("link", { name: "Lists", exact: true }).tap();
+    expect(await root.getAttribute("data-pointer")).toBe("hidden");
+    await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    expect(await root.getAttribute("data-pointer")).toBe("hidden");
+  });
+
   test("dims in the evening with a veil, unless the Pi's helper turns the screen down", async ({
     page,
     request,
@@ -709,6 +741,15 @@ test.describe("a laptop", () => {
     await expect(page.getByRole("group", { name: "On-screen keyboard" })).toHaveCount(0);
     await page.keyboard.press("Enter");
     await expect(page.getByRole("button", { name: "Edit Zoe" })).toBeVisible();
+  });
+
+  test("keeps its pointer: there's a person behind the mouse", async ({ page, request }) => {
+    await seed(request);
+    await signInPhone(page);
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    await page.mouse.move(600, 400);
+    await page.waitForTimeout(3_500);
+    await expect(page.locator("html")).not.toHaveAttribute("data-pointer", "hidden");
   });
 });
 

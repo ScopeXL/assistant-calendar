@@ -9,6 +9,7 @@ import { zonedParts } from "../../lib/dates";
 import { whenIdle, watchActivity } from "../../lib/idle";
 import { watchKeyboardFields } from "../../lib/keyboard";
 import { MotionProvider } from "../../lib/motion";
+import { watchPointer } from "../../lib/pointer";
 import { fetchSession, type Session } from "../../lib/session";
 import { applyAppearance } from "../../lib/theme";
 import { useMinute } from "../../lib/time";
@@ -96,9 +97,11 @@ function Frame({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stopActivity = watchActivity();
     const stopKeyboard = watchKeyboardFields();
+    const stopPointer = watchPointer();
     return () => {
       stopActivity();
       stopKeyboard();
+      stopPointer();
     };
   }, []);
   return (

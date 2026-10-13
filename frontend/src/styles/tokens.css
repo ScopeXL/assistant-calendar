@@ -272,6 +272,13 @@
   [data-shell="display"] :focus-visible {
     outline-width: 4px;
   }
+
+  /* The wall's pointer while nobody moves the mouse (lib/pointer, ADR 0030): gone, over every
+     control, whatever cursor it asks for. */
+  :root[data-pointer="hidden"],
+  :root[data-pointer="hidden"] * {
+    cursor: none !important;
+  }
 }
 
 /* Native <dialog> as a bottom sheet on phones and a centred panel on large screens (no style

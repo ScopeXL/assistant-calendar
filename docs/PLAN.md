@@ -647,7 +647,7 @@ A separate repo `ScopeXL/sunroom-ha` (so the Home Assistant version bump stays d
 | A keyboard left attached (Alt+F4, Ctrl+Alt+T) | systemd restarts Chromium in 3 s; the README says not to leave one; a `--lockdown` option later strips labwc keybinds |
 | Translate, password and notification prompts | The flags above; the display never asks for permissions |
 | Silent chimes | `--autoplay-policy=no-user-gesture-required`; HDMI audio is the default sink; `wpctl status` in KIOSK.md |
-| A visible cursor | The labwc window rule; `unclutter` on X11 |
+| A visible cursor | The page hides it three seconds after the mouse stops and at once on a touch (`lib/pointer`, ADR 0030); the labwc window rule and `unclutter` on X11 cover the moments before the page loads |
 | Wayfire on an older Bookworm | Refused with the one-line switch to labwc |
 | The on-screen keyboard | The display UI ships its own (UX §1); `--enable-wayland-ime --wayland-text-input-version=3` is passed and squeekboard is left enabled as a fallback |
 | Touch sleeps with the panel on some monitors | The schedule's on-time always runs; `--no-screen-helper` keeps the app's blackout only |

@@ -209,8 +209,10 @@ instead, and run the installer with `--rotate 0`.
 when the Pi starts are never detected. Run the installer again with `--force-hdmi 1920x1080` (use
 your screen's size).
 
-**The pointer stays visible.** labwc hides it from version 0.8.4; bring the Pi up to date with
-`sudo apt update && sudo apt full-upgrade`. On X11, `unclutter` hides it.
+**The pointer stays visible.** Sunroom's page hides the pointer itself three seconds after the
+mouse stops, and at once when the screen is touched; moving the mouse brings it back. labwc 0.8.4
+and, on X11, `unclutter` keep it hidden before the page loads; if you see it then, bring the Pi up
+to date with `sudo apt update && sudo apt full-upgrade`.
 
 **`sunroom.local` doesn't open on a phone.** Use the numbered address the installer printed.
 Phones on a VPN or on mobile data can't see `.local` names, and some routers block them.
