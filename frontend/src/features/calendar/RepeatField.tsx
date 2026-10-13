@@ -2,11 +2,13 @@ import { useState } from "react";
 
 import { addDays } from "../../lib/dates";
 import { useReveal } from "../../lib/reveal";
-import { Chip, ChipRow } from "../../ui/Chip";
+import { Chip } from "../../ui/Chip";
+import { useFieldLabel } from "../../ui/Field";
 import { MonthGrid } from "../../ui/MonthGrid";
 import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
 import { Stepper } from "../../ui/Stepper";
+import { ChoiceList, ValueRow } from "../../ui/ValueRow";
 import { WeekdayPicker } from "../../ui/WeekStrip";
 import type { KeptRule } from "./EventEditor";
 import {
@@ -30,16 +32,20 @@ export interface RepeatChange {
 }
 
 type EndKind = "never" | "until" | "count";
+// Two rows of the list that aren't presets: a rule kept as it is, and Custom….
+const KEPT = "as-it-is";
+const CUSTOM = "custom";
 const DEFAULT_COUNT = 10;
 const DEFAULT_UNTIL_DAYS = 90;
 
 /**
- * How something repeats (UX §4 "Repeats", ADR 0029): the usual choices as chips, and Custom…,
- * which opens every N days, weeks, months or years, on the weekdays picked (in the household's
- * order), by date or by weekday in a month. Whenever it repeats, Ends: never, on a date, or
- * after a number of times. The sentence under it says the rule in words. A rule these shapes
- * can't hold shows as a pressed "As it is" chip with the server's words, and stays untouched
- * until another choice is made.
+ * How something repeats (UX §4 "Repeats", ADR 0029, 0030): one row whose button says the rule in
+ * words ("Every week on Thu", "Doesn't repeat") and opens the usual choices as a list, a row
+ * each, easier to scan than nine chips. Custom… is the last row: every N days, weeks, months or
+ * years, on the weekdays picked (in the household's order), by date or by weekday in a month.
+ * Whenever it repeats, Ends: never, on a date, or after a number of times. A rule these shapes
+ * can't hold is the first row, "As it is", with the server's words, and stays untouched until
+ * another choice is made.
  */
 export function RepeatField({
   label = "Repeats",
@@ -69,11 +75,13 @@ export function RepeatField({
   const presets = repeatPresets(day).filter(
     (preset) => !presetKeys || presetKeys.includes(preset.key),
   );
-  const isPreset = presets.some((preset) => sameRepeat(preset.repeat, value));
-  const [opened, setOpened] = useState(false);
-  const open = opened || (!kept && value !== null && !isPreset);
+  const preset = presets.find((candidate) => sameRepeat(candidate.repeat, value));
+  const [open, setOpen] = useState(false);
+  // Custom shows for a rule no preset says, and from the moment Custom… is tapped.
+  const [customPicked, setCustomPicked] = useState(false);
+  const isCustom = customPicked || (!kept && value !== null && !preset);
   const custom = repeatToCustom(value, day);
-  const customPanel = useReveal<HTMLDivElement>(open);
+  const customPanel = useReveal<HTMLDivElement>(isCustom);
   const endKind: EndKind =
     repeatEnd.until !== undefined ? "until" : repeatEnd.count !== undefined ? "count" : "never";
 
@@ -83,54 +91,53 @@ export function RepeatField({
   const setCustom = (change: Partial<CustomRepeat>) => {
     set(customToRepeat({ ...custom, ...change }, day));
   };
-  const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
-  const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
+  const heading = useFieldLabel();
+  const body = display ? "text-d-body font-semibold" : "text-body font-semibold";
   const many = custom.interval > 1;
+  const keptWords = kept ? `${kept.text.charAt(0).toLowerCase()}${kept.text.slice(1)}` : "";
+  const summary = value
+    ? describeRepeat(value, day, repeatEnd, weekStartsOn)
+    : kept
+      ? kept.text
+      : "Doesn't repeat";
   return (
-    <div className="flex flex-col gap-2">
-      <p className={heading}>{label}</p>
-      <ChipRow label={label}>
-        {kept ? (
-          <Chip on onClick={() => undefined}>
-            {`As it is: ${kept.text.charAt(0).toLowerCase()}${kept.text.slice(1)}`}
-          </Chip>
-        ) : null}
-        {presets.map((preset) => (
-          <Chip
-            key={preset.key}
-            on={!kept && sameRepeat(preset.repeat, value)}
-            onClick={() => {
-              setOpened(false);
-              set(preset.repeat);
-            }}
-          >
-            {preset.label}
-          </Chip>
-        ))}
-        <Chip
-          on={open}
-          expanded={open}
-          onClick={() => {
-            if (open) {
-              setOpened(false);
-              // Closing Custom with a custom rule set goes back to not repeating.
-              if (!isPreset) set(null);
-              return;
-            }
-            setOpened(true);
+    <ValueRow
+      label={label}
+      value={summary}
+      expanded={open}
+      onToggle={() => {
+        setOpen(!open);
+      }}
+    >
+      <ChoiceList
+        label={label}
+        choices={[
+          ...(kept ? [{ value: KEPT, label: `As it is: ${keptWords}` }] : []),
+          ...presets.map((candidate) => ({ value: candidate.key, label: candidate.label })),
+          { value: CUSTOM, label: "Custom…" },
+        ]}
+        value={kept ? KEPT : isCustom ? CUSTOM : preset?.key}
+        onChange={(key) => {
+          if (key === KEPT) return;
+          if (key === CUSTOM) {
+            setCustomPicked(true);
             if (kept || value === null) set(customToRepeat(custom, day));
-          }}
-        >
-          Custom…
-        </Chip>
-      </ChipRow>
-      {open ? (
+            return;
+          }
+          const picked = presets.find((candidate) => candidate.key === key);
+          setCustomPicked(false);
+          set(picked?.repeat ?? null);
+          // Nothing more to say about something that doesn't repeat.
+          if (!picked?.repeat) setOpen(false);
+        }}
+      />
+      {isCustom ? (
         <div
           ref={customPanel}
-          className="flex flex-col gap-4 rounded-panel border-2 border-line p-3"
+          className={`flex flex-col gap-4 border-t-2 border-line pt-4 ${display ? "px-4" : "px-3"}`}
         >
           <div className="flex flex-wrap items-center gap-3">
-            <span className={heading}>Every</span>
+            <span className={body}>Every</span>
             <Stepper
               label="Every"
               value={custom.interval}
@@ -181,7 +188,9 @@ export function RepeatField({
         </div>
       ) : null}
       {value ? (
-        <div className="flex flex-col gap-2">
+        <div
+          className={`flex flex-col gap-2 border-t-2 border-line pt-4 ${display ? "px-4" : "px-3"}`}
+        >
           <p className={heading}>Ends</p>
           <Segmented<EndKind>
             label="Ends"
@@ -229,18 +238,20 @@ export function RepeatField({
                   set(value, { count });
                 }}
               />
-              <span className={heading}>{repeatEnd.count === 1 ? "time" : "times"}</span>
+              <span className={body}>{repeatEnd.count === 1 ? "time" : "times"}</span>
             </div>
           ) : null}
         </div>
       ) : null}
-      <p aria-live="polite" className={soft}>
-        {value
-          ? describeRepeat(value, day, repeatEnd, weekStartsOn)
-          : kept
-            ? kept.text
-            : "Doesn't repeat"}
-      </p>
-    </div>
+      <div className="flex justify-end">
+        <Chip
+          onClick={() => {
+            setOpen(false);
+          }}
+        >
+          Done
+        </Chip>
+      </div>
+    </ValueRow>
   );
 }

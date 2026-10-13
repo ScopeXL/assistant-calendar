@@ -119,9 +119,9 @@ export function AddPanel({
   const ready = !editing || event !== undefined;
   return (
     <>
-      <SidePanel open={panel !== null} title={title} onClose={onClose}>
+      <SidePanel open={panel !== null} title={title} onClose={onClose} scrollKey={chosen}>
         {adding && types.length > 0 ? (
-          <div className="mb-5">
+          <div className="mb-8">
             <Segmented
               stacked
               label="What to add"

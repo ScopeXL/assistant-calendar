@@ -68,10 +68,21 @@ test("quick add on the wall, seen on a phone, changed and undone, dragged and pu
       "true",
     );
   await pressed("Day", "Thu, Oct 8");
-  await pressed("Time", "2:30 PM");
-  await pressed("How long", "1 hour");
   await pressed("Who", "Mia");
-  await pressed("Repeats", "Doesn't repeat");
+  // Time, How long and Repeats each say what's chosen on one button (ADR 0030): no row of
+  // likely times, no nine chips of repeats.
+  await expect(add.getByRole("button", { name: "Time: 2:30 PM" })).toBeVisible();
+  await expect(add.getByRole("button", { name: "All day" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(add.getByRole("button", { name: "How long: 1 hour" })).toBeVisible();
+  await expect(add.getByRole("button", { name: "Repeats: Doesn't repeat" })).toBeVisible();
+  await expect(add.getByRole("button", { name: "9:00 AM" })).toHaveCount(0);
+  // The form is in three parts: the first needs no heading, the others say what they are.
+  await expect(add.getByRole("region", { name: "What and Who" })).toBeVisible();
+  await expect(add.getByRole("heading", { name: "When" })).toBeVisible();
+  await expect(add.getByRole("heading", { name: "Details" })).toBeAttached();
   // The kinds of thing to add are one row, and the button stays in view above the keyboard.
   const kinds = await row("What to add")
     .getByRole("button")

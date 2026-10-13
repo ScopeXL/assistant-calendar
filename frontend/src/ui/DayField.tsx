@@ -5,6 +5,7 @@ import { addDays, weekOf, weekSpan } from "../lib/dates";
 import { useReveal } from "../lib/reveal";
 import { Button } from "./Button";
 import { Chip } from "./Chip";
+import { useFieldLabel } from "./Field";
 import { MonthGrid } from "./MonthGrid";
 import { useShell } from "./shell";
 import { WeekStrip } from "./WeekStrip";
@@ -28,6 +29,7 @@ export function DayField({
   grid = "closed",
   anchor,
   hint,
+  inRow = false,
 }: {
   label?: string;
   /** The chosen day; null only with `optional`. */
@@ -45,8 +47,11 @@ export function DayField({
   /** A day in the week to show when no day is chosen (a meal: the week on the board). */
   anchor?: string | undefined;
   hint?: string | undefined;
+  /** Inside a ValueRow that already says the label: don't write it twice. */
+  inRow?: boolean;
 }) {
   const display = useShell() === "display";
+  const labelClass = useFieldLabel();
   const [open, setOpen] = useState(grid === "open");
   const month = useReveal<HTMLDivElement>(open);
   const [shown, setShown] = useState(value ?? anchor ?? today);
@@ -62,8 +67,8 @@ export function DayField({
   const icon = display ? "size-8" : "size-6";
   return (
     <div role="group" aria-label={label} className="flex flex-col gap-2">
-      <p className="flex items-baseline justify-between gap-3">
-        <span className={`font-semibold ${display ? "text-d-body" : "text-body"}`}>{label}</span>
+      <p className={`flex items-baseline gap-3 ${inRow ? "justify-end" : "justify-between"}`}>
+        <span className={inRow ? "sr-only" : labelClass}>{label}</span>
         <span aria-live="polite" className={soft}>
           {weekSpan(week)}
         </span>
@@ -114,7 +119,7 @@ export function DayField({
           <ChevronRight aria-hidden="true" className={icon} />
         </Button>
         <Chip
-          on={open}
+          opener
           expanded={open}
           onClick={() => {
             setOpen(!open);

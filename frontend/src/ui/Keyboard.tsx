@@ -130,9 +130,18 @@ export function KeyboardHost({ railSide }: { railSide: "left" | "right" }) {
     const root = document.documentElement;
     const node = host.current;
     if (open && node) {
-      root.style.setProperty("--osk-h", `${String(node.offsetHeight)}px`);
-      target?.scrollIntoView({ block: "nearest" });
-      return;
+      // It follows the keys' own height: the row of accents is there only while a key is held.
+      const measure = () => {
+        root.style.setProperty("--osk-h", `${String(node.offsetHeight)}px`);
+        target?.scrollIntoView({ block: "nearest" });
+      };
+      measure();
+      if (typeof ResizeObserver === "undefined") return;
+      const observer = new ResizeObserver(measure);
+      observer.observe(node);
+      return () => {
+        observer.disconnect();
+      };
     }
     const timer = setTimeout(() => {
       root.style.setProperty("--osk-h", "0px");
@@ -278,7 +287,12 @@ function Keys({ target, layout }: { target: HTMLInputElement; layout: KeyboardLa
   const rows = page === "letters" ? LETTERS : SYMBOLS;
   return (
     <div className="flex flex-col gap-2">
-      <div aria-live="polite" className="flex min-h-14 items-center justify-center gap-2">
+      {/* The accents of a held key. No row at all until then (ADR 0030): it used to hold 56 px
+          of the screen empty above the keys. */}
+      <div
+        aria-live="polite"
+        className={accents ? "flex min-h-14 items-center justify-center gap-2" : "sr-only"}
+      >
         {accents
           ? Array.from(accents).map((accent) => (
               <Key

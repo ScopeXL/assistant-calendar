@@ -7,6 +7,7 @@ import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { DayField } from "../../ui/DayField";
+import { Field, FormSection } from "../../ui/Field";
 import { PanelActions } from "../../ui/PanelActions";
 import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
@@ -21,7 +22,6 @@ import type { AddEditorProps } from "../registry";
 import { useChoreChanges, useChoreSettings, type Chore, type ChoreIn } from "./data";
 import { clockText } from "./words";
 
-const TIMES = ["07:00", "08:00", "12:00", "15:00", "17:00", "19:00", "20:00"];
 const STARS = [0, 1, 2, 3, 4, 5];
 // A task repeats the simple ways; anything else is Custom.
 const PRESETS = ["none", "daily", "weekdays", "weekly", "biweekly", "monthly-date"];
@@ -78,8 +78,7 @@ export function ChoreEditor({
     if (!chore) setDay(tapped);
   });
   const ready = title.trim() !== "";
-  const gap = display ? "gap-6" : "gap-5";
-  const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
+  const gap = display ? "gap-8" : "gap-6";
 
   const fields = (): ChoreIn => {
     const first = firstDayOf(repeat, day);
@@ -131,91 +130,94 @@ export function ChoreEditor({
         save();
       }}
     >
-      <TextField
-        label="What"
-        autoComplete="off"
-        autoFocus={!chore}
-        placeholder="Feed the dog"
-        value={title}
-        onChange={(event) => {
-          setTitle(event.target.value);
-        }}
-      />
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Who</p>
-        <WhoPicker
-          label="Who"
-          everyoneLabel="Anyone"
-          members={members}
-          value={who}
-          multiple
-          onChange={setWho}
+      <FormSection title="What and Who" quiet>
+        <TextField
+          label="What"
+          autoComplete="off"
+          autoFocus={!chore}
+          placeholder="Feed the dog"
+          value={title}
+          onChange={(event) => {
+            setTitle(event.target.value);
+          }}
         />
-        {who.length > 1 ? (
-          <Segmented
-            label="How they share it"
-            value={turns ? "turns" : "each"}
-            options={[
-              { value: "each", label: "Each does it" },
-              { value: "turns", label: "They take turns" },
-            ]}
-            onChange={(value) => {
-              setTurns(value === "turns");
-            }}
+        <Field label="Who">
+          <WhoPicker
+            label="Who"
+            everyoneLabel="Anyone"
+            members={members}
+            value={who}
+            multiple
+            onChange={setWho}
           />
-        ) : null}
-      </div>
-      <DayField
-        value={day}
-        today={today}
-        weekStartsOn={weekStartsOn}
-        hint={repeat || kept ? "The day it starts." : undefined}
-        onChange={(next) => {
-          setDay(next);
-          setWhenTouched(true);
-        }}
-      />
-      <TimeField
-        label="Due"
-        value={time}
-        none={{ label: "Any time" }}
-        suggestions={TIMES}
-        words={(hhmm) => `by ${clockText(hhmm)}`}
-        onChange={setTime}
-      />
-      <RepeatField
-        day={day}
-        today={today}
-        value={repeat}
-        repeatEnd={repeatEnd}
-        kept={kept}
-        weekStartsOn={weekStartsOn}
-        presetKeys={PRESETS}
-        onChange={(change) => {
-          setRepeat(change.repeat);
-          setRepeatEnd(change.repeatEnd);
-          setKept(change.kept);
-          setWhenTouched(true);
-        }}
-      />
+          {who.length > 1 ? (
+            <Segmented
+              label="How they share it"
+              value={turns ? "turns" : "each"}
+              options={[
+                { value: "each", label: "Each does it" },
+                { value: "turns", label: "They take turns" },
+              ]}
+              onChange={(value) => {
+                setTurns(value === "turns");
+              }}
+            />
+          ) : null}
+        </Field>
+      </FormSection>
+      <FormSection title="When">
+        <DayField
+          value={day}
+          today={today}
+          weekStartsOn={weekStartsOn}
+          hint={repeat || kept ? "The day it starts." : undefined}
+          onChange={(next) => {
+            setDay(next);
+            setWhenTouched(true);
+          }}
+        />
+        <TimeField
+          label="Due"
+          value={time}
+          none={{ label: "Any time" }}
+          words={(hhmm) => `by ${clockText(hhmm)}`}
+          onChange={setTime}
+        />
+        <RepeatField
+          day={day}
+          today={today}
+          value={repeat}
+          repeatEnd={repeatEnd}
+          kept={kept}
+          weekStartsOn={weekStartsOn}
+          presetKeys={PRESETS}
+          onChange={(change) => {
+            setRepeat(change.repeat);
+            setRepeatEnd(change.repeatEnd);
+            setKept(change.kept);
+            setWhenTouched(true);
+          }}
+        />
+      </FormSection>
       {starsOn ? (
-        <div className="flex flex-col gap-2">
-          <p className={heading}>Stars</p>
-          <ChipRow label="Stars">
-            {STARS.map((count) => (
-              <Chip
-                key={count}
-                on={points === count}
-                label={count === 1 ? "1 star" : `${String(count)} stars`}
-                onClick={() => {
-                  setPoints(count);
-                }}
-              >
-                {count === 0 ? "None" : `★${String(count)}`}
-              </Chip>
-            ))}
-          </ChipRow>
-        </div>
+        <FormSection title="Details">
+          <Field label="Stars">
+            <ChipRow label="Stars">
+              {STARS.map((count) => (
+                <Chip
+                  key={count}
+                  on={points === count}
+                  label={count === 1 ? "1 star" : `${String(count)} stars`}
+                  onClick={() => {
+                    setPoints(count);
+                  }}
+                >
+                  {count === 0 ? "None" : `★${String(count)}`}
+                </Chip>
+              ))}
+            </ChipRow>
+          </Field>
+        </FormSection>
       ) : null}
       {error ? (
         <p role="alert" className="font-semibold text-alert">

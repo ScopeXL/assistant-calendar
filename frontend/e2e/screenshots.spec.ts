@@ -225,20 +225,35 @@ test("the wall screen", async ({ page }) => {
     .getByRole("group", { name: "On-screen keyboard" })
     .getByRole("button", { name: "Done" })
     .click();
+  // The panel keeps the keyboard's padding for 400 ms after it lowers: wait it out, or the
+  // shot shows the button floating mid-panel.
+  await page.waitForTimeout(500);
   await shot(page, "add-event");
   await add.getByRole("button", { name: "Pick a date" }).click();
   await add.getByRole("button", { name: "Pick a date" }).scrollIntoViewIfNeeded();
   await shot(page, "add-pick-a-date");
   await add.getByRole("button", { name: "Pick a date" }).click();
-  await add.getByRole("button", { name: "Pick a time" }).click();
+  // Time, How long and Repeats: one button each, its picker opening under the row.
+  await add.getByRole("button", { name: /^Time: / }).click();
   await add.getByRole("group", { name: "Time: minutes" }).scrollIntoViewIfNeeded();
   await shot(page, "add-time");
-  await add.getByRole("button", { name: "Pick a time" }).click();
-  await add.getByRole("button", { name: "Custom…" }).click();
+  await add.getByRole("button", { name: "Done", exact: true }).click();
+  await add.getByRole("button", { name: /^How long: / }).click();
+  await add.getByRole("radiogroup", { name: "How long" }).scrollIntoViewIfNeeded();
+  await shot(page, "add-how-long");
+  await add.getByRole("button", { name: "Done", exact: true }).click();
+  await add.getByRole("button", { name: /^Repeats: / }).click();
+  await add.getByRole("radiogroup", { name: "Repeats" }).scrollIntoViewIfNeeded();
+  await shot(page, "add-repeats");
+  await add.getByRole("radio", { name: "Custom…" }).click();
   await add.getByRole("button", { name: "Every: more" }).click();
   await add.getByRole("button", { name: "Tuesday" }).click();
   await add.getByRole("group", { name: "Ends" }).scrollIntoViewIfNeeded();
   await shot(page, "add-custom-repeat");
+  await add.getByRole("button", { name: "Done", exact: true }).click();
+  await add.getByRole("button", { name: "More…" }).click();
+  await add.getByRole("button", { name: /^Remind: / }).scrollIntoViewIfNeeded();
+  await shot(page, "add-details");
   await add.getByRole("button", { name: "Close" }).click();
   await change(page, { display_home_view: "today" });
   await page.reload();

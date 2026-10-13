@@ -25,6 +25,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   Today panel's button. The month's name and the week's dates left it (the days say when they
   are; the Month view says its month). The Hours zoom sits on the grid's corner.
 - Rooms the rail already names no longer repeat their name in the header.
+- Add is in three parts, What and who, When and Details, with room between them. Time, How
+  long and Repeats each show your choice on one button and open their picker under it; the row
+  of suggested times is gone.
 - Settings' list is wider, so every page's name fits on one line.
 - Google's app keys are asked for inside Sign in with Google, where they're used, instead of
   on Features.

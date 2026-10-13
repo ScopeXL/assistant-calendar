@@ -219,22 +219,25 @@ test("a task every two weeks on two days, with all five people on one line of Wh
   expect(boxes.map((box) => box.avatar)).toEqual([64, 64, 64, 64, 64, 64]);
   await who.getByRole("button", { name: "Zoe" }).click();
 
-  // Due: a time that isn't one of the chips, from Pick a time.
-  const due = add.getByRole("group", { name: "Due", exact: true });
-  await due.getByRole("button", { name: "Pick a time" }).click();
+  // Due: any time at all, and one button says it (a new task is due any time).
+  await expect(add.getByRole("button", { name: "Any time" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await add.getByRole("button", { name: "Due: Pick a time" }).click();
   await add.getByRole("group", { name: "Due: hour" }).getByRole("button", { name: "4 PM" }).click();
   await add
     .getByRole("group", { name: "Due: minutes" })
     .getByRole("button", { name: ":30" })
     .click();
-  await expect(due.getByRole("button", { name: "by 4:30 PM" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await add.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(add.getByRole("button", { name: "Due: by 4:30 PM" })).toBeVisible();
 
-  // Repeats: Custom, every 2 weeks on Tuesday and Thursday; the days start on Sunday here.
-  // A new task repeats every day until told otherwise, so Custom opens on days.
-  await add.getByRole("button", { name: "Custom…" }).click();
+  // Repeats: Custom is the last row of its list. Every 2 weeks on Tuesday and Thursday; the
+  // days start on Sunday here. A new task repeats every day until told otherwise, so Custom
+  // opens on days.
+  await add.getByRole("button", { name: "Repeats: Every day" }).click();
+  await add.getByRole("radio", { name: "Custom…" }).click();
   await add.getByRole("button", { name: "Every: more" }).click();
   await add.getByRole("button", { name: "Weeks", exact: true }).click();
   const on = add.getByRole("group", { name: "On", exact: true });

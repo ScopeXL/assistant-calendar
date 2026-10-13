@@ -173,21 +173,12 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   const pph = friday.height / 24;
   await page.mouse.click(friday.x + friday.width / 2, friday.y + 10.5 * pph + 2);
   const add = page.getByRole("dialog", { name: "Add" });
-  // The tapped time isn't one of the usual chips: it shows among them, pressed, in clock order.
-  const time = add.getByRole("group", { name: "Time", exact: true });
-  await expect(time.getByRole("button", { name: "10:30 AM" })).toHaveAttribute(
+  // The tapped time is what the Time row's one button says.
+  await expect(add.getByRole("button", { name: "Time: 10:30 AM" })).toBeVisible();
+  await expect(add.getByRole("button", { name: "All day" })).toHaveAttribute(
     "aria-pressed",
-    "true",
+    "false",
   );
-  await expect(time.getByRole("button")).toHaveText([
-    "All day",
-    "9:00 AM",
-    "10:30 AM",
-    "12:00 PM",
-    "3:00 PM",
-    "6:00 PM",
-    "Pick a time",
-  ]);
   await expect(
     add
       .getByRole("group", { name: "Day", exact: true })

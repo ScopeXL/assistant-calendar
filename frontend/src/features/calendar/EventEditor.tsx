@@ -3,17 +3,19 @@ import { useEffect, useMemo, useState } from "react";
 import { errorMessage } from "../../api/client";
 import { addDays, householdZone, longMonthDay, weekdayOf } from "../../lib/dates";
 import { serverNow } from "../../lib/clock";
-import { COLORS } from "../../lib/colors";
 import { useMembers, useSettings } from "../../lib/household";
-import { EVENT_TIMES } from "../../lib/times";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { ColorDots } from "../../ui/ColorDots";
 import { DayField } from "../../ui/DayField";
+import { Field, FormSection } from "../../ui/Field";
+import { LengthField } from "../../ui/LengthField";
 import { MonthGrid } from "../../ui/MonthGrid";
 import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
 import { TimeField } from "../../ui/TimeField";
+import { ChoiceRow } from "../../ui/ValueRow";
 import { WhoPicker } from "../../ui/WhoPicker";
 import { useCalendars } from "./data";
 import { parseQuickAdd, type QuickAddDraft } from "./quickAdd";
@@ -22,12 +24,11 @@ import { repeatToRRule, rruleToRepeat, type Repeat, type RepeatEnd } from "./rep
 import type { CalendarEvent, EventFields, Occurrence, PersonColor } from "./types";
 import { useBoardDay } from "./useBoardDay";
 
-const LENGTHS = [30, 60, 90, 120, 180];
-const REMINDERS: { minutes: number | null; label: string }[] = [
-  { minutes: null, label: "None" },
-  { minutes: 10, label: "10 min before" },
-  { minutes: 60, label: "1 hour before" },
-  { minutes: 1440, label: "1 day before" },
+const REMINDERS: { value: number | null; label: string }[] = [
+  { value: null, label: "None" },
+  { value: 10, label: "10 min before" },
+  { value: 60, label: "1 hour before" },
+  { value: 1440, label: "1 day before" },
 ];
 
 export interface Draft {
@@ -54,15 +55,6 @@ export interface Draft {
 export interface KeptRule {
   rrule: string;
   text: string;
-}
-
-function lengthWords(minutes: number): string {
-  if (minutes < 60) return `${String(minutes)} min`;
-  if (minutes === 60) return "1 hour";
-  if (minutes === 90) return "1½ hours";
-  return minutes % 60 === 0
-    ? `${String(minutes / 60)} hours`
-    : `${String(Math.floor(minutes / 60))} h ${String(minutes % 60)} min`;
 }
 
 const dayDiff = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
@@ -272,52 +264,50 @@ export function EventEditor({
     [onDay],
   );
 
-  const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
-  const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
   // Once the parser has taken words out of what was typed, say what's left as the title.
   const took = !editing && draft.title.trim() !== "" && draft.title.trim() !== text.trim();
-  const lengths = [...new Set([...LENGTHS, draft.minutes])].sort((a, b) => a - b);
   const longer = draft.lastDay !== null && draft.lastDay !== draft.day;
 
   return (
     <form
-      className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
+      className={`flex flex-col ${display ? "gap-8" : "gap-6"}`}
       onSubmit={(event) => {
         event.preventDefault();
         if (draft.title.trim()) onSave(draft);
       }}
     >
-      <TextField
-        label={editing ? "Title" : "What, when, who"}
-        hint={
-          editing
-            ? null
-            : took
-              ? `Saved as "${draft.title.trim()}"`
-              : "For example: Dentist Thu 2:30pm Mia"
-        }
-        value={text}
-        maxLength={200}
-        autoComplete="off"
-        data-autofocus=""
-        error={error ? errorMessage(error) : null}
-        onChange={(event) => {
-          setText(event.target.value);
-        }}
-      />
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Who</p>
-        <WhoPicker
-          label="Who"
-          members={members}
-          value={draft.memberIds}
-          multiple
-          onChange={(memberIds) => {
-            set({ memberIds });
+      <FormSection title="What and Who" quiet>
+        <TextField
+          label={editing ? "Title" : "What, when, who"}
+          hint={
+            editing
+              ? null
+              : took
+                ? `Saved as "${draft.title.trim()}"`
+                : "For example: Dentist Thu 2:30pm Mia"
+          }
+          value={text}
+          maxLength={200}
+          autoComplete="off"
+          data-autofocus=""
+          error={error ? errorMessage(error) : null}
+          onChange={(event) => {
+            setText(event.target.value);
           }}
         />
-      </div>
-      <div className="flex flex-col gap-3">
+        <Field label="Who">
+          <WhoPicker
+            label="Who"
+            members={members}
+            value={draft.memberIds}
+            multiple
+            onChange={(memberIds) => {
+              set({ memberIds });
+            }}
+          />
+        </Field>
+      </FormSection>
+      <FormSection title="When">
         <DayField
           value={draft.day}
           today={today}
@@ -328,11 +318,10 @@ export function EventEditor({
           }}
         />
         {draft.allDay ? (
-          <div className="flex flex-col gap-2">
-            <p className={soft}>Last day</p>
+          <Field label="Last day">
             <ChipRow label="Last day">
               <Chip
-                on={!longer && !span}
+                on={!longer}
                 onClick={() => {
                   setSpan(false);
                   set({ lastDay: null });
@@ -341,7 +330,7 @@ export function EventEditor({
                 Same day
               </Chip>
               <Chip
-                on={longer || span}
+                opener
                 expanded={span}
                 onClick={() => {
                   setSpan(!span);
@@ -362,94 +351,57 @@ export function EventEditor({
                 }}
               />
             ) : null}
-          </div>
+          </Field>
         ) : null}
-      </div>
-      <TimeField
-        label="Time"
-        value={draft.allDay ? null : draft.start}
-        none={{ label: "All day" }}
-        suggestions={EVENT_TIMES}
-        onChange={(time) => {
-          set(time === null ? { allDay: true } : { allDay: false, start: time });
-        }}
-      />
-      {draft.allDay ? null : (
-        <div className="flex flex-col gap-2">
-          <p className={heading}>How long</p>
-          <ChipRow label="How long">
-            {lengths.map((minutes) => (
-              <Chip
-                key={minutes}
-                on={draft.minutes === minutes}
-                onClick={() => {
-                  set({ minutes });
-                }}
-              >
-                {lengthWords(minutes)}
-              </Chip>
-            ))}
-          </ChipRow>
-        </div>
-      )}
-      <RepeatField
-        day={draft.day}
-        today={today}
-        value={draft.repeat}
-        repeatEnd={draft.repeatEnd}
-        kept={draft.kept}
-        weekStartsOn={weekStartsOn}
-        onChange={set}
-      />
-      {writable.length > 1 ? (
-        <div className="flex flex-col gap-2">
-          <p className={heading}>Calendar</p>
-          <ChipRow label="Calendar">
-            {writable.map((c) => (
-              <Chip
-                key={c.id}
-                on={draft.calendarId === c.id}
-                onClick={() => {
-                  set({ calendarId: c.id });
-                }}
-              >
-                {c.name}
-              </Chip>
-            ))}
-          </ChipRow>
-        </div>
-      ) : null}
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Color</p>
-        <ChipRow label="Color">
-          <Chip
-            on={draft.color === null}
-            onClick={() => {
-              set({ color: null });
+        <TimeField
+          label="Time"
+          value={draft.allDay ? null : draft.start}
+          none={{ label: "All day" }}
+          onChange={(time) => {
+            set(time === null ? { allDay: true } : { allDay: false, start: time });
+          }}
+        />
+        {draft.allDay ? null : (
+          <LengthField
+            value={draft.minutes}
+            onChange={(minutes) => {
+              set({ minutes });
             }}
-          >
-            The person's color
-          </Chip>
-          {COLORS.map((c) => (
-            <Chip
-              key={c.value}
-              on={draft.color === c.value}
-              onClick={() => {
-                set({ color: c.value });
-              }}
-            >
-              <span data-person={c.value} className="inline-flex items-center gap-2">
-                <span aria-hidden="true" className="size-5 rounded-full bg-p" />
-                {c.word}
-              </span>
-            </Chip>
-          ))}
-        </ChipRow>
-      </div>
-      <div className="flex flex-col gap-4">
+          />
+        )}
+        <RepeatField
+          day={draft.day}
+          today={today}
+          value={draft.repeat}
+          repeatEnd={draft.repeatEnd}
+          kept={draft.kept}
+          weekStartsOn={weekStartsOn}
+          onChange={set}
+        />
+      </FormSection>
+      <FormSection title="Details">
+        {writable.length > 1 ? (
+          <ChoiceRow
+            label="Calendar"
+            choices={writable.map((c) => ({ value: c.id, label: c.name }))}
+            value={draft.calendarId ?? ""}
+            onChange={(calendarId) => {
+              set({ calendarId });
+            }}
+          />
+        ) : null}
+        <Field label="Color">
+          <ColorDots
+            value={draft.color}
+            noneLabel="The person's color"
+            onChange={(color) => {
+              set({ color });
+            }}
+          />
+        </Field>
         <div>
           <Chip
-            on={more}
+            opener
             expanded={more}
             onClick={() => {
               setMore(!more);
@@ -478,25 +430,18 @@ export function EventEditor({
                 set({ notes: event.target.value });
               }}
             />
-            <div className="flex flex-col gap-2">
-              <p className={heading}>Remind on the kitchen screen</p>
-              <ChipRow label="Remind on the kitchen screen">
-                {REMINDERS.map((option) => (
-                  <Chip
-                    key={option.label}
-                    on={draft.reminder === option.minutes}
-                    onClick={() => {
-                      set({ reminder: option.minutes });
-                    }}
-                  >
-                    {option.label}
-                  </Chip>
-                ))}
-              </ChipRow>
-            </div>
+            <ChoiceRow
+              label="Remind"
+              hint="A reminder shows on the kitchen screen."
+              choices={REMINDERS}
+              value={draft.reminder}
+              onChange={(reminder) => {
+                set({ reminder });
+              }}
+            />
           </>
         ) : null}
-      </div>
+      </FormSection>
       <PanelActions>
         <Button type="submit" block pending={pending} disabled={!draft.title.trim()}>
           {editing ? "Save changes" : "Add event"}

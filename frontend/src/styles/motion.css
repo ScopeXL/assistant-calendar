@@ -102,6 +102,11 @@ nav[data-rail-motion] .rail-add {
   background-color: var(--wall);
 }
 
+/* A chevron on something that opens in place (ui/Chip's opener, ui/ValueRow): it turns over. */
+.turn {
+  transition: rotate var(--motion-quick) var(--ease-standard);
+}
+
 /* Selection: a chip or avatar filling and ringing (quick). */
 .select-fill {
   transition:

@@ -53,17 +53,31 @@ function Field({
   );
 }
 
-const sentence = () =>
-  screen.getByText(/^(Every|Doesn\u2019t|Doesn't)/, { selector: "p[aria-live]" });
+/** The row's button, which says the rule in words: "Repeats: Every week on Thu". */
+const row = () => screen.getByRole("button", { name: /^Repeats: / });
+const said = () => (row().getAttribute("aria-label") ?? "").replace("Repeats: ", "");
+const open = () => {
+  if (row().getAttribute("aria-expanded") !== "true") fireEvent.click(row());
+};
+const checked = () =>
+  within(screen.getByRole("radiogroup", { name: "Repeats" }))
+    .getAllByRole("radio")
+    .filter((choice) => choice.getAttribute("aria-checked") === "true")
+    .map((choice) => choice.textContent);
 
-describe("how something repeats (ADR 0029)", () => {
-  it("offers the usual choices worded from the start day", () => {
+describe("how something repeats (ADR 0029, 0030)", () => {
+  it("is one row that says the rule, and opens the usual choices as a list", () => {
     const onRule = vi.fn();
     render(<Field onRule={onRule} />);
-    const chips = within(screen.getByRole("group", { name: "Repeats" }))
-      .getAllByRole("button")
-      .map((chip) => chip.textContent);
-    expect(chips).toEqual([
+    expect(said()).toBe("Doesn't repeat");
+    expect(row().getAttribute("aria-expanded")).toBe("false");
+    // Closed, there is no wall of chips: just the one button.
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    open();
+    const choices = within(screen.getByRole("radiogroup", { name: "Repeats" }))
+      .getAllByRole("radio")
+      .map((choice) => choice.textContent);
+    expect(choices).toEqual([
       "Doesn't repeat",
       "Every day",
       "Every weekday",
@@ -74,41 +88,41 @@ describe("how something repeats (ADR 0029)", () => {
       "Every year on Oct 8",
       "Custom…",
     ]);
-    expect(
-      screen.getByRole("button", { name: "Doesn't repeat" }).getAttribute("aria-pressed"),
-    ).toBe("true");
-    expect(sentence().textContent).toBe("Doesn't repeat");
+    expect(checked()).toEqual(["Doesn't repeat"]);
     // Nothing repeats, so there's nothing to end.
     expect(screen.queryByRole("group", { name: "Ends" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Every week on Thu" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Every week on Thu" }));
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=WEEKLY;BYDAY=TH");
+    expect(said()).toBe("Every week on Thu");
+    // It stays open: now that it repeats, Ends is there to set. Done closes it.
     expect(screen.getByRole("group", { name: "Ends" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    // Back to not repeating closes it by itself: there's nothing more to say.
+    open();
+    fireEvent.click(screen.getByRole("radio", { name: "Doesn't repeat" }));
+    expect(onRule.mock.lastCall?.[0]).toBeNull();
+    expect(screen.queryByRole("radiogroup")).toBeNull();
   });
 
   it("builds a custom rule: every 2 weeks on Tuesday and Thursday", () => {
     const onRule = vi.fn();
     render(<Field onRule={onRule} />);
-    const custom = screen.getByRole("button", { name: "Custom…" });
-    expect(custom.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(custom);
-    expect(screen.getByRole("button", { name: "Custom…" }).getAttribute("aria-expanded")).toBe(
-      "true",
-    );
+    open();
+    expect(screen.queryByRole("group", { name: "Every" })).toBeNull();
+    fireEvent.click(screen.getByRole("radio", { name: "Custom…" }));
     // It starts as every week on the start day.
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=WEEKLY;BYDAY=TH");
+    expect(checked()).toEqual(["Custom…"]);
     // The weekdays are in the household's order: Sunday first here.
     const days = within(screen.getByRole("group", { name: "On" })).getAllByRole("button");
     expect(days.map((day) => day.getAttribute("aria-label"))[0]).toBe("Sunday");
     fireEvent.click(screen.getByRole("button", { name: "Every: more" }));
     fireEvent.click(screen.getByRole("button", { name: "Tuesday" }));
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH");
-    expect(sentence().textContent).toBe("Every 2 weeks on Tue and Thu");
-    // No preset says this, so only Custom is pressed.
-    const pressed = within(screen.getByRole("group", { name: "Repeats" }))
-      .getAllByRole("button")
-      .filter((chip) => chip.getAttribute("aria-pressed") === "true")
-      .map((chip) => chip.textContent);
-    expect(pressed).toEqual(["Custom…"]);
+    expect(said()).toBe("Every 2 weeks on Tue and Thu");
+    // No preset says this, so only Custom is checked.
+    expect(checked()).toEqual(["Custom…"]);
     // With two or more, the units read as plurals.
     expect(screen.getByRole("button", { name: "Weeks" }).getAttribute("aria-pressed")).toBe("true");
   });
@@ -116,7 +130,8 @@ describe("how something repeats (ADR 0029)", () => {
   it("offers a month by date or by weekday, and days and years", () => {
     const onRule = vi.fn();
     render(<Field onRule={onRule} />);
-    fireEvent.click(screen.getByRole("button", { name: "Custom…" }));
+    open();
+    fireEvent.click(screen.getByRole("radio", { name: "Custom…" }));
     fireEvent.click(screen.getByRole("button", { name: "Month" }));
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=MONTHLY");
     fireEvent.click(screen.getByRole("button", { name: "On the second Thursday" }));
@@ -133,6 +148,8 @@ describe("how something repeats (ADR 0029)", () => {
   it("ends never, on a date from a month grid, or after a number of times", () => {
     const onRule = vi.fn();
     render(<Field start={{ freq: "daily", interval: 1 }} onRule={onRule} />);
+    expect(said()).toBe("Every day");
+    open();
     const ends = screen.getByRole("group", { name: "Ends" });
     expect(within(ends).getByRole("button", { name: "Never" }).getAttribute("aria-pressed")).toBe(
       "true",
@@ -141,7 +158,8 @@ describe("how something repeats (ADR 0029)", () => {
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=DAILY;COUNT=10");
     fireEvent.click(screen.getByRole("button", { name: "Times: less" }));
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=DAILY;COUNT=9");
-    expect(sentence().textContent).toBe("Every day, 9 times");
+    // The row says the end too.
+    expect(said()).toBe("Every day, 9 times");
     expect(within(ends).getByRole("button", { name: "After 9 times" })).toBeTruthy();
     fireEvent.click(within(ends).getByRole("button", { name: "On a date" }));
     // Seeded 90 days on: January 6, 2027.
@@ -152,32 +170,31 @@ describe("how something repeats (ADR 0029)", () => {
     expect(onRule.mock.lastCall?.[0]).toBe("FREQ=DAILY");
   });
 
-  it("opens on Custom for a rule no preset says", () => {
+  it("says a rule no preset says, and opens on Custom for it", () => {
     render(<Field start={{ freq: "weekly", interval: 3, weekdays: [0, 2] }} weekStartsOn={0} />);
-    expect(screen.getByRole("button", { name: "Custom…" }).getAttribute("aria-expanded")).toBe(
-      "true",
-    );
+    expect(said()).toBe("Every 3 weeks on Mon and Wed");
+    open();
+    expect(checked()).toEqual(["Custom…"]);
     expect(screen.getByRole("status").textContent).toContain("3");
     expect(screen.getByRole("button", { name: "Monday" }).getAttribute("aria-pressed")).toBe(
       "true",
     );
-    expect(sentence().textContent).toBe("Every 3 weeks on Mon and Wed");
   });
 
   it("keeps a rule it can't read as it is, until something else is picked", () => {
     const onRule = vi.fn<(rule: string | null, change: RepeatChange) => void>();
     const kept = { rrule: "FREQ=MONTHLY;BYMONTHDAY=15", text: "Every month on the 15th" };
     render(<Field keep={kept} onRule={onRule} />);
-    const asIs = screen.getByRole("button", { name: "As it is: every month on the 15th" });
-    expect(asIs.getAttribute("aria-pressed")).toBe("true");
-    expect(
-      screen.getByRole("button", { name: "Doesn't repeat" }).getAttribute("aria-pressed"),
-    ).toBe("false");
-    expect(screen.getByText("Every month on the 15th", { selector: "p[aria-live]" })).toBeTruthy();
+    // The row says it in the server's words.
+    expect(said()).toBe("Every month on the 15th");
+    open();
+    expect(checked()).toEqual(["As it is: every month on the 15th"]);
+    // Tapping the kept rule itself changes nothing.
+    fireEvent.click(screen.getByRole("radio", { name: /^As it is/ }));
     expect(onRule).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Every day" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Every day" }));
     expect(onRule.mock.lastCall?.[1].kept).toBeNull();
-    expect(screen.queryByRole("button", { name: /^As it is/ })).toBeNull();
+    expect(screen.queryByRole("radio", { name: /^As it is/ })).toBeNull();
   });
 
   it("offers a task only the choices it's given, and Custom for the rest", () => {
@@ -187,10 +204,9 @@ describe("how something repeats (ADR 0029)", () => {
         presetKeys={["none", "daily", "weekdays", "weekly", "biweekly", "monthly-date"]}
       />,
     );
-    expect(screen.queryByRole("button", { name: "Every year on Oct 8" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Custom…" }).getAttribute("aria-pressed")).toBe(
-      "true",
-    );
+    open();
+    expect(screen.queryByRole("radio", { name: "Every year on Oct 8" })).toBeNull();
+    expect(checked()).toEqual(["Custom…"]);
     expect(screen.getByRole("button", { name: "Year" }).getAttribute("aria-pressed")).toBe("true");
   });
 });

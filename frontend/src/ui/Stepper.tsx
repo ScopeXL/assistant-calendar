@@ -7,19 +7,24 @@ import { useShell } from "./shell";
 /**
  * A small whole number changed with two buttons (every 2 weeks, 10 times): no keyboard, and a
  * finger can't type a wrong value. The buttons are named for the row ("Every: less", "Every:
- * more") and stop at the ends.
+ * more") and stop at the ends. With `step` it moves between that step's multiples (a length in
+ * quarter hours), and `words` says the value its own way ("45 min").
  */
 export function Stepper({
   label,
   value,
   min = 1,
   max = 99,
+  step = 1,
+  words,
   onChange,
 }: {
   label: string;
   value: number;
   min?: number;
   max?: number;
+  step?: number;
+  words?: (value: number) => string;
   onChange: (value: number) => void;
 }) {
   const display = useShell() === "display";
@@ -32,16 +37,24 @@ export function Stepper({
         aria-label={`${label}: less`}
         disabled={value <= min}
         onClick={() => {
-          onChange(Math.max(min, value - 1));
+          onChange(Math.max(min, Math.ceil(value / step) * step - step));
         }}
       >
         <Minus aria-hidden="true" className={icon} />
       </Button>
       <output
         aria-live="polite"
-        className={`text-center font-bold ${display ? "min-w-14 text-d-title" : "min-w-10 text-title"}`}
+        className={`text-center font-bold ${
+          words
+            ? display
+              ? "min-w-36 text-d-body"
+              : "min-w-24 text-body"
+            : display
+              ? "min-w-14 text-d-title"
+              : "min-w-10 text-title"
+        }`}
       >
-        <Digits value={String(value)} />
+        {words ? words(value) : <Digits value={String(value)} />}
       </output>
       <Button
         variant="secondary"
@@ -49,7 +62,7 @@ export function Stepper({
         aria-label={`${label}: more`}
         disabled={value >= max}
         onClick={() => {
-          onChange(Math.min(max, value + 1));
+          onChange(Math.min(max, Math.floor(value / step) * step + step));
         }}
       >
         <Plus aria-hidden="true" className={icon} />

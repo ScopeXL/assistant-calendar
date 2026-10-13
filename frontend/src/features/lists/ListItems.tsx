@@ -3,15 +3,17 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import { errorMessage } from "../../api/client";
-import { addDays, shortDate, shortWeekday, zonedParts } from "../../lib/dates";
-import { useMembers, type Member } from "../../lib/household";
+import { addDays, shortWeekday, zonedParts } from "../../lib/dates";
+import { useMembers, useSettings, type Member } from "../../lib/household";
 import { whenIdle } from "../../lib/idle";
 import { createStore, useStore } from "../../lib/store";
 import { useMinute } from "../../lib/time";
 import { GLIDE } from "../../lib/motion";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
-import { Chip, ChipRow } from "../../ui/Chip";
+import { Chip } from "../../ui/Chip";
+import { DayField } from "../../ui/DayField";
+import { Field } from "../../ui/Field";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
@@ -353,15 +355,13 @@ function ItemSheet({ item, onClose }: { item: Item | null; onClose: () => void }
 function ItemEditor({ item, onClose }: { item: Item; onClose: () => void }) {
   const display = useShell() === "display";
   const { data: members = [] } = useMembers();
+  const { data: settings } = useSettings();
   const changes = useListChanges();
   const [actor] = useWallActor();
   const today = zonedParts(useMinute()).day;
   const [text, setText] = useState(item.text);
   const [who, setWho] = useState<string | null>(item.assigned_member_id);
   const [day, setDay] = useState<string | null>(item.due_date);
-  const days = [0, 1, 2, 3, 4, 5, 6].map((n) => addDays(today, n));
-  const label = (d: string) =>
-    d === today ? "Today" : d === addDays(today, 1) ? "Tomorrow" : shortWeekday(d);
   const save = () => {
     changes.patchItem.mutate(
       {
@@ -387,8 +387,7 @@ function ItemEditor({ item, onClose }: { item: Item; onClose: () => void }) {
           setText(event.target.value);
         }}
       />
-      <div className="flex flex-col gap-2">
-        <p className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>Who</p>
+      <Field label="Who">
         <WhoPicker
           label="Who"
           members={members}
@@ -397,36 +396,20 @@ function ItemEditor({ item, onClose }: { item: Item; onClose: () => void }) {
             setWho(ids[0] ?? null);
           }}
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <p className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>Day</p>
-        <ChipRow label="Day">
-          <Chip
-            on={day === null}
-            onClick={() => {
-              setDay(null);
-            }}
-          >
-            No day
-          </Chip>
-          {days.map((d) => (
-            <Chip
-              key={d}
-              on={day === d}
-              onClick={() => {
-                setDay(d);
-              }}
-            >
-              {label(d)}
-            </Chip>
-          ))}
-          {day && !days.includes(day) ? (
-            <Chip on onClick={() => undefined}>
-              {shortDate(day)}
-            </Chip>
-          ) : null}
-        </ChipRow>
-      </div>
+      </Field>
+      {/* The same Day picker as Add's (ADR 0030), not a row of weekday chips of its own. */}
+      <DayField
+        value={day}
+        today={today}
+        weekStartsOn={settings?.week_starts_on ?? 6}
+        onChange={setDay}
+        optional={{
+          label: "No day",
+          onChoose: () => {
+            setDay(null);
+          },
+        }}
+      />
       {changes.patchItem.isError ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(changes.patchItem.error)}

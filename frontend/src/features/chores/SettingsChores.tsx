@@ -7,10 +7,12 @@ import { useMembers, usePlugins, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { LengthField } from "../../ui/LengthField";
 import { ListRow } from "../../ui/ListRow";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
+import { TimeField } from "../../ui/TimeField";
 import { WeekdayPicker } from "../../ui/WeekStrip";
 import { WhoPicker } from "../../ui/WhoPicker";
 import { Group, Text } from "../settings/parts";
@@ -29,12 +31,6 @@ import { STEP_ICONS, stepIcon } from "./icons";
 import { RewardPanel } from "./RewardsPage";
 import { clockText } from "./words";
 
-const STARTS = ["06:30", "07:00", "07:30", "18:30", "19:00", "19:30", "20:00"];
-const LASTS: [string, number][] = [
-  ["30 min", 30],
-  ["1 hour", 60],
-  ["2 hours", 120],
-];
 const SUGGESTED_STEPS: { icon: string; title: string }[] = [
   { icon: "toothbrush", title: "Brush teeth" },
   { icon: "shirt", title: "Pajamas on" },
@@ -287,35 +283,16 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
           minOne={false}
         />
       </div>
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Starts</p>
-        <ChipRow label="Starts">
-          {[...new Set([...STARTS, start])].sort().map((hhmm) => (
-            <Chip
-              key={hhmm}
-              on={start === hhmm}
-              onClick={() => {
-                setStart(hhmm);
-              }}
-            >
-              {clockText(hhmm)}
-            </Chip>
-          ))}
-        </ChipRow>
-        <ChipRow label="Shows for">
-          {LASTS.map(([label, minutes]) => (
-            <Chip
-              key={label}
-              on={last === minutes}
-              onClick={() => {
-                setLast(minutes);
-              }}
-            >
-              {`for ${label}`}
-            </Chip>
-          ))}
-        </ChipRow>
-      </div>
+      {/* The same time and length pickers as Add's (ADR 0030): any start, not seven fixed ones. */}
+      <TimeField
+        label="Starts"
+        value={start}
+        none={null}
+        onChange={(time) => {
+          if (time) setStart(time);
+        }}
+      />
+      <LengthField label="Shows for" value={last} onChange={setLast} />
       {starsOn ? (
         <div className="flex flex-col gap-2">
           <p className={heading}>Stars for finishing</p>

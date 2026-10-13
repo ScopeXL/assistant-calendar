@@ -1,10 +1,11 @@
 import { useId, type ComponentPropsWithRef } from "react";
 
 import type { KeyboardLayout } from "../lib/keyboard";
+import { useFieldHint, useFieldLabel } from "./Field";
 import { useShell } from "./shell";
 
 /**
- * A labelled text field. On the wall display it opens the on-screen keyboard (data-osk) and
+ * A labelled text field; its label is the form's quiet one (ui/Field). On the wall display it opens the on-screen keyboard (data-osk) and
  * keeps the system's own keyboard away (inputMode none); type is at least 24 px there and 16 px
  * on phones, so an iPhone never zooms in (UX §1).
  */
@@ -25,18 +26,15 @@ export function TextField({
   hideLabel?: boolean;
 }) {
   const display = useShell() === "display";
+  const labelClass = useFieldLabel();
+  const hintClass = useFieldHint();
   const id = useId();
   const hintId = useId();
   const errorId = useId();
   const described = [hint ? hintId : "", error ? errorId : ""].filter(Boolean).join(" ");
   return (
     <div className="flex flex-col gap-2">
-      <label
-        htmlFor={id}
-        className={
-          hideLabel ? "sr-only" : display ? "text-d-body font-semibold" : "text-body font-semibold"
-        }
-      >
+      <label htmlFor={id} className={hideLabel ? "sr-only" : labelClass}>
         {label}
       </label>
       <input
@@ -52,10 +50,7 @@ export function TextField({
         {...props}
       />
       {hint ? (
-        <p
-          id={hintId}
-          className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}
-        >
+        <p id={hintId} className={hintClass}>
           {hint}
         </p>
       ) : null}

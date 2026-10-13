@@ -8,6 +8,7 @@ import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { DayField } from "../../ui/DayField";
+import { Field, FormSection } from "../../ui/Field";
 import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { TextField } from "../../ui/TextField";
@@ -46,7 +47,7 @@ export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
     lists.find((list) => list.kind === "grocery") ??
     lists[0];
   const texts = splitItems(text);
-  const gap = display ? "gap-6" : "gap-5";
+  const gap = display ? "gap-8" : "gap-6";
   const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
 
   if (!chosen) {
@@ -80,55 +81,57 @@ export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
         );
       }}
     >
-      <TextField
-        label="What"
-        hint="Commas add several: milk, eggs, bread."
-        autoComplete="off"
-        autoFocus
-        value={text}
-        onChange={(event) => {
-          setText(event.target.value);
-        }}
-      />
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Which list</p>
-        <ChipRow label="Which list">
-          {lists.map((list) => (
-            <Chip
-              key={list.id}
-              on={list.id === chosen.id}
-              onClick={() => {
-                setListId(list.id);
-              }}
-            >
-              {list.name}
-            </Chip>
-          ))}
-        </ChipRow>
-      </div>
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Who</p>
-        <WhoPicker
-          label="Who"
-          members={members}
-          value={who ? [who] : []}
-          onChange={(ids) => {
-            setWho(ids[0] ?? null);
+      <FormSection title="What and Who" quiet>
+        <TextField
+          label="What"
+          hint="Commas add several: milk, eggs, bread."
+          autoComplete="off"
+          autoFocus
+          value={text}
+          onChange={(event) => {
+            setText(event.target.value);
           }}
         />
-      </div>
-      <DayField
-        value={day}
-        today={today}
-        weekStartsOn={settings?.week_starts_on ?? 6}
-        onChange={setDay}
-        optional={{
-          label: "No day",
-          onChoose: () => {
-            setDay(null);
-          },
-        }}
-      />
+        <Field label="Which list">
+          <ChipRow label="Which list">
+            {lists.map((list) => (
+              <Chip
+                key={list.id}
+                on={list.id === chosen.id}
+                onClick={() => {
+                  setListId(list.id);
+                }}
+              >
+                {list.name}
+              </Chip>
+            ))}
+          </ChipRow>
+        </Field>
+        <Field label="Who">
+          <WhoPicker
+            label="Who"
+            members={members}
+            value={who ? [who] : []}
+            onChange={(ids) => {
+              setWho(ids[0] ?? null);
+            }}
+          />
+        </Field>
+      </FormSection>
+      <FormSection title="When">
+        <DayField
+          value={day}
+          today={today}
+          weekStartsOn={settings?.week_starts_on ?? 6}
+          onChange={setDay}
+          optional={{
+            label: "No day",
+            onChoose: () => {
+              setDay(null);
+            },
+          }}
+        />
+      </FormSection>
       {addItems.isError ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(addItems.error)}

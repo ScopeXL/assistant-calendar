@@ -11,11 +11,18 @@ interface PanelProps {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  /** The wall's panel goes back to its top when this changes (Add: the kind of thing), as it
+   * does when it opens: a new form shouldn't start scrolled to where the last one was left. */
+  scrollKey?: string | undefined;
 }
 
 /** The event sheet, Add and the editor: a side panel on the wall screen, a sheet on a phone. */
-export function SidePanel(props: PanelProps) {
-  return useShell() === "display" ? <WallPanel {...props} /> : <Sheet {...props} />;
+export function SidePanel({ scrollKey, ...props }: PanelProps) {
+  return useShell() === "display" ? (
+    <WallPanel {...props} scrollKey={scrollKey} />
+  ) : (
+    <Sheet {...props} />
+  );
 }
 
 /**
@@ -24,7 +31,7 @@ export function SidePanel(props: PanelProps) {
  * can take a tap on a day. Close is always visible; Escape closes it too. It slides in and out
  * (styles/motion.css, `[data-panel]`) and keeps showing what it showed while it slides away.
  */
-function WallPanel({ open, title, onClose, children, footer }: PanelProps) {
+function WallPanel({ open, title, onClose, children, footer, scrollKey }: PanelProps) {
   const { data: settings } = useSettings();
   const titleId = useId();
   const ref = useRef<HTMLElement>(null);
@@ -42,10 +49,11 @@ function WallPanel({ open, title, onClose, children, footer }: PanelProps) {
   }
 
   // It opens at its top, whatever was scrolled to the last time it was open, or in the panel
-  // it replaces (an event's sheet, then Change): the node is the same one.
+  // it replaces (an event's sheet, then Change): the node is the same one. A new form inside it
+  // (Add: another kind) starts at its top too.
   useEffect(() => {
     if (open && body.current) body.current.scrollTop = 0;
-  }, [open, title]);
+  }, [open, title, scrollKey]);
 
   // Focus moves in when it opens and back to where it was when it closes.
   useEffect(() => {
