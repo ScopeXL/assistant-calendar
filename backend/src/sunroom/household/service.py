@@ -71,6 +71,7 @@ def settings_out(home: Household, settings: Settings) -> SettingsOut:
             "daylight_tint": home.daylight_tint,
             "text_size": home.text_size,
             "display_home_view": home.display_home_view,
+            "display_start": home.display_start,
             "display_return_minutes": home.display_return_minutes,
             "display_rail_side": home.display_rail_side,
             "display_rail_compact": home.display_rail_compact,

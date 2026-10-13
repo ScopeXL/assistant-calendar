@@ -22,6 +22,7 @@ async def test_settings_start_with_the_household_defaults(parent: httpx.AsyncCli
     assert settings["show_tips"] is False
     assert settings["text_size"] == "standard"
     assert settings["display_rail_compact"] is False  # the full rail until a parent folds it
+    assert settings["display_start"] == "last"  # a screen comes back to where it left off
     assert settings["has_pin"] is False
     assert settings["pin_length"] is None
     assert settings["setup_complete"] is True
@@ -74,6 +75,20 @@ async def test_a_parent_folds_the_rail_and_picks_small_text(parent: httpx.AsyncC
     assert (small.json()["text_size"], small.json()["display_rail_compact"]) == ("small", True)
     again = (await parent.get("/api/settings")).json()
     assert (again["text_size"], again["display_rail_compact"]) == ("small", True)
+
+
+async def test_a_parent_picks_what_a_screen_shows_when_it_starts(
+    parent: httpx.AsyncClient,
+) -> None:
+    home = await parent.patch("/api/settings", json={"display_start": "home"}, headers=CSRF)
+    assert home.status_code == 200, home.text
+    assert home.json()["display_start"] == "home"
+    assert (await parent.get("/api/settings")).json()["display_start"] == "home"
+    last = await parent.patch("/api/settings", json={"display_start": "last"}, headers=CSRF)
+    assert last.json()["display_start"] == "last"
+    never = await parent.patch("/api/settings", json={"display_start": "never"}, headers=CSRF)
+    assert never.status_code == 422
+    assert (await parent.get("/api/settings")).json()["display_start"] == "last"
 
 
 async def test_bad_settings_are_refused(parent: httpx.AsyncClient) -> None:

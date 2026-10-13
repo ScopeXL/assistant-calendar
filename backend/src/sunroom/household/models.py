@@ -50,6 +50,14 @@ class HomeView(StrEnum):
     PEOPLE = "people"
 
 
+class DisplayStart(StrEnum):
+    """What a screen shows after a refresh, an update or a restart (ADR 0030): what it was
+    showing, or the home view."""
+
+    LAST = "last"
+    HOME = "home"
+
+
 class WeekLayout(StrEnum):
     """How the wall's Week board draws a day (ADR 0028): stacked chips, or an hour grid."""
 
@@ -77,6 +85,8 @@ class Household(Base):
     daylight_tint: Mapped[bool] = mapped_column(Boolean, default=True)
     text_size: Mapped[str] = mapped_column(String(10), default=TextSize.STANDARD)
     display_home_view: Mapped[str] = mapped_column(String(10), default=HomeView.WEEK)
+    # Settings → Display → When it starts: where the screen left off, or the home view (ADR 0030).
+    display_start: Mapped[str] = mapped_column(String(8), default=DisplayStart.LAST)
     display_return_minutes: Mapped[int] = mapped_column(Integer, default=5)  # 0 = never
     display_rail_side: Mapped[str] = mapped_column(String(8), default="left")
     # Settings → Display → Compact rail: only the rooms' icons, for a wider board (ADR 0029).

@@ -113,6 +113,22 @@ export function DisplayPage() {
           />
         </Row>
         <Row
+          label="When it starts"
+          hint="What the screen shows after a refresh, an update or a restart."
+        >
+          <Segmented
+            label="When it starts"
+            value={settings.display_start}
+            onChange={(display_start) => {
+              update.mutate({ display_start });
+            }}
+            options={[
+              { value: "last", label: "Where it left off" },
+              { value: "home", label: "The home view" },
+            ]}
+          />
+        </Row>
+        <Row
           label="Week layout"
           hint="Agenda stacks each day's events; Hours draws them on a 24-hour grid."
         >

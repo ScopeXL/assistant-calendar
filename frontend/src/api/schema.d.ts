@@ -4790,6 +4790,11 @@ export interface components {
             /** Display Sounds */
             display_sounds: boolean;
             /**
+             * Display Start
+             * @enum {string}
+             */
+            display_start: "last" | "home";
+            /**
              * Display Week Layout
              * @enum {string}
              */
@@ -4875,6 +4880,8 @@ export interface components {
             display_show_today_panel?: boolean | null;
             /** Display Sounds */
             display_sounds?: boolean | null;
+            /** Display Start */
+            display_start?: ("last" | "home") | null;
             /** Display Week Layout */
             display_week_layout?: ("agenda" | "hours") | null;
             /** Household Name */

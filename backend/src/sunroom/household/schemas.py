@@ -15,6 +15,7 @@ RoleName = Literal["parent", "kid"]
 ThemeName = Literal["auto", "light", "dark"]
 TextSizeName = Literal["small", "standard", "large", "xl"]
 HomeViewName = Literal["week", "today", "people"]
+DisplayStartName = Literal["last", "home"]
 WeekLayoutName = Literal["agenda", "hours"]
 TimeFormat = Literal["12h", "24h"]
 RailSide = Literal["left", "right"]
@@ -58,6 +59,7 @@ class SettingsOut(BaseModel):
     daylight_tint: bool
     text_size: TextSizeName
     display_home_view: HomeViewName
+    display_start: DisplayStartName  # after a refresh or a restart: where it left off, or home
     display_return_minutes: int
     display_rail_side: RailSide
     display_rail_compact: bool  # the rail shows only its icons (ADR 0029)
@@ -94,6 +96,7 @@ class SettingsUpdate(BaseModel):
     daylight_tint: bool | None = None
     text_size: TextSizeName | None = None
     display_home_view: HomeViewName | None = None
+    display_start: DisplayStartName | None = None
     display_return_minutes: Literal[0, 2, 5, 10] | None = None
     display_rail_side: RailSide | None = None
     display_rail_compact: bool | None = None
