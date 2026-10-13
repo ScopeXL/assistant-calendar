@@ -28,6 +28,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Add is in three parts, What and who, When and Details, with room between them. Time, How
   long and Repeats each show your choice on one button and open their picker under it; the row
   of suggested times is gone.
+- A meal is one box: type it, or tap a saved meal under it as you type.
 - Settings' list is wider, so every page's name fits on one line.
 - Google's app keys are asked for inside Sign in with Google, where they're used, instead of
   on Features.

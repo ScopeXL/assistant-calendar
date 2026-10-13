@@ -12,6 +12,7 @@ import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { EmptyState } from "../../ui/EmptyState";
+import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import { TextField } from "../../ui/TextField";
@@ -139,7 +140,8 @@ export function tileCount(list: ListInfo): string {
   return countLine(list.kind, list.open_count, list.done_count, list.due_count);
 }
 
-/** New list (UX §4): a name, with the usual ones as chips; it opens once made. */
+/** New list (UX §4, ADR 0030): one field for its name, with the usual names as chips under it
+ * that fill the field; it opens once made. */
 export function NewListPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const display = useShell() === "display";
   const navigate = useNavigate();
@@ -167,30 +169,36 @@ export function NewListPanel({ open, onClose }: { open: boolean; onClose: () => 
           make(name);
         }}
       >
-        <ChipRow label="Usual lists">
-          {SUGGESTED.map((suggestion) => (
-            <Chip
-              key={suggestion}
-              onClick={() => {
-                make(suggestion);
-              }}
-            >
-              {suggestion}
-            </Chip>
-          ))}
-        </ChipRow>
-        <TextField
-          label="Or name it"
-          autoComplete="off"
-          value={name}
-          error={createList.isError ? errorMessage(createList.error) : null}
-          onChange={(event) => {
-            setName(event.target.value);
-          }}
-        />
-        <Button type="submit" block disabled={!name.trim()} pending={createList.isPending}>
-          Add list
-        </Button>
+        <div className="flex flex-col gap-3">
+          <TextField
+            label="Name"
+            autoComplete="off"
+            data-autofocus=""
+            value={name}
+            error={createList.isError ? errorMessage(createList.error) : null}
+            onChange={(event) => {
+              setName(event.target.value);
+            }}
+          />
+          <ChipRow label="Usual lists">
+            {SUGGESTED.map((suggestion) => (
+              <Chip
+                key={suggestion}
+                on={name.trim() === suggestion}
+                onClick={() => {
+                  setName(suggestion);
+                }}
+              >
+                {suggestion}
+              </Chip>
+            ))}
+          </ChipRow>
+        </div>
+        <PanelActions>
+          <Button type="submit" block disabled={!name.trim()} pending={createList.isPending}>
+            Add list
+          </Button>
+        </PanelActions>
       </form>
     </SidePanel>
   );

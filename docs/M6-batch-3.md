@@ -782,7 +782,8 @@ Features, so it is unchanged. The phone's screenshots gain `add-google-signin-ke
 
 ### T8 Add: sections, value rows, one field for a meal
 
-- [ ] Done (commits: )
+- [x] Done (commits: "forms: sections, value rows and in-place pickers", "meals: one field, the
+  saved meals under it")
 
 **Owner's notes.** "The 'Add' panel not having proper spacing in between sections, or just being
 confusing to see all the buttons with specific times and then another one with a 'Custom' or 'Pick
@@ -903,6 +904,33 @@ times go; one field for a meal). CHANGELOG: "Add is in three parts, What and who
 Details, with room between them. Time, How long and Repeats each show your choice on one button
 and open their picker under it; the row of suggested times is gone." "A meal is one box: type it,
 or tap a saved meal under it as you type."
+
+**As built.** Two commits, not three: parts a and b are one, because the time field's new shape
+(no suggestions, one button) doesn't compile until the forms that use it change with it.
+- **The first section has no visible heading.** "What and Who" directly over a field labelled
+  "What, when, who" and a row labelled "Who" said one thing three times. `FormSection quiet`
+  keeps it a named section for a screen reader; When and Details are drawn.
+- **Lists inside the pickers, not chips.** How long's five lengths are 777 px of chips at the
+  wall's sizes and the picker is 568 px wide, so "a one-line ChipRow" would have wrapped. Its
+  choices, and Calendar's and Remind's, are the same list Repeats got (`ChoiceList` in
+  `ui/ValueRow`), a row each with a check; a list closes when one is picked. Repeats stays open
+  after a choice (Ends is right there once it repeats) and has Done; Doesn't repeat closes it.
+- **The hours are a grid** of four columns, the minutes under them in the same four, so the
+  picker is tidy rather than a ragged wrap. `Chip` gained `block` for that, and `opener`.
+- **Phone labels are 14 px**, not 13: `text-caption` was too small over a field for a
+  grandparent's phone. `TextField`'s label changed everywhere with it (Settings' sheets, sign-in,
+  setup), which is what "one label line for every form" means.
+- **Color is `ui/ColorDots`**, shared by the event and countdown forms. "Remind on the kitchen
+  screen" is "Remind" with the rest as its hint, so the row fits one line.
+- **The meal field** searches with what's typed unless a saved meal was just tapped (then the
+  whole row shows again, the tapped meal first). Linking is by the tapped meal or an exact,
+  case-blind name; the saved meal's own spelling is what's stored.
+- **The keyboard**: the accents row is `sr-only` until a key is held, and a `ResizeObserver`
+  keeps `--osk-h` right when it appears. jsdom has no `ResizeObserver`, so the hook checks.
+- **Removed**: `lib/times`' `timeChips` and `EVENT_TIMES`, the task form's `TIMES`, the routine
+  form's `STARTS` and `LASTS`, `TimeField`'s `suggestions` and `pickLabel`.
+- The `add-event` screenshot now waits out the keyboard's 400 ms padding (T9's note), and there
+  are new shots: `add-how-long`, `add-repeats`, `add-details`.
 
 ### T9 The audit, again: the second pass
 

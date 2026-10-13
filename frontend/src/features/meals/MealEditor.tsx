@@ -1,17 +1,19 @@
-import { Search } from "lucide-react";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
-import { weekOf, zonedParts } from "../../lib/dates";
+import { shortDate, weekOf, zonedParts } from "../../lib/dates";
 import { useMembers, useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { DayField } from "../../ui/DayField";
+import { Field, FormSection, useFieldHint } from "../../ui/Field";
 import { PanelActions } from "../../ui/PanelActions";
+import { ScrollRow } from "../../ui/ScrollRow";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
+import { ChoiceRow, ValueRow } from "../../ui/ValueRow";
 import { WhoPicker } from "../../ui/WhoPicker";
 import { useBoardDay } from "../calendar/useBoardDay";
 import type { AddEditorProps } from "../registry";
@@ -35,9 +37,14 @@ export function AddMeal({ day, initialTitle, onDone }: AddEditorProps) {
 const itemsText = (count: number) => (count === 1 ? "1 item" : `${String(count)} items`);
 
 /**
- * A meal's fields (UX §4 "Meals room"): saved meals first, most made first, with a search; or a
- * new one typed in; the day, which meal (when the household plans more than dinner) and who
- * cooks. A saved meal with ingredients offers "Add 4 items to Groceries" while Lists is on.
+ * A meal's fields (UX §4 "Meals room", ADR 0030). One box, "What's cooking": what's typed is
+ * the meal's name and, at the same time, the search of the saved meals, which sit under the box
+ * as one row of chips (most made first, narrowing as you type). Tapping one fills the box and
+ * keeps its emoji, recipe and ingredients; so does typing a saved meal's name exactly; changing
+ * the words lets go of it. Then who cooks, the day and which meal (when the household plans
+ * more than dinner). A saved meal with ingredients offers "Add 4 items to Groceries" while
+ * Lists is on. Opened from a day's cell, the day and the meal are already chosen: they show as
+ * rows that open their pickers only when tapped.
  */
 export function MealEditor({
   entry,
@@ -63,10 +70,18 @@ export function MealEditor({
   const changes = useMealChanges();
   const groceries = useAddToGroceries();
   const listsOn = useListsOn();
-  const [search, setSearch] = useState("");
-  const { data: saved = [] } = useSaved(search);
   const [text, setText] = useState(entry?.text ?? startText);
   const [picked, setPicked] = useState<Saved | null>(null);
+  const name = text.trim();
+  // Still the one that was tapped: its chips stay as they were. Otherwise what's typed searches.
+  const held = picked !== null && picked.text === name ? picked : null;
+  const { data: saved = [] } = useSaved(held || entry ? "" : name);
+  // The saved meal this is: the one tapped, or one whose name was typed out in full.
+  const linked =
+    held ??
+    (entry ? null : (saved.find((meal) => meal.text.toLowerCase() === name.toLowerCase()) ?? null));
+  // One row, the linked meal first so it's in view.
+  const chips = linked ? [linked, ...saved.filter((meal) => meal.id !== linked.id)] : saved;
   const [day, setDay] = useState(entry?.day ?? startDay ?? today);
   // A day tapped on the board while Add is open moves a new meal's day.
   useBoardDay(startDay, (tapped) => {
@@ -75,9 +90,12 @@ export function MealEditor({
   const [slot, setSlot] = useState<Slot>(entry?.slot ?? startSlot ?? "dinner");
   const [cook, setCook] = useState<string[]>(entry?.member_id ? [entry.member_id] : []);
   const [shop, setShop] = useState(true);
-  const ingredients = picked?.ingredients ?? [];
-  const ready = text.trim() !== "";
-  const heading = display ? "text-d-body font-semibold" : "text-body font-semibold";
+  const ingredients = linked?.ingredients ?? [];
+  const ready = name !== "";
+  // Opened from a day's cell: the day and the meal are decided, and take one line each.
+  const decided = !entry && startDay !== null && startSlot !== null;
+  const [dayOpen, setDayOpen] = useState(false);
+  const soft = useFieldHint();
 
   const pick = (meal: Saved) => {
     setPicked(meal);
@@ -86,7 +104,8 @@ export function MealEditor({
 
   const save = () => {
     if (!ready) return;
-    const sameAsPicked = picked !== null && picked.text === text.trim();
+    const picked = linked;
+    const sameAsPicked = picked !== null;
     changes.save.mutate(
       {
         body: {
@@ -94,7 +113,7 @@ export function MealEditor({
           day,
           slot,
           position: entry?.position ?? 0,
-          text: text.trim(),
+          text: sameAsPicked ? picked.text : name,
           emoji: sameAsPicked ? picked.emoji : (entry?.emoji ?? null),
           recipe_url: sameAsPicked ? picked.recipe_url : (entry?.recipe_url ?? null),
           note: entry?.note ?? null,
@@ -118,31 +137,30 @@ export function MealEditor({
   const verb = entry ? "Save changes" : `Add ${SLOT_WORDS[slot].toLowerCase()}`;
   return (
     <form
-      className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
+      className={`flex flex-col ${display ? "gap-8" : "gap-6"}`}
       onSubmit={(event) => {
         event.preventDefault();
         save();
       }}
     >
-      {!entry ? (
+      <FormSection title="What and Who" quiet>
         <div className="flex flex-col gap-3">
-          <p className={heading}>Saved Meals</p>
           <TextField
-            label="Find a saved meal"
-            hideLabel
-            placeholder="Find a saved meal"
+            label={entry ? "What" : "What’s cooking"}
             autoComplete="off"
-            value={search}
+            placeholder="Tacos"
+            maxLength={120}
+            value={text}
             onChange={(event) => {
-              setSearch(event.target.value);
+              setText(event.target.value);
             }}
           />
-          {saved.length ? (
-            <ChipRow label="Saved meals">
-              {saved.slice(0, 12).map((meal) => (
+          {entry ? null : chips.length ? (
+            <ScrollRow label="Saved meals">
+              {chips.slice(0, 12).map((meal) => (
                 <Chip
                   key={meal.id}
-                  on={picked?.id === meal.id}
+                  on={linked?.id === meal.id}
                   onClick={() => {
                     pick(meal);
                   }}
@@ -150,67 +168,83 @@ export function MealEditor({
                   {meal.emoji ? `${meal.emoji} ${meal.text}` : meal.text}
                 </Chip>
               ))}
-            </ChipRow>
-          ) : (
-            <p
-              className={
-                display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"
-              }
-            >
-              <Search aria-hidden="true" className="mr-2 inline size-5" />
-              {search.trim()
-                ? "No saved meal by that name. Type it below."
-                : "Meals you add are kept here for next time."}
-            </p>
+            </ScrollRow>
+          ) : name ? null : (
+            <p className={soft}>Meals you add are kept here for next time.</p>
           )}
         </div>
-      ) : null}
-      <TextField
-        label={entry ? "What" : "Or type a new meal"}
-        autoComplete="off"
-        placeholder="Tacos"
-        maxLength={120}
-        value={text}
-        onChange={(event) => {
-          setText(event.target.value);
-        }}
-      />
-      <DayField
-        value={day}
-        today={today}
-        weekStartsOn={settings?.week_starts_on ?? 6}
-        anchor={weekStart}
-        onChange={setDay}
-      />
-      {slots.length > 1 ? (
-        <div className="flex flex-col gap-2">
-          <p className={heading}>Which meal</p>
-          <ChipRow label="Which meal">
-            {slots.map((option) => (
-              <Chip
-                key={option}
-                on={slot === option}
-                onClick={() => {
-                  setSlot(option);
-                }}
-              >
-                {SLOT_WORDS[option]}
-              </Chip>
-            ))}
-          </ChipRow>
-        </div>
-      ) : null}
-      <div className="flex flex-col gap-2">
-        <p className={heading}>Who cooks</p>
-        <WhoPicker label="Who cooks" members={members} value={cook} onChange={setCook} />
-      </div>
-      {picked?.text === text.trim() && ingredients.length > 0 && listsOn && !entry ? (
-        <Switch
-          label={`Add ${itemsText(ingredients.length)} to Groceries`}
-          hint={ingredients.join(", ")}
-          checked={shop}
-          onChange={setShop}
-        />
+        <Field label="Who cooks">
+          <WhoPicker
+            label="Who cooks"
+            everyoneLabel="Anyone"
+            members={members}
+            value={cook}
+            onChange={setCook}
+          />
+        </Field>
+      </FormSection>
+      <FormSection title="When">
+        {decided ? (
+          <ValueRow
+            label="Day"
+            value={shortDate(day)}
+            expanded={dayOpen}
+            onToggle={() => {
+              setDayOpen(!dayOpen);
+            }}
+          >
+            <DayField
+              inRow
+              value={day}
+              today={today}
+              weekStartsOn={settings?.week_starts_on ?? 6}
+              anchor={weekStart}
+              onChange={setDay}
+            />
+          </ValueRow>
+        ) : (
+          <DayField
+            value={day}
+            today={today}
+            weekStartsOn={settings?.week_starts_on ?? 6}
+            anchor={weekStart}
+            onChange={setDay}
+          />
+        )}
+        {slots.length <= 1 ? null : decided ? (
+          <ChoiceRow
+            label="Which meal"
+            choices={slots.map((option) => ({ value: option, label: SLOT_WORDS[option] }))}
+            value={slot}
+            onChange={setSlot}
+          />
+        ) : (
+          <Field label="Which meal">
+            <ChipRow label="Which meal">
+              {slots.map((option) => (
+                <Chip
+                  key={option}
+                  on={slot === option}
+                  onClick={() => {
+                    setSlot(option);
+                  }}
+                >
+                  {SLOT_WORDS[option]}
+                </Chip>
+              ))}
+            </ChipRow>
+          </Field>
+        )}
+      </FormSection>
+      {linked && ingredients.length > 0 && listsOn && !entry ? (
+        <FormSection title="Details">
+          <Switch
+            label={`Add ${itemsText(ingredients.length)} to Groceries`}
+            hint={ingredients.join(", ")}
+            checked={shop}
+            onChange={setShop}
+          />
+        </FormSection>
       ) : null}
       {changes.save.error ? (
         <p role="alert" className="font-semibold text-alert">

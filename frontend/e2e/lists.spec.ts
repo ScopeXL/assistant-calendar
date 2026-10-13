@@ -73,14 +73,19 @@ test("Clear done comes back with Undo", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Done" })).toContainText("Bread");
 });
 
-test("New list makes it from a chip and opens it", async ({ page }) => {
+test("New list is one field, a usual name fills it, and the list opens once made", async ({
+  page,
+}) => {
   await pairWall(page);
   await page.goto("/lists");
   await page.getByRole("button", { name: "New list" }).click();
-  await page
-    .getByRole("dialog", { name: "New list" })
-    .getByRole("button", { name: "Pharmacy" })
-    .click();
+  const panel = page.getByRole("dialog", { name: "New list" });
+  await expect(panel.getByRole("textbox")).toHaveCount(1);
+  const add = panel.getByRole("button", { name: "Add list" });
+  await expect(add).toBeDisabled();
+  await panel.getByRole("button", { name: "Pharmacy" }).click();
+  await expect(panel.getByLabel("Name")).toHaveValue("Pharmacy");
+  await add.click();
   await expect(page.getByRole("heading", { name: "Pharmacy", level: 1 })).toBeVisible();
   await expect(page.getByText("Nothing on Pharmacy yet. Add the first thing.")).toBeVisible();
 });

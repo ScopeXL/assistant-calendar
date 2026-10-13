@@ -40,6 +40,34 @@ test("Tonight shows today's dinner, and a saved meal fills an empty day", async 
   const grid = await mealsRoom(page);
   await grid.getByRole("button", { name: "Add dinner on Sat, Oct 10" }).click();
   const panel = page.getByRole("dialog", { name: "Add dinner" });
+  // One box (ADR 0030): what's typed is the meal's name and the search of the saved meals,
+  // which sit under it as one row of chips. Opened from Saturday's cell, the day is one line.
+  const what = panel.getByLabel("What’s cooking");
+  await expect(panel.getByRole("textbox")).toHaveCount(1);
+  await expect(panel.getByRole("button", { name: "Day: Sat, Oct 10" })).toBeVisible();
+  const saved = panel.getByRole("group", { name: "Saved meals" }).getByRole("button");
+  // The saved meals arrive a moment after the panel.
+  await expect(panel.getByRole("button", { name: /Grilled cheese and soup/ })).toBeVisible();
+  const all = await saved.count();
+  expect(all).toBeGreaterThan(2);
+  await what.fill("grilled");
+  await expect(saved).toHaveCount(1);
+  await panel.getByRole("button", { name: /Grilled cheese and soup/ }).click();
+  await expect(what).toHaveValue("Grilled cheese and soup");
+  await expect(panel.getByRole("button", { name: /Grilled cheese and soup/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  // The whole row is back, the picked meal first; changing the words lets go of it.
+  await expect(saved).toHaveCount(all);
+  await what.fill("Grilled cheese and soup, with pickles");
+  await expect(
+    panel.getByRole("group", { name: "Saved meals" }).getByRole("button", { pressed: true }),
+  ).toHaveCount(0);
+  // Typing a saved meal's name in full is the same as tapping it: Groceries is offered.
+  await what.fill("tacos");
+  await expect(panel.getByRole("switch", { name: /^Add 5 items to Groceries/ })).toBeVisible();
+  await what.fill("grilled");
   await panel.getByRole("button", { name: /Grilled cheese and soup/ }).click();
   await panel.getByRole("button", { name: "Add dinner" }).click();
   await expect(toast(page, "Added Grilled cheese and soup")).toBeVisible();
