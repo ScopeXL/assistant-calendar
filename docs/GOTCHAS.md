@@ -52,3 +52,6 @@ size limit.
   injects a `<style>`. Only the screenshot spec turns `cspGuard` off.
 - `settled()` hung on the Hours board: the now line glides in a 60 s transition. It ignores
   animations longer than 10 s.
+- The update e2e failed only around 3:30 PM: it counted every toast, and the seed's 4 PM
+  practice reminds 30 minutes ahead on the real clock. Count the toast the test means, or set
+  the server's clock.

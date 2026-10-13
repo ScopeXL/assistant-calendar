@@ -862,12 +862,13 @@ test.describe("after the container is updated", () => {
     const reloaded = page.waitForEvent("load");
     const dropped = await request.post("/api/_test/drop-streams", { headers: CSRF });
     expect(dropped.status()).toBe(204);
-    const toasts = page.locator("[data-toast]");
-    await expect(toasts.filter({ hasText: "Sunroom was updated to 9.9.9" })).toBeVisible();
+    // Only this toast: at the right hour the seed's own events remind, 30 minutes ahead.
+    const said = page.locator("[data-toast]").filter({ hasText: "Sunroom was updated to 9.9.9" });
+    await expect(said).toBeVisible();
     await reloaded;
     // The reloaded page hears that version again: it has refreshed for it once, and says no more.
     await hearsLive(page);
     await page.waitForTimeout(1500);
-    await expect(toasts).toHaveCount(0);
+    await expect(said).toHaveCount(0);
   });
 });
