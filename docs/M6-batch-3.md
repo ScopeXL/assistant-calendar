@@ -270,7 +270,8 @@ in §13.10's table ("A visible cursor"), where the cursor already was.
 
 ### T3 Remember the view: the migration, the setting, the per-screen memory
 
-- [ ] Done (commits: )
+- [x] Done (commits: "household: the When it starts setting", "display: the screen remembers
+  its view")
 
 **Owner's note.** "Whatever view the user is currently on should be the 'default' when the app is
 updated or refreshed. This includes any filters or zoom levels. That way during a force refresh,
@@ -343,6 +344,18 @@ view"), §10 checklist. PLAN §10.1 (`display_start`), §12.3. CHANGELOG: "A kit
 back to what it was showing after a refresh, an update or a restart: the room, the view, who's
 filtered, the Week layout and zoom, the panel and the rail. Settings → Display → When it starts
 can make it open on the home view instead."
+
+**As built.** The migration is `202610131907_household_display_start`. Three differences from
+the plan. With **The home view** a screen keeps nothing (`setRemembering(false)` clears both
+keys and stops the writes) instead of keeping the view and dropping it at the next start: the
+store starts from the memory before the settings are known, so anything kept would be drawn for
+a moment first. `forgetView()` is still there for the one start after the setting changed while
+the screen was off. The room is read once as the module loads (`roomAtStart()`), because the
+shell writes the room from its first render and would have overwritten it before the settings
+arrived. And the room isn't written while the plugins' rooms are still loading: `/lists` isn't
+known to be a room until then, and writing "home" for it would lose the memory on a quick second
+refresh. The end-to-end test drives the "Show" avatars for the people filter; T6 moves it to the
+Filter button.
 
 ### T4 Setup: the city, the search as you type, no pairing step, the test server's places
 

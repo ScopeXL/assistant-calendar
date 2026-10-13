@@ -463,6 +463,88 @@ test.describe("the wall screen", () => {
     await expect.poll(width).toBe(72);
   });
 
+  test("comes back where it was after a refresh, unless the household says the home view", async ({
+    page,
+    request,
+  }) => {
+    test.skip(test.info().project.name !== "display-1080p", "landscape: the rail and the panel");
+    await request.post("/api/_test/clock", {
+      headers: CSRF,
+      data: { set: "2026-10-07T14:00:00Z" },
+    });
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/display");
+    const header = page.getByRole("banner");
+    const rail = page.getByRole("navigation", { name: "Rooms" });
+    const today = page.getByRole("complementary", { name: "Today" });
+    const shell = page.locator("[data-shell]");
+    const show = page.getByRole("group", { name: "Show" });
+    const pressed = (name: string) =>
+      page.getByRole("button", { name, exact: true, pressed: true });
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    // Hours on the Week, zoomed in; then next month, two people, the rail folded, no Today panel.
+    await page.getByRole("button", { name: "Hours", exact: true }).click();
+    await page.getByRole("button", { name: "Zoom in" }).click();
+    await show.getByRole("button", { name: "Mia" }).click();
+    await show.getByRole("button", { name: "Leo" }).click();
+    await header.getByRole("button", { name: "Month", exact: true }).click();
+    await header.getByRole("button", { name: "Next month" }).click();
+    await rail.getByRole("button", { name: "Hide the rail" }).click();
+    await header.getByRole("button", { name: "Hide the Today panel" }).click();
+    await expect(today).toBeHidden();
+
+    await page.reload();
+    await expect(pressed("Month")).toBeVisible();
+    await expect(header.getByRole("button", { name: "This month" })).toBeEnabled();
+    await expect(shell).toHaveAttribute("data-rail", "compact");
+    await expect(today).toBeHidden();
+    await expect(pressed("Mia")).toBeVisible();
+    await expect(pressed("Leo")).toBeVisible();
+    await expect(pressed("Ana")).toHaveCount(0);
+    // The Week's layout and its zoom came back with it.
+    await header.getByRole("button", { name: "Week", exact: true }).click();
+    await expect(pressed("Hours")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Zoom out" })).toBeEnabled();
+
+    // A restart: the Pi's launcher always opens /display, and the screen goes back to its room.
+    await rail.getByRole("link", { name: "Lists", exact: true }).click();
+    await expect(header.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    const kept = (key: string) => page.evaluate((name) => localStorage.getItem(name), key);
+    await expect.poll(() => kept("sunroom.display.room")).toBe("/lists");
+    await page.goto("/display");
+    await page.waitForURL((url) => url.pathname === "/lists");
+    await expect(header.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await expect(shell).toHaveAttribute("data-rail", "compact");
+
+    // Settings → Display → When it starts → The home view: the screen keeps nothing from then
+    // on, and the next start is the home view at home.
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    try {
+      const home = await request.patch("/api/settings", {
+        headers: CSRF,
+        data: { display_start: "home" },
+      });
+      expect(home.ok()).toBe(true);
+      await expect.poll(() => kept("sunroom.display.view")).toBeNull();
+      await page.reload();
+      await page.waitForURL((url) => url.pathname === "/display");
+      await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+      await expect(header.getByRole("button", { name: "This week" })).toBeDisabled();
+      await expect(shell).toHaveAttribute("data-rail", "full");
+      await expect(today).toBeVisible();
+      await expect(pressed("Agenda")).toBeVisible();
+      await expect(pressed("Mia")).toHaveCount(0);
+      await expect(pressed("Leo")).toHaveCount(0);
+    } finally {
+      await request.patch("/api/settings", { headers: CSRF, data: { display_start: "last" } });
+    }
+  });
+
   test("shows a padlock only while Settings are locked behind the PIN", async ({
     page,
     request,

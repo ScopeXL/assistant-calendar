@@ -6,6 +6,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A kitchen screen comes back to what it was showing after a refresh, an update or a restart:
+  the room, the view, who's filtered, the Week layout and zoom, the panel and the rail.
+  Settings → Display → When it starts can make it open on the home view instead.
+
 ### Changed
 
 - The live-updates icon shows only while the screen is reconnecting, checking every 30 seconds,

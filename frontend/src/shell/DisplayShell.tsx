@@ -13,8 +13,12 @@ import { zonedParts } from "../lib/dates";
 import {
   displayState,
   editorOpen,
+  forgetView,
   idleHolds,
+  rememberRoom,
   resetBoard,
+  roomAtStart,
+  setRemembering,
   updateDisplay,
 } from "../lib/displayState";
 import { useDatePreferences, useSettings } from "../lib/household";
@@ -58,6 +62,10 @@ function tellServerAwake(): void {
   void api.POST("/api/display/wake").catch(() => undefined);
 }
 const UPDATE_IDLE_MS = 10 * 60_000;
+
+// The page has decided where it starts (below). Once per page load, not per mount: the kiosk
+// remounts this shell between /display and the rooms.
+let started = false;
 
 /**
  * The wall display's shell (UX §3): the rail at one side, and beside it the header over the
@@ -159,6 +167,36 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
       stopPointer();
     };
   }, [kiosk]);
+
+  // Where this screen starts (Settings → Display → When it starts, ADR 0030). Where it left
+  // off: the view came back with the store (lib/displayState), and a page that opened at home
+  // (the Pi's launcher always opens /display) goes back to the room it was in. The home view:
+  // nothing is kept, and the page goes home. From then on the room is kept as it changes;
+  // Settings never is (its PIN grant may be gone).
+  const startMode = settings?.display_start;
+  const atHome = pathname === "/" || pathname === "/display" || pathname === "/calendar";
+  useEffect(() => {
+    if (!startMode) return;
+    setRemembering(startMode === "last");
+    if (!started) {
+      started = true;
+      if (startMode === "home") {
+        forgetView();
+        if (!atHome) void navigate({ to: home, replace: true });
+        return;
+      }
+      const [key, ...rest] = (roomAtStart() ?? "").slice(1).split("/");
+      if (atHome && key) {
+        void (rest.length
+          ? navigate({ to: "/$room/$", params: { room: key, _splat: rest.join("/") } })
+          : navigate({ to: "/$room", params: { room: key } }));
+        return;
+      }
+    }
+    // Not while the rooms are still loading: an address isn't known to be a room until then.
+    if (atHome) rememberRoom(null);
+    else if (inPluginRoom) rememberRoom(pathname);
+  }, [startMode, atHome, inPluginRoom, pathname, home, navigate]);
 
   // After 2 minutes idle the board goes back to this week, with the household's panel setting;
   // an editor left open gets 10 minutes before it closes too (UX §1 "Undo, drafts").
