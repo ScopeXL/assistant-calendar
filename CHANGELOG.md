@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-12
+
 ### Added
 
 - Settings → Backup → Erase everything starts Sunroom over, after a backup and your household
@@ -60,6 +62,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Recently Removed is its own page in Settings, not the end of Household.
 - The Sunroom mark sits at the top of the rail, and Settings is a gear now. The padlock shows
   only while a paired screen's Settings are locked behind the PIN.
+- Behind the scenes: a feature's settings can change shape in an update without losing what
+  you chose, and the upgrade tests start from 0.7.0's database.
 
 ### Fixed
 
@@ -358,5 +362,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.6.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.5.0...v0.6.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.7.0...HEAD
 [0.7.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.6.0...v0.7.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.7.0...v0.8.0
