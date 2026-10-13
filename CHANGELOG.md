@@ -18,6 +18,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   or can't reach Sunroom. Connected, the corner is clear.
 - Setup asks for your city and finds it as you type. So does Settings → Household → Location.
 - On a paired screen the mouse pointer disappears a few seconds after it stops moving.
+### Fixed
+
+- In development the city search answers any name (it made up only two).
 
 ## [0.8.0] - 2026-10-12
 

@@ -93,7 +93,20 @@ async def test_the_test_servers_town_search_is_made_up(
         "Sample Harbour, Sample County, United Kingdom",
     ]
     assert await labels("Town") == ["Sample Town, Sample State, United States"]
+    # Any other name finds a made-up place called that, so `just dev` answers whatever city is
+    # typed (ADR 0030); "Nowhere" finds nothing, so the empty answer can still be seen.
+    assert await labels("springfield") == ["Springfield, Sample State, United States"]
+    assert await labels("new  haven") == ["New Haven, Sample State, United States"]
     assert await labels("Nowhere") == []
+    assert await labels("nowhere at all") == []
+    first, again, other = [
+        (await seeded.get("/api/weather/geocode", params={"q": q})).json()[0]
+        for q in ("Springfield", "SPRINGFIELD", "Riverton")
+    ]
+    assert (first["latitude"], first["longitude"]) == (again["latitude"], again["longitude"])
+    assert (first["latitude"], first["longitude"]) != (other["latitude"], other["longitude"])
+    assert abs(first["latitude"] - 40.71) <= 0.5 and abs(first["longitude"] + 74.01) <= 0.5
+    assert first["timezone"] == "America/New_York"
     town = (await seeded.get("/api/weather/geocode", params={"q": "Sample Town"})).json()
     assert town == [
         {

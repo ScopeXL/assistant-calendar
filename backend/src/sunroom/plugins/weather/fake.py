@@ -1,13 +1,14 @@
-"""The test server's weather (SUNROOM_TEST_MODE: ``just seed``, screenshots, end-to-end runs): a
-made-up week in Open-Meteo's own answer shape, and two made-up places for the town search, so
-the test server never touches the network. Deterministic: the same moment, zone and units give
-the same forecast, with October-ish numbers and the sun up from about 7:05 AM to 6:30 PM.
-Synthetic only.
+"""The test server's weather (SUNROOM_TEST_MODE: ``just dev``, ``just seed``, screenshots,
+end-to-end runs): a made-up week in Open-Meteo's own answer shape, and a city search that makes
+up a place for any name, so the test server never touches the network. Deterministic: the same
+moment, zone and units give the same forecast, with October-ish numbers and the sun up from
+about 7:05 AM to 6:30 PM; the same name gives the same place. Synthetic only.
 """
 
 from __future__ import annotations
 
 import math
+import zlib
 from datetime import datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -44,10 +45,28 @@ PLACES = (
 )
 
 
+NOWHERE = "nowhere"  # a name that starts with it finds nothing, so the empty answer can be seen
+
+
 def places(name: str) -> list[PlaceOut]:
-    """The made-up places with ``name`` in their label ("Sample" finds both)."""
+    """The sample places with ``name`` in their label ("Sample" finds both). Any other name
+    finds one made-up place called that, in Sample State, so the search in ``just dev`` answers
+    whatever city is typed, as the real one would (ADR 0030); "Nowhere" still finds nothing."""
     wanted = name.casefold()
-    return [place for place in PLACES if wanted in place.label.casefold()]
+    found = [place for place in PLACES if wanted in place.label.casefold()]
+    if found or len(wanted) < 2 or wanted.startswith(NOWHERE):
+        return found
+    words = " ".join(word[:1].upper() + word[1:] for word in name.split())
+    # Near the first sample, a little apart for each name, so two cities aren't one place.
+    spot = zlib.crc32(wanted.encode())
+    return [
+        PlaceOut(
+            label=f"{words}, Sample State, United States",
+            latitude=round(PLACES[0].latitude + (spot % 101 - 50) / 100, 2),
+            longitude=round(PLACES[0].longitude + (spot // 101 % 101 - 50) / 100, 2),
+            timezone=PLACES[0].timezone,
+        )
+    ]
 
 
 def forecast(
