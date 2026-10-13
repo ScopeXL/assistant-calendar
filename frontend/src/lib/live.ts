@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { receiveKioskCommand } from "../shell/kioskCommands";
 import { createEventHandler } from "./eventRouter";
-import { LiveUpdates } from "./events";
+import { LiveUpdates, liveStatus } from "./events";
 import { probeSession } from "./session";
 
 let onSignedOut: () => void = () => undefined;
@@ -36,7 +36,16 @@ export function useLiveUpdates(enabled = true): void {
       probeSession,
     });
     live.start();
+    // The page's root says what the stream is doing: a header shows its icon only when something
+    // is wrong (ui/LiveStatus), so this is how a test knows the screen is hearing updates.
+    const root = document.documentElement;
+    const mark = () => {
+      root.dataset.stream = liveStatus.get();
+    };
+    mark();
+    const unmark = liveStatus.subscribe(mark);
     return () => {
+      unmark();
       live.stop();
     };
   }, [client, enabled]);

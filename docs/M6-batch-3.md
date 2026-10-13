@@ -184,7 +184,7 @@ Each line says where it is and which task fixes it; the last few are left for la
 
 ### T1 The live icon only when something's wrong
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: the live-updates icon only while something's wrong")
 
 **Owner's note.** "Remove the status icon from the main view when everything is connected and
 working. Only show when it is reconnecting/disconnected or not receiving updates for some reason."
@@ -217,9 +217,17 @@ phone's Calendar header: `getByRole("img", { name: /^Live updates/ })` has count
 **CHANGELOG.** "The live-updates icon shows only while the screen is reconnecting, checking every
 30 seconds, or can't reach Sunroom. Connected, the corner is clear."
 
+**As built.** Four other end-to-end tests waited on the icon's `data-live="live"` to know the
+screen's stream was open, and the icon said "live" from the first paint (it only ever shows another
+state after 2 s), so they weren't waiting for anything. `lib/live` now marks the page's root with
+the stream's raw status (`html[data-stream]`) and the tests wait for that (`hearsLive`). With
+`/api/events` aborted the client gives up on the stream after three failures and checks every
+30 seconds, retrying the stream once a minute, so the test clears the corner the way the wall
+does: a room switch opens a new stream.
+
 ### T2 The kiosk hides the pointer when idle
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: the wall hides a resting pointer")
 
 **Owner's note.** "When using a paired screen (i.e. raspberry pi), can you default the mouse to
 disappear if it is not moving on the screen? Perhaps after a few seconds of being idle."

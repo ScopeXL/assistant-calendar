@@ -6,6 +6,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The live-updates icon shows only while the screen is reconnecting, checking every 30 seconds,
+  or can't reach Sunroom. Connected, the corner is clear.
+
 ## [0.8.0] - 2026-10-12
 
 ### Added

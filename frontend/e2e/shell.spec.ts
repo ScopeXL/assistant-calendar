@@ -18,6 +18,11 @@ async function noSidewaysScroll(page: Page, where: string): Promise<void> {
   expect(overflow, `horizontal overflow on ${where}`).toBeLessThanOrEqual(0);
 }
 
+/** The page's stream is open and has heard the server's hello (lib/live marks the root). */
+async function hearsLive(page: Page): Promise<void> {
+  await expect(page.locator("html")).toHaveAttribute("data-stream", "live");
+}
+
 /** Every digit of the clock sits in a box of one width, so the time never jiggles (ADR 0021). */
 async function steadyDigits(page: Page): Promise<void> {
   const widths = await page
@@ -42,8 +47,10 @@ test.describe("a phone", () => {
     await expect(page.getByRole("link", { name: "Using this phone: Ana" })).toBeVisible();
     await page.getByRole("link", { name: "Calendar" }).click();
     await expect(page.getByRole("group", { name: "Days" })).toBeVisible();
-    // The live-updates icon at the right of the Calendar's header.
-    await expect(page.getByRole("img", { name: "Live updates: connected" })).toBeVisible();
+    // Connected, the Calendar's header has no live-updates icon: it shows only when something's
+    // wrong (ADR 0030).
+    await hearsLive(page);
+    await expect(page.getByRole("img", { name: /^Live updates/ })).toHaveCount(0);
     await noSidewaysScroll(page, "Calendar");
     await page.getByRole("link", { name: "More" }).click();
     await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
@@ -223,7 +230,7 @@ test.describe("the wall screen", () => {
     }
   });
 
-  test("says in its top-right corner that it hears live updates, and keeps hearing them", async ({
+  test("shows nothing in its corner while it hears live updates, and says so when it can't", async ({
     page,
     request,
   }) => {
@@ -236,21 +243,40 @@ test.describe("the wall screen", () => {
     await page.goto("/display");
     const board = page.getByRole("region", { name: "This Week" });
     const header = page.getByRole("banner");
-    const icon = header.getByRole("img", { name: "Live updates: connected" });
-    await expect(icon).toBeVisible();
+    await expect(board).toBeVisible();
+    await hearsLive(page);
+    await expect(header.locator("[data-live]")).toHaveCount(0);
+    // The server drops every stream: the screen reconnects by itself, too quickly to say so.
+    const dropped = await page.request.post("/api/_test/drop-streams", { headers: CSRF });
+    expect(dropped.status()).toBe(204);
+    for (let sample = 0; sample < 15; sample++) {
+      await expect(header.locator("[data-live]")).toHaveCount(0);
+      await page.waitForTimeout(200);
+    }
+    await hearsLive(page);
+    // Now the stream can't be opened at all: within seconds the corner says so.
+    await page.route("**/api/events*", (route) => route.abort());
+    await page.request.post("/api/_test/drop-streams", { headers: CSRF });
+    const icon = header.getByRole("img", {
+      name: /^Live updates: (reconnecting|checking every 30 seconds)$/,
+    });
+    await expect(icon).toBeVisible({ timeout: 15_000 });
     // The screen's top-right corner: the last thing on the header's first line.
     const corner = await icon.boundingBox();
     const box = await header.boundingBox();
     expect((corner?.x ?? 0) + (corner?.width ?? 0)).toBeGreaterThan(
       (box?.x ?? 0) + (box?.width ?? 0) - 80,
     );
-    // The server drops every stream: the screen reconnects by itself, too quickly to say so.
-    const dropped = await page.request.post("/api/_test/drop-streams", { headers: CSRF });
-    expect(dropped.status()).toBe(204);
-    for (let sample = 0; sample < 15; sample++) {
-      await expect(header.locator("[data-live]")).toHaveAttribute("data-live", "live");
-      await page.waitForTimeout(200);
-    }
+    // The way is clear again. A stream that kept failing is retried once a minute; the wall also
+    // opens a new one on every room switch, and the corner clears as soon as it's heard.
+    await page.unroute("**/api/events*");
+    await page.getByRole("link", { name: "Lists", exact: true }).click();
+    await expect(header.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
+    await expect(header.locator("[data-live]")).toHaveCount(0, { timeout: 10_000 });
+    await hearsLive(page);
+    await page.getByRole("link", { name: "Calendar", exact: true }).click();
+    await expect(board).toBeVisible();
+    await hearsLive(page);
     // And it hears changes again.
     const added = await page.request.post("/api/calendar/events", {
       headers: CSRF,
@@ -534,7 +560,7 @@ test.describe("the wall screen", () => {
     await pairWall(page);
     await page.goto("/display");
     await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
-    await expect(page.locator("[data-live]").first()).toHaveAttribute("data-live", "live");
+    await hearsLive(page);
     // A parent's phone (its own cookies) changes Start after in Photos & Screensaver.
     const parent = await request.post("/api/auth/login", {
       headers: CSRF,
@@ -575,7 +601,7 @@ test.describe("the wall screen", () => {
     await page.goto("/lists");
     const rail = page.getByRole("navigation", { name: "Rooms" });
     await expect(rail.getByRole("link", { name: "Meals" })).toBeVisible();
-    await expect(page.locator("[data-live]").first()).toHaveAttribute("data-live", "live");
+    await hearsLive(page);
     // Watch every change to the page: the Lists room must never leave the rail, not for a frame.
     await page.evaluate(() => {
       const seen = window as unknown as { railLostLists?: boolean };
@@ -613,7 +639,7 @@ test.describe("the wall screen", () => {
     await pairWall(page);
     await page.goto("/lists");
     await expect(page.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
-    await expect(page.locator("[data-live]").first()).toHaveAttribute("data-live", "live");
+    await hearsLive(page);
     const rootPx = () =>
       page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
     expect(await rootPx()).toBe(16);
@@ -701,8 +727,7 @@ test.describe("after the container is updated", () => {
       await signInPhone(page);
       await page.goto("/calendar");
     }
-    const live = page.locator("[data-live]").first();
-    await expect(live).toHaveAttribute("data-live", "live");
+    await hearsLive(page);
     // Every hello from now on names another version, as after `docker compose pull && up -d`.
     // Not just the next one: a hello naming the page's own version after the new one rightly
     // calls the refresh off, so a page that opened one more stream in between never reloaded.
@@ -718,7 +743,7 @@ test.describe("after the container is updated", () => {
     await expect(toasts.filter({ hasText: "Sunroom was updated to 9.9.9" })).toBeVisible();
     await reloaded;
     // The reloaded page hears that version again: it has refreshed for it once, and says no more.
-    await expect(live).toHaveAttribute("data-live", "live");
+    await hearsLive(page);
     await page.waitForTimeout(1500);
     await expect(toasts).toHaveCount(0);
   });

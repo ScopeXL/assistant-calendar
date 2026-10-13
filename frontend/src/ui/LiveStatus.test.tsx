@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Before the module loads, so its first settling timer is a fake one too.
 vi.useFakeTimers();
-const { LiveStatusButton, SETTLE_MS, liveState, mergeLive } = await import("./LiveStatus");
+const { LiveStatusButton, LiveStatusIcon, SETTLE_MS, liveState, mergeLive } =
+  await import("./LiveStatus");
 const { liveStatus } = await import("../lib/events");
 const { connection } = await import("../lib/connection");
 const { toasts } = await import("../lib/toast");
@@ -59,16 +60,36 @@ describe("the live-updates icon (UX §8)", () => {
     expect(liveState.get()).toBe("offline");
   });
 
-  it("is a button that says the state in words", () => {
+  it("draws nothing in a header while connected, and a button that says the state when not", () => {
     render(<LiveStatusButton />);
-    const icon = screen.getByRole("img", { name: "Live updates: connected" });
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("img")).toBeNull();
+    act(() => {
+      liveStatus.set("connecting");
+      vi.advanceTimersByTime(SETTLE_MS);
+    });
+    const icon = screen.getByRole("img", { name: "Live updates: reconnecting" });
     act(() => {
       icon.closest("button")?.click();
     });
-    expect(toasts.get().map((toast) => toast.message)).toEqual(["Live updates are on."]);
+    expect(toasts.get().map((toast) => toast.message)).toEqual(["Reconnecting to Sunroom…"]);
+    act(() => {
+      liveStatus.set("live");
+    });
+    expect(screen.queryByRole("button")).toBeNull();
     act(() => {
       liveStatus.set("signed-out");
     });
     expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  it("keeps the icon with its words in every state for About", () => {
+    render(<LiveStatusIcon />);
+    expect(screen.getByRole("img", { name: "Live updates: connected" })).toBeTruthy();
+    act(() => {
+      connection.set({ ...REACHABLE, server: "unreachable", showOffline: true });
+      vi.advanceTimersByTime(SETTLE_MS);
+    });
+    expect(screen.getByRole("img", { name: "Live updates: offline" })).toBeTruthy();
   });
 });

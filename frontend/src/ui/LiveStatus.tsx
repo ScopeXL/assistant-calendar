@@ -8,9 +8,11 @@ import { Button } from "./Button";
 import { useShell } from "./shell";
 
 /**
- * Is this screen hearing live updates? (UX §8, ADR 0028.) One icon, five states, told apart by
- * shape, never by color alone: connected, reconnecting, checking every 30 seconds (something
- * between here and the server holds the stream back), offline, and nothing once signed out.
+ * Is this screen hearing live updates? (UX §8, ADR 0028, 0030.) One icon, five states, told
+ * apart by shape, never by color alone: connected, reconnecting, checking every 30 seconds
+ * (something between here and the server holds the stream back), offline, and nothing once
+ * signed out. About → Connection shows it in every state; a header only while it has something
+ * to say.
  */
 export type LiveState = "live" | "reconnecting" | "polling" | "offline" | "hidden";
 
@@ -106,11 +108,12 @@ export function LiveStatusIcon() {
   );
 }
 
-/** The icon as a button (the board's top-right corner, the phone's Calendar header): a tap
- * says the state in words. */
+/** The icon as a button (the wall's header, the phone's Calendar header), drawn only while
+ * something is wrong: reconnecting, checking every 30 seconds, or offline. Connected draws
+ * nothing and keeps no room for itself (ADR 0030). A tap says the state in words. */
 export function LiveStatusButton() {
   const state = useLiveState();
-  if (state === "hidden") return null;
+  if (state === "hidden" || state === "live") return null;
   return (
     <Button
       variant="quiet"

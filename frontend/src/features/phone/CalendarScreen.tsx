@@ -214,7 +214,8 @@ export function CalendarScreen() {
         </header>
         <Segmented label="View" options={MODES} value={mode} onChange={setMode} />
         <div className="flex flex-col gap-2">
-          {/* The live-updates icon at the right: the header has no room beside the arrows. */}
+          {/* The live-updates icon at the right, only while something's wrong (ADR 0030): the
+              header has no room beside the arrows. */}
           <div className="flex items-center justify-between gap-2">
             <Chip
               on={showPeople}

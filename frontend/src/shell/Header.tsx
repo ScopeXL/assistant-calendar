@@ -42,10 +42,11 @@ function HeaderToday() {
 /**
  * The wall's header (UX §3, ADR 0029): one bar over the board and the Today panel, the full
  * width in portrait. Today at the left; then the room's title and its own controls, handed over
- * through shell/roomHeader; the Today panel's button and, in the top-right corner, the
- * live-updates icon. One row from 104rem of its own width (1920 px at Standard); narrower, the
- * room's title and controls take a second row and the corner stays where it was. Nothing here
- * animates in: it's part of the first paint.
+ * through shell/roomHeader; the Today panel's button and, only while something is wrong, the
+ * live-updates icon in the top-right corner (ADR 0030: connected, the corner is clear and nothing
+ * holds its place). One row from 104rem of its own width (1920 px at Standard); narrower, the
+ * room's title and controls take a second row. Nothing here animates in: it's part of the first
+ * paint.
  */
 export function Header({
   panelShown,
