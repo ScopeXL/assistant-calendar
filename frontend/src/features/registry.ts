@@ -93,10 +93,10 @@ export interface PluginModule {
   settingsPages?: SettingsPage[];
   /** Custom sections inside core settings pages, by key: `accounts` (calendar_sync: Calendars &
    * Accounts), `household` (the weather's Location), `features` (under the plugin's own switch
-   * on the Features page: Google's keys). */
+   * on the Features page; nothing uses it since ADR 0030). */
   settings?: Record<string, ComponentType>;
-  /** Groups of its settings spec the module draws itself in `settings.features`; the generic
-   * form on Features leaves their fields out. */
+  /** Groups of its settings spec the module draws itself, somewhere of its own (Google's keys,
+   * inside Sign in with Google); the generic form on Features leaves their fields out. */
   ownSettingGroups?: readonly string[];
   /** Drawn over everything on the wall, for the plugin to show when it should (the
    * screensaver, when the wall has been left alone). `asleep`: Night is showing, which wins;

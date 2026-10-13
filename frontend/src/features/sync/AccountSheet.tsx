@@ -15,6 +15,7 @@ import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { sourceName, statusLine, useSyncChanges, type Account, type RemoteCalendar } from "./data";
+import { GoogleKeys } from "./GoogleKeys";
 
 type View =
   | { kind: "account" }
@@ -220,6 +221,15 @@ function AccountPage({
           </p>
         ) : null}
       </div>
+      {/* An account that signed in with Google's own page: its app keys can be changed here,
+          without starting the account over (ADR 0030). */}
+      {google && !account.helper_email ? (
+        <Section title="Google App Keys">
+          <div className={text.display ? "py-4" : "py-3"}>
+            <GoogleKeys removable={false} />
+          </div>
+        </Section>
+      ) : null}
       {account.calendars.length > 0 ? (
         <Section title="Sync">
           {account.calendars.map((calendar) => (

@@ -534,6 +534,24 @@ test("a phone's calendar", async ({ page, isMobile }) => {
       await sheet.getByRole("button", { name: "Close" }).click();
       await expect(sheet).toBeHidden();
     }
+    // Sign in with Google: the step asks for the app's keys itself (ADR 0030), then keeps them.
+    await page.getByRole("button", { name: "Add an account" }).click();
+    const google = page.getByRole("dialog");
+    await google.getByRole("button", { name: /^Google/ }).click();
+    await google.getByRole("button", { name: /^Sign in with Google/ }).click();
+    const save = google.getByRole("button", { name: "Save keys and continue" });
+    await save.scrollIntoViewIfNeeded();
+    await shot(page, `add-google-signin-keys-${scheme}`);
+    await google.getByLabel("Google app's client ID").fill("sample-id.apps.example.com");
+    await google.getByLabel("Google app's client secret").fill("sample-secret-0001");
+    await save.click();
+    const signIn = google.getByRole("button", { name: "Sign in with Google" });
+    await signIn.scrollIntoViewIfNeeded();
+    await shot(page, `add-google-signin-${scheme}`);
+    await google.getByRole("button", { name: "Remove keys" }).click();
+    await expect(save).toBeVisible();
+    await google.getByRole("button", { name: "Close" }).click();
+    await expect(google).toBeHidden();
   }
 });
 

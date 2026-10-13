@@ -17,6 +17,7 @@ import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { sourceName, useHolidayPlaces, useSyncChanges, type Account } from "./data";
+import { GoogleKeys, useGoogleKeys } from "./GoogleKeys";
 import {
   GoogleIntegrateArt,
   GoogleSecretAddressArt,
@@ -146,7 +147,7 @@ export function AddAccountSheet({
             {
               step: "google-signin",
               label: "Sign in with Google",
-              line: "Needs Sunroom at an https:// address on the internet and your own Google app keys.",
+              line: "Needs Sunroom at an https:// address on the internet and your own Google app keys, which it asks for here.",
               phone: kiosk,
             },
           ]}
@@ -786,6 +787,7 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
  * as the server's check: google_accounts.sign_in_allowed). */
 function SignInFlow() {
   const text = useText();
+  const keys = useGoogleKeys();
   const secure = (() => {
     try {
       const { protocol, hostname } = window.location;
@@ -827,28 +829,32 @@ function SignInFlow() {
           Set the consent screen to External and publish it. If it stays in Testing, Google signs
           Sunroom out every 7 days.
         </li>
-        <li>
-          Paste the client ID and secret under Settings → Features → Synced Calendars → Sign in with
-          Google → Set up.
-        </li>
+        <li>Paste the client ID and secret below.</li>
       </Steps>
-      <p className={`${text.secondary} text-ink-soft`}>
-        Google may say the app isn't verified: tap Advanced, then Go to Sunroom. It's your own app.
-      </p>
-      {start.isError ? (
-        <p role="alert" className={`${text.body} font-semibold text-alert`}>
-          {errorMessage(start.error)}
-        </p>
+      {/* The keys live here, the one step that uses them (ADR 0030). */}
+      <GoogleKeys firstSave="Save keys and continue" />
+      {keys.ready ? (
+        <>
+          <p className={`${text.secondary} text-ink-soft`}>
+            Google may say the app isn't verified: tap Advanced, then Go to Sunroom. It's your own
+            app.
+          </p>
+          {start.isError ? (
+            <p role="alert" className={`${text.body} font-semibold text-alert`}>
+              {errorMessage(start.error)}
+            </p>
+          ) : null}
+          <Button
+            block
+            pending={start.isPending}
+            onClick={() => {
+              start.mutate();
+            }}
+          >
+            Sign in with Google
+          </Button>
+        </>
       ) : null}
-      <Button
-        block
-        pending={start.isPending}
-        onClick={() => {
-          start.mutate();
-        }}
-      >
-        Sign in with Google
-      </Button>
     </div>
   );
 }

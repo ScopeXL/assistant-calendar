@@ -719,7 +719,8 @@ them would have an Hours board with no way to zoom.
 
 ### T7 Settings: the navigation's width; Google's keys where they're used
 
-- [ ] Done (commits: )
+- [x] Done (commits: "settings: a wider navigation", "sync: Google's keys live in the Sign in
+  with Google step")
 
 **Owner's notes.** "The Settings screen navigation items should be a little wider. 'Calendars &
 Accounts' should fit on one line." "In Features, why is 'Sign in with Google' its own option?
@@ -768,6 +769,16 @@ it points at Features → Sign in with Google, `AddAccount.tsx:830-833`'s step t
 ("supersedes 0029's Features row"). CHANGELOG: "Settings' list is wider, so every page's name fits
 on one line." "Google's app keys are asked for inside Sign in with Google, where they're used,
 instead of on Features."
+
+**As built.** `features/sync/GoogleKeys.tsx` is one component, `GoogleKeys`, with a
+`useGoogleKeys` hook beside it; the row and the sheet are gone. Its first save is the step's
+main button ("Save keys and continue"); changing saved keys is a quieter button with Cancel.
+In an account's sheet it can change the keys and not remove them (`removable={false}`): taking
+the keys from under an account that signs in with them would stop it. A Google sign-in account
+is told apart as `provider === "google"` with no `helper_email`. The step's choice line reads
+"…and your own Google app keys, which it asks for here." `docs/SYNC.md` never pointed at
+Features, so it is unchanged. The phone's screenshots gain `add-google-signin-keys` and
+`add-google-signin`.
 
 ### T8 Add: sections, value rows, one field for a meal
 

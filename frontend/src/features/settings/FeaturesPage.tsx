@@ -51,7 +51,9 @@ function PluginFields({ plugin, modules }: { plugin: PluginInfo; modules: Plugin
  * turning one off hides its rooms and panels at once and keeps its data. A stopped plugin says
  * so, with Retry. A feature with a Settings page of its own (Tasks, Meals, Photos & Screensaver)
  * shows a row that opens it, so its fields live in one place; the rest keep their few fields
- * here, saving as they change. What a plugin draws itself (Google's keys) sits under its switch.
+ * here, saving as they change. A plugin can still draw something of its own under its switch
+ * (`settings.features`); nothing does now that Google's keys are asked for inside Sign in with
+ * Google (ADR 0030).
  */
 export function FeaturesPage() {
   const { data: plugins = [] } = usePlugins();
