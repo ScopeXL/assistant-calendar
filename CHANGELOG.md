@@ -25,6 +25,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
   Today panel's button. The month's name and the week's dates left it (the days say when they
   are; the Month view says its month). The Hours zoom sits on the grid's corner.
 - Rooms the rail already names no longer repeat their name in the header.
+- Settings' list is wider, so every page's name fits on one line.
 - The rail shows the Sunroom mark alone at its top, as tall as the header; Hide the rail moved
   into the header beside the date, across from the Today panel's button; folded, Add is the
   size of a room's icon and the rail eases shut and open instead of jumping.

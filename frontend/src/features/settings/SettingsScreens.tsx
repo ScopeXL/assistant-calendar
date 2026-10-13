@@ -129,7 +129,7 @@ function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
       />
       <nav
         aria-label="Settings"
-        className="w-80 shrink-0 overflow-y-auto border-r border-line py-4"
+        className="w-96 shrink-0 overflow-y-auto border-r border-line py-4"
       >
         {/* Inset from the rail: neighbouring targets keep 8 px apart (UX §1). */}
         <ul className="flex flex-col gap-1 px-3">
@@ -139,7 +139,7 @@ function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
                 to="/settings/$page"
                 params={{ page: page.key }}
                 aria-current={page.key === current.key ? "page" : undefined}
-                className="press-row flex min-h-16 items-center rounded-button-d px-4 text-d-body font-semibold text-ink-soft aria-[current=page]:bg-surface aria-[current=page]:text-ink"
+                className="press-row flex min-h-16 items-center rounded-button-d px-4 text-d-body font-semibold whitespace-nowrap text-ink-soft aria-[current=page]:bg-surface aria-[current=page]:text-ink"
               >
                 {page.title}
               </Link>
