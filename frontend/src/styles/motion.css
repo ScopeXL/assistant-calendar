@@ -47,10 +47,41 @@
   transition: width var(--motion-enter) var(--ease-standard);
 }
 
-/* The rail folding to its icons and back (shell/Rail): its width eases, and the board takes or
-   gives the room. The attribute arrives a frame after the settings do, never on first paint. */
+/* The rail folding to its icons and back (shell/Rail, ADR 0030): its width eases, as the Today
+   panel's does, and the board takes or gives the room. The attribute arrives a frame after the
+   settings do, never on first paint. The rail is a surface, so this rule has to out-rank the
+   crossfade above (which resets `transition` on every surface a moment after first paint, and
+   so used to cancel the fold) and carry the crossfade itself. */
+:root[data-motion-ready] nav[data-rail-motion],
 nav[data-rail-motion] {
-  transition: width var(--motion-enter) var(--ease-standard);
+  transition:
+    width var(--motion-enter) var(--ease-standard),
+    background-color var(--motion-daylight) linear,
+    color var(--motion-crossfade) linear;
+}
+/* With it: each room's height eases between a full cell and an icon's square, the words under
+   the icons fade and give up their height (they stay in the page, so a room keeps its name),
+   Settings' word folds away beside its gear, and the Add circle settles to its smaller size.
+   The mark and the icons are centred in whatever width the rail has, so they glide. */
+nav[data-rail-motion] .rail-room {
+  transition: flex-basis var(--motion-enter) var(--ease-standard);
+}
+nav[data-rail-motion] .rail-word {
+  transition:
+    opacity var(--motion-quick) var(--ease-standard),
+    max-height var(--motion-enter) var(--ease-standard),
+    margin var(--motion-enter) var(--ease-standard);
+}
+nav[data-rail-motion] .rail-word-beside {
+  transition:
+    opacity var(--motion-quick) var(--ease-standard),
+    max-width var(--motion-enter) var(--ease-standard),
+    margin var(--motion-enter) var(--ease-standard);
+}
+nav[data-rail-motion] .rail-add {
+  transition:
+    width var(--motion-enter) var(--ease-standard),
+    height var(--motion-enter) var(--ease-standard);
 }
 
 /* A press: controls dip slightly while a finger is on them and their colors ease. */

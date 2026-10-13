@@ -20,6 +20,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Setup no longer stops to pair the kitchen screen: pair it whenever it shows its code, from
   More → Pair a Display.
 - On a paired screen the mouse pointer disappears a few seconds after it stops moving.
+- The rail shows the Sunroom mark alone at its top, as tall as the header; Hide the rail moved
+  into the header beside the date, across from the Today panel's button; folded, Add is the
+  size of a room's icon and the rail eases shut and open instead of jumping.
 
 ### Fixed
 

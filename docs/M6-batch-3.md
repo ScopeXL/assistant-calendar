@@ -444,7 +444,8 @@ More.
 
 ### T5 The rail: the mark, one height with the header, the fold that eases, the toggle in the header
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: the rail's mark, its fold that eases, and the toggles in the
+  header")
 
 **Owner's notes.** "Add the same animation when expanding/collapsing the 'Today' panel to the
 navigation panel." "The navigation panel should have the app logo centered, similar to the other
@@ -518,6 +519,17 @@ ease together"), §10 (the rail line). CHANGELOG: "The rail shows the Sunroom ma
 top, as tall as the header; Hide the rail moved into the header beside the date, across from the
 Today panel's button; folded, Add is the size of a room's icon and the rail eases shut and open
 instead of jumping."
+
+**As built.** Both toggles are the same bordered square (`PanelToggle` in `shell/Header`), not a
+quiet button for the rail's and a bordered one for the panel's: the owner asked for "the
+expand/collapse icons on both sides", and they read as a pair only when they look alike. Both
+say `aria-expanded` (the panel's said `aria-pressed`). `ui/Brand` lost its `rail` size and its
+`markOnly` form: the rail draws `SunMark` itself. The words use a margin, not a `gap`, so a
+folded icon is exactly centred; Settings' word folds by `max-width` beside its gear. `Rail` lost
+`side` and `onFold` and kept `settled`. Measured: the rail goes 192 → 149 → 98 → 85 → 75 → 72 px
+over the 220 ms where it used to jump. Seen in the mirrored shot and left for T9: with the rail
+on the right its rule is still on its right edge (`landscape:border-r`), the screen's edge, so
+nothing separates it from the board.
 
 ### T6 The header: the Calendar's part, Filter, no titles, the spacing audit
 

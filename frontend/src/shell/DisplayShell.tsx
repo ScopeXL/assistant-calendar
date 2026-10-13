@@ -301,11 +301,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
                     : "locked"
               }
               compact={railCompact}
-              side={railSide}
               settled={settings !== undefined}
-              onFold={(compact) => {
-                updateDisplay({ railCollapsed: compact });
-              }}
               onAdd={() => {
                 if (room === "settings") void navigate({ to: home });
                 updateDisplay({ panel: { kind: "add", day: null, hour: null } });
@@ -322,6 +318,11 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
               panelShown={showPanel}
               onTogglePanel={() => {
                 updateDisplay({ panelShown: !showPanel });
+              }}
+              railCompact={railCompact}
+              railSide={railSide}
+              onFoldRail={(compact) => {
+                updateDisplay({ railCollapsed: compact });
               }}
             />
             {showPanel ? (

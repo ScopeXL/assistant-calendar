@@ -223,6 +223,24 @@ test.describe("the wall screen", () => {
       expect(panel?.y ?? 0).toBeGreaterThanOrEqual((header?.y ?? 0) + (header?.height ?? 0));
       // At Standard on 1920 px it's one row: today, the room's title and controls, the corner.
       if (size.width >= 1920) expect(header?.height ?? 0).toBeLessThanOrEqual(84);
+      // The rail starts with the Sunroom mark alone, in a block as tall as the header, so the
+      // rule under it meets the header's (ADR 0030). No word beside it.
+      const rail = page.getByRole("navigation", { name: "Rooms" });
+      const mark = rail.getByRole("img", { name: "Sunroom" });
+      await expect(rail).not.toContainText("Sunroom");
+      const block = await mark.locator("xpath=..").boundingBox();
+      const drawn = await mark.boundingBox();
+      if (size.width >= 1920) expect(block?.height).toBeCloseTo(header?.height ?? 0, 0);
+      // Centred, like the rooms' icons under it (the rail's own rule takes a pixel).
+      expect(Math.abs((drawn?.x ?? 0) + (drawn?.width ?? 0) / 2 - 192 / 2)).toBeLessThanOrEqual(1);
+      // The header's two toggles sit at its ends, each nearest its own panel.
+      const banner = page.getByRole("banner");
+      const fold = await banner.getByRole("button", { name: "Hide the rail" }).boundingBox();
+      const hide = await banner.getByRole("button", { name: "Hide the Today panel" }).boundingBox();
+      const date = await banner.locator("p").first().boundingBox();
+      expect(fold?.x ?? 0).toBeLessThan(date?.x ?? 0);
+      expect(Math.round((fold?.x ?? 0) - (header?.x ?? 0))).toBe(24);
+      expect(hide?.x ?? 0).toBeGreaterThan(size.width - 100);
       await page.getByRole("button", { name: "Hide the Today panel" }).click();
       await expect(today).toBeHidden();
       await page.getByRole("button", { name: "Show the Today panel" }).click();
@@ -407,18 +425,47 @@ test.describe("the wall screen", () => {
     const boardWidth = async () => Math.round((await board.boundingBox())?.width ?? 0);
     expect(await width()).toBe(192);
     const wide = await boardWidth();
-    await expect(rail.getByRole("img", { name: "Sunroom" })).toHaveCount(0); // the name is written
-    await expect(rail).toContainText("Sunroom");
+    // Hide the rail lives in the header, before today, across from the Today panel's button.
+    const header = page.getByRole("banner");
+    await expect(rail.getByRole("button", { name: /the rail$/ })).toHaveCount(0);
+    const add = rail.getByRole("button", { name: "Add", exact: true });
+    const settings = rail.getByRole("button", { name: "Settings" });
+    const box = async (target: typeof add) => {
+      const found = await target.boundingBox();
+      return { width: Math.round(found?.width ?? 0), height: Math.round(found?.height ?? 0) };
+    };
+    // Whole: Settings is one row, as tall as a tap target (and as the tips strip beside it).
+    expect((await box(settings)).height).toBe(56);
+    expect((await box(settings)).width).toBe(191);
+    await expect(settings).toContainText("Settings");
 
-    await rail.getByRole("button", { name: "Hide the rail" }).click();
+    await header.getByRole("button", { name: "Hide the rail" }).click();
+    await expect(header.getByRole("button", { name: "Show the rail" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
     await expect.poll(width).toBe(72);
-    // Never fully hidden: every room, Add and Settings are still one tap away, by name.
+    // Never fully hidden: every room, Add and Settings are still one tap away, by name. The
+    // words fade rather than leave, so each room keeps its name.
     for (const name of ["Calendar", "Lists", "Tasks", "Meals", "Countdowns", "Photos"]) {
       await expect(rail.getByRole("link", { name, exact: true })).toBeVisible();
     }
-    await expect(rail.getByRole("button", { name: "Add", exact: true })).toBeVisible();
-    await expect(rail.getByRole("button", { name: "Settings" })).toBeVisible();
+    await expect(add).toBeVisible();
+    await expect(settings).toBeVisible();
     await expect(rail.getByRole("img", { name: "Sunroom" })).toBeVisible();
+    // Folded, Add is the size of a room's icon, not a 64 px circle in a 72 px rail.
+    await expect.poll(async () => (await box(add)).width).toBe(56);
+    expect((await box(add)).height).toBe(56);
+    expect((await box(settings)).height).toBe(56);
+    // The words under the icons take no room once the fold has finished.
+    await expect
+      .poll(() =>
+        rail
+          .getByRole("link", { name: "Lists", exact: true })
+          .locator("span")
+          .evaluate((word) => Math.round(word.getBoundingClientRect().height)),
+      )
+      .toBe(0);
     // The board takes the room, and the header starts where the rail ends.
     expect(await boardWidth()).toBe(wide + 120);
     expect(Math.round((await page.getByRole("banner").boundingBox())?.x ?? 0)).toBe(72);
@@ -429,9 +476,9 @@ test.describe("the wall screen", () => {
     await rail.getByRole("link", { name: "Calendar", exact: true }).click();
     await expect(board).toBeVisible();
 
-    await rail.getByRole("button", { name: "Show the rail" }).click();
+    await header.getByRole("button", { name: "Show the rail" }).click();
     await expect.poll(width).toBe(192);
-    await rail.getByRole("button", { name: "Hide the rail" }).click();
+    await header.getByRole("button", { name: "Hide the rail" }).click();
     await expect.poll(width).toBe(72);
     // Left alone for two minutes, the screen goes back to how the household set it.
     await page.clock.fastForward(121_000);
@@ -457,7 +504,7 @@ test.describe("the wall screen", () => {
     await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     expect(await width()).toBe(72);
     // Anyone can open it back out for now; idle puts it back to the household's choice.
-    await rail.getByRole("button", { name: "Show the rail" }).click();
+    await page.getByRole("banner").getByRole("button", { name: "Show the rail" }).click();
     await expect.poll(width).toBe(192);
     await page.clock.fastForward(121_000);
     await expect.poll(width).toBe(72);
@@ -490,7 +537,7 @@ test.describe("the wall screen", () => {
     await show.getByRole("button", { name: "Leo" }).click();
     await header.getByRole("button", { name: "Month", exact: true }).click();
     await header.getByRole("button", { name: "Next month" }).click();
-    await rail.getByRole("button", { name: "Hide the rail" }).click();
+    await header.getByRole("button", { name: "Hide the rail" }).click();
     await header.getByRole("button", { name: "Hide the Today panel" }).click();
     await expect(today).toBeHidden();
 
