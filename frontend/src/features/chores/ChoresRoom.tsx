@@ -77,7 +77,7 @@ function ChoresBoard() {
         <div className="flex min-h-0 flex-1 flex-col px-6">
           <EmptyState
             icon={ListTodo}
-            title="No tasks yet"
+            line="No tasks yet"
             note="Give each person a few, and watch them get stamped."
             action={<Button onClick={add}>Add Task</Button>}
           />

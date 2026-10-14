@@ -147,7 +147,7 @@ function Tiles({ onAdd }: { onAdd: () => void }) {
       {isSuccess && items.length === 0 ? (
         <EmptyState
           icon={Hourglass}
-          title="No countdowns yet"
+          line="No countdowns yet"
           note={EMPTY}
           // A phone's bottom bar already has Add Countdown.
           action={display ? <Button onClick={onAdd}>Add Countdown</Button> : undefined}

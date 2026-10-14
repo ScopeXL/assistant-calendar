@@ -76,7 +76,7 @@ function PhoneChores() {
         {isSuccess && day.columns.length === 0 ? (
           <EmptyState
             icon={ListTodo}
-            title="No tasks yet"
+            line="No tasks yet"
             note="Give each person a few, and watch them get stamped."
           />
         ) : day && mode === "today" ? (

@@ -12,12 +12,13 @@ import { useShell } from "./shell";
  */
 export function EmptyState({
   icon: Icon,
-  title,
+  line,
   note,
   action,
 }: {
   icon: LucideIcon;
-  title: string;
+  /** "No lists yet": empty-state copy, so sentence case (UX §2). */
+  line: string;
   note?: string;
   /** The one button: a primary `Button`, or what stands in for it (the kitchen screen's QR). */
   action?: ReactNode;
@@ -37,7 +38,7 @@ export function EmptyState({
       >
         <Icon aria-hidden="true" className={display ? "size-14" : "size-10"} />
       </span>
-      <p className={display ? "text-d-title font-bold" : "text-row font-bold"}>{title}</p>
+      <p className={display ? "text-d-title font-bold" : "text-row font-bold"}>{line}</p>
       {note ? (
         <p
           className={`max-w-prose text-ink-soft ${display ? "text-d-secondary" : "text-secondary"}`}

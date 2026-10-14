@@ -14,7 +14,7 @@ describe("an empty room (UX §8, ADR 0032)", () => {
       <ShellContext.Provider value="display">
         <EmptyState
           icon={ListChecks}
-          title="No lists yet"
+          line="No lists yet"
           note="Groceries, to-dos, packing: everyone sees them on the wall and on their phones."
           action={<Button>New List</Button>}
         />
@@ -29,7 +29,7 @@ describe("an empty room (UX §8, ADR 0032)", () => {
   });
 
   it("has no button of its own on a phone that has its bar's", () => {
-    render(<EmptyState icon={ListChecks} title="No lists yet" />);
+    render(<EmptyState icon={ListChecks} line="No lists yet" />);
     expect(screen.queryByRole("button")).toBeNull();
   });
 

@@ -79,7 +79,7 @@ export function PhotosRoom() {
         {library.isSuccess && photos.length === 0 ? (
           <EmptyState
             icon={Images}
-            title="No photos yet"
+            line="No photos yet"
             note="Photos added from a phone or a computer show here and on the screensaver."
             // The kitchen screen has no file picker: its QR code stands where the button would.
             action={kiosk ? fromAPhone : <AddPhotosButton />}

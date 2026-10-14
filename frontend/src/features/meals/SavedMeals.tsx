@@ -36,7 +36,7 @@ export function SavedMeals() {
       {isSuccess && saved.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title="No saved meals yet"
+          line="No saved meals yet"
           note="Save a meal once and add it in one tap next week."
           action={
             // A phone's bottom bar already has New Saved Meal.

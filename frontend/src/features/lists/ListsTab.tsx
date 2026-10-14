@@ -43,7 +43,7 @@ function PhoneLists() {
       {isSuccess && lists.length === 0 ? (
         <EmptyState
           icon={ListChecks}
-          title="No lists yet"
+          line="No lists yet"
           note="Groceries, to-dos, packing: everyone sees them on the wall and on their phones."
         />
       ) : (
@@ -91,7 +91,7 @@ function PhoneList({ listId }: { listId: string }) {
   if (isError) {
     return (
       <Screen title="Lists" back="/lists">
-        <EmptyState icon={ListX} title="That list isn't here any more" />
+        <EmptyState icon={ListX} line="That list isn't here any more" />
       </Screen>
     );
   }

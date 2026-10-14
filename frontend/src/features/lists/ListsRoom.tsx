@@ -58,7 +58,7 @@ function ListTiles() {
         {isSuccess && lists.length === 0 ? (
           <EmptyState
             icon={ListChecks}
-            title="No lists yet"
+            line="No lists yet"
             note="Groceries, to-dos, packing: everyone sees them on the wall and on their phones."
             action={
               <Button
@@ -217,7 +217,7 @@ function ListPage({ listId }: { listId: string }) {
         <RoomHeader title="Lists" />
         <EmptyState
           icon={ListX}
-          title="That list isn't here any more"
+          line="That list isn't here any more"
           action={
             <Button
               onClick={() => {

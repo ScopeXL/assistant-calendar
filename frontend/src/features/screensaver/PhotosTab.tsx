@@ -48,7 +48,7 @@ export function PhotosTab() {
       {library.isSuccess && photos.length === 0 ? (
         <EmptyState
           icon={Images}
-          title="No photos yet"
+          line="No photos yet"
           note="Photos added from a phone or a computer show here and on the screensaver."
         />
       ) : (
