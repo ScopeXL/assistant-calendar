@@ -222,7 +222,7 @@ future batches inherit it.
 
 ### T0 The quick gate: recipes, the allowlist, the rule
 
-- [ ] Done (commit: )
+- [x] Done (commit: "tooling: a quick gate per task, the full gate per batch")
 
 **Owner's note.** "Most of the time it takes hours and I suspect a large chunk is due to testing.
 Is there a way to build a plan and run tests at the end? Propose a solution to save some time and

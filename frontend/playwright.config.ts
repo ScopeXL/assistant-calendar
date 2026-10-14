@@ -17,7 +17,8 @@ export default defineConfig({
   workers: 1,
   forbidOnly: ci,
   retries: ci ? 1 : 0,
-  reporter: ci ? [["list"], ["html", { open: "never" }]] : "list",
+  // Locally one line that shows a failure when it happens; CI keeps a test per line and a report.
+  reporter: ci ? [["list"], ["html", { open: "never" }]] : "line",
   use: {
     baseURL: BASE_URL,
     trace: "retain-on-failure",

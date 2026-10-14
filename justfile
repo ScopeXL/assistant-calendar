@@ -76,6 +76,19 @@ test:
     cd backend && uv run pytest -q --disable-socket --allow-unix-socket
     cd frontend && pnpm exec vitest run
 
+# The per-task gate (CLAUDE.md "Definition of done"): lint and type checks, about a minute
+quick: lint typecheck
+
+# Vitest, quietly, for a file, a folder or `related src/ui/Sheet.tsx` (nothing: all of it)
+[positional-arguments]
+test-fe *ARGS:
+    cd frontend && pnpm exec vitest --run --reporter=dot "$@"
+
+# pytest, quietly, for a file or a folder such as `tests/countdowns` (nothing: all of it)
+[positional-arguments]
+test-py *ARGS:
+    cd backend && uv run pytest -q --disable-socket --allow-unix-socket "$@"
+
 # Regenerate the frontend's API types from the backend's OpenAPI schema
 api-types:
     cd backend && uv run sunroom openapi --out ../frontend/src/api/openapi.json
@@ -115,9 +128,11 @@ check: lint typecheck test api-types-check migrations-check release-meta-check
 build:
     cd frontend && pnpm build
 
-# End-to-end tests: the wall screen (1080p, portrait), phones (WebKit, Chromium) and a laptop
-e2e: build
-    cd frontend && pnpm exec playwright test
+# End-to-end tests: the wall screen (1080p, portrait), phones (WebKit, Chromium) and a laptop.
+# Arguments pick a spec, a project or a test: `e2e/hours.spec.ts --project=display-1080p -g zoom`
+[positional-arguments]
+e2e *ARGS: build
+    cd frontend && pnpm exec playwright test "$@"
 
 # Capture key screens at every size, light and dark, into .screenshots/ for review
 screenshots: build

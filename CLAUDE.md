@@ -86,8 +86,10 @@ Keep this file under 15 KB; detail belongs in `docs/`.
 | `just dev` | Backend (`--reload`) plus Vite at `http://localhost:5173`, with `/api` proxied |
 | `just seed [PORT]` | Load the synthetic Sample Family into a test-mode server |
 | `just display [--portrait] [--unpaired] [--fresh]` | The built app's wall screen in a Chromium window, paired, with sample data |
-| `just check` | Everything a commit must pass: lint and format (ruff, ESLint, Prettier, shellcheck on `kiosk/`); typecheck (pyright strict, `tsc`); tests (pytest, Vitest); API types up to date; migration checks; release metadata. **CI runs exactly this** |
-| `just e2e` | Production build plus Playwright: the wall at 1920×1080 and 1080×1920 (touch), phones on WebKit and Chromium, a laptop; axe, tap targets, the CSP guard |
+| `just check` | The full check: lint and format (ruff, ESLint, Prettier, shellcheck on `kiosk/`); typecheck (pyright strict, `tsc`); tests (pytest, Vitest); API types up to date; migration checks; release metadata. CI runs the same checks as jobs, plus `just e2e` and the secrets scan |
+| `just quick` | The per-task gate's first step: lint and typecheck only (about 30 s) |
+| `just test-fe [ARGS]` / `just test-py [ARGS]` | Vitest or pytest, terse, for a file or folder (`src/ui/Sheet.test.tsx`, `related src/ui/Sheet.tsx`; `tests/countdowns`) |
+| `just e2e [ARGS]` | Production build plus Playwright: the wall at 1920×1080 and 1080×1920 (touch), phones on WebKit and Chromium, a laptop; axe, tap targets, the CSP guard. Arguments pick a spec, a project or a test (`e2e/hours.spec.ts --project=display-1080p -g zoom`) |
 | `just screenshots` | Key screens on all five projects, light and dark, three times of day, into `.screenshots/` |
 | `just api-types` | Regenerate `frontend/src/api/schema.d.ts` from the backend's OpenAPI |
 | `just db-revision "msg"` | Create a new migration |
@@ -144,7 +146,8 @@ kiosk/           install.sh, the launcher, sunroom-screen (sleep and brightness)
   `Clock`; tests copy a migrated template DB, never `create_all`. Playwright resets the test
   server before each test.
 - **Git:**
-  - Commit after each green unit of work: subject `area: summary`, the Co-Authored-By trailer.
+  - Commit after each unit of work passes the quick gate (below): subject `area: summary`, the
+    Co-Authored-By trailer.
   - This repo's git email is the owner's GitHub noreply address. Don't change it.
   - Stage explicit paths. Never `git add -A`; never stash or discard changes you didn't make.
   - **Push only through deploy, or when the owner asks.**
@@ -152,14 +155,20 @@ kiosk/           install.sh, the launcher, sunroom-screen (sleep and brightness)
 
 ## Definition of done
 
-1. `just check` is green.
-2. `just e2e` is green for the flows you touched.
-3. For any UI change, run `just screenshots` and review 1920×1080, 1080×1920 and 390×844 in
-   light and dark against [UX §10](docs/UX.md); fix what looks off.
+Two tiers (PLAN §14.7). Read test output only when it fails.
+
+**Each unit of work (the quick gate):**
+1. `just quick` is green.
+2. The unit tests it touched pass (`just test-fe …`, `just test-py …`).
+3. Its end-to-end spec passes on one project (`just e2e e2e/<spec> --project=<name>`).
 4. Docs are updated: PLAN or UX, plus a new ADR if a decision changed.
 5. `CHANGELOG.md` has a plain-English line under `[Unreleased]`.
-6. `just scan` is clean.
-7. The work is committed.
+6. `just scan` is clean (the hook runs it), and the work is committed.
+
+**The end of a batch, and before any release (the full gate):** `just check`, the whole
+`just e2e`, and `just screenshots` reviewed against [UX §10](docs/UX.md) (1920×1080, 1080×1920
+and 390×844, light and dark; only the screens the batch touched), then `just scan`. A failure
+is traced by running the failing spec at each task's commit. `just preflight` runs it all again.
 
 ## Deploy (summary; the skill holds the full runbook)
 
@@ -196,19 +205,12 @@ part your task touches, and move lines there when this file nears its limit.
 - `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answers
   navigations (and `location.reload()`) from its precached `index.html`. Test routes on a page
   never loaded before; `lib/update.reloadFresh()` drops the worker and its caches first.
-- A click just after a dnd-kit drop did nothing: dnd-kit swallows clicks for 50 ms after a drop.
-  Tests wait 100 ms.
 - A `createLink` component lost its styles: the router passes its own `className`. Merge it
   after the spread (`shell/HeaderLinks`, `ui/ListRow`).
-- At Small text, 8 px gaps became 7 and failed the tap check: rem shrinks. `--spacing-2` is
-  `max(0.5rem, 8px)`; Hours chips size by `tapPx(rem)`.
-- A heading locator matched twice in Settings: the Today panel shows beside it. Use `exact`.
 - A plugin's setting reached the wall minutes late: `plugins.changed` refreshed only the plugin
   list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
 - The test server keeps plugin settings between tests (`/api/_test/reset` leaves
   `plugin_state`): a test that changes one puts it back in `finally`.
-- After Erase everything the wall sat on a pair code: its cached setup status said complete.
-  `handleSignedOut` invalidates it.
 - An exiting `AnimatePresence` child stayed tappable, and cleared a shared ref as it left:
   `ui/Leaves` makes it inert (`useIsPresent`); such a ref is set, never nulled.
 - A role locator's `toHaveCount(0)` passed before a chip had faded: leaving, it's `aria-hidden`

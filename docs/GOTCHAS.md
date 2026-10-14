@@ -45,6 +45,8 @@ size limit.
   `flex flex-col`.
 - A stacked `Segmented` row rested 4 px scrolled: its snap points sat inside its padding. It
   has `scroll-px-1`.
+- At Small text, 8 px gaps became 7 and failed the tap check: rem shrinks. `--spacing-2` is
+  `max(0.5rem, 8px)`; Hours chips size by `tapPx(rem)`.
 
 ## Time and live updates
 
@@ -52,6 +54,8 @@ size limit.
   about new clock samples. `lib/clock` tells listeners when the offset moves (`onClockMoved`).
 - The wall's live icon blinked on every room switch: the kiosk remounts the shell, so the stream
   reconnects. `ui/LiveStatus` shows anything but connected only after 2 s.
+- After Erase everything the wall sat on a pair code: its cached setup status said complete.
+  `handleSignedOut` invalidates it.
 
 ## End-to-end tests
 
@@ -81,3 +85,6 @@ size limit.
   weather arrives after the board, and in portrait (two header rows) its stacked high and low
   make the first row taller. The test waits for the weather button. The 8 px shift itself is
   still there on a portrait wall as the weather loads.
+- A click just after a dnd-kit drop did nothing: dnd-kit swallows clicks for 50 ms after a drop.
+  Tests wait 100 ms.
+- A heading locator matched twice in Settings: the Today panel shows beside it. Use `exact`.

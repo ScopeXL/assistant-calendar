@@ -699,7 +699,7 @@ Unknown `APP_*`/`SUNROOM_*` names produce a typo warning at boot.
 
 ### 14.3 justfile
 
-Dinner Bell's recipe set, verbatim where it applies: `setup`, `dev`, `fmt`, `lint`, `typecheck`, `test`, `api-types`, `api-types-check`, `migrations-check`, `release-meta-check`, `check` (CI runs exactly this), `build`, `e2e`, `screenshots`, `scan`, the three hook recipes, `smoke-image`, `preflight`, `bump`, `release-tag`, `image`, `image-verify`, `release`, `inspect-backup`, `db-revision`. Additions: `display` (opens the built app at `/display` in a 1920×1080 Chromium window for review), `seed` (loads the synthetic fixture household: "Sample Family" with four members, two local calendars, an ICS fixture account, chores, lists, meals, countdowns and a dozen stock photos, so screenshots and demos never use real data), `kiosk-lint` (shellcheck on `kiosk/*.sh`).
+Dinner Bell's recipe set, verbatim where it applies: `setup`, `dev`, `fmt`, `lint`, `typecheck`, `test`, `api-types`, `api-types-check`, `migrations-check`, `release-meta-check`, `check` (CI runs the same checks as jobs, plus `e2e` and the secrets scan), `build`, `e2e`, `screenshots`, `scan`, the three hook recipes, `smoke-image`, `preflight`, `bump`, `release-tag`, `image`, `image-verify`, `release`, `inspect-backup`, `db-revision`. Additions: `quick`, `test-fe`, `test-py` and arguments to `e2e`, the per-task gate (§14.7); `display` (opens the built app at `/display` in a 1920×1080 Chromium window for review), `seed` (loads the synthetic fixture household: "Sample Family" with four members, two local calendars, an ICS fixture account, chores, lists, meals, countdowns and a dozen stock photos, so screenshots and demos never use real data), `kiosk-lint` (shellcheck on `kiosk/*.sh`).
 
 ### 14.4 Startup, migrations, backups, export
 
@@ -723,9 +723,9 @@ Identical to Dinner Bell: settings → data dir and `flock` → pre-migration ba
 | End to end | Playwright against the production build: `display-1080p` (1920×1080, touch, Chromium), `display-portrait` (1080×1920), `phone-webkit` and `phone-chromium` (390×844), `desktop` (1440×900); axe; a fixture fails any test on a CSP violation or page error; tap-target checks (56 px display, 44 px phone) | First run, pairing, add event, recurring edit chooser, chore completion with Undo, lists sync between two pages, screensaver in/out, theme switch, PIN gate |
 | Image | `just smoke-image` | Boots the image with an empty volume, waits for health, runs the setup wizard through the API, checks the private scan |
 
-### 14.7 Definition of done (per task)
+### 14.7 Definition of done (two tiers)
 
-1. `just check` green. 2. `just e2e` green for touched flows. 3. For UI changes, `just screenshots` at 1920×1080, 1080×1920 and 390×844 in light and dark, reviewed against UX §10. 4. Docs updated (PLAN or UX, plus an ADR if a decision changed). 5. A plain-English CHANGELOG line under `[Unreleased]`. 6. `just scan` clean. 7. Committed.
+Decided with the owner for M6 batch 4 (ADR 0032), after batch 3 spent most of its two hours running the whole gate after each of ten tasks. **Per task, the quick gate:** 1. `just quick` (lint and typecheck) green. 2. The unit tests it touched pass (`just test-fe <file or folder>`, `just test-py <file or folder>`). 3. Its end-to-end spec passes on one project (`just e2e e2e/<spec> --project=<name>`). 4. Docs updated (PLAN or UX, plus an ADR if a decision changed). 5. A plain-English CHANGELOG line under `[Unreleased]`. 6. `just scan` clean. 7. Committed. **Once at the end of a batch, and before any release, the full gate:** `just check`, the whole `just e2e`, `just screenshots` at 1920×1080, 1080×1920 and 390×844 in light and dark reviewed against UX §10 (the screens the batch touched), and `just scan`. A failure there is traced by running the failing spec at each task's commit; nothing is pushed before a release, and `just preflight` runs the full gate again. The recipes use terse reporters, and test output is read only when something fails.
 
 ### 14.8 CLAUDE.md
 

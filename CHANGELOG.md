@@ -12,6 +12,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
   nowhere to type it. Pair a display there now opens a box for the code, on phones too.
 - Behind the scenes: a layout test that failed now and then on the upright screen waits for
   the weather to arrive first.
+- Behind the scenes: checks can run for one test file or one screen at a time.
 
 ## [0.9.1] - 2026-10-14
 
