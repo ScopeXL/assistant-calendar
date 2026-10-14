@@ -25,13 +25,32 @@
   --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* The wall's tint and the theme crossfade when they change, never on first paint (lib/theme.ts
-   adds data-motion-ready a moment after the page appears). */
+/* The wall's tint steps through the day (UX §9 daylight): what draws the wall eases over 2 s,
+   never on first paint (lib/theme.ts adds data-motion-ready once the household's appearance is
+   on). The surfaces (the header, the rail, the Today panel) are drawn in --surface, which only a
+   theme change moves. */
 :root[data-motion-ready] body,
-:root[data-motion-ready] [data-surface] {
+:root[data-motion-ready] [data-shell] {
+  transition: background-color var(--motion-daylight) linear;
+}
+
+/* A theme change (UX §9 crossfade, ADR 0032): for its 600 ms every color on the page eases
+   together, so the screen changes once (lib/theme.ts sets data-theme-switching while it lasts).
+   Left to their own rules, the surfaces took 2 s, today's column 600 ms and a button 90 ms: a
+   flicker, then a slow fade. It out-ranks the rail's own rule and every `.press`; Reduce Motion's
+   !important durations below still win. */
+:root[data-motion-ready][data-theme-switching] *,
+:root[data-motion-ready][data-theme-switching] *::before,
+:root[data-motion-ready][data-theme-switching] *::after {
   transition:
-    background-color var(--motion-daylight) linear,
-    color var(--motion-crossfade) linear;
+    background-color var(--motion-crossfade) linear,
+    color var(--motion-crossfade) linear,
+    border-color var(--motion-crossfade) linear,
+    outline-color var(--motion-crossfade) linear,
+    text-decoration-color var(--motion-crossfade) linear,
+    fill var(--motion-crossfade) linear,
+    stroke var(--motion-crossfade) linear,
+    box-shadow var(--motion-crossfade) linear;
 }
 
 /* Midnight: today's lit column hands over to the next, and the fill crossfades (UX §9 "Quiet
@@ -49,15 +68,10 @@
 
 /* The rail folding to its icons and back (shell/Rail, ADR 0030): its width eases, as the Today
    panel's does, and the board takes or gives the room. The attribute arrives a frame after the
-   settings do, never on first paint. The rail is a surface, so this rule has to out-rank the
-   crossfade above (which resets `transition` on every surface a moment after first paint, and
-   so used to cancel the fold) and carry the crossfade itself. */
-:root[data-motion-ready] nav[data-rail-motion],
+   settings do, never on first paint. Its colors change only with the theme, which the theme
+   switch above eases (until 0.10.0 a crossfade rule on every surface reset this one). */
 nav[data-rail-motion] {
-  transition:
-    width var(--motion-enter) var(--ease-standard),
-    background-color var(--motion-daylight) linear,
-    color var(--motion-crossfade) linear;
+  transition: width var(--motion-enter) var(--ease-standard);
 }
 /* With it: each room's height eases between a full cell and an icon's square, the words under
    the icons fade and give up their height (they stay in the page, so a room keeps its name),

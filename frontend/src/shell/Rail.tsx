@@ -73,7 +73,6 @@ export function Rail({
   return (
     <nav
       aria-label="Rooms"
-      data-surface=""
       data-segmented=""
       data-rail-motion={moves ? "" : undefined}
       className={`flex flex-col bg-surface landscape:h-full landscape:w-[var(--rail-w)] landscape:overflow-clip landscape:border-line portrait:h-28 portrait:flex-row portrait:items-center portrait:border-t portrait:border-line ${

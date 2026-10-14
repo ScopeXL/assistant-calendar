@@ -462,7 +462,6 @@ function TodaySide({
     >
       {held ? (
         <div
-          data-surface=""
           className={`flex w-[var(--panel-w)] shrink-0 flex-col border-line bg-surface ${
             railSide === "right" ? "border-r" : "border-l"
           }`}

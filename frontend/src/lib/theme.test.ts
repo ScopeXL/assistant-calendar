@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import boot from "../../public/theme-boot.js?raw";
 import {
   APPEARANCE_KEY,
   applyAppearance,
+  CROSSFADE_MS,
   daypart,
   rememberAppearance,
   rememberedAppearance,
@@ -178,5 +179,42 @@ describe("the appearance a browser remembers (ADR 0032)", () => {
     runBoot();
     expect(document.documentElement.dataset.theme).toBeUndefined();
     expect(document.documentElement.dataset.daypart).toBe("midday");
+  });
+});
+
+describe("a theme change (UX §9, ADR 0032)", () => {
+  const base = { daylightTint: true, textSize: "standard", display: true } as const;
+  const shown = (root: HTMLElement, theme: "light" | "dark", reduceMotion = false) =>
+    applyAppearance({ ...base, theme, reduceMotion }, at(11), root);
+
+  it("crossfades every color together for 600 ms, once the fades are armed", () => {
+    vi.useFakeTimers();
+    try {
+      const root = document.createElement("html");
+      shown(root, "light");
+      expect(root.dataset.themeSwitching).toBeUndefined();
+      shown(root, "dark");
+      // Not armed yet: the first paint and the household's first appearance snap.
+      expect(root.dataset.themeSwitching).toBeUndefined();
+      root.dataset.motionReady = "";
+      shown(root, "dark");
+      expect(root.dataset.themeSwitching).toBeUndefined();
+      shown(root, "light");
+      expect(root.dataset.themeSwitching).toBe("");
+      vi.advanceTimersByTime(CROSSFADE_MS - 1);
+      expect(root.dataset.themeSwitching).toBe("");
+      vi.advanceTimersByTime(1);
+      expect(root.dataset.themeSwitching).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("has nothing to ease with Reduce motion", () => {
+    const root = document.createElement("html");
+    root.dataset.motionReady = "";
+    shown(root, "light", true);
+    shown(root, "dark", true);
+    expect(root.dataset.themeSwitching).toBeUndefined();
   });
 });

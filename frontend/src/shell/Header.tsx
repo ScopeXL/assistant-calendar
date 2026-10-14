@@ -136,7 +136,6 @@ export function Header({
   return (
     <header
       data-header=""
-      data-surface=""
       className="@container/header flex min-h-[var(--header-h)] shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface px-6 py-2.5 @min-[104rem]/header:py-1"
     >
       {railSide === "left" ? rail : panel}

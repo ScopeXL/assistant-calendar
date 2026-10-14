@@ -31,9 +31,13 @@ size limit.
 - A backdrop under the header's menus covered only the header: the header is a size container
   (`@container`), and a container contains `fixed` boxes. `ui/Menu` closes on a press outside
   and swallows that click instead.
-- The rail's fold never eased: `:root[data-motion-ready] [data-surface]` resets `transition` on
-  every surface a moment after first paint, and out-ranked the rail's own rule. A surface that
-  moves needs a rule at least that specific, carrying the crossfade too.
+- The rail's fold never eased: `:root[data-motion-ready] [data-surface]` reset `transition` on
+  every surface a moment after first paint, and out-ranked the rail's own rule. That rule is
+  gone (0.10.0); a theme switch's (`data-theme-switching`) out-ranks every element's own for
+  its 600 ms, so a fold during a theme change snaps.
+- A fade that only Light showed, on a refresh: the theme arrived with `/api/settings`, after
+  the fades were armed, and the page had painted the browser's own dark. `public/theme-boot.js`
+  paints the remembered theme first, and the fades wait for the household's (ADR 0032).
 - The header was 9 px taller in Tasks than elsewhere: a bordered `Segmented` is 12 px taller
   than a button. As one row the header pads 4 px, and `--header-h` follows `--tap`.
 

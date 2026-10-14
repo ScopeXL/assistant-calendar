@@ -21,7 +21,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   the weather to arrive first.
 - Behind the scenes: checks can run for one test file or one screen at a time.
 - A refresh paints the screen in its theme straight away: the header, the rails, the buttons and
-  today's column no longer show another color and fade.
+  today's column no longer show another color and fade. Changing the theme crossfades
+  everything together.
 
 ## [0.9.1] - 2026-10-14
 

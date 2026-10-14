@@ -404,7 +404,8 @@ layout it measured 7 px.
 
 ### T5 The theme: right from the first paint, and one crossfade
 
-- [ ] Done (commit: )
+- [x] Done (commits: "theme: the first paint is the remembered one", "theme: a change crossfades
+  everything together")
 
 **Owner's note.** "Look at the animation when the page is refreshed or the theme is changed.
 Several areas flicker with a different color and slowly fade to the chosen theme. It seems to be
@@ -473,6 +474,18 @@ Theme switches crossfade the whole screen once, both ways.
 **CHANGELOG.** "A refresh paints the screen in its theme straight away: the header, the rails,
 the buttons and today's column no longer show another color and fade. Changing the theme
 crossfades everything together."
+
+**As built.** `applyAppearance` returns what it put on `<html>` and the shells call
+`rememberAppearance` with the household's choices (theme choice, daylight tint, sun times), so
+the pre-pairing `Frame`, which renders while a paired wall finds out that it is, can keep a
+memory under five minutes old exactly (`showAppearance`) and otherwise follow the remembered
+choices by its clock; it never writes the memory itself, or an unpaired screen's 6 PM guess
+would stick past 7 PM. The boot script is linted as a browser script (`eslint.config.js`). The
+e2e test runs on a browser that prefers light with a Dark household and checks the theme when
+the page has loaded and when the fades are armed, with no memory, with the right one and with a
+wrong one; with the fades armed on mount (the old code) it reads "light". The `data-surface`
+markers went with the rule that used them. Not done here: Auto across a sunrise or sunset while
+the screen is off paints the remembered theme, then snaps (no fade) when the settings arrive.
 
 ### T6 Toasts stay put, and float inside a sheet
 

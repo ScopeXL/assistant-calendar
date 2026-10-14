@@ -321,6 +321,15 @@ test.describe("the wall screen", () => {
     await page.reload();
     await expect(html).toHaveAttribute("data-motion-ready", "");
     expect(await marks()).toEqual({ load: "light", ready: "dark" });
+
+    // A change of theme from a phone crossfades everything together, for 600 ms.
+    const light = await request.patch("/api/settings", { headers: CSRF, data: { theme: "light" } });
+    expect(light.ok()).toBe(true);
+    await expect(html).toHaveAttribute("data-theme-switching", "", { timeout: 2000 });
+    await expect(html).toHaveAttribute("data-theme", "light");
+    await expect(html).not.toHaveAttribute("data-theme-switching", "", { timeout: 2000 });
+    const auto = await request.patch("/api/settings", { headers: CSRF, data: { theme: "auto" } });
+    expect(auto.ok()).toBe(true);
   });
 
   test("shows nothing in its corner while it hears live updates, and says so when it can't", async ({

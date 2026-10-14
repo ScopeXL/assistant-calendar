@@ -109,9 +109,13 @@ export function applyAppearance(
   return shown;
 }
 
-/** Put a shown appearance on <html> as it was, as the boot script does. */
+/**
+ * Put a shown appearance on <html> as it was, as the boot script does. A change of theme once
+ * the fades are armed crossfades every color together (`crossfadeTheme`).
+ */
 export function showAppearance(shown: ShownAppearance, root = document.documentElement): void {
   const data = root.dataset;
+  const before = data.theme;
   if (shown.theme) data.theme = shown.theme;
   else delete data.theme;
   data.daypart = shown.daypart;
@@ -119,6 +123,36 @@ export function showAppearance(shown: ShownAppearance, root = document.documentE
   else delete data.textSize;
   if (shown.reduceMotion) data.reduceMotion = "";
   else delete data.reduceMotion;
+  if (data.theme !== before && data.motionReady !== undefined) crossfadeTheme(root);
+}
+
+/** How long a theme change takes (UX §9 crossfade; `--motion-crossfade` in styles/motion.css). */
+export const CROSSFADE_MS = 600;
+const switching = new WeakMap<HTMLElement, number>();
+
+/**
+ * A theme change, once the fades are armed (UX §9, ADR 0032): data-theme-switching on <html>
+ * for the crossfade's 600 ms, under which every color on the page eases together
+ * (styles/motion.css). Without it each thing eased at its own pace: the surfaces over 2 s,
+ * today's column over 600 ms, a button over 90 ms. Nothing to ease with Reduce motion.
+ */
+function crossfadeTheme(root: HTMLElement): void {
+  const reduced =
+    root.dataset.reduceMotion !== undefined ||
+    (typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.clearTimeout(switching.get(root));
+  if (reduced) {
+    delete root.dataset.themeSwitching;
+    return;
+  }
+  root.dataset.themeSwitching = "";
+  switching.set(
+    root,
+    window.setTimeout(() => {
+      delete root.dataset.themeSwitching;
+    }, CROSSFADE_MS),
+  );
 }
 
 /**
