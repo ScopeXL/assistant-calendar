@@ -184,7 +184,14 @@ test("a computer adds an account in a sheet, and Google's way back opens its cal
   await page.goto("/settings/calendars");
   await page.getByRole("button", { name: "Add an Account" }).click();
   const sheet = page.getByRole("dialog", { name: "Add an Account" });
-  await expect(sheet.getByRole("button", { name: /^iCloud/ })).toBeVisible();
+  // Apple first, then Google, Holidays, Another calendar and A calendar server (ADR 0032).
+  await expect(sheet.getByRole("listitem")).toHaveText([
+    /^Apple/,
+    /^Google/,
+    /^Holidays/,
+    /^Another calendar/,
+    /^A calendar server/,
+  ]);
   await expect(sheet.getByText("Or add it from a phone")).toHaveCount(0);
   await sheet.getByRole("button", { name: /^Google/ }).click();
   const google = page.getByRole("dialog", { name: "Google" });
@@ -336,11 +343,11 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
     sheet.getByRole("img", { name: "A code that opens Add an Account on a phone" }),
   ).toBeVisible();
 
-  // iCloud: the password is a masked field, typed on the screen's own keyboard.
-  await sheet.getByRole("button", { name: /^iCloud/ }).click();
-  const icloud = page.getByRole("dialog", { name: "iCloud" });
-  await expect(icloud.getByRole("link")).toHaveCount(0);
-  const password = icloud.getByLabel("App-specific password");
+  // Apple: the password is a masked field, typed on the screen's own keyboard.
+  await sheet.getByRole("button", { name: /^Apple/ }).click();
+  const apple = page.getByRole("dialog", { name: "Apple" });
+  await expect(apple.getByRole("link")).toHaveCount(0);
+  const password = apple.getByLabel("App-specific password");
   await expect(password).toHaveAttribute("type", "password");
   await password.click();
   const keyboard = page.getByRole("group", { name: "On-screen keyboard" });
@@ -352,8 +359,8 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
   const field = await password.boundingBox();
   expect(keys && field && field.y + field.height <= keys.y).toBe(true);
   await keyboard.getByRole("button", { name: "Done" }).click();
-  await icloud.getByRole("button", { name: "Close" }).click();
-  await expect(icloud).toBeHidden();
+  await apple.getByRole("button", { name: "Close" }).click();
+  await expect(apple).toBeHidden();
 
   // Google: the secret address runs here; the helper's key file and Google's page need a phone.
   await add.click();

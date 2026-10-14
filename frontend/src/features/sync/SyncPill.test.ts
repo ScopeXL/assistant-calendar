@@ -8,7 +8,7 @@ function account(overrides: Partial<Account>): Account {
   return {
     id: "account-1",
     provider: "caldav",
-    label: "iCloud",
+    label: "Apple",
     address: "caldav.icloud.com",
     calendars: [],
     interval_min: 5,
@@ -32,7 +32,7 @@ beforeEach(() => {
 describe("pillText", () => {
   it("asks for a refused password again", () => {
     expect(pillText(account({ status: "needs_reconnect" }))).toBe(
-      "iCloud needs its password again.",
+      "Apple needs its password again.",
     );
     expect(pillText(account({ provider: "google", status: "needs_reconnect" }))).toBe(
       "Google signed Sunroom out.",
@@ -56,9 +56,9 @@ describe("pillText", () => {
 
   it("says since when an account hasn't answered, and that its events stay", () => {
     const quiet = account({ status: "error", last_success_at: "2026-10-07T13:10:00Z" });
-    expect(pillText(quiet)).toBe("iCloud hasn't answered since 9:10 AM. Showing what we had.");
+    expect(pillText(quiet)).toBe("Apple hasn't answered since 9:10 AM. Showing what we had.");
     expect(pillText(account({ status: "error" }))).toBe(
-      "iCloud hasn't answered. Showing what we had.",
+      "Apple hasn't answered. Showing what we had.",
     );
   });
 });

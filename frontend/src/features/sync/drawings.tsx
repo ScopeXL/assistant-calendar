@@ -2,7 +2,7 @@ import { Calendar, Copy, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 
 /*
- * Drawings for the account steps on a phone (docs/UX.md §6 "Connect an iCloud calendar",
+ * Drawings for the account steps on a phone (docs/UX.md §6 "Connect an Apple calendar",
  * "Connect Google"): a browser window, quiet lines for what doesn't matter, and the one thing to
  * tap filled with the sun color and ringed, named in the step's own words.
  * - Schematic, not a copy of Apple's or Google's pages: no logos, brand colors or people.
@@ -184,8 +184,8 @@ function Plus({ x, y }: { x: number; y: number }) {
   );
 }
 
-/** iCloud, step 1: appleid.apple.com, the two boxes, and Sign in. */
-export function ICloudSignInArt() {
+/** Apple, step 1: appleid.apple.com, the two boxes, and Sign in. */
+export function AppleSignInArt() {
   return (
     <Window address="appleid.apple.com">
       <Card x={84} y={46} width={152} height={26} />
@@ -201,8 +201,8 @@ export function ICloudSignInArt() {
   );
 }
 
-/** iCloud, step 2: under Sign-In and Security, App-Specific Passwords and its plus, then the name. */
-export function ICloudNewPasswordArt() {
+/** Apple, step 2: under Sign-In and Security, App-Specific Passwords and its plus, then the name. */
+export function AppleNewPasswordArt() {
   return (
     <Window>
       <text x="18" y={baseline(49, 15)} fontSize="15" fontWeight="600" className="fill-ink">
@@ -230,8 +230,8 @@ export function ICloudNewPasswordArt() {
   );
 }
 
-/** iCloud, step 3: the new password, and Copy. */
-export function ICloudCopyPasswordArt() {
+/** Apple, step 3: the new password, and Copy. */
+export function AppleCopyPasswordArt() {
   return (
     <Window>
       <Card x={36} y={46} width={248} height={96} />

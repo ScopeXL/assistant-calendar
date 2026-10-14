@@ -30,7 +30,7 @@ MANIFEST = PluginManifest(
     id="calendar_sync",
     version="1.0.0",
     name="Synced Calendars",
-    description="Google, iCloud and any calendar address on the board, kept up to date.",
+    description="Google, Apple and any calendar address on the board, kept up to date.",
     settings_spec=(
         ParamField(
             "google_client_id",

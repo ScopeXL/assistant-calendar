@@ -346,7 +346,7 @@ test("the wall screen", async ({ page }) => {
   await school.getByRole("button", { name: "Close" }).click();
   await expect(school).toBeHidden();
 
-  // Adding an account here: the choices with the phone shortcut, iCloud's password on the
+  // Adding an account here: the choices with the phone shortcut, Apple's password on the
   // keyboard, and Google's two ways that need a phone.
   await page
     .getByRole("navigation", { name: "Settings" })
@@ -357,10 +357,10 @@ test("the wall screen", async ({ page }) => {
   await addAccount.click();
   await expect(adding.getByText("Or add it from a phone")).toBeVisible();
   await shot(page, "settings-add-account");
-  await adding.getByRole("button", { name: /^iCloud/ }).click();
+  await adding.getByRole("button", { name: /^Apple/ }).click();
   await adding.getByLabel("App-specific password").click();
   await expect(keys).toBeVisible();
-  await shot(page, "settings-add-icloud-keyboard");
+  await shot(page, "settings-add-apple-keyboard");
   await keys.getByRole("button", { name: "Done" }).click();
   await adding.getByRole("button", { name: "Close" }).click();
   await expect(adding).toBeHidden();
@@ -535,15 +535,15 @@ test("a phone's calendar", async ({ page, isMobile }) => {
     await school.getByRole("button", { name: "Close" }).click();
     await expect(school).toBeHidden();
     const flows: [string, string][] = [
-      ["iCloud", "icloud"],
-      ["Another calendar", "address"],
-      ["Holidays", "holidays"],
+      ["Apple", "apple"],
       ["Google", "google"],
+      ["Holidays", "holidays"],
+      ["Another calendar", "address"],
     ];
     for (const [choice, name] of flows) {
       await page.getByRole("button", { name: "Add an Account" }).click();
       const sheet = page.getByRole("dialog");
-      if (name === "icloud") await shot(page, `add-account-${scheme}`);
+      if (name === "apple") await shot(page, `add-account-${scheme}`);
       await sheet.getByRole("button", { name: new RegExp(`^${choice}`) }).click();
       await shot(page, `add-${name}-${scheme}`);
       if (name === "google") {
@@ -580,7 +580,7 @@ test("a phone's account steps", async ({ page, isMobile }) => {
   await seed(page.request);
   await signInPhone(page);
   const flows: [string, string[]][] = [
-    ["icloud", ["iCloud"]],
+    ["apple", ["Apple"]],
     ["google-address", ["Google", "Paste the secret address"]],
     ["google-helper", ["Google", "Share with a Sunroom helper"]],
   ];

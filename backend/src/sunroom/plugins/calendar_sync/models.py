@@ -47,7 +47,7 @@ class SyncAccount(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     provider: Mapped[str] = mapped_column(String(16))
     auth_mode: Mapped[str] = mapped_column(String(16), default=AuthMode.NONE)
-    label: Mapped[str] = mapped_column(String(120))  # "iCloud · ana@…", "Holidays · US"
+    label: Mapped[str] = mapped_column(String(120))  # "Apple · ana@…", "Holidays · US"
     status: Mapped[str] = mapped_column(String(16), default=AccountStatus.CONNECTED)
     # What it's safe to show: the server's host, a feed's address with its secret part hidden.
     server_url: Mapped[str | None] = mapped_column(String(500), default=None)

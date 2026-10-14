@@ -170,7 +170,7 @@ export async function settled(page: Page): Promise<void> {
 }
 
 /**
- * A scripted calendar account (the test server's stand-in for iCloud or Google) with one
+ * A scripted calendar account (the test server's stand-in for Apple or Google) with one
  * calendar, "School", synced and (unless `mapped` is false) mapped: Settings → Calendars &
  * Accounts then shows a real row. `request` must be a parent's (a signed-in phone's
  * `page.request`).

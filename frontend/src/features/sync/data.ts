@@ -40,12 +40,12 @@ export function useHolidayPlaces({ enabled = true } = {}) {
   });
 }
 
-/** What a person calls where a calendar comes from: "iCloud", "Google", "School". */
+/** What a person calls where a calendar comes from: "Apple", "Google", "School". */
 export function sourceName(account: Account): string {
   if (account.provider === "holidays") return "Holidays";
   if (account.provider === "google") return "Google";
   const address = account.address ?? "";
-  if (address.includes("icloud.com")) return "iCloud";
+  if (address.includes("icloud.com")) return "Apple"; // iCloud, which the family knows as Apple
   if (address.includes("google.com")) return "Google";
   return account.label;
 }

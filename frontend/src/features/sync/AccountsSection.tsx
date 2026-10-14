@@ -85,7 +85,7 @@ export function AccountsSection() {
             display ? "mb-4 text-d-secondary text-ink-soft" : "mb-3 text-secondary text-ink-soft"
           }
         >
-          Bring in calendars you already use: Google, iCloud, or any calendar address.
+          Bring in calendars you already use: Apple, Google, or any calendar address.
         </p>
       ) : (
         <div

@@ -26,9 +26,9 @@ import {
   HelperKeyArt,
   HelperProjectArt,
   HelperServiceAccountArt,
-  ICloudCopyPasswordArt,
-  ICloudNewPasswordArt,
-  ICloudSignInArt,
+  AppleCopyPasswordArt,
+  AppleNewPasswordArt,
+  AppleSignInArt,
 } from "./drawings";
 
 type Step =
@@ -37,7 +37,7 @@ type Step =
   | "google-address"
   | "google-helper"
   | "google-signin"
-  | "icloud"
+  | "apple"
   | "server"
   | "address"
   | "holidays"
@@ -49,7 +49,7 @@ const TITLES: Record<Step, string> = {
   "google-address": "Google: The Secret Address",
   "google-helper": "Google: Share with a Helper",
   "google-signin": "Sign in with Google",
-  icloud: "iCloud",
+  apple: "Apple",
   server: "A Calendar Server",
   address: "Another Calendar",
   holidays: "Holidays",
@@ -74,7 +74,7 @@ function phoneAddress(): string {
 
 /**
  * Add an account (UX §6) on a phone, a computer or the wall screen (ADR 0028): Google (three
- * ways), iCloud, a calendar server, any calendar address, or holidays. Each flow ends on the
+ * ways), Apple, a calendar server, any calendar address, or holidays. Each flow ends on the
  * account's calendars, with a switch and a person each, then Done. On the wall screen passwords
  * are masked fields on its own keyboard, behind the PIN; the two Google ways that need a phone
  * (a key file, Google's own page) show a code to scan instead, and so does "Or add it from a
@@ -112,14 +112,19 @@ export function AddAccountSheet({
         <div className="flex flex-col gap-6">
           <Choices
             options={[
+              // Apple first: the owner's order (ADR 0032).
+              {
+                step: "apple",
+                label: "Apple",
+                line: "Your iPhone's and Mac's calendars, both ways.",
+              },
               { step: "google", label: "Google", line: "Google Calendar, three ways to connect." },
-              { step: "icloud", label: "iCloud", line: "Your iPhone's calendars, both ways." },
+              { step: "holidays", label: "Holidays", line: "Public holidays, no address needed." },
               {
                 step: "address",
                 label: "Another calendar",
                 line: "Any calendar address (.ics): school, team, Outlook.",
               },
-              { step: "holidays", label: "Holidays", line: "Public holidays, no address needed." },
               {
                 step: "server",
                 label: "A calendar server",
@@ -159,8 +164,8 @@ export function AddAccountSheet({
         <AddressFlow kiosk={kiosk} onDone={close} />
       ) : step === "holidays" ? (
         <HolidaysFlow onDone={close} />
-      ) : step === "icloud" ? (
-        <ServerFlow icloud kiosk={kiosk} onConnected={picked} />
+      ) : step === "apple" ? (
+        <ServerFlow apple kiosk={kiosk} onConnected={picked} />
       ) : step === "server" ? (
         <ServerFlow kiosk={kiosk} onConnected={picked} />
       ) : step === "google-helper" ? (
@@ -366,7 +371,7 @@ function AddressFlow({
       ) : (
         <p className={text.body}>
           {kiosk ? "Type" : "Paste"} the calendar's address. School and team sites, Outlook's
-          “Publish calendar” and iCloud's public calendars all give one.
+          “Publish calendar” and Apple's public calendars all give one.
         </p>
       )}
       <TextField
@@ -509,14 +514,17 @@ function HolidaysFlow({ onDone }: { onDone: () => void }) {
   );
 }
 
-/** iCloud (an app-specific password) or another CalDAV server (its address and login). On the
- * wall screen, the steps at Apple happen on a phone or computer, and the password is typed here. */
+/**
+ * Apple (iCloud's CalDAV, with an app-specific password) or another CalDAV server (its address
+ * and login). On the wall screen, the steps at Apple happen on a phone or computer, and the
+ * password is typed here.
+ */
 function ServerFlow({
-  icloud = false,
+  apple = false,
   kiosk = false,
   onConnected,
 }: {
-  icloud?: boolean;
+  apple?: boolean;
   kiosk?: boolean;
   onConnected: (account: Account) => void;
 }) {
@@ -526,7 +534,7 @@ function ServerFlow({
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [home, setHome] = useState(false);
-  const ready = user.trim() && password.trim() && (icloud || server.trim());
+  const ready = user.trim() && password.trim() && (apple || server.trim());
   return (
     <form
       className="flex flex-col gap-5"
@@ -535,17 +543,17 @@ function ServerFlow({
         if (!ready) return;
         addCaldav.mutate(
           {
-            server_url: icloud ? "https://caldav.icloud.com" : server.trim(),
+            server_url: apple ? "https://caldav.icloud.com" : server.trim(),
             username: user.trim(),
             app_password: password.trim(),
             label: null,
-            allow_private: !icloud && home,
+            allow_private: !apple && home,
           },
           { onSuccess: onConnected },
         );
       }}
     >
-      {icloud ? (
+      {apple ? (
         <>
           <Steps>
             <li>
@@ -568,22 +576,22 @@ function ServerFlow({
                   and sign in.
                 </>
               )}
-              <ICloudSignInArt />
+              <AppleSignInArt />
             </li>
             <li>
               Under Sign-In and Security, tap App-Specific Passwords, then the plus, and name it
               Sunroom.
-              <ICloudNewPasswordArt />
+              <AppleNewPasswordArt />
             </li>
             <li>
               {kiosk
                 ? "Type the password it shows (xxxx-xxxx-xxxx-xxxx) below."
                 : "Copy the password it shows (xxxx-xxxx-xxxx-xxxx) and paste it below."}
-              <ICloudCopyPasswordArt />
+              <AppleCopyPasswordArt />
             </li>
           </Steps>
           <p className={`${text.secondary} text-ink-soft`}>
-            Two-factor authentication has to be on for your Apple ID. Your Apple ID's own password
+            Two-factor authentication has to be on for your Apple Account. Your Apple Account's own
             doesn't work here.
           </p>
         </>
@@ -602,8 +610,8 @@ function ServerFlow({
         />
       )}
       <TextField
-        label={icloud ? "Apple ID email" : "User name"}
-        type={icloud ? "email" : "text"}
+        label={apple ? "Apple Account email" : "User name"}
+        type={apple ? "email" : "text"}
         autoCapitalize="none"
         autoComplete="username"
         value={user}
@@ -612,7 +620,7 @@ function ServerFlow({
         }}
       />
       <TextField
-        label={icloud ? "App-specific password" : "Password"}
+        label={apple ? "App-specific password" : "Password"}
         type="password"
         layout="password"
         autoComplete="off"
@@ -622,7 +630,7 @@ function ServerFlow({
         }}
         error={addCaldav.isError ? errorMessage(addCaldav.error) : null}
       />
-      {icloud ? null : (
+      {apple ? null : (
         <Switch
           label="This server is on your home network"
           hint="Only for a server at home. A parent also adds it under Settings → Network."

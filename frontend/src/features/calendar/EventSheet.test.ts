@@ -22,13 +22,13 @@ function calendar(overrides: Partial<CalendarInfo>): CalendarInfo {
 
 describe("sourceLine", () => {
   it("names a two-way calendar's account", () => {
-    const work = calendar({ name: "Work", source_label: "iCloud", read_only: false });
-    expect(sourceLine(work, false)).toBe("iCloud · Work");
+    const work = calendar({ name: "Work", source_label: "Apple", read_only: false });
+    expect(sourceLine(work, false)).toBe("Apple · Work");
   });
 
   it("says where to change an event Sunroom can only show", () => {
-    expect(sourceLine(calendar({ name: "Work", source_label: "iCloud" }), true)).toBe(
-      "From iCloud · Work. Change it in the Calendar app.",
+    expect(sourceLine(calendar({ name: "Work", source_label: "Apple" }), true)).toBe(
+      "From Apple · Work. Change it in the Calendar app.",
     );
     expect(sourceLine(calendar({ name: "Family", source_label: "Google" }), true)).toBe(
       "From Google · Family. Change it in Google Calendar.",

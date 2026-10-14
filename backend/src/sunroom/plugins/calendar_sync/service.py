@@ -185,14 +185,14 @@ async def _account(session: Any, account_id: str) -> SyncAccount:
 
 
 def source_label(provider: str, url: str | None = None) -> str:
-    """How an event's sheet names where it came from: "From iCloud · Work" (UX §4)."""
+    """How an event's sheet names where it came from: "From Apple · Work" (UX §4)."""
     host = addresses.host_of(url) if url else ""
     if provider == Provider.HOLIDAYS:
         return "Holidays"
     if provider == Provider.GOOGLE or host.endswith("google.com"):
         return "Google"
     if host.endswith("icloud.com"):
-        return "iCloud"
+        return "Apple"  # iCloud, which the family knows as Apple (ADR 0032)
     if host.endswith(("outlook.com", "office365.com", "live.com")):
         return "Outlook"
     if provider == Provider.CALDAV:
@@ -604,7 +604,7 @@ async def add_caldav(
     except OutboundError as exc:
         raise bad(exc.message, exc.code) from None
     icloud = addresses.host_of(server_url).endswith("icloud.com")
-    name = "iCloud" if icloud else addresses.host_of(server_url)
+    name = "Apple" if icloud else addresses.host_of(server_url)
     label = body.label or f"{name} · {masked_user(body.username)}"
     account_id = await save_account(
         ctx,

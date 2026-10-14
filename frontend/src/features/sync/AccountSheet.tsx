@@ -527,7 +527,7 @@ function ReconnectPage({
       <p className={text.body}>
         {feed
           ? `${kiosk ? "Type" : "Paste"} the calendar's new address.`
-          : sourceName(account) === "iCloud"
+          : sourceName(account) === "Apple"
             ? kiosk
               ? "On a phone or computer, make a new app-specific password at appleid.apple.com, then type it here."
               : "Make a new app-specific password at appleid.apple.com and paste it here."

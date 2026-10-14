@@ -10,22 +10,22 @@ import {
   HelperKeyArt,
   HelperProjectArt,
   HelperServiceAccountArt,
-  ICloudCopyPasswordArt,
-  ICloudNewPasswordArt,
-  ICloudSignInArt,
+  AppleCopyPasswordArt,
+  AppleNewPasswordArt,
+  AppleSignInArt,
 } from "./drawings";
 
 afterEach(cleanup);
 
 /** Each step's drawing, and the words from its step that it must show. */
 const DRAWINGS: [string, ComponentType, string[]][] = [
-  ["iCloud: sign in", ICloudSignInArt, ["appleid.apple.com", "Sign in"]],
+  ["Apple: sign in", AppleSignInArt, ["appleid.apple.com", "Sign in"]],
   [
-    "iCloud: a new app-specific password",
-    ICloudNewPasswordArt,
+    "Apple: a new app-specific password",
+    AppleNewPasswordArt,
     ["Sign-In and Security", "App-Specific Passwords", "Sunroom"],
   ],
-  ["iCloud: copy the password", ICloudCopyPasswordArt, ["xxxx-xxxx-xxxx-xxxx", "Copy"]],
+  ["Apple: copy the password", AppleCopyPasswordArt, ["xxxx-xxxx-xxxx-xxxx", "Copy"]],
   ["Google: settings", GoogleSettingsArt, ["Settings"]],
   [
     "Google: integrate calendar",

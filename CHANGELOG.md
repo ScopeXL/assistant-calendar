@@ -19,6 +19,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   phone.
 - An empty room (Lists, Tasks, Photos, Countdowns and the rest) shows an icon, what goes there,
   and one big button to add the first thing.
+- Add an account starts with Apple (it said iCloud), then Google, Holidays, Another calendar and
+  A calendar server; an account's sheet lists the calendars that sync first.
 
 ### Fixed
 

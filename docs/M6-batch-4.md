@@ -750,7 +750,8 @@ table and DEPLOY.md say tags.
 
 ### T11 Accounts: synced first, Apple, the order
 
-- [ ] Done (commit: )
+- [x] Done (commits: "sync: an account's sheet lists the calendars that sync first", "sync:
+  Apple, first in the list")
 
 **Owner's notes.** "When editing a connected calendar, show the sync'd calendars at the top of
 the list." "When adding an account, rename iCloud to Apple, and change the order to: 'Apple,
@@ -807,6 +808,17 @@ src/features/sync`; `just e2e e2e/sync.spec.ts --project=phone-webkit`.
 
 **CHANGELOG.** "Add an account starts with Apple (it said iCloud), then Google, Holidays, Another
 calendar and A calendar server; an account's sheet lists the calendars that sync first."
+
+**As built.** The accounts table's column is `label` ("iCloud · ana@…"), not `name`, so the
+migration (`202610141930_sync_accounts_named_icloud_become_apple`) rewrites the leading word of
+a CalDAV account's label, alone or before " · ", and leaves a label someone typed. The 0.10.0
+fixture (`202610141930.sql`, the 0.9.0 rows with the account renamed) is built in this task, as
+RELEASING.md asks and preflight now checks. The CalDAV copy's place word became "in your Apple
+account" ("isn't on Apple anymore" read oddly). Apple calls the login an **Apple Account** since
+2024, so "Apple ID email" and the two-factor note say that; appleid.apple.com still answers, so
+the steps keep it. The drawings' components are `Apple…Art`, and the wall's step key is
+`apple` (the server address stays `caldav.icloud.com`). `sync.spec.ts` checks the chooser's
+order and runs on `desktop` and `display-1080p` (every test skips itself on the phones).
 
 ### T12 Setup: the six steps beside the form
 

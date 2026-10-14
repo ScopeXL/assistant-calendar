@@ -374,6 +374,15 @@ def _v0_9_0() -> list[Statement]:
     ]
 
 
+def _v0_10_0() -> list[Statement]:
+    """0.10.0 (M6 batch 4): 0.9.0's rows, with the Apple account named as 0.10.0 names it."""
+    return [
+        *_v0_9_0(),
+        "UPDATE sync_accounts SET label = 'Apple · sample@…'"
+        " WHERE id = '00000000-0000-7000-8000-000000000a21'",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
@@ -385,6 +394,7 @@ SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610091752": _v0_7_0,
     "202610121749": _v0_8_0,
     "202610131907": _v0_9_0,
+    "202610141930": _v0_10_0,
 }
 
 

@@ -4,7 +4,7 @@ import { Button } from "../../ui/Button";
 import { AddAccountSheet } from "./AddAccount";
 import { useAccounts } from "./data";
 
-/** First run, step 6 (UX §6): Google, iCloud, a calendar address or holidays; each flow comes
+/** First run, step 6 (UX §6): Apple, Google, holidays or a calendar address; each flow comes
  * back here, listing what was added. */
 export function SetupCalendars({ onDone }: { onDone: () => void }) {
   const [open, setOpen] = useState(false);
@@ -12,8 +12,8 @@ export function SetupCalendars({ onDone }: { onDone: () => void }) {
   return (
     <>
       <p className="text-body text-ink-soft">
-        Google, iCloud, a school or team calendar, or your country's holidays. You can add more
-        later in Settings, then Calendars & Accounts.
+        Apple, Google, your country's holidays, or a school or team calendar. You can add more later
+        in Settings, then Calendars & Accounts.
       </p>
       {accounts.length ? (
         <ul aria-label="Added" className="flex flex-col gap-1">

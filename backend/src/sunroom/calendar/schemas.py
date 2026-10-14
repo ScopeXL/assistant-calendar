@@ -31,7 +31,7 @@ class CalendarOut(BaseModel):
     version: int
     is_default: bool
     deleted: bool
-    source_label: str | None = None  # a synced calendar's account: "iCloud", "Google", …
+    source_label: str | None = None  # a synced calendar's account: "Apple", "Google", …
 
 
 class CalendarCreate(BaseModel):

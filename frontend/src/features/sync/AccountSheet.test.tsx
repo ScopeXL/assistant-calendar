@@ -40,7 +40,7 @@ function calendar(overrides: Partial<RemoteCalendar> & Pick<RemoteCalendar, "id"
 function account(overrides: Partial<Account> = {}): Account {
   return {
     id: "acct",
-    label: "iCloud",
+    label: "Apple",
     provider: "caldav",
     address: "ana@example.com",
     status: "connected",
@@ -136,7 +136,7 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
 
   it("lists its calendars under Sync, and the synced ones under Show on the screen's name", () => {
     draw(account());
-    const sheet = screen.getByRole("dialog", { name: "Edit iCloud" });
+    const sheet = screen.getByRole("dialog", { name: "Edit Apple" });
     expect(within(sheet).getByText("ana@example.com")).toBeTruthy();
     expect(within(sheet).getByRole("button", { name: "Refresh Now" })).toBeTruthy();
     expect(within(sheet).getByRole("heading", { name: "Sync" })).toBeTruthy();
@@ -205,19 +205,19 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
       { clear_owner: false, color: "sea" },
       { clear_owner: false, owner_member_id: "m" },
     ]);
-    fireEvent.click(within(page).getByRole("button", { name: "Back to iCloud" }));
-    expect(screen.getByRole("dialog", { name: "Edit iCloud" })).toBeTruthy();
+    fireEvent.click(within(page).getByRole("button", { name: "Back to Apple" }));
+    expect(screen.getByRole("dialog", { name: "Edit Apple" })).toBeTruthy();
   });
 
   it("removes the account only after asking", async () => {
     const { sent, onClose } = draw(account());
     fireEvent.click(screen.getByRole("button", { name: "Remove Account" }));
-    const asking = screen.getByRole("dialog", { name: "Remove iCloud?" });
+    const asking = screen.getByRole("dialog", { name: "Remove Apple?" });
     fireEvent.click(within(asking).getByRole("button", { name: "Keep It" }));
-    expect(screen.getByRole("dialog", { name: "Edit iCloud" })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: "Edit Apple" })).toBeTruthy();
     expect(sent).toEqual([]);
     fireEvent.click(screen.getByRole("button", { name: "Remove Account" }));
-    fireEvent.click(screen.getByRole("button", { name: "Remove iCloud" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove Apple" }));
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
     });
@@ -225,11 +225,11 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
   });
 
   it("offers the way back in that fits an account that stopped working", () => {
-    const broken = { status: "needs_reconnect", last_error: "iCloud needs its password again." };
+    const broken = { status: "needs_reconnect", last_error: "Apple needs its password again." };
     draw(account(broken as Partial<Account>));
     expect(screen.queryByRole("button", { name: "Refresh Now" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Connect Again" }));
-    const again = screen.getByRole("dialog", { name: "Connect iCloud Again" });
+    const again = screen.getByRole("dialog", { name: "Connect Apple Again" });
     expect(within(again).getByLabelText("Password")).toBeTruthy();
     cleanup();
     // Google signs in on its own page: no password to type.

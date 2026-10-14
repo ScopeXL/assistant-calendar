@@ -756,7 +756,7 @@ async def test_refused_pushes_say_why() -> None:
         )
     )
     assert twice.kind == ErrorKind.REFUSED
-    assert twice.message == "iCloud already has that event in another calendar."
+    assert twice.message == "Apple already has that event in another calendar."
 
 
 async def test_delete_with_if_match_and_gone_counts_as_done() -> None:
@@ -844,7 +844,7 @@ async def test_a_wrong_icloud_password_says_how_to_fix_it() -> None:
     error = await failure(client.discover())
     assert error.kind == ErrorKind.AUTH
     assert error.message == (
-        "iCloud said that password isn't right. Make a new app-specific password and try again."
+        "Apple said that password isn't right. Make a new app-specific password and try again."
     )
     assert len(net.seen) == 2  # the well-known address and its redirect; nothing more
 
@@ -865,7 +865,7 @@ async def test_rate_limits_say_when_to_try_again() -> None:
     server.fail_next.append(httpx.Response(503, headers={"Retry-After": "120"}))
     error = await failure(client.sync_collection(home, None))
     assert (error.kind, error.retry_after) == (ErrorKind.RATE_LIMITED, 120.0)
-    assert error.message == "iCloud asked Sunroom to slow down. It will try again later."
+    assert error.message == "Apple asked Sunroom to slow down. It will try again later."
 
     later = {
         "Retry-After": "Thu, 08 Oct 2026 14:02:00 GMT",
@@ -878,7 +878,7 @@ async def test_rate_limits_say_when_to_try_again() -> None:
     server.fail_next.append(httpx.Response(500))
     error = await failure(client.ctag(home))
     assert error.kind == ErrorKind.UNREACHABLE
-    assert error.message == "iCloud had a problem. Sunroom will try again later."
+    assert error.message == "Apple had a problem. Sunroom will try again later."
 
 
 async def test_servers_that_dont_answer() -> None:
@@ -886,7 +886,7 @@ async def test_servers_that_dont_answer() -> None:
     icloud = CaldavClient(nowhere.http(), f"https://{ICLOUD}", "ana@example.com", PASSWORD)
     error = await failure(icloud.discover())
     assert error.kind == ErrorKind.UNREACHABLE
-    assert error.message == "iCloud didn't answer. Check the server has internet and try again."
+    assert error.message == "Apple didn't answer. Check the server has internet and try again."
     assert len(nowhere.seen) == 1  # the address itself is the same server: not asked again
 
     other = CaldavClient(nowhere.http(), DAV_URL, "ana", PASSWORD)

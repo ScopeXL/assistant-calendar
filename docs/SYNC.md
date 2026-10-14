@@ -76,6 +76,10 @@ Every request is pinned to the address that was checked, and each redirect is ch
 
 ### iCloud
 
+The app calls it **Apple** wherever the family reads it (0.10.0, ADR 0032): the chooser, an
+account's name, its sheet, the source line on events and the error copy. iCloud stays the
+technical name here.
+
 - **Host:** start at `https://caldav.icloud.com`; the real host (`pNN-caldav.icloud.com`) is
   discovered, never hard-coded.
 - **Passwords:**

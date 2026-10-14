@@ -66,7 +66,7 @@ export function sourceLine(calendar: CalendarInfo, readOnly: boolean): string | 
   if (source === "a calendar address")
     return `From a calendar address · ${calendar.name}. It shows events only.`;
   const app =
-    source === "iCloud" ? "the Calendar app" : source === "Google" ? "Google Calendar" : source;
+    source === "Apple" ? "the Calendar app" : source === "Google" ? "Google Calendar" : source;
   return `From ${source} · ${calendar.name}. Change it in ${app}.`;
 }
 

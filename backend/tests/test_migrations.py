@@ -196,3 +196,42 @@ def test_unknown_revision_is_detected(tmp_path: Path) -> None:
     conn.close()
     with pytest.raises(migrate.UnknownRevisionError):
         migrate.check_known(db)
+
+
+def test_accounts_named_icloud_become_apple(tmp_path: Path) -> None:
+    """0.10.0 (ADR 0032): the family reads "Apple", so a CalDAV account 0.9.0 named "iCloud · …"
+    as it connected reads "Apple · …". A name someone chose, and a calendar address, keep theirs."""
+    db = tmp_path / "sunroom.db"
+    conn = sqlite3.connect(db)
+    conn.executescript((FIXTURE_DBS / "202610131907.sql").read_text())
+    columns = [row[1] for row in conn.execute("PRAGMA table_info(sync_accounts)")]
+    apple = dict(
+        zip(
+            columns,
+            conn.execute("SELECT * FROM sync_accounts WHERE provider = 'caldav'").fetchone(),
+            strict=True,
+        )
+    )
+    for suffix, label in (("b", "iCloud"), ("c", "Our iCloud")):
+        row = {**apple, "id": str(apple["id"])[:-1] + suffix, "label": label}
+        conn.execute(
+            f"INSERT INTO sync_accounts ({', '.join(row)}) VALUES ({', '.join('?' for _ in row)})",  # noqa: S608
+            list(row.values()),
+        )
+    conn.execute(
+        "UPDATE sync_accounts SET label = 'iCloud · a public calendar' WHERE provider = 'ics'"
+    )
+    conn.commit()
+    conn.close()
+    assert migrate.upgrade(db) == migrate.head_revision()
+    conn = sqlite3.connect(db)
+    try:
+        labels = sorted(conn.execute("SELECT provider, label FROM sync_accounts").fetchall())
+    finally:
+        conn.close()
+    assert labels == [
+        ("caldav", "Apple"),
+        ("caldav", "Apple · sample@…"),
+        ("caldav", "Our iCloud"),
+        ("ics", "iCloud · a public calendar"),
+    ]
