@@ -76,7 +76,8 @@ size limit.
 - A wait for the board to come back to this week passed at once: the Week board's region is
   named "This Week" on every week. Wait for the header's This week button to be disabled (This
   month on the Month view).
-- The portrait layout test (`lays out its rail or bottom bar…`) fails about one run in seven
-  under `--repeat-each`, at 0.9.0 too: it reads the Today band's box, then the header's, and the
-  header has grown 8 px in between. A first run in a fresh worker passes, which is all `just e2e`
-  does. Not fixed yet: find what grows the header after the board shows.
+- The portrait layout test (`lays out its rail or bottom bar…`) failed about one run in seven:
+  it read the Today band's box, then the header's, and the header had grown 8 px in between. The
+  weather arrives after the board, and in portrait (two header rows) its stacked high and low
+  make the first row taller. The test waits for the weather button. The 8 px shift itself is
+  still there on a portrait wall as the weather loads.

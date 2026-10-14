@@ -197,6 +197,11 @@ test.describe("the wall screen", () => {
     await expect(board).toBeVisible();
     await expect(board.locator("[aria-current=date]")).toHaveCount(1);
     await noSidewaysScroll(page, "the board");
+    // The weather arrives after the board, and in portrait it makes the header's first row
+    // taller: measure once it's there.
+    await expect(
+      page.getByRole("banner").getByRole("button", { name: /^The weather/ }),
+    ).toBeVisible();
     const size = page.viewportSize() ?? { width: 0, height: 0 };
     const rooms = await page.getByRole("navigation", { name: "Rooms" }).boundingBox();
     const today = page.getByRole("complementary", { name: "Today" });
