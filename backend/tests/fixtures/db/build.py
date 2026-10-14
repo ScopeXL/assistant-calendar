@@ -356,6 +356,24 @@ def _v0_8_0() -> list[Statement]:
     ]
 
 
+def _v0_9_0() -> list[Statement]:
+    """0.9.0 (M6 batch 3): 0.8.0's household opening at its home view after a restart, and an
+    Apple calendar account, which 0.9.0 names "iCloud" as it connects."""
+    return [
+        *_v0_8_0(),
+        "UPDATE household SET display_start = 'home'",
+        "INSERT INTO sync_accounts (id, provider, auth_mode, label, status, server_url, username,"
+        " credentials_enc, config_json, allow_private, owner_member_id, interval_s, last_sync_at,"
+        " last_success_at, next_sync_at, last_error, last_error_at, consecutive_failures,"
+        " version, created_by_member_id, created_at, deleted_at) VALUES"
+        " ('00000000-0000-7000-8000-000000000a21', 'caldav', 'app_password',"
+        " 'iCloud · sample@…', 'connected', 'https://caldav.icloud.com', 'sample@example.com',"
+        " 'sample-ciphertext', '{}', 0, NULL, 300, '2026-10-13 19:30:00',"
+        " '2026-10-13 19:30:00', '2026-10-13 19:35:00', NULL, NULL, 0, 1,"
+        f" '{PARENT}', '2026-10-13 19:20:00', NULL)",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
@@ -366,6 +384,7 @@ SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610082231": _v0_6_0,
     "202610091752": _v0_7_0,
     "202610121749": _v0_8_0,
+    "202610131907": _v0_9_0,
 }
 
 
