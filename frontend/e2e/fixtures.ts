@@ -20,19 +20,20 @@ const CSRF = { "X-Sunroom": "1" };
 export const test = base.extend<{
   cspGuard: boolean;
   guard: undefined;
-  watch: (page: Page) => void;
+  watch: (page: Page) => Promise<void>;
 }>({
   cspGuard: [true, { option: true }],
   watch: [
     async ({ cspGuard }, use) => {
       const problems: string[] = [];
-      await use((page: Page) => {
+      await use(async (page: Page) => {
         page.on("pageerror", (error) => problems.push(`page error: ${error.message}`));
         page.on("dialog", (dialog) => {
           problems.push(`dialog: ${dialog.message()}`);
           void dialog.dismiss();
         });
-        void page.addInitScript(() => {
+        // Awaited: a test that skips itself at once ended under the pending call ("Test ended.").
+        await page.addInitScript(() => {
           document.addEventListener("securitypolicyviolation", (event) => {
             console.error(`CSP violation: ${event.violatedDirective} ${event.blockedURI}`);
           });
@@ -48,7 +49,7 @@ export const test = base.extend<{
   guard: [
     async ({ page, request, watch }, use) => {
       await resetServer(request);
-      watch(page);
+      await watch(page);
       await use(undefined);
     },
     { auto: true },
@@ -77,7 +78,7 @@ export async function seed(
 /** A phone (390 × 844, touch) in its own browser context: its own cookies. */
 export async function phone(
   browser: Browser,
-  watch: (page: Page) => void,
+  watch: (page: Page) => Promise<void>,
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -90,14 +91,14 @@ export async function phone(
     locale: "en-US",
   });
   const page = await context.newPage();
-  watch(page);
+  await watch(page);
   return { context, page };
 }
 
 /** The wall screen (1920 × 1080, touch) in its own context. */
 export async function wall(
   browser: Browser,
-  watch: (page: Page) => void,
+  watch: (page: Page) => Promise<void>,
   viewport = { width: 1920, height: 1080 },
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext({
@@ -108,7 +109,7 @@ export async function wall(
     locale: "en-US",
   });
   const page = await context.newPage();
-  watch(page);
+  await watch(page);
   return { context, page };
 }
 

@@ -227,6 +227,8 @@ for (const scheme of ["light", "dark"] as const) {
 
     test("a phone, signed in", async ({ page, request, isMobile }) => {
       test.skip(!isMobile, "phones");
+      // Some forty checks, each an axe scan and two sweeps of the page: minutes on CI's runner.
+      test.slow();
       await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
       await seed(request, { pin: PIN });
       await page.goto("/sign-in");
@@ -332,6 +334,8 @@ for (const scheme of ["light", "dark"] as const) {
 
     test("the wall screen, from first light to Settings", async ({ page, request }, testInfo) => {
       test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
+      // Some forty checks, each an axe scan and two sweeps of the page: minutes on CI's runner.
+      test.slow();
       await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
       await page.goto("/display");
       await expect(

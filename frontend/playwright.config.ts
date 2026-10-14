@@ -17,6 +17,9 @@ export default defineConfig({
   workers: 1,
   forbidOnly: ci,
   retries: ci ? 1 : 0,
+  // GitHub's 4-CPU runner is several times slower than the build Mac: the long journeys (each
+  // marks itself slow, three times this) timed out at Playwright's default 30 s there.
+  timeout: 60_000,
   // Locally one line that shows a failure when it happens; CI keeps a test per line and a report.
   reporter: ci ? [["list"], ["html", { open: "never" }]] : "line",
   use: {

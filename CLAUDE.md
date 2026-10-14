@@ -174,7 +174,8 @@ is traced by running the failing spec at each task's commit. `just preflight` ru
 
 Ask about changes the owner hasn't seen; `just preflight` stops at any failure; bump (patch;
 minor for what the family sees); `just release-tag`, `smoke-image`, `image`, `image-verify`;
-report the version, SHA, digest, changes, database changes, server steps and the checklist.
+watch the push's CI run; report the version, SHA, digest, CI's result, changes, database changes,
+server steps and the checklist.
 
 ## Gotchas that already bit
 

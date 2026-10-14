@@ -42,6 +42,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   opens over it.
 - Check Now in About found no versions: Sunroom's versions on GitHub are tags, not releases. It
   reads them now.
+- Behind the scenes: the end-to-end checks on GitHub timed out on two long accessibility runs;
+  they have the time they need, and the release reports the result.
 
 ## [0.9.1] - 2026-10-14
 

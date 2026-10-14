@@ -953,7 +953,7 @@ password and portrait.
 
 ### T14 The e2e job on GitHub
 
-- [ ] Done (commit: )
+- [x] Done (commit: "ci: the e2e job has the time it needs, and the deploy reports it")
 
 **Owner's note.** "The 'e2e' job in GitHub actions seems to always fail. Can you dig into why and
 propose a fix?" The why is in "Answers".
@@ -988,6 +988,15 @@ deploy skill now reports.
 
 **CHANGELOG.** Under Fixed: "Behind the scenes: the end-to-end checks on GitHub timed out on two
 long accessibility runs; they have the time they need, and the release reports the result."
+
+**As built.** As planned. `actions/cache` is pinned to v6.1.0's commit like every other action,
+the cache key is the version `pnpm exec playwright --version` prints, and actionlint passes on
+the workflow. The deploy skill's step 7 finds the run by the release commit (`gh run list
+--workflow ci.yml --commit …`) and watches it, and the report's second line says what it found;
+its allowed tools gain `gh run list/watch/view` and `git rev-parse`. RELEASING.md has the story
+and a CI row in the pipeline table; CLAUDE.md's deploy summary names CI's result (its CI
+sentence was already fixed in T0). Locally the journeys pass in about a minute and a half for
+both themes on two projects; CI's proof is the next release's run.
 
 ### T15 Wrap up the batch
 

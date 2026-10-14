@@ -92,3 +92,9 @@ size limit.
 - A click just after a dnd-kit drop did nothing: dnd-kit swallows clicks for 50 ms after a drop.
   Tests wait 100 ms.
 - A heading locator matched twice in Settings: the Today panel shows beside it. Use `exact`.
+- The e2e job on GitHub failed every release from 0.5.0 to 0.9.1, unseen: the two accessibility
+  journeys (about forty axe scans each) passed in under 30 s on the Mac and took longer on the
+  4-CPU runner, Playwright's default limit. The base is 60 s and they're `test.slow()`; the
+  deploy skill now reports the run.
+- A test that skipped itself at once ended "Test ended." and showed as flaky on CI: the `guard`
+  fixture fired `page.addInitScript` without awaiting it. `watch` awaits it now.

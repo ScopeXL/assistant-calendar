@@ -79,6 +79,8 @@ jobs:
 
   e2e:
     runs-on: ubuntu-24.04
+    # A whole run is about 20 minutes on this runner; a hung one stops here, not at 6 hours.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
@@ -93,7 +95,21 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: cd backend && uv sync --locked
       - run: cd frontend && pnpm install --frozen-lockfile
-      - run: cd frontend && pnpm exec playwright install --with-deps chromium webkit
+      - name: Playwright's version
+        id: playwright
+        run: echo "version=$(cd frontend && pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache the browsers
+        id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install the browsers
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: cd frontend && pnpm exec playwright install --with-deps chromium webkit
+      - name: Install the browsers' system libraries (the browsers came from the cache)
+        if: steps.browsers.outputs.cache-hit == 'true'
+        run: cd frontend && pnpm exec playwright install-deps chromium webkit
       - name: End-to-end tests (wall screen, phones on WebKit and Chromium, a laptop)
         run: just e2e
       - name: Upload the report on failure

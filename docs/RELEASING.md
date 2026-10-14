@@ -24,8 +24,18 @@ does the rest. This page explains the pieces, and how to release without Claude.
 | Smoke | `just smoke-image vX.Y.Z` | The image from the tag doesn't start healthy on an empty volume with no settings, fails a probe or setup through the API, or starts on a bad volume |
 | Push | `just image` | The version already exists on Docker Hub |
 | Verify | `just image-verify` | Platforms missing, tags disagree, the pulled image fails a probe or setup on either architecture, or the image scan finds a private term |
+| CI | `gh run watch` on the run the push started | Never: the release is out by then. Its result goes in the report, green or the failing jobs with the run's link, and a red run is fixed in a working session, never from the deploy |
 
 Without Claude: `just release patch` runs all of it.
+
+## GitHub's checks
+
+The release gate is local (`just preflight` runs everything on the Mac), and GitHub runs the
+same checks as jobs when the release is pushed, plus the end-to-end suite on Linux browsers and
+a secrets scan. Its e2e job failed on every release from 0.5.0 to 0.9.1 without anyone seeing
+it: the two long accessibility journeys took longer than Playwright's default 30 seconds on
+GitHub's 4-CPU runner. They have the time they need now (ADR 0032), the job caches its browsers
+and stops after 45 minutes, and the deploy skill waits for the run and reports it.
 
 ## One-time setup on the build Mac
 
