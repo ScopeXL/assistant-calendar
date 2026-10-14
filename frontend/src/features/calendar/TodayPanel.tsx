@@ -137,7 +137,7 @@ export function TodayPanel({
                 onNow ? "text-d-body font-semibold text-ink-soft" : "text-d-glance font-bold"
               }
             >
-              {hadToday ? "Nothing else on today." : "Nothing on today."}
+              {hadToday ? "Nothing else today." : "Nothing today."}
             </p>
             {!showTomorrow && firstTomorrow ? (
               <p className="text-d-secondary text-ink-soft">

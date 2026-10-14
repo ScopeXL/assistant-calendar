@@ -147,7 +147,7 @@ export function TodayScreen() {
           </button>
         ) : (
           <p className="text-big font-bold">
-            {hadToday ? "Nothing else on today." : "Nothing on today."}
+            {hadToday ? "Nothing else today." : "Nothing today."}
           </p>
         )}
       </section>

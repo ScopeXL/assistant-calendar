@@ -9,7 +9,7 @@ import type { Occurrence } from "./types";
  * The Today view (UX §3, board B): today's events at glance size, every line readable from
  * across the room, then a strip of the next days with how much each holds. For small
  * households, grandparents and hallway screens; chosen in Settings → Display → Home view.
- * Until the events first arrive it says nothing, rather than "Nothing on today."
+ * Until the events first arrive it says nothing, rather than "Nothing today."
  */
 export function TodayView({
   today,
@@ -34,7 +34,7 @@ export function TodayView({
     <div className="flex min-h-0 flex-1 flex-col border-t border-line">
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-5" tabIndex={0}>
         {loading ? null : items.length === 0 ? (
-          <p className="text-d-glance font-bold text-ink-soft">Nothing on today.</p>
+          <p className="text-d-glance font-bold text-ink-soft">Nothing today.</p>
         ) : (
           items.map((occurrence) => {
             const people = members.filter((m) => occurrence.member_ids.includes(m.id));

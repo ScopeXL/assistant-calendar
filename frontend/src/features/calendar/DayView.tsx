@@ -139,7 +139,7 @@ export function DayView({
             ? `free until ${formatWallTime(row.until)}`
             : groups.length
               ? "Tap a time to add"
-              : "Nothing on this day yet. Tap to add.";
+              : "Nothing planned yet. Tap a time to add.";
           return (
             <div key={`free-${String(index)}`} className={`grid ${hours} items-center gap-4`}>
               <span />

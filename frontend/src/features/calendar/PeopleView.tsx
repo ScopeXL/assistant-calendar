@@ -9,9 +9,9 @@ const COLUMNS = 7;
 
 /**
  * Who's doing what (UX §4): a column per person, Everyone first, in household order, with the
- * avatar and name glance-sized so a kid finds their own column; today's events underneath, then
- * what the plugins add (their chores, with working boxes). Seven columns fit; more page
- * sideways.
+ * avatar and name glance-sized so a kid finds their own column; today's events underneath (or
+ * "Free day" when there are none), then what the plugins add (their chores, with working
+ * boxes). Seven columns fit; more page sideways.
  */
 export function PeopleView({
   today,
@@ -68,7 +68,15 @@ export function PeopleView({
               />
             ))
           ) : (
-            <p className="px-2 text-center text-d-secondary text-ink-soft">Nothing on</p>
+            // A clear calendar is a state, not an error: a pill in the person's tint (an event
+            // chip's tint and ink; neutral for Everyone), under the name. It stays when tasks
+            // follow: the column's events are what it speaks for (ADR 0032).
+            <p
+              data-person={member?.color ?? "everyone"}
+              className="self-center rounded-full bg-p-tint px-5 py-2 text-d-secondary font-semibold text-ink"
+            >
+              Free day
+            </p>
           )}
           {extras.map((Extra, index) => (
             <Extra key={index} memberId={member?.id ?? null} day={today} />

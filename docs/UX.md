@@ -249,7 +249,7 @@ Overlapping events sit side by side, each at least half the width; more than thr
 
 **Month view**: the month's name ("October 2026") over the weekday row, since the header doesn't say it and the cells are bare numbers; then cells with the day number (28 px, today's in a filled circle), up to three one-line entries at 20 px with a 4 px color bar and the person's initial, then "+N more"; a countdown's day shows a small star mark; the current week is lit a step and today two. A cell is one button that opens its Day view, where every event is a full chip: three tappable entries won't fit a cell at the wall's 56 px tap size (decided in M1).
 
-**People**: one column per person, Everyone first, in household order; Today or This Week (rows per day inside each column, compact one-line chips). Each column: the avatar at 72 px with the name (glance-sized so a child finds their own column), today's events, that person's tasks with working checkboxes (the same celebration as the Tasks room), then "Cooks tonight" if set. Up to seven columns fit; an eighth pages horizontally.
+**People**: one column per person, Everyone first, in household order; Today or This Week (rows per day inside each column, compact one-line chips). Each column: the avatar at 72 px with the name (glance-sized so a child finds their own column), today's events (or a **Free day** pill in the person's tint when there are none), that person's tasks with working checkboxes (the same celebration as the Tasks room), then "Cooks tonight" if set. Up to seven columns fit; an eighth pages horizontally.
 
 **Event sheet** (a 640 px side panel from the right in landscape, over the Today panel; a bottom sheet in portrait):
 
@@ -733,8 +733,9 @@ Other motions: a press dips controls by 3% and shades rows (tap); sheets slide u
 | Where | Copy | Button |
 |---|---|---|
 | Week board, nothing this week | "Nothing on this week yet. Add an event, or bring in a calendar you already use." | Add Event; a quiet "Bring in a Calendar" shows the phone QR |
-| Today panel, nothing today | "Nothing on today." then "Tomorrow · 8:00 AM School drop-off" | — |
-| People, a person with nothing | "Nothing on" | — |
+| Today panel, nothing today | "Nothing today." (or "Nothing else today." once today's are over) then "Tomorrow · 8:00 AM School drop-off"; the Today view and a phone's Today say it too | — |
+| Day view, nothing that day | "Nothing planned yet. Tap a time to add." (a phone's day list: "Nothing planned") | — |
+| People, a person with nothing | A **Free day** pill under the name, in the person's tint with the chips' ink (neutral for Everyone): a clear calendar is a state, not an error (ADR 0032). Their tasks still follow | — |
 | Lists room | "Lists live here: groceries, to-dos, packing. Everyone sees them, on the wall and on their phone." | New List |
 | A list with no items | "Nothing on Groceries yet. Add the first thing." | the add field, focused |
 | Tasks room, none | "Tasks live here. Give each person a few, and watch them get stamped." | Add Task |

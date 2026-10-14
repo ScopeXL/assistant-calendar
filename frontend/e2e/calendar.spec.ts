@@ -178,6 +178,9 @@ test("the views, the event sheet and Recently Removed", async ({ page }) => {
   await expect(page.getByRole("banner").getByRole("button", { name: /^Filter/ })).toHaveCount(0);
   await expect(people.getByRole("region", { name: "Ana" })).toContainText("Vet");
   await expect(people.getByRole("region", { name: "Leo" })).toContainText("Piano lesson");
+  // A clear calendar reads "Free day" under the name, in a pill; a busy one doesn't (ADR 0032).
+  await expect(people.getByRole("region", { name: "Sam" })).toContainText("Free day");
+  await expect(people.getByRole("region", { name: "Ana" })).not.toContainText("Free day");
 
   // Back to the week; remove the vet, then put it back from Settings.
   await page.getByRole("button", { name: "Week", exact: true }).click();

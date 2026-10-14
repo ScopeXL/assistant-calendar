@@ -181,7 +181,7 @@ export function DayGroups({
                 </li>
               ) : null}
               {!items.length ? (
-                <li className="px-2 py-2 text-secondary text-ink-soft">Nothing on this day</li>
+                <li className="px-2 py-2 text-secondary text-ink-soft">Nothing planned</li>
               ) : null}
             </ul>
           </section>

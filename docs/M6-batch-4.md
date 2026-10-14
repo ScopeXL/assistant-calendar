@@ -338,7 +338,7 @@ update it; add "Fit the day is the first button in the group").
 
 ### T3 "Nothing today", and a free day on the People view
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: Nothing today, and a Free day on the People view")
 
 **Owner's note.** "'Nothing on today' should be 'Nothing today'. Also, the People view shouldn't
 say 'Nothing on'. Can you come up with a different idea to indicate that person has a clear day?"
@@ -364,6 +364,11 @@ with no events shows "Free day". `just e2e e2e/calendar.spec.ts --project=displa
 
 **CHANGELOG.** "The Today panel says 'Nothing today'; on the People view a clear day reads
 'Free day'."
+
+**As built.** The pill's words are the event chips' ink on the person's tint, not the person's
+own color (`text-p-text`): in the dark theme that color on its own 24% tint is 3.4:1, under AA
+for 20 px text. Everyone's neutral pill (ink on `--line`) is 11:1 light and dark. UX §8 gains a
+row for the Day view's empty day.
 
 ### T4 The header: today's three things on one line
 
