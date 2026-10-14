@@ -13,6 +13,7 @@ import pytest
 from fastapi import FastAPI
 from sqlalchemy import update
 
+from sunroom.calendar import sync_merge
 from sunroom.calendar.models import Calendar, Event
 from sunroom.calendar.schemas import OccurrenceOut
 from tests.support import CSRF, PASSWORD, add_member, set_pin, state_of
@@ -448,6 +449,88 @@ async def test_read_only_calendars_refuse_changes(parent: httpx.AsyncClient, app
     assert refused.json()["error"]["code"] == "calendar_read_only"
 
 
+async def synced(app: FastAPI, name: str, *, read_only: bool = False) -> str:
+    """A calendar an account fills, made as the calendar_sync plugin makes one."""
+    state = state_of(app)
+    async with state.db.write() as tx:
+        calendar = await sync_merge.create_calendar(
+            tx,
+            name=name,
+            color="sea",
+            owner_member_id=None,
+            read_only=read_only,
+            visible_on_display=True,
+            source_label="Apple",
+            now=state.clock.now(),
+        )
+        return calendar.id
+
+
+async def defaults(client: httpx.AsyncClient) -> list[str]:
+    calendars = (await client.get("/api/calendar/calendars")).json()
+    return [c["name"] for c in calendars if c["is_default"]]
+
+
+async def test_any_calendar_that_takes_events_can_be_the_default(
+    parent: httpx.AsyncClient, app: FastAPI
+) -> None:
+    """Settings → Calendars & Accounts → Default calendar (UX §4): a synced one too, so what's
+    added on the wall reaches everyone's phones."""
+    family = await synced(app, "Family")
+    school = await synced(app, "School", read_only=True)
+    made = await parent.post(f"/api/calendar/calendars/{family}/default", headers=CSRF)
+    assert made.status_code == 200, made.text
+    assert (made.json()["name"], made.json()["is_default"]) == ("Family", True)
+    assert await defaults(parent) == ["Family"]
+    added = await add(parent, title="Dentist", start="2026-10-07T09:00")
+    assert added["event"]["calendar_id"] == family  # no calendar picked: the default
+    refused = await parent.post(f"/api/calendar/calendars/{school}/default", headers=CSRF)
+    assert refused.status_code == 409
+    assert refused.json()["error"]["code"] == "calendar_read_only"
+    missing = await parent.post("/api/calendar/calendars/nothing-here/default", headers=CSRF)
+    assert missing.status_code == 404
+    assert await defaults(parent) == ["Family"]
+
+
+async def test_new_events_go_home_while_the_default_cant_take_them(
+    parent: httpx.AsyncClient, app: FastAPI
+) -> None:
+    """A synced default unmapped with its account, or turned read-only, hands new events to
+    Home until it's back; then it's the default again."""
+    state = state_of(app)
+    home = next(c for c in (await parent.get("/api/calendar/calendars")).json())["id"]
+    family = await synced(app, "Family")
+    await parent.post(f"/api/calendar/calendars/{family}/default", headers=CSRF)
+    async with state.db.write() as tx:
+        await sync_merge.remove_calendar(tx, family, state.clock.now())
+    assert await defaults(parent) == ["Home"]
+    added = await add(parent, title="Dentist", start="2026-10-07T09:00")
+    assert added["event"]["calendar_id"] == home
+    async with state.db.write() as tx:
+        await sync_merge.restore_calendar(tx, family, state.clock.now())
+    assert await defaults(parent) == ["Family"]
+    async with state.db.write() as tx:
+        await sync_merge.update_calendar(tx, family, now=state.clock.now(), read_only=True)
+    assert await defaults(parent) == ["Home"]
+    # Home is where new events go now, so it stays.
+    refused = await parent.delete(f"/api/calendar/calendars/{home}", headers=CSRF)
+    assert refused.status_code == 409 and refused.json()["error"]["code"] == "default_calendar"
+
+
+async def test_a_synced_default_can_go_for_good(parent: httpx.AsyncClient, app: FastAPI) -> None:
+    """Pruning an unmapped calendar that was the default leaves Home as the default; the
+    household's link to it would otherwise stop the prune (a foreign key)."""
+    state = state_of(app)
+    family = await synced(app, "Family")
+    await parent.post(f"/api/calendar/calendars/{family}/default", headers=CSRF)
+    async with state.db.write() as tx:
+        await sync_merge.remove_calendar(tx, family, state.clock.now())
+    async with state.db.write() as tx:
+        await sync_merge.prune(tx.session, state.clock.now() + timedelta(seconds=1))
+    every = (await parent.get("/api/calendar/calendars", params={"include_removed": True})).json()
+    assert [(c["name"], c["is_default"]) for c in every] == [("Home", True)]
+
+
 @pytest.fixture
 async def screen(parent: httpx.AsyncClient, other: httpx.AsyncClient) -> httpx.AsyncClient:
     """The wall screen, paired, with a parent PIN set (kid-safe editing is on by default)."""
@@ -481,6 +564,11 @@ async def test_kid_safe_editing_guards_changes_on_the_wall(
     assert changed.status_code == 403 and changed.json()["error"]["pin"] is True
     removed = await screen.delete(f"/api/calendar/events/{event['id']}", headers=CSRF)
     assert removed.status_code == 403
+    # Which calendar new events go to is a parent's setting.
+    made = await screen.post(
+        f"/api/calendar/calendars/{event['calendar_id']}/default", headers=CSRF
+    )
+    assert made.status_code == 403 and made.json()["error"]["pin"] is True
 
 
 async def test_the_export_has_the_calendar(parent: httpx.AsyncClient) -> None:

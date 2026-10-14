@@ -19,6 +19,7 @@ export function ValueRow({
   expanded,
   onToggle,
   before,
+  strong = false,
   children,
 }: {
   label: string;
@@ -28,11 +29,13 @@ export function ValueRow({
   expanded: boolean;
   onToggle: () => void;
   before?: ReactNode;
+  /** A setting that is a row of a Settings page: labelled like the rows beside it. */
+  strong?: boolean;
   /** The picker, drawn under the row while it's open. */
   children: ReactNode;
 }) {
   const display = useShell() === "display";
-  const labelClass = useFieldLabel();
+  const labelClass = useFieldLabel(strong);
   const hintClass = useFieldHint();
   const panelId = useId();
   const panel = useReveal<HTMLDivElement>(expanded);
@@ -149,12 +152,14 @@ export function ChoiceRow<T extends string | number | null>({
   value,
   onChange,
   hint,
+  strong = false,
 }: {
   label: string;
   choices: readonly Choice<T>[];
   value: T;
   onChange: (value: T) => void;
   hint?: string | null;
+  strong?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const chosen = choices.find((choice) => choice.value === value);
@@ -163,6 +168,7 @@ export function ChoiceRow<T extends string | number | null>({
       label={label}
       value={chosen?.label ?? ""}
       hint={hint ?? null}
+      strong={strong}
       expanded={open}
       onToggle={() => {
         setOpen(!open);

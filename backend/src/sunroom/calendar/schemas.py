@@ -46,7 +46,6 @@ class CalendarUpdate(BaseModel):
     color: PersonColor | None = None
     owner_member_id: str | None = None
     visible_on_display: bool | None = None
-    is_default: bool | None = None
 
 
 class EventFields(BaseModel):

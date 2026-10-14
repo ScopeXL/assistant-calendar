@@ -766,6 +766,26 @@ export interface paths {
         patch: operations["patch_calendar_api_calendar_calendars__calendar_id__patch"];
         trace?: never;
     };
+    "/api/calendar/calendars/{calendar_id}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make Default Calendar
+         * @description New events go to this calendar unless another is picked.
+         */
+        post: operations["make_default_calendar_api_calendar_calendars__calendar_id__default_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/calendar/calendars/{calendar_id}/restore": {
         parameters: {
             query?: never;
@@ -2652,8 +2672,6 @@ export interface components {
         CalendarUpdate: {
             /** Color */
             color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
-            /** Is Default */
-            is_default?: boolean | null;
             /** Name */
             name?: string | null;
             /** Owner Member Id */
@@ -6597,6 +6615,37 @@ export interface operations {
                 "application/json": components["schemas"]["CalendarUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    make_default_calendar_api_calendar_calendars__calendar_id__default_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

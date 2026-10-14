@@ -732,17 +732,6 @@
             ],
             "title": "Color"
           },
-          "is_default": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Default"
-          },
           "name": {
             "anyOf": [
               {
@@ -10885,6 +10874,49 @@
           }
         },
         "summary": "Patch Calendar",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
+    "/api/calendar/calendars/{calendar_id}/default": {
+      "post": {
+        "description": "New events go to this calendar unless another is picked.",
+        "operationId": "make_default_calendar_api_calendar_calendars__calendar_id__default_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "calendar_id",
+            "required": true,
+            "schema": {
+              "title": "Calendar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Make Default Calendar",
         "tags": [
           "calendar"
         ]

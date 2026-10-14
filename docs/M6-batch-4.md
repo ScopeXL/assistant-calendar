@@ -62,6 +62,7 @@ as tasks`.
 | An account's sheet lists the calendars that sync first | T11 |
 | Add an account: iCloud → Apple; the order Apple, Google, Holidays, Another calendar, A calendar server | T11 |
 | Plans take hours, mostly testing: build everything and test at the end? | T0, and "Answers" |
+| (Once the batch was built) Set a "Default" calendar that's selected when adding new events | T16 |
 
 ## Answers to the owner's questions
 
@@ -1066,6 +1067,48 @@ column (Sign out of this phone fit on one); Edit a person's birthday is still th
 input (unchanged by this batch). Not done by this session: the by-hand refresh of the wall in
 Light and Dark in `just display` (the end-to-end test checks the theme at load and when the
 fades are armed, and a theme change's crossfade), a walk on the Pi, and VoiceOver.
+
+### T16 The default calendar
+
+- [x] Done (commit: "calendars: a Default calendar for new events, an account's too")
+
+**Owner's note.** "Can you put in one more thing? Add the ability to set a "Default" calendar
+that is selected when adding new events." Asked once T0 to T15 were built and committed.
+
+**What existed.** The household has kept a default since M1 (`household.default_calendar_id`),
+and Add preselected it. A local calendar's row said "New events go here", and the switch that
+changed it sat inside each local calendar's Edit sheet. An account's calendar couldn't be it:
+`PATCH /calendars/{id}` refuses synced calendars, and new events fell back to Home.
+
+**As built.**
+- Settings → Calendars & Accounts opens with **Default calendar**: a value row (`ChoiceRow`,
+  with the new `strong` label of a Settings row) whose list is every calendar that can be
+  written to, the household's own first and then an account's ("Apple · Family"). It saves as
+  it's picked, with "Saved" under it; "Not saved — …" is a toast. The switch left the Edit sheet,
+  and the chosen calendar's row says "Default calendar" (it still has no Remove).
+- `POST /api/calendar/calendars/{id}/default` (a parent's, so the wall asks for the PIN when
+  one is set) sets it; a read-only or removed calendar is refused. `CalendarUpdate.is_default`
+  is gone.
+- `default_calendar()` passes over a chosen calendar that's unmapped or read-only and takes the
+  first local one, so new events never meet a refusal; the choice is kept, and it's the default
+  again when it's back. `sync_merge.prune` clears the household's link to a calendar before
+  deleting it; without that the foreign key fails the prune (the test fails that way with the
+  line taken out). Nothing schedules that prune yet.
+- Add's Calendar row names an account's calendars the same way (`calendarChoiceLabel`), so two
+  calendars of one name can be told apart.
+- Tests: three API tests (an account's calendar as the default, the fallback and back, the
+  prune), the wall's PIN for it, two unit tests (which calendars take events, their names), and
+  an end-to-end test (`sync.spec`, desktop: pick the account's calendar, Add starts with it, the
+  event lands there). The screenshot spec opens the list on the wall and a phone.
+- Gate: `just quick`; both unit suites in full (1,123 backend, 600 frontend); `sync.spec` on
+  desktop; the wall and phone screenshot runs on display-1080p, display-portrait and
+  phone-webkit, reviewed in light and dark. The full `just e2e` runs at the release's preflight.
+- Seen and left: the test server's account names its calendars "a calendar address", so its
+  calendar reads "a calendar address · School"; a real account reads "Apple · Family". With an
+  account's calendar as the default, the household's own calendars can all be removed; if that
+  account's calendar then goes too, Add says "Add a calendar first: Settings, then Calendars &
+  Accounts." (it said "Calendars") until one is put back or added. Keeping one local calendar
+  for good is a choice for the owner.
 
 ## Follow-ups noticed but not in this batch
 

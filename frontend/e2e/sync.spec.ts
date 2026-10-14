@@ -5,9 +5,9 @@
  * the events stay. Adding an account from any device (ADR 0028): a computer gets the steps in a
  * sheet, and Google's way back opens a new account's calendars; the wall types a password on
  * its own keyboard and hands Google's file and page to a phone. An account opens from its row
- * (ADR 0029): Sync, whose a calendar is and its color, Show on the screen, Remove account. The
- * server's clock reads
- * Wednesday, October 7, 2026, 10:00 AM in New York. Synthetic data only.
+ * (ADR 0029): Sync, whose a calendar is and its color, Show on the screen, Remove account. An
+ * account's calendar can be the Default calendar, where Add starts (ADR 0032). The server's
+ * clock reads Wednesday, October 7, 2026, 10:00 AM in New York. Synthetic data only.
  */
 import type { APIRequestContext, Locator, Page } from "@playwright/test";
 
@@ -327,6 +327,47 @@ test("an account opens from its row: Sync, whose and color, Show on the screen, 
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Edit Test server" })).toHaveCount(0);
   await context.close();
+});
+
+test("an account's calendar can be the default: Add starts with it, and what's added goes there", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a computer");
+  await signInPhone(page);
+  await scriptedAccount(page.request);
+  await page.goto("/settings/calendars");
+  // Home is the default until another is picked, and its row says so.
+  const home = page.getByRole("button", { name: "Edit Home" });
+  await expect(home).toContainText("Default calendar");
+  await page.getByRole("button", { name: "Default calendar: Home" }).click();
+  // A synced calendar names its account first, so two of one name can be told apart.
+  await page
+    .getByRole("radiogroup", { name: "Default calendar" })
+    .getByRole("radio", { name: /· School$/ })
+    .click();
+  await expect(page.getByRole("button", { name: /^Default calendar: .+ · School$/ })).toBeVisible();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  await expect(home).not.toContainText("Default calendar");
+
+  // Add starts with it, and an event added without picking another goes there.
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  const add = page.getByRole("dialog", { name: "Add" });
+  await expect(add.getByRole("button", { name: /^Calendar: .+ · School$/ })).toBeAttached();
+  await add.getByLabel("What, when, who").fill("Dentist Thu 2:30pm");
+  await add.getByRole("button", { name: "Add Event" }).click();
+  await expect(add).toBeHidden();
+  const calendars = (await (await page.request.get("/api/calendar/calendars")).json()) as {
+    id: string;
+    name: string;
+  }[];
+  const found = (await (
+    await page.request.get("/api/calendar/occurrences", {
+      params: { from: "2026-10-04", to: "2026-10-11" },
+    })
+  ).json()) as { occurrences: { title: string; calendar_id: string }[] };
+  expect(found.occurrences.find((o) => o.title === "Dentist")?.calendar_id).toBe(
+    calendars.find((c) => c.name === "School")?.id,
+  );
 });
 
 test("the wall adds an account itself, and hands Google's file and page to a phone", async ({

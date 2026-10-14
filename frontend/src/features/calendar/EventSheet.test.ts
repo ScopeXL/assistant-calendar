@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { calendarChoiceLabel, takesEvents } from "./data";
 import { sourceLine } from "./EventSheet";
 import type { CalendarInfo } from "./types";
 
@@ -44,5 +45,20 @@ describe("sourceLine", () => {
   it("says nothing for the family's own calendars", () => {
     const own = calendar({ kind: "local", source_label: null, read_only: false });
     expect(sourceLine(own, false)).toBeNull();
+  });
+});
+
+describe("choosing a calendar (Add's Calendar row, Settings' Default calendar)", () => {
+  it("offers the calendars that take events: not read-only ones, not removed ones", () => {
+    const home = calendar({ name: "Home", kind: "local", source_label: null, read_only: false });
+    const family = calendar({ name: "Family", source_label: "Apple", read_only: false });
+    const removed = calendar({ name: "Old", kind: "local", read_only: false, deleted: true });
+    expect([home, family, calendar({}), removed].filter(takesEvents)).toEqual([home, family]);
+  });
+
+  it("names a synced calendar's account first, so two of one name can be told apart", () => {
+    const own = calendar({ name: "Family", kind: "local", source_label: null, read_only: false });
+    const apple = calendar({ name: "Family", source_label: "Apple", read_only: false });
+    expect([own, apple].map(calendarChoiceLabel)).toEqual(["Family", "Apple · Family"]);
   });
 });

@@ -30,7 +30,7 @@ export function TextField({
   strong?: boolean;
 }) {
   const display = useShell() === "display";
-  const labelClass = useFieldLabel();
+  const labelClass = useFieldLabel(strong);
   const hintClass = useFieldHint();
   const id = useId();
   const hintId = useId();
@@ -38,18 +38,7 @@ export function TextField({
   const described = [hint ? hintId : "", error ? errorId : ""].filter(Boolean).join(" ");
   return (
     <div className="flex flex-col gap-2">
-      <label
-        htmlFor={id}
-        className={
-          hideLabel
-            ? "sr-only"
-            : strong
-              ? display
-                ? "text-d-body font-semibold"
-                : "text-body font-semibold"
-              : labelClass
-        }
-      >
+      <label htmlFor={id} className={hideLabel ? "sr-only" : labelClass}>
         {label}
       </label>
       <input

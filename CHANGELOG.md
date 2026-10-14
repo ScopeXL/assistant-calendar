@@ -6,6 +6,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Settings → Calendars & Accounts starts with Default calendar: where new events go. It can be
+  an Apple or Google calendar too. Add starts with it, and you can still pick another there,
+  where an account's calendars are named after it (Apple · Family).
+
 ### Changed
 
 - Buttons are written the way titles are: Add Photos, Save Changes, Check Now.

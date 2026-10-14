@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { api, errorMessage, unwrap } from "../../api/client";
+import { api, errorMessage, notSaved, unwrap } from "../../api/client";
 import { useMembers } from "../../lib/household";
+import { asParent } from "../../lib/parent";
+import { useSavedFlash } from "../../lib/savedFlash";
 import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
@@ -10,11 +12,13 @@ import { Chip, ChipRow } from "../../ui/Chip";
 import { ColorPicker, usedBy } from "../../ui/ColorPicker";
 import { useFieldLabel } from "../../ui/Field";
 import { ListRow } from "../../ui/ListRow";
+import { SavedMark } from "../../ui/SavedMark";
 import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
-import { useCalendars } from "../calendar/data";
+import { ChoiceRow } from "../../ui/ValueRow";
+import { calendarChoiceLabel, takesEvents, useCalendars } from "../calendar/data";
 import { usePluginModules } from "../usePluginModules";
 import type { CalendarInfo, PersonColor } from "../calendar/types";
 import { Group, Text } from "./parts";
@@ -32,10 +36,10 @@ function useRefreshCalendars() {
 }
 
 /**
- * Settings → Calendars & Accounts (UX §4): the Home calendar and any other local calendars, a
- * row each that opens its sheet (a color, an owner, "Show on the wall screen", which one new
- * events go to, removing it, with Put back). Accounts and their synced calendars follow, from
- * the calendar_sync plugin.
+ * Settings → Calendars & Accounts (UX §4): first the Default calendar, where new events go; then
+ * the Home calendar and any other local calendars, a row each that opens its sheet (a color, an
+ * owner, "Show on the wall screen", removing it, with Put back). Accounts and their synced
+ * calendars follow, from the calendar_sync plugin.
  */
 export function CalendarsPage() {
   const display = useShell() === "display";
@@ -62,14 +66,12 @@ export function CalendarsPage() {
   });
   return (
     <>
-      <Group
-        title="Calendars"
-        note="Events you add go to the calendar marked “New events go here”."
-      >
+      <DefaultCalendar calendars={everyCalendar} />
+      <Group title="Calendars">
         {calendars.map((calendar) => {
           const owner = members.find((m) => m.id === calendar.owner_member_id) ?? null;
           const notes = [
-            calendar.is_default ? "New events go here" : null,
+            calendar.is_default ? "Default calendar" : null,
             owner ? `${owner.name}'s` : "Everyone's",
             calendar.visible_on_display ? null : "Hidden on the wall screen",
           ]
@@ -158,6 +160,60 @@ export function CalendarsPage() {
   );
 }
 
+/**
+ * Where new events go (UX §4): any calendar that takes events, a synced one from an account too,
+ * so what's added on the wall can reach everyone's phones. Add starts with it and can still pick
+ * another. It saves as it changes, like every setting (ADR 0029).
+ */
+function DefaultCalendar({ calendars }: { calendars: CalendarInfo[] }) {
+  const display = useShell() === "display";
+  const refresh = useRefreshCalendars();
+  const saved = useSavedFlash();
+  const choices = calendars.filter(takesEvents);
+  const current = choices.find((calendar) => calendar.is_default) ?? null;
+  const make = useMutation({
+    mutationFn: (calendar: CalendarInfo) =>
+      asParent(async () =>
+        unwrap(
+          await api.POST("/api/calendar/calendars/{calendar_id}/default", {
+            params: { path: { calendar_id: calendar.id } },
+          }),
+        ),
+      ),
+    onSuccess: async () => {
+      await refresh();
+      saved.flash();
+    },
+    onError: (error) => {
+      showToast(notSaved(error));
+    },
+  });
+  if (!choices.length) return null;
+  // The one just picked shows while it saves.
+  const shown = make.isPending ? make.variables.id : (current?.id ?? "");
+  return (
+    <Group>
+      <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
+        <ChoiceRow
+          strong
+          label="Default calendar"
+          hint="New events go here. You can pick another when you add one."
+          choices={choices.map((calendar) => ({
+            value: calendar.id,
+            label: calendarChoiceLabel(calendar),
+          }))}
+          value={shown}
+          onChange={(id) => {
+            const picked = choices.find((calendar) => calendar.id === id);
+            if (picked && picked.id !== current?.id) make.mutate(picked);
+          }}
+        />
+        <SavedMark show={saved.saved} />
+      </div>
+    </Group>
+  );
+}
+
 function CalendarSheet({ editing, onClose }: { editing: Editing; onClose: () => void }) {
   const calendar = editing?.kind === "change" ? editing.calendar : null;
   return (
@@ -180,7 +236,6 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
   const [color, setColor] = useState<PersonColor>(calendar?.color ?? "sky");
   const [owner, setOwner] = useState<string | null>(calendar?.owner_member_id ?? null);
   const [shown, setShown] = useState(calendar?.visible_on_display ?? true);
-  const [isDefault, setIsDefault] = useState(calendar?.is_default ?? false);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -194,7 +249,7 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
         ? unwrap(
             await api.PATCH("/api/calendar/calendars/{calendar_id}", {
               params: { path: { calendar_id: calendar.id } },
-              body: { ...body, ...(isDefault && !calendar.is_default ? { is_default: true } : {}) },
+              body,
             }),
           )
         : unwrap(await api.POST("/api/calendar/calendars", { body }));
@@ -275,14 +330,6 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
         </ChipRow>
       </div>
       <Switch label="Show on the wall screen" checked={shown} onChange={setShown} />
-      {calendar && !calendar.is_default ? (
-        <Switch
-          label="New events go here"
-          hint="Quick add and Add use this calendar unless you pick another."
-          checked={isDefault}
-          onChange={setIsDefault}
-        />
-      ) : null}
       {error ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(error)}

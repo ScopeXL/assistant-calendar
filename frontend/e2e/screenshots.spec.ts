@@ -368,6 +368,11 @@ test("the wall screen", async ({ page }) => {
   await shot(page, "settings-account-calendar");
   await school.getByRole("button", { name: "Close" }).click();
   await expect(school).toBeHidden();
+  // The Default calendar's list, open: Home, and the account's calendar under its name.
+  await page.getByRole("button", { name: "Default calendar: Home" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Default calendar" })).toBeVisible();
+  await shot(page, "settings-default-calendar");
+  await page.getByRole("button", { name: "Default calendar: Home" }).click();
 
   // Adding an account here: the choices with the phone shortcut, Apple's password on the
   // keyboard, and Google's two ways that need a phone.
@@ -584,6 +589,10 @@ test("a phone's calendar", async ({ page, isMobile }) => {
     await page.goto("/settings/calendars");
     await expect(page.getByRole("heading", { name: "Accounts", exact: true })).toBeVisible();
     await shot(page, `settings-calendars-accounts-${scheme}`);
+    await page.getByRole("button", { name: "Default calendar: Home" }).click();
+    await expect(page.getByRole("radiogroup", { name: "Default calendar" })).toBeVisible();
+    await shot(page, `settings-calendars-default-${scheme}`);
+    await page.getByRole("button", { name: "Default calendar: Home" }).click();
     // An account's sheet, and its calendar's page inside it.
     await page.getByRole("button", { name: "Edit Test server" }).click();
     await expect(page.getByRole("dialog", { name: "Edit Test server" })).toBeVisible();

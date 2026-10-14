@@ -6,9 +6,12 @@ import { useShell } from "./shell";
  * The one look for a row's label in every form (ADR 0030): quieter than what's under it, so a
  * label reads as a label and not as one more chip. 20 px in soft ink on the wall, 14 px on a
  * phone. The primitives that write their own label (TextField, DayField, ValueRow) use it too.
+ * `strong`: a setting that is a row of a Settings page, labelled like the rows beside it.
  */
-export function useFieldLabel(): string {
-  return useShell() === "display"
+export function useFieldLabel(strong = false): string {
+  const display = useShell() === "display";
+  if (strong) return display ? "text-d-body font-semibold" : "text-body font-semibold";
+  return display
     ? "text-d-secondary font-semibold text-ink-soft"
     : "text-secondary font-semibold text-ink-soft";
 }

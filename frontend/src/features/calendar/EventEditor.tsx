@@ -17,7 +17,7 @@ import { TextField } from "../../ui/TextField";
 import { TimeField } from "../../ui/TimeField";
 import { ChoiceRow } from "../../ui/ValueRow";
 import { WhoPicker } from "../../ui/WhoPicker";
-import { useCalendars } from "./data";
+import { calendarChoiceLabel, takesEvents, useCalendars } from "./data";
 import { parseQuickAdd, type QuickAddDraft } from "./quickAdd";
 import { RepeatField } from "./RepeatField";
 import { repeatToRRule, rruleToRepeat, type Repeat, type RepeatEnd } from "./repeat";
@@ -205,7 +205,8 @@ export function EventEditor({
   const { data: members = [] } = useMembers();
   const { data: calendars = [] } = useCalendars();
   const weekStartsOn = settings?.week_starts_on ?? 6;
-  const writable = calendars.filter((c) => !c.read_only && !c.deleted);
+  const writable = calendars.filter(takesEvents);
+  // Settings → Calendars & Accounts → Default calendar: where a new event starts.
   const defaultCalendar = writable.find((c) => c.is_default)?.id ?? writable[0]?.id ?? null;
   const [text, setText] = useState(initial?.title ?? "");
   const [manual, setManual] = useState<Partial<Draft>>(initial ?? {});
@@ -383,7 +384,7 @@ export function EventEditor({
         {writable.length > 1 ? (
           <ChoiceRow
             label="Calendar"
-            choices={writable.map((c) => ({ value: c.id, label: c.name }))}
+            choices={writable.map((c) => ({ value: c.id, label: calendarChoiceLabel(c) }))}
             value={draft.calendarId ?? ""}
             onChange={(calendarId) => {
               set({ calendarId });

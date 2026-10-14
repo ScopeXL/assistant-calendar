@@ -82,22 +82,28 @@ class Context:
 
 
 async def default_calendar(session: AsyncSession) -> Calendar:
-    """The household's default calendar, or the first local one; Home is made if none is left."""
+    """Where new events go: the household's default calendar while it's here and takes events
+    (a synced one can be removed with its account, or turn read-only), else the first local
+    calendar that does."""
     home = await session.get(Household, 1)
     if home is not None and home.default_calendar_id:
         found = await session.get(Calendar, home.default_calendar_id)
-        if found is not None and found.deleted_at is None:
+        if found is not None and found.deleted_at is None and not found.read_only:
             return found
     first = (
         await session.scalars(
             select(Calendar)
-            .where(Calendar.kind == CalendarKind.LOCAL, Calendar.deleted_at.is_(None))
+            .where(
+                Calendar.kind == CalendarKind.LOCAL,
+                Calendar.deleted_at.is_(None),
+                Calendar.read_only.is_(False),
+            )
             .order_by(Calendar.sort, Calendar.created_at)
         )
     ).first()
     if first is not None:
         return first
-    raise AppError(409, "no_calendar", "Add a calendar first: Settings, then Calendars.")
+    raise AppError(409, "no_calendar", "Add a calendar first: Settings, then Calendars & Accounts.")
 
 
 async def list_calendars(session: AsyncSession, *, include_deleted: bool = False) -> list[Calendar]:
@@ -176,14 +182,28 @@ async def update_calendar(
         calendar.owner_member_id = body.owner_member_id
     if body.visible_on_display is not None:
         calendar.visible_on_display = body.visible_on_display
-    if body.is_default:
-        home = await tx.session.get(Household, 1)
-        if home is not None:
-            home.default_calendar_id = calendar.id
-            tx.publish("settings.changed", {"area": "calendars"})
     calendar.updated_at = ctx.now
     calendar.version += 1
     tx.publish("calendars.changed", {"calendar_id": calendar.id})
+    return calendar
+
+
+async def make_default(tx: WriteTx, calendar_id: str) -> Calendar:
+    """The default calendar: new events go here unless another is picked (UX §4). Any calendar
+    that takes events can be it, a synced one from an account too."""
+    calendar = await tx.session.get(Calendar, calendar_id)
+    if calendar is None or calendar.deleted_at is not None:
+        raise AppError(404, "not_found", "That calendar isn't here any more.")
+    if calendar.read_only:
+        raise AppError(
+            409,
+            "calendar_read_only",
+            "This calendar only shows events, so new ones can't go there.",
+        )
+    home = await tx.session.get(Household, 1)
+    if home is not None and home.default_calendar_id != calendar.id:
+        home.default_calendar_id = calendar.id
+        tx.publish("calendars.changed", {"calendar_id": calendar.id})
     return calendar
 
 

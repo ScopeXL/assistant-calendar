@@ -86,6 +86,14 @@ async def patch_calendar(
         return service.calendar_out(calendar, await service.default_calendar_id(tx.session))
 
 
+@router.post("/calendars/{calendar_id}/default")
+async def make_default_calendar(calendar_id: str, state: StateDep, actor: ParentDep) -> CalendarOut:
+    """New events go to this calendar unless another is picked."""
+    async with state.db.write() as tx:
+        calendar = await service.make_default(tx, calendar_id)
+        return service.calendar_out(calendar, await service.default_calendar_id(tx.session))
+
+
 @router.delete("/calendars/{calendar_id}")
 async def delete_calendar(calendar_id: str, state: StateDep, actor: ParentDep) -> CalendarOut:
     async with state.db.write() as tx:

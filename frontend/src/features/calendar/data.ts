@@ -13,7 +13,7 @@ import { asParent } from "../../lib/parent";
 import { showToast } from "../../lib/toast";
 import { useCalendarOverlays } from "../usePluginModules";
 import { CORE_OVERLAYS } from "./overlays";
-import type { CalendarEvent, Change, EventFields, Scope } from "./types";
+import type { CalendarEvent, CalendarInfo, Change, EventFields, Scope } from "./types";
 
 /** Occurrences in [from, to). The board asks for `overlays` too: the core's birthdays, and what
  * the plugins that are on add to its days (meals, countdowns). */
@@ -50,6 +50,19 @@ export function useCalendars(removed = false) {
       ),
     staleTime: 60_000,
   });
+}
+
+/** The calendars a new event can go to: a local one, or a synced one that isn't read-only. */
+export function takesEvents(calendar: CalendarInfo): boolean {
+  return !calendar.read_only && !calendar.deleted;
+}
+
+/** A calendar's name among choices: a synced one names its account first ("Apple · Family"), as
+ * an event's sheet does, so two calendars with one name can be told apart. */
+export function calendarChoiceLabel(calendar: CalendarInfo): string {
+  return calendar.kind === "sync" && calendar.source_label
+    ? `${calendar.source_label} · ${calendar.name}`
+    : calendar.name;
 }
 
 export function useEvent(eventId: string | null) {

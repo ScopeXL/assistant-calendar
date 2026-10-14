@@ -20,7 +20,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from datetime import datetime
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sunroom.calendar import revisions
@@ -46,6 +46,7 @@ from sunroom.calendar.synced import (
 from sunroom.calendar.timing import json_list, set_timing, timing_of
 from sunroom.db.engine import WriteTx
 from sunroom.domain.recurrence import RecurrenceError, validate_rrule
+from sunroom.household.models import Household
 
 CHUNK = 200  # series per write transaction, so the write lock stays short on a Pi
 SYNC_DEVICE = "sync"  # what a revision written by a sync says did it
@@ -655,4 +656,10 @@ async def prune(session: AsyncSession, cutoff: datetime) -> None:
         delete(Event).where(Event.calendar_id.in_(gone), Event.parent_event_id.is_not(None))
     )
     await session.execute(delete(Event).where(Event.calendar_id.in_(gone)))
+    # The household's default may be one of them (it fell back to Home when it was unmapped).
+    await session.execute(
+        update(Household)
+        .where(Household.default_calendar_id.in_(gone))
+        .values(default_calendar_id=None)
+    )
     await session.execute(delete(Calendar).where(Calendar.id.in_(gone)))
