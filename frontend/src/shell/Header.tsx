@@ -10,9 +10,11 @@ import { LiveStatusButton } from "../ui/LiveStatus";
 import { roomHeader } from "./roomHeader";
 
 /**
- * Today, at the header's left (UX §3): the date in bold on the time's baseline, the time at
- * glance size (weight 800, digits in fixed boxes so it never jiggles, AM or PM small beside it),
- * then what the plugins put by the clock (the weather), 24 px apart.
+ * Today, at the header's left (UX §3): the date in bold, the time at glance size (weight 800,
+ * digits in fixed boxes so it never jiggles, AM or PM small on its baseline), then what the
+ * plugins put by the clock (the weather), 24 px apart. Each is centred on the header's middle
+ * line (ADR 0032): on the time's baseline, the date sat low and the time rode high against the
+ * weather's centred 56 px button.
  */
 function HeaderToday() {
   const now = useMinute();
@@ -21,7 +23,7 @@ function HeaderToday() {
   const suffix = clockSuffix(now);
   const blocks = useRailBlocks();
   return (
-    <div className="mr-3 flex shrink-0 items-baseline gap-x-6 landscape:ml-3">
+    <div className="mr-3 flex shrink-0 items-center gap-x-6 landscape:ml-3">
       <p className="text-d-body font-bold whitespace-nowrap">{shortDate(day)}</p>
       <p className="text-d-glance font-extrabold whitespace-nowrap">
         <Digits value={time} spoken={suffix ? `${time} ${suffix}` : time} />
@@ -31,8 +33,7 @@ function HeaderToday() {
           </span>
         ) : null}
       </p>
-      {/* The date sits on the time's baseline; the weather is a button, centred in the bar. */}
-      <div className="flex items-center gap-x-6 self-center empty:hidden">
+      <div className="flex items-center gap-x-6 empty:hidden">
         {blocks.map((Block, index) => (
           <Block key={index} place="header" />
         ))}

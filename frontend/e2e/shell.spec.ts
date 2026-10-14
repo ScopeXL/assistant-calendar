@@ -209,6 +209,20 @@ test.describe("the wall screen", () => {
     const panel = await today.boundingBox();
     const header = await page.getByRole("banner").boundingBox();
     await steadyDigits(page);
+    // Today's three things share the header's middle line (ADR 0032): the date's, the time's
+    // and the weather's middles within 2 px of one another.
+    const bar = page.getByRole("banner");
+    const middles = await Promise.all(
+      [
+        bar.locator("p").nth(0),
+        bar.locator("p").nth(1),
+        bar.getByRole("button", { name: /^The weather/ }),
+      ].map(async (part) => {
+        const box = await part.boundingBox();
+        return (box?.y ?? 0) + (box?.height ?? 0) / 2;
+      }),
+    );
+    expect(Math.max(...middles) - Math.min(...middles)).toBeLessThanOrEqual(2);
     if (size.height > size.width) {
       // Portrait: the header across the top, the Today band under it, the bar at the bottom.
       expect(header).toMatchObject({ x: 0, y: 0, width: size.width });

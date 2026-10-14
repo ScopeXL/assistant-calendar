@@ -372,7 +372,7 @@ row for the Day view's empty day.
 
 ### T4 The header: today's three things on one line
 
-- [ ] Done (commit: )
+- [x] Done (commit: "shell: the header's date, time and weather on one middle line")
 
 **Owner's note.** "The time in the header isn't aligned with the date or weather text."
 
@@ -396,6 +396,11 @@ weather centred on the header's middle line"), `:846`; ADR 0030's header row get
 header shots in T15.
 
 **CHANGELOG.** "In the header the date, the time and the weather line up."
+
+**As built.** There is no test named "header" in `shell.spec.ts`; the header's geometry is in
+"lays out its rail or bottom bar, the board and Today", which now measures the date's, the
+time's and the weather's middles within 2 px on both wall projects. With the old baseline
+layout it measured 7 px.
 
 ### T5 The theme: right from the first paint, and one crossfade
 

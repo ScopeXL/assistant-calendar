@@ -11,6 +11,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Buttons are written the way titles are: Add Photos, Save Changes, Check Now.
 - On the Hours grid the zoom's buttons read Fit the day, Zoom out, Zoom in.
 - The Today panel says "Nothing today"; on the People view a clear day reads "Free day".
+- In the header the date, the time and the weather line up.
 
 ### Fixed
 
