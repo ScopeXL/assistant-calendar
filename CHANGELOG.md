@@ -6,12 +6,14 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-14
+
 ### Added
 
-- Settings → Calendars & Accounts starts with Default calendar: where new events go. It can be
-  an Apple or Google calendar too. Add starts with it, and you can still pick another there,
-  where an account's calendars are named after it (Apple · Family). Sunroom always keeps one
-  calendar of its own, so the last one can't be removed.
+- Settings → Calendars & Accounts starts with Default calendar: where new events go, and it can
+  be an Apple or Google calendar too. Add starts with it, and you can still pick another there
+  (an account's calendars are named after it: Apple · Family). Sunroom always keeps one calendar
+  of its own, so the last one can't be removed.
 
 ### Changed
 
@@ -27,7 +29,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - An empty room (Lists, Tasks, Photos, Countdowns and the rest) shows an icon, what goes there,
   and one big button to add the first thing.
 - Add an account starts with Apple (it said iCloud), then Google, Holidays, Another calendar and
-  A calendar server; an account's sheet lists the calendars that sync first.
+  A calendar server. An iCloud account you already have is called Apple now, and an account's
+  sheet lists the calendars that sync first.
 - Setup fills a computer's screen: the six steps are listed at the left with the current one
   marked, and each step's form sits beside them. On a phone a progress bar shows how far along
   you are.
@@ -36,21 +39,18 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Fixed
 
-- On a computer, Settings → Devices (it was Phones & Screens) said to type the kitchen screen's
-  code, with nowhere to type it. Pair a Display there now opens a box for the code, on phones
-  too.
-- Behind the scenes: a layout test that failed now and then on the upright screen waits for
-  the weather to arrive first.
-- Behind the scenes: checks can run for one test file or one screen at a time.
 - A refresh paints the screen in its theme straight away: the header, the rails, the buttons and
   today's column no longer show another color and fade. Changing the theme crossfades
   everything together.
 - A sheet no longer shifts when a toast fades, and a toast no longer jumps into a sheet that
   opens over it.
+- On a computer, Settings → Devices (it was Phones & Screens) said to type the kitchen screen's
+  code, with nowhere to type it. Pair a Display there now opens a box for the code, on phones
+  too.
 - Check Now in About found no versions: Sunroom's versions on GitHub are tags, not releases. It
   reads them now.
-- Behind the scenes: the end-to-end checks on GitHub timed out on two long accessibility runs;
-  they have the time they need, and the release reports the result.
+- Behind the scenes: the checks on GitHub have the time they need and every release reports
+  them, a layout test no longer fails now and then, and checks can run one test at a time.
 
 ## [0.9.1] - 2026-10-14
 
@@ -467,5 +467,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.9.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.8.0...v0.9.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.9.1...HEAD
 [0.9.1]: https://github.com/ScopeXL/assistant-calendar/compare/v0.9.0...v0.9.1
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.9.1...v0.10.0
