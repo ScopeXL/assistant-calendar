@@ -6,6 +6,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- On a computer, Settings → Phones & Screens said to type the kitchen screen's code, with
+  nowhere to type it. Pair a display there now opens a box for the code, on phones too.
+
 ## [0.9.1] - 2026-10-14
 
 ### Fixed

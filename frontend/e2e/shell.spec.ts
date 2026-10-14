@@ -882,6 +882,35 @@ test.describe("a laptop", () => {
     test.skip(test.info().project.name !== "desktop", "a laptop");
   });
 
+  test("pairs a wall screen from Settings, having no More", async ({
+    page,
+    request,
+    browser,
+    watch,
+  }) => {
+    await seed(request);
+    const { page: screen, context } = await wall(browser, watch);
+    await screen.goto("/display");
+    const code = screen.getByTestId("pair-code");
+    await expect(code).toBeVisible();
+    await signInPhone(page);
+    await page.goto("/settings/devices");
+    await expect(page.getByText(/^No screen paired yet/)).toBeVisible();
+    await page.getByRole("button", { name: "Pair a display" }).click();
+    const sheet = page.getByRole("dialog", { name: "Pair a Display" });
+    await sheet.getByLabel("The code on the screen").fill((await code.textContent()) ?? "");
+    await sheet.getByRole("button", { name: "Pair", exact: true }).click();
+    await expect(sheet).toBeHidden();
+    await expect(
+      page.locator("[data-toast]").filter({ hasText: "Kitchen screen paired" }),
+    ).toBeVisible();
+    await expect(screen.getByRole("heading", { name: "Name this screen" })).toBeVisible();
+    await screen.getByRole("button", { name: "Hallway" }).click();
+    await screen.getByRole("button", { name: "Done" }).click();
+    await expect(page.getByText("Hallway screen")).toBeVisible();
+    await context.close();
+  });
+
   test("gets the display shell and types with its own keyboard", async ({ page, request }) => {
     await seed(request);
     await signInPhone(page);

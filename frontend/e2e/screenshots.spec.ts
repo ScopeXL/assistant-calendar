@@ -454,6 +454,10 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByRole("button", { name: "Add a phone" }).click();
     await expect(page.getByRole("dialog", { name: "Add a phone" })).toBeVisible();
     await shot(page, `settings-add-a-phone-${scheme}`);
+    await page.goto("/settings/devices");
+    await page.getByRole("button", { name: "Pair a display" }).click();
+    await expect(page.getByRole("dialog", { name: "Pair a Display" })).toBeVisible();
+    await shot(page, `settings-pair-a-display-${scheme}`);
     // Erase everything: both steps of its sheet (nothing is erased here).
     await page.goto("/settings/backup");
     await page.getByRole("button", { name: "Erase everything…" }).click();
@@ -798,6 +802,17 @@ test("a laptop", async ({ page }) => {
     await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);
   }
+  // A computer pairs a screen from Phones & Screens: it has no More.
+  await page
+    .getByRole("navigation", { name: "Settings" })
+    .getByRole("link", { name: "Phones & Screens", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Pair a display" }).click();
+  const pairing = page.getByRole("dialog", { name: "Pair a Display" });
+  await expect(pairing).toBeVisible();
+  await shot(page, "settings-pair-a-display");
+  await pairing.getByRole("button", { name: "Close" }).click();
+  await expect(pairing).toBeHidden();
   // A computer adds photos itself: the room's Add photos, and a person's Add a photo.
   await page
     .getByRole("navigation", { name: "Settings" })

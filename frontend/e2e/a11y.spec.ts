@@ -318,7 +318,10 @@ for (const scheme of ["light", "dark"] as const) {
           await sheet(page, "Add a calendar", "add a calendar");
           await sheet(page, "Edit Test server", "an account");
         }
-        if (title === "Phones & Screens") await sheet(page, "Add a phone", "add a phone");
+        if (title === "Phones & Screens") {
+          await sheet(page, "Add a phone", "add a phone");
+          await sheet(page, "Pair a display", "pair a display from Settings");
+        }
       }
       await page.goto("/install?from=more");
       await expect(
@@ -621,6 +624,10 @@ for (const scheme of ["light", "dark"] as const) {
           page.getByRole("heading", { name: title, level: 2, exact: true }),
         ).toBeVisible();
         await check(page, `laptop settings: ${title}`);
+        // A computer has no More: it pairs a screen from here.
+        if (title === "Phones & Screens") {
+          await sheet(page, "Pair a display", "laptop: pair a display");
+        }
       }
     });
   });

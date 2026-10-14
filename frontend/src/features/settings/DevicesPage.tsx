@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { Monitor, Smartphone } from "lucide-react";
 import { useState } from "react";
 
@@ -13,6 +12,7 @@ import { showToast } from "../../lib/toast";
 import { Button } from "../../ui/Button";
 import { useShell } from "../../ui/shell";
 import { AddPhoneSheet } from "./AddPhoneSheet";
+import { PairDisplaySheet } from "./PairDisplaySheet";
 import { Group, Text } from "./parts";
 
 type Device = components["schemas"]["DeviceOut"];
@@ -29,7 +29,10 @@ function signOutLabel(device: Device): string {
   return device.is_current ? "Sign out of this phone" : "Sign out";
 }
 
-/** Settings → Phones & screens (UX §4): every signed-in phone and paired screen. */
+/**
+ * Settings → Phones & screens (UX §4): every signed-in phone and paired screen. A phone or a
+ * computer pairs a screen from here; the screen itself doesn't offer to.
+ */
 export function DevicesPage() {
   const display = useShell() === "display";
   const queryClient = useQueryClient();
@@ -39,6 +42,8 @@ export function DevicesPage() {
     queryFn: () => asParent(async () => unwrap(await api.GET("/api/auth/devices"))),
   });
   const [adding, setAdding] = useState(false);
+  const [pairing, setPairing] = useState(false);
+  const onTheScreen = session?.device_kind === "kiosk";
   const refresh = () => queryClient.invalidateQueries({ queryKey: qk.devices() });
 
   const signOut = useMutation({
@@ -140,14 +145,16 @@ export function DevicesPage() {
         ) : (
           screens.map(row)
         )}
-        {!display ? (
-          <div className="py-4">
-            <Link
-              to="/pair"
-              className="press inline-flex min-h-11 items-center rounded-button border-2 border-line bg-surface px-5 text-body font-semibold"
+        {!onTheScreen ? (
+          <div className={display ? "py-5" : "py-4"}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setPairing(true);
+              }}
             >
-              Pair a Display
-            </Link>
+              Pair a display
+            </Button>
           </div>
         ) : null}
       </Group>
@@ -176,6 +183,12 @@ export function DevicesPage() {
         open={adding}
         onClose={() => {
           setAdding(false);
+        }}
+      />
+      <PairDisplaySheet
+        open={pairing}
+        onClose={() => {
+          setPairing(false);
         }}
       />
     </>

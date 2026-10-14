@@ -138,7 +138,7 @@ describe("design rules", () => {
     expect(
       offenders(/\buppercase\b/, [
         "../features/auth/SignInScreen.tsx",
-        "../features/phone/PairDisplayScreen.tsx",
+        "../features/phone/PairCode.tsx",
         "../features/onboarding/SetupWizard.tsx",
       ]),
     ).toEqual([]);
