@@ -27,14 +27,20 @@ PUBLIC = "140.82.112.6"  # a made-up public address for api.github.com in these 
 class FakeGitHub:
     def __init__(self) -> None:
         self.requests: list[httpx.Request] = []
-        self.tag: str | None = "v99.0.0"
+        # The repository's tags, as GitHub lists them (a stray one that isn't a version too).
+        self.tags: list[str] = ["v0.9.1", "v99.0.0", "nightly"]
+        self.body: object | None = None  # an answer of another shape
         self.status = 200
 
     def handle(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
-        if self.status != 200 or self.tag is None:
-            return httpx.Response(self.status if self.status != 200 else 404)
-        return httpx.Response(200, json={"tag_name": self.tag, "name": "Sunroom"})
+        if self.status != 200:
+            return httpx.Response(self.status)
+        if self.body is not None:
+            return httpx.Response(200, json=self.body)
+        return httpx.Response(
+            200, json=[{"name": tag, "commit": {"sha": "0" * 40}} for tag in self.tags]
+        )
 
     def transport(self) -> Callable[[], httpx.AsyncBaseTransport]:
         return lambda: httpx.MockTransport(self.handle)
@@ -121,7 +127,8 @@ async def test_once_on_it_asks_once_a_day_and_says_a_newer_one_is_out(
     sent = github.requests[0]
     # Pinned to the address the guard checked, with GitHub's name in the Host header.
     assert sent.headers["host"] == "api.github.com"
-    assert sent.url.path == "/repos/ScopeXL/assistant-calendar/releases/latest"
+    assert sent.url.path == "/repos/ScopeXL/assistant-calendar/tags"
+    assert sent.url.params["per_page"] == "100"
     assert sent.headers["user-agent"] == f"Sunroom/{build_info().version}"
     body = await status(phone)
     assert (body["enabled"], body["latest"], body["available"]) == (True, "99.0.0", True)
@@ -129,7 +136,7 @@ async def test_once_on_it_asks_once_a_day_and_says_a_newer_one_is_out(
     await updates.tick(state)  # not again the same day
     assert len(github.requests) == 1
     clock.advance(hours=24)
-    github.tag = f"v{build_info().version}"
+    github.tags = [f"v{build_info().version}", "v0.1.0"]
     await updates.tick(state)
     assert len(github.requests) == 2
     assert (await status(phone))["available"] is False
@@ -143,7 +150,7 @@ async def test_a_failed_check_says_so_and_check_now_waits_a_minute(
     checked = await phone.post("/api/admin/update/check", headers=CSRF)
     assert checked.status_code == 200, checked.text
     assert checked.json()["problem"] == (
-        "GitHub's answer wasn't one Sunroom could read. It will try again tomorrow."
+        "GitHub couldn't find Sunroom's versions. It will try again tomorrow."
     )
     assert checked.json()["available"] is False
     again = await phone.post("/api/admin/update/check", headers=CSRF)
@@ -153,6 +160,38 @@ async def test_a_failed_check_says_so_and_check_now_waits_a_minute(
     later = await phone.post("/api/admin/update/check", headers=CSRF)
     assert later.json()["problem"] is None
     assert later.json()["available"] is True
+
+
+async def test_it_reads_the_tags_and_takes_the_highest_version(
+    phone: httpx.AsyncClient, github: FakeGitHub, clock: FakeClock
+) -> None:
+    """Sunroom's versions on GitHub are tags; there are no Releases (ADR 0032). 0.10.0 is above
+    0.9.1 as numbers, though not as words; a tag that isn't a version is skipped."""
+    await phone.patch("/api/settings", json={"update_check": True}, headers=CSRF)
+    github.tags = ["v0.9.1", "v0.10.0", "test-tag", "v0.2.0"]
+    checked = await phone.post("/api/admin/update/check", headers=CSRF)
+    assert (checked.json()["latest"], checked.json()["problem"]) == ("0.10.0", None)
+
+    # A 404 (no such repository, or a tags list GitHub won't give) and an answer it can't read
+    # each say so in their own words.
+    for status, body, said in [
+        (404, None, "GitHub couldn't find Sunroom's versions. It will try again tomorrow."),
+        (200, [], "GitHub's answer wasn't one Sunroom could read. It will try again tomorrow."),
+        (
+            200,
+            [{"name": "nightly"}],
+            "GitHub's answer wasn't one Sunroom could read. It will try again tomorrow.",
+        ),
+        (
+            200,
+            {"tag_name": "v1.0.0"},
+            "GitHub's answer wasn't one Sunroom could read. It will try again tomorrow.",
+        ),
+    ]:
+        clock.advance(minutes=1, seconds=1)
+        github.status, github.body = status, body
+        answer = await phone.post("/api/admin/update/check", headers=CSRF)
+        assert answer.json()["problem"] == said, (status, body)
 
 
 async def test_the_server_can_keep_it_off_and_say_how_to_update_a_pi(

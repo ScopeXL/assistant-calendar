@@ -719,7 +719,7 @@ walls, a phone and a laptop.
 
 ### T10 The update check reads the tags
 
-- [ ] Done (commit: )
+- [x] Done (commit: "updates: Check Now reads GitHub's tags")
 
 **Owner's note.** "When I click 'Check now' in 'Check for new versions daily' it shows the text
 'GitHub's answer wasn't one Sunroom could read. It will try again tomorrow.'" The cause is in
@@ -742,6 +742,11 @@ tests/test_updates.py`. By hand: `curl -s "$TAGS_URL" | head -c 300` on the Mac 
 
 **CHANGELOG.** Under Fixed: "Check now in About found no versions: Sunroom's versions on GitHub are
 tags, not releases. It reads them now."
+
+**As built.** As planned. Checked by hand on 2026-10-14: the tags list answers
+`[{"name": "v0.9.1", …}, …]` and `/releases/latest` answers 404. Any answer that isn't OK (a 500
+too, not only a 404) gets the new "couldn't find Sunroom's versions" line; PLAN §13.6, its jobs
+table and DEPLOY.md say tags.
 
 ### T11 Accounts: synced first, Apple, the order
 

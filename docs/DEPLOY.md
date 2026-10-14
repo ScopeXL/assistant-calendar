@@ -122,7 +122,7 @@ Each release prints these steps. In Sunroom's folder on the server:
    new version.
 
 To hear about new versions, turn on **Settings → About → Check for new versions daily**: once a
-day Sunroom asks GitHub for the newest release (GitHub sees your server's address) and About
+day Sunroom asks GitHub for its newest version (GitHub sees your server's address) and About
 says when one is out, with these steps. It's off until you turn it on.
 
 Before migrating, Sunroom copies the database into `/data/backups/pre-migrate/`. If a migration

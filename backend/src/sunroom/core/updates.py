@@ -1,8 +1,10 @@
 """The opt-in daily check for a newer Sunroom (PLAN §13.6).
 
 Off unless a parent turns on Settings → About → "Check for new versions daily", and pinned off by
-``SUNROOM_UPDATE_CHECK=0``: one request a day to GitHub's releases API tells GitHub the server's
-address, so nothing goes out until someone asks for it. The answer lives in memory (one process
+``SUNROOM_UPDATE_CHECK=0``: one request a day to GitHub's list of the repository's tags tells
+GitHub the server's address, so nothing goes out until someone asks for it. Tags, not Releases:
+every release is a tag (the deploy skill pushes one), and none is published as a GitHub Release,
+so the releases API answered 404 (ADR 0032). The answer lives in memory (one process
 serves the API); after a restart the next hourly tick asks again. How to update is worded by
 ``SUNROOM_INSTALL_KIND``: the Pi's script, Compose, Portainer.
 """
@@ -18,7 +20,8 @@ from typing import cast
 from sunroom.core.config import InstallKind
 from sunroom.core.http import GuardedHttp, OutboundError
 
-RELEASES_URL = "https://api.github.com/repos/ScopeXL/assistant-calendar/releases/latest"
+# A hundred is every tag for years; the highest version among them is the newest release.
+TAGS_URL = "https://api.github.com/repos/ScopeXL/assistant-calendar/tags?per_page=100"
 CHECK_EVERY = timedelta(hours=24)
 TICK_S = 3600
 _VERSION = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
@@ -35,7 +38,7 @@ HOW: dict[InstallKind, str] = {
 
 @dataclass
 class UpdateCheck:
-    latest: str | None = None  # "0.6.1", from the newest release
+    latest: str | None = None  # "0.6.1", the highest version among the tags
     checked_at: datetime | None = None
     problem: str | None = None  # plain English, when the last check didn't get an answer
 
@@ -70,11 +73,11 @@ def newer(candidate: str | None, current: str) -> bool:
 
 
 async def check(http: GuardedHttp, current: str, now: datetime, into: UpdateCheck) -> None:
-    """Ask GitHub for the newest release; never raises (a quiet line in About says why)."""
+    """Ask GitHub for the newest version; never raises (a quiet line in About says why)."""
     into.checked_at = now
     try:
         answer = await http.get(
-            RELEASES_URL,
+            TAGS_URL,
             headers={
                 "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28",
@@ -85,21 +88,32 @@ async def check(http: GuardedHttp, current: str, now: datetime, into: UpdateChec
     except OutboundError:
         into.problem = "GitHub didn't answer. Sunroom will try again tomorrow."
         return
-    tag = _tag_of(answer.content) if answer.ok else None
-    if tag is None or parse(tag) is None:
+    if not answer.ok:
+        into.problem = "GitHub couldn't find Sunroom's versions. It will try again tomorrow."
+        return
+    latest = _latest_of(answer.content)
+    if latest is None:
         into.problem = "GitHub's answer wasn't one Sunroom could read. It will try again tomorrow."
         return
-    into.latest = tag.lstrip("v")
+    into.latest = latest
     into.problem = None
 
 
-def _tag_of(content: bytes) -> str | None:
-    """The release's tag from GitHub's answer ({"tag_name": "v0.6.1", …}), if it has one."""
+def _latest_of(content: bytes) -> str | None:
+    """The highest version among the repository's tags ([{"name": "v0.9.1", …}, …]), compared
+    as numbers (0.10.0 is above 0.9.1); a tag that isn't a version is skipped."""
     try:
         body: object = json.loads(content)
     except ValueError:
         return None
-    if not isinstance(body, dict):
+    if not isinstance(body, list):
         return None
-    tag: object = cast("dict[str, object]", body).get("tag_name")
-    return tag if isinstance(tag, str) else None
+    versions: list[tuple[int, int, int]] = []
+    for tag in cast("list[object]", body):
+        name = cast("dict[str, object]", tag).get("name") if isinstance(tag, dict) else None
+        version = parse(name) if isinstance(name, str) else None
+        if version is not None:
+            versions.append(version)
+    if not versions:
+        return None
+    return ".".join(str(part) for part in max(versions))

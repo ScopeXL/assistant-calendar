@@ -33,6 +33,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   everything together.
 - A sheet no longer shifts when a toast fades, and a toast no longer jumps into a sheet that
   opens over it.
+- Check Now in About found no versions: Sunroom's versions on GitHub are tags, not releases. It
+  reads them now.
 
 ## [0.9.1] - 2026-10-14
 
