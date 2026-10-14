@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request, Response
 
 from sunroom.app import create_app
 from sunroom.auth.deps import Actor, current_actor
-from sunroom.auth.password import device_label, hash_password, verify_password
+from sunroom.auth.password import device_form, device_label, hash_password, verify_password
 from sunroom.core.clock import FakeClock
 from tests.support import (
     CSRF,
@@ -180,6 +180,25 @@ def test_device_labels() -> None:
     assert device_label(iphone) == "iPhone, Safari"
     assert device_label(android) == "Android phone, Chrome"
     assert device_label(None) == "Device"
+
+
+def test_device_forms() -> None:
+    """Settings → Devices draws each by what it is (ADR 0032): a paired screen, else the word
+    device_label wrote at sign-in. A computer was listed as a phone before."""
+    for label, form in [
+        ("iPhone, Safari", "phone"),
+        ("Android phone, Chrome", "phone"),
+        ("iPad, Safari", "tablet"),
+        ("Android tablet, Chrome", "tablet"),
+        ("Chromebook, Chrome", "computer"),
+        ("Mac, Safari", "computer"),
+        ("Windows PC, Edge", "computer"),
+        ("Linux computer, Firefox", "computer"),
+        ("Device", "phone"),
+    ]:
+        assert device_form("phone", label) == form, label
+    assert device_form("kiosk", "Kitchen screen") == "screen"
+    assert device_form("kiosk", "Mac, Chrome") == "screen"
 
 
 def test_password_hashes_verify_and_carry_their_parameters() -> None:

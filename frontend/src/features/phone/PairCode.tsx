@@ -1,6 +1,6 @@
 /**
  * Pairing a wall screen by the code it shows (UX §5 "Pair a Display"): the call and the field,
- * shared by More → Pair a Display on a phone and Settings → Phones & Screens on a phone or a
+ * shared by More → Pair a Display on a phone and Settings → Devices on a phone or a
  * computer. The screen moves on by itself once it's paired, and asks for its own name.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";

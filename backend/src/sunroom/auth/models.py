@@ -19,7 +19,7 @@ class DeviceKind(StrEnum):
 
 class PairedVia(StrEnum):
     PASSWORD = "password"  # noqa: S105 - a label, not a password
-    CODE = "code"  # a code from a signed-in phone ("Add a phone")
+    CODE = "code"  # a code from a signed-in device ("Add a Device")
     KIOSK_CODE = "kiosk_code"  # the display's own code, typed on a parent's phone
     SETUP = "setup"  # the device that ran the setup wizard
 
@@ -44,7 +44,7 @@ class Device(Base):
 class JoinCode(Base):
     """A six-character code, single use, for 10 minutes, stored as an HMAC (PLAN §10.1).
 
-    ``kind = phone``: a signed-in device shows it so a new phone can sign in ("Add a phone").
+    ``kind = phone``: a signed-in device shows it so a new device can sign in ("Add a Device").
     ``kind = kiosk``: the wall display shows it and a parent types it on their phone; the display
     holds a poll token (stored hashed) and long-polls until the code is claimed (auth/kiosk.py).
     """

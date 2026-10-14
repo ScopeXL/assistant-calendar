@@ -29,7 +29,7 @@ const SETTINGS = [
   "Photos & Screensaver",
   "Display",
   "Household",
-  "Phones & Screens",
+  "Devices",
   "Recently Removed",
   "Backup",
 ];
@@ -232,7 +232,7 @@ for (const scheme of ["light", "dark"] as const) {
       await page.goto("/sign-in");
       await expect(page.getByLabel("Household password")).toBeVisible();
       await check(page, "sign in");
-      await page.getByRole("button", { name: "Use a code from another phone" }).click();
+      await page.getByRole("button", { name: "Use a code from another device" }).click();
       await check(page, "sign in with a code");
       await signInPhone(page);
       await check(page, "today");
@@ -318,8 +318,8 @@ for (const scheme of ["light", "dark"] as const) {
           await sheet(page, "Add a Calendar", "add a calendar");
           await sheet(page, "Edit Test server", "an account");
         }
-        if (title === "Phones & Screens") {
-          await sheet(page, "Add a Phone", "add a phone");
+        if (title === "Devices") {
+          await sheet(page, "Add a Device", "add a device");
           await sheet(page, "Pair a Display", "pair a display from Settings");
         }
       }
@@ -625,7 +625,7 @@ for (const scheme of ["light", "dark"] as const) {
         ).toBeVisible();
         await check(page, `laptop settings: ${title}`);
         // A computer has no More: it pairs a screen from here.
-        if (title === "Phones & Screens") {
+        if (title === "Devices") {
           await sheet(page, "Pair a Display", "laptop: pair a display");
         }
       }

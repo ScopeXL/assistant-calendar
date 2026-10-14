@@ -1,4 +1,5 @@
 import {
+  devices,
   expect,
   test as base,
   type APIRequestContext,
@@ -82,6 +83,8 @@ export async function phone(
     viewport: { width: 390, height: 844 },
     hasTouch: true,
     isMobile: true,
+    // A phone's own words, so the server knows it for one (Settings → Devices, ADR 0032).
+    userAgent: devices["Pixel 7"].userAgent,
     baseURL: "http://127.0.0.1:4173",
     timezoneId: "America/New_York",
     locale: "en-US",

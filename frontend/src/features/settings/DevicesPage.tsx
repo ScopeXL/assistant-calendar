@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Monitor, Smartphone } from "lucide-react";
+import { Laptop, Monitor, Smartphone, Tablet, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
@@ -11,7 +11,7 @@ import { fetchSession } from "../../lib/session";
 import { showToast } from "../../lib/toast";
 import { Button } from "../../ui/Button";
 import { useShell } from "../../ui/shell";
-import { AddPhoneSheet } from "./AddPhoneSheet";
+import { AddDeviceSheet } from "./AddDeviceSheet";
 import { PairDisplaySheet } from "./PairDisplaySheet";
 import { Group, Text } from "./parts";
 
@@ -24,14 +24,28 @@ function lastUsed(device: Device): string {
   return `last used ${String(days)} days ago`;
 }
 
+/** What each device is (the server's `form`, from the label it signed in with: ADR 0032). */
+const ICONS: Record<Device["form"], LucideIcon> = {
+  screen: Monitor,
+  phone: Smartphone,
+  tablet: Tablet,
+  computer: Laptop,
+};
+const WORDS: Record<Exclude<Device["form"], "screen">, string> = {
+  phone: "Phone",
+  tablet: "Tablet",
+  computer: "Computer",
+};
+
 function signOutLabel(device: Device): string {
-  if (device.kind === "kiosk") return device.is_current ? "Unpair This Screen" : "Unpair";
-  return device.is_current ? "Sign Out of This Phone" : "Sign Out";
+  if (device.form === "screen") return device.is_current ? "Unpair This Screen" : "Unpair";
+  return device.is_current ? `Sign Out of This ${WORDS[device.form]}` : "Sign Out";
 }
 
 /**
- * Settings → Phones & screens (UX §4): every signed-in phone and paired screen. A phone or a
- * computer pairs a screen from here; the screen itself doesn't offer to.
+ * Settings → Devices (UX §4, ADR 0032): the paired screens on top, then every signed-in phone,
+ * tablet and computer, each with an icon for what it is. A phone or a computer pairs a screen
+ * from here; the screen itself doesn't offer to.
  */
 export function DevicesPage() {
   const display = useShell() === "display";
@@ -84,58 +98,61 @@ export function DevicesPage() {
   const phones = devices.filter((device) => device.kind === "phone");
   const problem = error ?? signOut.error ?? kidPhone.error;
 
-  const row = (device: Device) => (
-    <div
-      key={device.id}
-      className={`flex flex-wrap items-center gap-4 ${display ? "min-h-20 py-3" : "min-h-16 py-2"}`}
-    >
-      {device.kind === "kiosk" ? (
-        <Monitor aria-hidden="true" className={display ? "size-9" : "size-6"} />
-      ) : (
-        <Smartphone aria-hidden="true" className={display ? "size-9" : "size-6"} />
-      )}
-      <div className="flex min-w-0 flex-1 basis-56 flex-col">
-        <span className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>
-          {device.label}
-          {device.is_current ? " (this one)" : ""}
-        </span>
-        <span
-          className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}
-        >
-          {[
-            device.member_name ? `Used by ${device.member_name}` : null,
-            device.is_kid_device ? "a child’s phone" : null,
-            lastUsed(device),
-          ]
-            .filter(Boolean)
-            .join(", ")}
-        </span>
-      </div>
-      {device.kind === "phone" && session?.has_pin ? (
+  const row = (device: Device) => {
+    const Icon = ICONS[device.form];
+    return (
+      <div
+        key={device.id}
+        className={`flex flex-wrap items-center gap-4 ${display ? "min-h-20 py-3" : "min-h-16 py-2"}`}
+      >
+        <Icon
+          aria-hidden="true"
+          data-form={device.form}
+          className={display ? "size-9" : "size-6"}
+        />
+        <div className="flex min-w-0 flex-1 basis-56 flex-col">
+          <span className={display ? "text-d-body font-semibold" : "text-body font-semibold"}>
+            {device.label}
+            {device.is_current ? " (this one)" : ""}
+          </span>
+          <span
+            className={display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"}
+          >
+            {[
+              device.member_name ? `Used by ${device.member_name}` : null,
+              device.is_kid_device ? "a child’s device" : null,
+              lastUsed(device),
+            ]
+              .filter(Boolean)
+              .join(", ")}
+          </span>
+        </div>
+        {device.kind === "phone" && session?.has_pin ? (
+          <Button
+            variant="secondary"
+            aria-pressed={device.is_kid_device}
+            onClick={() => {
+              kidPhone.mutate({ device, kid: !device.is_kid_device });
+            }}
+          >
+            {device.is_kid_device ? "Not a Child’s Device" : "Child’s Device"}
+          </Button>
+        ) : null}
         <Button
           variant="secondary"
-          aria-pressed={device.is_kid_device}
           onClick={() => {
-            kidPhone.mutate({ device, kid: !device.is_kid_device });
+            signOut.mutate(device);
           }}
         >
-          {device.is_kid_device ? "Not a Child’s Phone" : "Child’s Phone"}
+          {signOutLabel(device)}
         </Button>
-      ) : null}
-      <Button
-        variant="secondary"
-        onClick={() => {
-          signOut.mutate(device);
-        }}
-      >
-        {signOutLabel(device)}
-      </Button>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <>
-      <Group title="Screens">
+      <Group title="Paired Screens">
         {screens.length === 0 ? (
           <div className="py-4">
             <Text soft>
@@ -159,8 +176,8 @@ export function DevicesPage() {
         ) : null}
       </Group>
       <Group
-        title="Phones"
-        note={session?.has_pin ? undefined : "Set a parent PIN in Family to mark a child’s phone."}
+        title="Phones & Computers"
+        note={session?.has_pin ? undefined : "Set a parent PIN in Family to mark a child’s device."}
       >
         {phones.map(row)}
         <div className={display ? "py-5" : "py-4"}>
@@ -170,7 +187,7 @@ export function DevicesPage() {
               setAdding(true);
             }}
           >
-            Add a Phone
+            Add a Device
           </Button>
         </div>
       </Group>
@@ -179,7 +196,7 @@ export function DevicesPage() {
           {errorMessage(problem)}
         </p>
       ) : null}
-      <AddPhoneSheet
+      <AddDeviceSheet
         open={adding}
         onClose={() => {
           setAdding(false);

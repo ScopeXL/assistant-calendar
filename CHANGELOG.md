@@ -14,11 +14,15 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - In the header the date, the time and the weather line up.
 - Coming Up on the Today panel shows birthdays only within a window (a month by default;
   Settings → Features → Countdowns → Birthdays in Coming Up). Countdowns you add always show.
+- Settings → Phones & Screens is now Devices: Paired Screens on top, then Phones & Computers,
+  each with the right icon (a computer was listed as a phone). Add a Device replaces Add a
+  phone.
 
 ### Fixed
 
-- On a computer, Settings → Phones & Screens said to type the kitchen screen's code, with
-  nowhere to type it. Pair a display there now opens a box for the code, on phones too.
+- On a computer, Settings → Devices (it was Phones & Screens) said to type the kitchen screen's
+  code, with nowhere to type it. Pair a Display there now opens a box for the code, on phones
+  too.
 - Behind the scenes: a layout test that failed now and then on the upright screen waits for
   the weather to arrive first.
 - Behind the scenes: checks can run for one test file or one screen at a time.

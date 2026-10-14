@@ -82,7 +82,7 @@ function PasswordForm({ onUseCode }: { onUseCode: () => void }) {
         Ask whoever set up Sunroom for the password.
       </p>
       <Button variant="quiet" className="-ml-5 self-start" onClick={onUseCode}>
-        Use a code from another phone
+        Use a code from another device
       </Button>
     </form>
   );
@@ -105,7 +105,7 @@ function CodeForm({ onUsePassword }: { onUsePassword: () => void }) {
       }}
     >
       <label htmlFor={inputId} className="text-body font-semibold">
-        Code from another phone
+        Code from another device
       </label>
       <input
         id={inputId}
@@ -123,8 +123,8 @@ function CodeForm({ onUsePassword }: { onUsePassword: () => void }) {
         className="min-h-12 rounded-button border-2 border-line bg-surface px-4 text-title font-bold tracking-widest uppercase"
       />
       <p id={hintId} className="text-secondary text-ink-soft">
-        On a phone that’s already signed in, open More, then Settings, then Phones & Screens, then
-        Add a phone.
+        On a phone or computer that’s already signed in, open Settings, then Devices, then Add a
+        Device (on a phone, Settings is under More).
       </p>
       <p id={errorId} role="alert" className="min-h-7 text-secondary font-semibold text-alert">
         {join.isError ? errorMessage(join.error) : null}

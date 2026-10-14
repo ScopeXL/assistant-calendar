@@ -70,7 +70,7 @@ test.describe("a phone", () => {
       "Family",
       "Display",
       "Household",
-      "Phones & Screens",
+      "Devices",
       "Recently Removed",
       "About",
     ]) {
@@ -1020,7 +1020,7 @@ test.describe("a laptop", () => {
     test.skip(test.info().project.name !== "desktop", "a laptop");
   });
 
-  test("pairs a wall screen from Settings, having no More", async ({
+  test("pairs a wall screen from Devices, having no More, and is a computer there", async ({
     page,
     request,
     browser,
@@ -1046,6 +1046,21 @@ test.describe("a laptop", () => {
     await screen.getByRole("button", { name: "Hallway" }).click();
     await screen.getByRole("button", { name: "Done" }).click();
     await expect(page.getByText("Hallway screen")).toBeVisible();
+    // Devices (ADR 0032): Paired Screens on top, then Phones & Computers, where this laptop has a
+    // computer's icon and signs out of "This Computer"; it was listed as a phone.
+    const groups = page.getByRole("heading", { level: 3 });
+    await expect(groups).toHaveText(["Paired Screens", "Phones & Computers"]);
+    await expect(page.locator('[data-form="screen"]')).toHaveCount(1);
+    await expect(page.locator('[data-form="computer"]')).toHaveCount(1);
+    await expect(page.locator('[data-form="phone"]')).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Sign Out of This Computer" })).toBeVisible();
+    await page.getByRole("button", { name: "Add a Device" }).click();
+    const adding = page.getByRole("dialog", { name: "Add a Device" });
+    await expect(adding.getByText(/^On the new phone or tablet/)).toContainText(
+      "On a computer, open the address under it.",
+    );
+    await expect(adding.getByText(/\/join#/)).toBeVisible();
+    await adding.getByRole("button", { name: "Done" }).click();
     await context.close();
   });
 

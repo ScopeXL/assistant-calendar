@@ -2012,6 +2012,16 @@
             "title": "Created At",
             "type": "string"
           },
+          "form": {
+            "enum": [
+              "screen",
+              "phone",
+              "tablet",
+              "computer"
+            ],
+            "title": "Form",
+            "type": "string"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -2057,6 +2067,7 @@
           "id",
           "label",
           "kind",
+          "form",
           "member_name",
           "is_kid_device",
           "created_at",
@@ -9626,7 +9637,7 @@
     },
     "/api/auth/join-codes": {
       "post": {
-        "description": "Add a phone: a one-time code another phone signs in with. On a wall screen, which anyone\nin the house can reach, only a parent may make one.",
+        "description": "Add a Device: a one-time code another phone, tablet or computer signs in with. On a wall\nscreen, which anyone in the house can reach, only a parent may make one.",
         "operationId": "make_join_code_api_auth_join_codes_post",
         "responses": {
           "201": {

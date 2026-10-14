@@ -597,7 +597,7 @@ reshape).
 
 ### T8 Devices
 
-- [ ] Done (commit: )
+- [x] Done (commit: "settings: Devices, with Paired Screens and Phones & Computers")
 
 **Owner's note.** "Rename 'Phones & Screens' to 'Devices'. Currently it lists my desktop under the
 'Phones' section. Computers/Phones can be in the same group, and instead of 'Add a phone' it
@@ -647,6 +647,14 @@ page list; Vitest for `DevicesPage` if one exists (icons by form). `just test-py
 **CHANGELOG.** "Settings → Phones & Screens is now Devices: Paired Screens on top, then Phones &
 Computers, each with the right icon (a computer was listed as a phone). Add a Device replaces Add
 a phone."
+
+**As built.** `DeviceFormName` lives beside `DeviceKindName` in `auth/schemas.py`, and
+`device_form` beside `device_label`. "Code from another device" is the sign-in field's label, so
+it stays sentence case (the plan wrote it as a title). Add a Device writes the code's address
+under the QR for a computer. The end-to-end fixture's extra phone (`phone()` in
+`e2e/fixtures.ts`) now sends the Pixel 7's user agent: it was Chromium's desktop one at phone
+size, so the first-run test's phone became "This Computer". There is no Vitest for
+`DevicesPage`; the laptop test checks the groups, the icons by form and Add a Device.
 
 ### T9 Empty rooms: an icon, a line, one big button
 

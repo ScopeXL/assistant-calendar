@@ -166,7 +166,7 @@ export function SetupWizard({ step }: { step: SetupStep }) {
         <Page title="You’re Set">
           <p className="text-body">
             Everyone at home can sign in with the household password, or with a code from Settings,
-            then Phones & Screens.
+            then Devices.
           </p>
           <p className="text-body">
             To put Sunroom on a kitchen screen, open More, then Pair a Display, when the screen

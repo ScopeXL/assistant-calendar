@@ -6,7 +6,7 @@ export const SETTINGS_PAGES = [
   { key: "calendars", title: "Calendars & Accounts" },
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
-  { key: "devices", title: "Phones & Screens" },
+  { key: "devices", title: "Devices" },
   { key: "removed", title: "Recently Removed" },
   { key: "backup", title: "Backup" },
   { key: "about", title: "About" },

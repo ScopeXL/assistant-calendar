@@ -76,7 +76,7 @@ export function JoinScreen() {
           <h1 className="mb-3 text-title font-bold">Put Sunroom on Your Home Screen First</h1>
           <p className="text-body text-ink-soft">
             On iPhone, the home-screen app keeps its own sign-in. Once it’s there, open it, tap{" "}
-            <strong>Use a code from another phone</strong>, and type:
+            <strong>Use a code from another device</strong>, and type:
           </p>
           <Code code={code} />
           <p className="mb-6 text-secondary text-ink-soft">

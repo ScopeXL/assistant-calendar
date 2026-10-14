@@ -1,7 +1,8 @@
 /**
- * Add a phone (UX §4 Phones & screens, §6): a one-time code for another phone to sign in without
- * the household password. The new phone scans the QR code with its camera, or types the code on
- * its sign-in screen (Use a code from another phone). It works once, for 10 minutes.
+ * Add a Device (UX §4 Devices, §6): a one-time code for another phone, tablet or computer to
+ * sign in without the household password. A phone or tablet scans the QR code with its camera, a
+ * computer opens the address under it, or any of them types the code on its sign-in screen (Use
+ * a code from another device). It works once, for 10 minutes.
  */
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -45,10 +46,14 @@ function CodeView({ code, onNew }: { code: JoinCode; onNew: () => void }) {
   }
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <p className="text-body">On the new phone, open the camera and point it at this code.</p>
-      <QrCode value={code.url} label="QR code that signs in another phone" />
       <p className="text-body">
-        Or, on the new phone’s sign-in screen, tap <strong>Use a code from another phone</strong>{" "}
+        On the new phone or tablet, open the camera and point it at this code. On a computer, open
+        the address under it.
+      </p>
+      <QrCode value={code.url} label="QR code that signs in another device" />
+      <p className="text-secondary break-all text-ink-soft select-all">{code.url}</p>
+      <p className="text-body">
+        Or, on the new device’s sign-in screen, tap <strong>Use a code from another device</strong>{" "}
         and type:
       </p>
       <p className="text-title font-bold tracking-widest " data-testid="join-code">
@@ -61,7 +66,7 @@ function CodeView({ code, onNew }: { code: JoinCode; onNew: () => void }) {
   );
 }
 
-export function AddPhoneSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function AddDeviceSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const make = useMutation({
     mutationFn: () => asParent(async () => unwrap(await api.POST("/api/auth/join-codes"))),
   });
@@ -74,7 +79,7 @@ export function AddPhoneSheet({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Sheet
       open={open}
-      title="Add a Phone"
+      title="Add a Device"
       onClose={onClose}
       footer={
         <Button block variant="secondary" onClick={onClose}>

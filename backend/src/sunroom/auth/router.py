@@ -18,7 +18,7 @@ from sunroom.auth.deps import (
     parent_required,
 )
 from sunroom.auth.models import Device, DeviceKind, JoinCode, PairedVia
-from sunroom.auth.password import device_label, hash_pin, verify_pin
+from sunroom.auth.password import device_form, device_label, hash_pin, verify_pin
 from sunroom.auth.ratelimit import SLOW_AFTER
 from sunroom.auth.schemas import (
     DeviceLabelIn,
@@ -83,8 +83,8 @@ async def login(body: LoginIn, request: Request, response: Response, state: Stat
 
 @router.post("/join-codes", status_code=201)
 async def make_join_code(request: Request, state: StateDep, actor: ActorDep) -> JoinCodeOut:
-    """Add a phone: a one-time code another phone signs in with. On a wall screen, which anyone
-    in the house can reach, only a parent may make one."""
+    """Add a Device: a one-time code another phone, tablet or computer signs in with. On a wall
+    screen, which anyone in the house can reach, only a parent may make one."""
     if actor.is_kiosk and not actor.is_parent:
         raise parent_required(actor, state)
     code = join.new_code()
@@ -226,6 +226,7 @@ async def list_devices(state: StateDep, actor: ParentDep) -> list[DeviceOut]:
                     "id": device.id,
                     "label": device.label,
                     "kind": device.kind,
+                    "form": device_form(device.kind, device.label),
                     "member_name": member_name,
                     "is_kid_device": device.is_kid_device,
                     "created_at": device.created_at,
@@ -267,6 +268,7 @@ async def update_device(
                 "id": device.id,
                 "label": device.label,
                 "kind": device.kind,
+                "form": device_form(device.kind, device.label),
                 "member_name": member.name if member else None,
                 "is_kid_device": device.is_kid_device,
                 "created_at": device.created_at,

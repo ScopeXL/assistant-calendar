@@ -18,6 +18,8 @@ import secrets
 
 from pydantic import SecretStr
 
+from sunroom.auth.schemas import DeviceFormName
+
 SCRYPT_N = 2**15
 SCRYPT_R = 8
 SCRYPT_P = 1
@@ -101,7 +103,7 @@ def verify_pin(pin: str, stored: str) -> bool:
 
 
 def device_label(user_agent: str | None) -> str:
-    """A short, human label for Phones & screens ("iPhone, Safari")."""
+    """A short, human label for Settings → Devices ("iPhone, Safari")."""
     ua = user_agent or ""
     if "iPhone" in ua:
         device = "iPhone"
@@ -130,3 +132,21 @@ def device_label(user_agent: str | None) -> str:
     else:
         return device
     return f"{device}, {browser}"
+
+
+_TABLETS = frozenset({"iPad", "Android tablet"})
+_COMPUTERS = frozenset({"Chromebook", "Mac", "Windows PC", "Linux computer"})
+
+
+def device_form(kind: str, label: str) -> DeviceFormName:
+    """What a device is, for its icon in Settings → Devices (ADR 0032): a paired screen, else
+    what `device_label` called it at sign-in ("Mac, Safari" is a computer). Only a screen ever
+    renames itself, so anything else unknown is a phone, as every device was listed before."""
+    if kind == "kiosk":
+        return "screen"
+    device = label.split(",", 1)[0].strip()
+    if device in _TABLETS:
+        return "tablet"
+    if device in _COMPUTERS:
+        return "computer"
+    return "phone"

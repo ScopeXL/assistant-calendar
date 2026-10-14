@@ -119,10 +119,10 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
     .getByRole("button", { name: "Cancel" })
     .click();
 
-  // The phone signs itself out from Phones & Screens.
+  // The phone signs itself out from Devices.
   await phonePage.getByRole("link", { name: "More", exact: true }).click();
   await phonePage.getByRole("link", { name: "Settings" }).click();
-  await phonePage.getByRole("link", { name: "Phones & Screens" }).click();
+  await phonePage.getByRole("link", { name: "Devices" }).click();
   await expect(phonePage.getByText("Kitchen screen", { exact: true })).toBeVisible();
   await phonePage.getByRole("button", { name: "Sign Out of This Phone" }).click();
   await expect(phonePage).toHaveURL(/\/sign-in/);

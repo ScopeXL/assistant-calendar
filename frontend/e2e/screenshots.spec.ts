@@ -36,7 +36,7 @@ const PAGES = [
   { key: "screensaver", title: "Photos & Screensaver" },
   { key: "display", title: "Display" },
   { key: "household", title: "Household" },
-  { key: "devices", title: "Phones & Screens" },
+  { key: "devices", title: "Devices" },
   { key: "removed", title: "Recently Removed" },
   { key: "backup", title: "Backup" },
   { key: "about", title: "About" },
@@ -451,9 +451,9 @@ test("a phone", async ({ page, isMobile }) => {
     await expect(page.getByRole("dialog", { name: "Edit Mia" })).toBeVisible();
     await shot(page, `settings-change-a-person-${scheme}`);
     await page.goto("/settings/devices");
-    await page.getByRole("button", { name: "Add a Phone" }).click();
-    await expect(page.getByRole("dialog", { name: "Add a Phone" })).toBeVisible();
-    await shot(page, `settings-add-a-phone-${scheme}`);
+    await page.getByRole("button", { name: "Add a Device" }).click();
+    await expect(page.getByRole("dialog", { name: "Add a Device" })).toBeVisible();
+    await shot(page, `settings-add-a-device-${scheme}`);
     await page.goto("/settings/devices");
     await page.getByRole("button", { name: "Pair a Display" }).click();
     await expect(page.getByRole("dialog", { name: "Pair a Display" })).toBeVisible();
@@ -802,10 +802,10 @@ test("a laptop", async ({ page }) => {
     await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);
   }
-  // A computer pairs a screen from Phones & Screens: it has no More.
+  // A computer pairs a screen from Devices: it has no More.
   await page
     .getByRole("navigation", { name: "Settings" })
-    .getByRole("link", { name: "Phones & Screens", exact: true })
+    .getByRole("link", { name: "Devices", exact: true })
     .click();
   await page.getByRole("button", { name: "Pair a Display" }).click();
   const pairing = page.getByRole("dialog", { name: "Pair a Display" });

@@ -172,7 +172,7 @@ answer. On a Pi that runs Sunroom, `sudo docker logs sunroom` says why it isn't 
 waiting for.
 
 **The screen shows a code again.** Its sign-in was ended: a new household password, a new secret
-key, a restore, or **Unpair** in Settings → Phones & screens. Pair it again from a phone.
+key, a restore, or **Unpair** in Settings → Devices. Pair it again from a phone.
 
 **The screen doesn't go dark at night.** Check the times and **While asleep** in Settings →
 Display → Sleep (**Dim clock** keeps the screen on, turned down). Then read the helper's log: "No

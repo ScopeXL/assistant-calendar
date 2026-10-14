@@ -1,5 +1,5 @@
 /**
- * Pair a display from Settings → Phones & Screens (UX §4): the code the wall screen shows, typed
+ * Pair a display from Settings → Devices (UX §4): the code the wall screen shows, typed
  * here, on a phone or a computer. A computer has no More, so this is its way to pair; a phone
  * also has More → Pair a Display, and the screen's QR code opens that. Not on the wall itself.
  */

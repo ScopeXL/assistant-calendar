@@ -14,7 +14,7 @@ export function setSignedOutHandler(handler: () => void): void {
   onSignedOut = handler;
 }
 
-/** This device signed itself out (Settings → Phones & screens). */
+/** This device signed itself out (Settings → Devices). */
 export function signedOutHere(): void {
   onSignedOut();
 }

@@ -256,8 +256,8 @@ export interface paths {
         put?: never;
         /**
          * Make Join Code
-         * @description Add a phone: a one-time code another phone signs in with. On a wall screen, which anyone
-         *     in the house can reach, only a parent may make one.
+         * @description Add a Device: a one-time code another phone, tablet or computer signs in with. On a wall
+         *     screen, which anyone in the house can reach, only a parent may make one.
          */
         post: operations["make_join_code_api_auth_join_codes_post"];
         delete?: never;
@@ -3074,6 +3074,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Form
+             * @enum {string}
+             */
+            form: "screen" | "phone" | "tablet" | "computer";
             /** Id */
             id: string;
             /** Is Current */

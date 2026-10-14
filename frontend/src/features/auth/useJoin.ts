@@ -5,8 +5,8 @@ import { api, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { rememberSignedIn } from "../../lib/session";
 
-/** Sign this phone in with a code from a signed-in one (Settings → Phones & screens → Add a
- * phone). */
+/** Sign this device in with a code from a signed-in one (Settings → Devices → Add a
+ * Device). */
 export function useJoinWithCode() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();

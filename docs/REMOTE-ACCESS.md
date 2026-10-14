@@ -11,7 +11,7 @@ to get one. The commands were checked against each tool's own documentation on 2
 | | Plain http, at home | An https address |
 |---|---|---|
 | The calendar, lists, chores, meals, countdowns, photos, weather and live updates | Yes | Yes |
-| Signing in, pairing the kitchen screen, and Add a phone (typing the code, or scanning the QR code with the phone's camera) | Yes | Yes |
+| Signing in, pairing the kitchen screen, and Add a Device (typing the code, or scanning the QR code with the phone's camera) | Yes | Yes |
 | Adding photos from a phone | Yes | Yes |
 | On an iPhone's or iPad's home screen, opening like an app | Yes, with iOS and iPadOS 26 | Yes |
 | Installed as an app on Android (Chrome's **Install app**) | A home-screen shortcut only | Yes |

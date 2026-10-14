@@ -8,6 +8,7 @@ from pydantic import BaseModel, StringConstraints
 from sunroom.household.schemas import MemberOut
 
 DeviceKindName = Literal["phone", "kiosk"]
+DeviceFormName = Literal["screen", "phone", "tablet", "computer"]
 Label = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 Pin = Annotated[str, StringConstraints(pattern=r"^\d{4,6}$")]
 
@@ -42,6 +43,8 @@ class DeviceOut(BaseModel):
     id: str
     label: str
     kind: DeviceKindName
+    # What it is, for its icon: from its kind and the label it signed in with (ADR 0032).
+    form: DeviceFormName
     member_name: str | None
     is_kid_device: bool
     created_at: datetime
