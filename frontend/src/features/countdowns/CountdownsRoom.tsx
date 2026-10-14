@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Hourglass, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { formatWallTime, shortDate } from "../../lib/dates";
@@ -145,7 +145,13 @@ function Tiles({ onAdd }: { onAdd: () => void }) {
   return (
     <>
       {isSuccess && items.length === 0 ? (
-        <EmptyState message={EMPTY} action={<Button onClick={onAdd}>Add Countdown</Button>} />
+        <EmptyState
+          icon={Hourglass}
+          title="No countdowns yet"
+          note={EMPTY}
+          // A phone's bottom bar already has Add Countdown.
+          action={display ? <Button onClick={onAdd}>Add Countdown</Button> : undefined}
+        />
       ) : (
         <ul
           aria-label="Countdowns"

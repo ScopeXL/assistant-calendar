@@ -90,6 +90,28 @@ test("New list is one field, a usual name fills it, and the list opens once made
   await expect(page.getByText("Nothing on Pharmacy yet. Add the first thing.")).toBeVisible();
 });
 
+test("an empty Lists room says what goes there, with one big New List", async ({ page }) => {
+  await pairWall(page);
+  const lists = (await (await page.request.get("/api/lists")).json()) as { id: string }[];
+  for (const list of lists) {
+    const gone = await page.request.delete(`/api/lists/${list.id}`, { headers: CSRF });
+    expect(gone.ok()).toBe(true);
+  }
+  await page.goto("/lists");
+  // An icon, a short line, a note and one big button, centred in the room (ADR 0032).
+  const empty = page.locator("[data-empty]");
+  await expect(empty).toContainText("No lists yet");
+  await expect(empty).toContainText("everyone sees them on the wall and on their phones");
+  const make = empty.getByRole("button", { name: "New List" });
+  const button = await make.boundingBox();
+  const room = await page.getByRole("region", { name: "Lists" }).boundingBox();
+  expect(button?.height ?? 0).toBeGreaterThanOrEqual(64);
+  const middle = (box: { x: number; width: number } | null) => (box ? box.x + box.width / 2 : 0);
+  expect(Math.abs(middle(button) - middle(room))).toBeLessThanOrEqual(2);
+  await make.click();
+  await expect(page.getByRole("dialog", { name: "New List" })).toBeVisible();
+});
+
 test("a long press on a tile opens Change list, and doesn't open the list", async ({ page }) => {
   await pairWall(page);
   await page.goto("/lists");

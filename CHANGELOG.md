@@ -17,6 +17,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Settings → Phones & Screens is now Devices: Paired Screens on top, then Phones & Computers,
   each with the right icon (a computer was listed as a phone). Add a Device replaces Add a
   phone.
+- An empty room (Lists, Tasks, Photos, Countdowns and the rest) shows an icon, what goes there,
+  and one big button to add the first thing.
 
 ### Fixed
 

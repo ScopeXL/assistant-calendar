@@ -18,7 +18,7 @@ import { RoomHeader } from "../../shell/roomHeader";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
-import { EmptyState } from "../../ui/EmptyState";
+import { QuietLine } from "../../ui/EmptyState";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
 import {
@@ -134,7 +134,7 @@ function MealsWeek() {
       <div className="min-h-0 flex-1 overflow-y-auto" tabIndex={0}>
         {isSuccess && entries.length === 0 ? (
           <div className="px-6 pt-2">
-            <EmptyState message={EMPTY} />
+            <QuietLine>{EMPTY}</QuietLine>
           </div>
         ) : null}
         <table {...pages.attrs} className="w-full table-fixed border-collapse">

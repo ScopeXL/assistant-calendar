@@ -609,6 +609,64 @@ test("a phone's account steps", async ({ page, isMobile }) => {
   }
 });
 
+test("empty rooms: Lists, Tasks and Photos", async ({ page, request }, testInfo) => {
+  const name = testInfo.project.name;
+  test.skip(name === "phone-chromium", "the wall, a phone and a laptop");
+  test.setTimeout(120_000);
+  await moveClock(page, STOPS[1]?.at ?? "");
+  await seed(page.request);
+  // Empty the three rooms as a parent: no lists, no tasks, no children (whose stars give them
+  // a column), no photos (ADR 0032's empty rooms).
+  const parent = await request.post("/api/auth/login", {
+    headers: CSRF,
+    data: { password: PASSWORD },
+  });
+  expect(parent.ok()).toBe(true);
+  const ids = async (path: string) =>
+    ((await (await request.get(path)).json()) as { id: string }[]).map((item) => item.id);
+  for (const id of await ids("/api/lists")) {
+    expect((await request.delete(`/api/lists/${id}`, { headers: CSRF })).ok()).toBe(true);
+  }
+  for (const id of await ids("/api/chores")) {
+    expect((await request.delete(`/api/chores/${id}`, { headers: CSRF })).ok()).toBe(true);
+  }
+  const members = (await (await request.get("/api/members")).json()) as {
+    id: string;
+    role: string;
+  }[];
+  for (const kid of members.filter((member) => member.role === "kid")) {
+    const archived = await request.post(`/api/members/${kid.id}/archive`, { headers: CSRF });
+    expect(archived.ok()).toBe(true);
+  }
+  const library = (await (await request.get("/api/photos?kind=library")).json()) as {
+    photos: { id: string }[];
+  };
+  for (const photo of library.photos) {
+    expect((await request.delete(`/api/photos/${photo.id}`, { headers: CSRF })).ok()).toBe(true);
+  }
+  if (name.startsWith("display")) {
+    const paired = await page.request.post("/api/auth/kiosk/pair-with-password", {
+      headers: CSRF,
+      data: { password: PASSWORD, label: "Kitchen screen" },
+    });
+    expect(paired.status()).toBe(200);
+  } else {
+    await signInPhone(page);
+  }
+  for (const theme of ["light", "dark"]) {
+    await change(page, { theme });
+    for (const [room, path] of [
+      ["lists", "/lists"],
+      ["tasks", "/chores"],
+      ["photos", "/photos"],
+    ] as const) {
+      await page.goto(path);
+      await expect(page.locator("[data-empty]")).toBeVisible();
+      await shot(page, `${room}-empty-${theme}`);
+    }
+  }
+});
+
 test("the wall's lists and chores", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
   test.setTimeout(240_000);

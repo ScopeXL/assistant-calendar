@@ -730,23 +730,25 @@ Other motions: a press dips controls by 3% and shades rows (tap); sheets slide u
 
 ## 8. Empty and quiet states
 
+**An empty room** (Lists, Tasks, Photos, Countdowns, Saved Meals, Stars & Rewards) is one centred block (ADR 0032): an icon in a soft circle, a short line in bold ("No lists yet"), a note on what goes there, and the one big button that starts it. On the wall it sits in the middle of the room, under the header's own button; on a phone it starts a third of the way down, and the screen's bottom bar holds the button, so there's never a second one. Anywhere that's empty without being a room (a list with nothing on it, a week with no meals planned, a Settings group) keeps a quiet line.
+
 | Where | Copy | Button |
 |---|---|---|
 | Week board, nothing this week | "Nothing on this week yet. Add an event, or bring in a calendar you already use." | Add Event; a quiet "Bring in a Calendar" shows the phone QR |
 | Today panel, nothing today | "Nothing today." (or "Nothing else today." once today's are over) then "Tomorrow · 8:00 AM School drop-off"; the Today view and a phone's Today say it too | — |
 | Day view, nothing that day | "Nothing planned yet. Tap a time to add." (a phone's day list: "Nothing planned") | — |
 | People, a person with nothing | A **Free day** pill under the name, in the person's tint with the chips' ink (neutral for Everyone): a clear calendar is a state, not an error (ADR 0032). Their tasks still follow | — |
-| Lists room | "Lists live here: groceries, to-dos, packing. Everyone sees them, on the wall and on their phone." | New List |
+| Lists room | **No lists yet** · "Groceries, to-dos, packing: everyone sees them on the wall and on their phones." | New List |
 | A list with no items | "Nothing on Groceries yet. Add the first thing." | the add field, focused |
-| Tasks room, none | "Tasks live here. Give each person a few, and watch them get stamped." | Add Task |
+| Tasks room, none | **No tasks yet** · "Give each person a few, and watch them get stamped." | Add Task |
 | A person with no tasks today | "Nothing today" | — |
-| Stars & Rewards, no rewards | "Rewards are what stars buy. Add one — movie night, an ice cream run." | Add Reward (PIN) |
+| Stars & Rewards, no rewards | **No rewards yet** · "Rewards are what stars buy: movie night, an ice cream run." | Add Reward (PIN) |
 | Routines, none | "A routine is a short checklist a child runs on their own: pajamas, teeth, book." | Add Routine (PIN) |
 | Meals, empty week | "Tonight's dinner shows here and on the Today panel. Add a dinner." | Add Dinner |
-| Saved Meals, none | "Save a meal once and add it in one tap next week." | New Saved Meal |
-| Countdowns, none | "Count down to birthdays, trips, the last day of school." | Add Countdown |
+| Saved Meals, none | **No saved meals yet** · "Save a meal once and add it in one tap next week." | New Saved Meal |
+| Countdowns, none | **No countdowns yet** · "Count down to birthdays, trips, the last day of school." | Add Countdown |
 | Tips strip (Show tips on) | One thing Sunroom can do: "Hold a chip on the board, then drag it to another day." Never an error, a warning, a nag or a count of what's unused | Next tip |
-| Photos, none | "Photos added from a phone or a computer show here and on the screensaver." | the QR on the kitchen screen, **Add Photos** on a phone or computer |
+| Photos, none | **No photos yet** · "Photos added from a phone or a computer show here and on the screensaver." | the QR and "Add photos from a phone…" in the button's place on the kitchen screen (it has no file picker); **Add Photos** on a computer, and in a phone's bar |
 | Screensaver with no photos | The time-of-day tint, the clock and Up Next, and one line: "Add photos from a phone or a computer to see them here." Never a stock image | — |
 | Settings → Calendars, none | "Bring in calendars you already use: Google, iCloud, or any calendar address." | Add an Account (a QR on the display) |
 | Devices, no screens | "No screen paired yet. Open sunroom.local on the kitchen screen and type its code here." | Pair a Display (on phones and computers) |
@@ -856,7 +858,7 @@ Sheets and panels do not use `overlay` or `allow-discrete` for their exit (Safar
 - [ ] The Add panel shows the board behind it; the keyboard docks under the panel; the row of kinds, the field and the primary button are visible above the keys; the kinds are one row (scrolling on a phone, never wrapping); the Who row never wraps (six cells at 64 px on the wall); the Day strip starts on the household's day; the form is in three parts 32 px apart (What and who with no heading, When, Details) and no row of chips wraps; Time, How long and Repeats are one button each that says what's chosen, and their pickers, Pick a date and Custom… open in place and in view; a chip that opens something is outlined with a chevron, never filled; labels are quieter than what's under them; nothing shows under the pinned button; a meal is one box with the saved meals in one row under it.
 - [ ] Settings (ADR 0029): no page has a Save button, and a sheet still has its own; a person, a calendar, an account, a reward and a routine are rows with a chevron, and their sheets are titled "Edit …"; a color picker shows the free colors first and whose the others are; an account's sheet has its status, Sync, "Show on" the paired screen's name and Remove account, and a calendar's page inside it comes back with "Back to …"; Recently Removed is its own page; on a phone and a laptop Backup ends with Start Over, and on the kitchen screen it doesn't.
 - [ ] No `title=` attributes, no hover-only controls, no all-caps, no IDs or feed URLs, no emoji in the app's own copy.
-- [ ] Empty states say what goes there and offer one button; quiet pills are one line.
+- [ ] An empty room (Lists, Tasks, Photos at least: the screenshots' `lists-empty`, `tasks-empty`, `photos-empty`) is centred: the icon in its circle, the short line, the note, one big button (on the wall 64 px, centred in the room; on a phone the bar's), the kitchen screen's QR where Photos' button would be; a list with nothing on it is still a quiet line; quiet pills are one line.
 - [ ] The screensaver's photo is uncropped and the clock band is the only overlay; Night is black with the dim clock; the evening dim darkens the whole page evenly and nothing else changes.
 - [ ] Portrait: the header is on top in two rows (today, then the room's controls), the Today band is under it and every Today block fits in its three columns (Tasks Today, Tonight, To Do, Coming Up), the rail is a bottom bar with labels, days are rows with four two-line chips per line, today's row is lit, sheets rise to two-thirds height, the keyboard never covers the field or the button.
 - [ ] Motion, by hand in `just dev`: the done moment plays, its "+2" flies to the person's avatar in the Today panel, and Undo reverses all of it; a long press on a list's tile opens Change list without opening the list; a week swipe pages by a week and the new week slides in from that side, as the arrows do (following the finger isn't built: §9); a long-press lifts a chip and a drop moves it with a toast; an event added from a phone eases onto the wall and one removed fades away, and the board's first paint, a page and a view switch move no chip; a stamped task and a checked item glide under Done and back on Undo; a count pops when it changes; the Today panel's button slides the panel open and shut; a routine's finished step slides off as the next comes in; a panel slides in with the keyboard and the field in view; the theme crossfades at the forced sunset in fake mode; the screensaver fades in after the test idle (30 s in fake mode) and a tap wakes it without triggering what's under the finger; with Reduce Motion on, all of it is instant and the done moment still reads as done.

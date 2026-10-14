@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { ListChecks, ListX, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
@@ -11,7 +11,7 @@ import { HeaderBack } from "../../shell/HeaderLinks";
 import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
-import { EmptyState } from "../../ui/EmptyState";
+import { EmptyState, QuietLine } from "../../ui/EmptyState";
 import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
@@ -57,7 +57,9 @@ function ListTiles() {
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {isSuccess && lists.length === 0 ? (
           <EmptyState
-            message="Lists live here: groceries, to-dos, packing. Everyone sees them, on the wall and on their phone."
+            icon={ListChecks}
+            title="No lists yet"
+            note="Groceries, to-dos, packing: everyone sees them on the wall and on their phones."
             action={
               <Button
                 onClick={() => {
@@ -214,7 +216,8 @@ function ListPage({ listId }: { listId: string }) {
       <section className="p-6">
         <RoomHeader title="Lists" />
         <EmptyState
-          message="That list isn't here any more."
+          icon={ListX}
+          title="That list isn't here any more"
           action={
             <Button
               onClick={() => {
@@ -270,7 +273,7 @@ function ListPage({ listId }: { listId: string }) {
           <Pop value={tileCount(list)} className="inline-block" />
         </p>
         {detail.items.length === 0 && detail.done.length === 0 ? (
-          <EmptyState message={`Nothing on ${list.name} yet. Add the first thing.`} />
+          <QuietLine>{`Nothing on ${list.name} yet. Add the first thing.`}</QuietLine>
         ) : (
           <ItemRows detail={detail} />
         )}

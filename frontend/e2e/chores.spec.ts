@@ -110,6 +110,41 @@ test("with Reduce Motion the moment still reads as done, without a burst", async
   expect(await bursting(page)).toBe(false);
 });
 
+test("an empty Tasks room says what goes there, with one big Add Task", async ({
+  page,
+  request,
+}) => {
+  await seed(request);
+  const parent = await request.post("/api/auth/login", {
+    headers: CSRF,
+    data: { password: PASSWORD },
+  });
+  expect(parent.ok()).toBe(true);
+  // Empty: no tasks, and no children, whose stars give them a column of their own.
+  const chores = (await (await request.get("/api/chores")).json()) as { id: string }[];
+  for (const chore of chores) {
+    const gone = await request.delete(`/api/chores/${chore.id}`, { headers: CSRF });
+    expect(gone.ok()).toBe(true);
+  }
+  const members = (await (await request.get("/api/members")).json()) as {
+    id: string;
+    role: string;
+  }[];
+  for (const kid of members.filter((member) => member.role === "kid")) {
+    const gone = await request.post(`/api/members/${kid.id}/archive`, { headers: CSRF });
+    expect(gone.ok()).toBe(true);
+  }
+  await choresRoom(page);
+  const empty = page.locator("[data-empty]");
+  await expect(empty).toContainText("No tasks yet");
+  await expect(empty).toContainText("Give each person a few, and watch them get stamped.");
+  const add = empty.getByRole("button", { name: "Add Task" });
+  expect((await add.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(64);
+  await add.click();
+  const panel = page.getByRole("dialog", { name: "Add" });
+  await expect(panel.getByRole("button", { name: "Task", pressed: true })).toBeVisible();
+});
+
 test("an Anyone chore asks who did it, and credits them", async ({ page, request }) => {
   await seed(request);
   await choresRoom(page);

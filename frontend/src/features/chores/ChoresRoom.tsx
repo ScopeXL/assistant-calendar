@@ -1,4 +1,4 @@
-import { Check, Minus, Star } from "lucide-react";
+import { Check, ListTodo, Minus, Star } from "lucide-react";
 import { useState } from "react";
 
 import { dayNumber, shortWeekday, weekOf, zonedParts } from "../../lib/dates";
@@ -74,9 +74,11 @@ function ChoresBoard() {
         </div>
       ) : null}
       {isSuccess && day.columns.length === 0 ? (
-        <div className="px-6">
+        <div className="flex min-h-0 flex-1 flex-col px-6">
           <EmptyState
-            message="Tasks live here. Give each person a few, and watch them get stamped."
+            icon={ListTodo}
+            title="No tasks yet"
+            note="Give each person a few, and watch them get stamped."
             action={<Button onClick={add}>Add Task</Button>}
           />
         </div>

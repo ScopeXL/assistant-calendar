@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, Plus } from "lucide-react";
+import { BookOpen, ChevronLeft, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
@@ -35,15 +35,20 @@ export function SavedMeals() {
     <>
       {isSuccess && saved.length === 0 ? (
         <EmptyState
-          message="Save a meal once and add it in one tap next week."
+          icon={BookOpen}
+          title="No saved meals yet"
+          note="Save a meal once and add it in one tap next week."
           action={
-            <Button
-              onClick={() => {
-                setEditing("new");
-              }}
-            >
-              New Saved Meal
-            </Button>
+            // A phone's bottom bar already has New Saved Meal.
+            display ? (
+              <Button
+                onClick={() => {
+                  setEditing("new");
+                }}
+              >
+                New Saved Meal
+              </Button>
+            ) : undefined
           }
         />
       ) : (

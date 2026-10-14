@@ -91,7 +91,9 @@ function RewardsBody() {
       ) : null}
       {data.rewards.length === 0 ? (
         <EmptyState
-          message="Rewards are what stars buy. Add one — movie night, an ice cream run."
+          icon={Star}
+          title="No rewards yet"
+          note="Rewards are what stars buy: movie night, an ice cream run."
           action={
             <Button
               onClick={() => {

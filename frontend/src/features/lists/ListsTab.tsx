@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, ListChecks, ListX, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { zonedParts } from "../../lib/dates";
 import { useMembers } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
-import { EmptyState } from "../../ui/EmptyState";
+import { EmptyState, QuietLine } from "../../ui/EmptyState";
 import { Screen } from "../../ui/Screen";
 import { Pop } from "../../ui/Pop";
 import { useList, useListChanges, useLists } from "./data";
@@ -41,7 +41,11 @@ function PhoneLists() {
       }
     >
       {isSuccess && lists.length === 0 ? (
-        <EmptyState message="Lists live here: groceries, to-dos, packing. Everyone sees them, on the wall and on their phone." />
+        <EmptyState
+          icon={ListChecks}
+          title="No lists yet"
+          note="Groceries, to-dos, packing: everyone sees them on the wall and on their phones."
+        />
       ) : (
         <ul className="divide-y divide-line rounded-chip border border-line bg-surface">
           {(lists ?? []).map((list) => (
@@ -87,7 +91,7 @@ function PhoneList({ listId }: { listId: string }) {
   if (isError) {
     return (
       <Screen title="Lists" back="/lists">
-        <EmptyState message="That list isn't here any more." />
+        <EmptyState icon={ListX} title="That list isn't here any more" />
       </Screen>
     );
   }
@@ -130,7 +134,7 @@ function PhoneList({ listId }: { listId: string }) {
         </div>
       </div>
       {detail.items.length === 0 && detail.done.length === 0 ? (
-        <EmptyState message={`Nothing on ${list.name} yet. Add the first thing.`} />
+        <QuietLine>{`Nothing on ${list.name} yet. Add the first thing.`}</QuietLine>
       ) : (
         <div className="rounded-chip border border-line bg-surface">
           <ItemRows detail={detail} />

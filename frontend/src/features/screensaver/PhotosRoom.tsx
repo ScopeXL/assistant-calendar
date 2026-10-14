@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, EyeOff, Eye, Play, Settings, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Images, Play, Settings, X } from "lucide-react";
 import { useState } from "react";
 
 import { qk } from "../../api/keys";
@@ -37,6 +37,13 @@ export function PhotosRoom() {
   const [open, setOpen] = useState<number | null>(null);
   const shown = manifest?.photos.length ?? 0;
   const address = `${window.location.origin}/photos`;
+  // The kitchen screen adds no photos itself: a phone does, from this code.
+  const fromAPhone = (
+    <div className="flex items-center gap-6 rounded-panel border border-line bg-surface p-5 text-left">
+      <QrCode value={address} label="A code that opens Photos on a phone" className="size-32" />
+      <p className="text-d-body">Add photos from a phone: open Sunroom, then More, then Photos.</p>
+    </div>
+  );
   return (
     <section aria-label="Photos" className="flex min-h-0 flex-1 flex-col">
       <RoomHeader
@@ -69,22 +76,17 @@ export function PhotosRoom() {
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto p-6" tabIndex={0}>
-        {kiosk ? (
-          <div className="mb-6 flex items-center gap-6 rounded-panel border border-line bg-surface p-5">
-            <QrCode
-              value={address}
-              label="A code that opens Photos on a phone"
-              className="size-32"
-            />
-            <p className="text-d-body">
-              Add photos from a phone: open Sunroom, then More, then Photos.
-            </p>
-          </div>
-        ) : null}
         {library.isSuccess && photos.length === 0 ? (
-          <EmptyState message="Photos added from a phone or a computer show here and on the screensaver." />
+          <EmptyState
+            icon={Images}
+            title="No photos yet"
+            note="Photos added from a phone or a computer show here and on the screensaver."
+            // The kitchen screen has no file picker: its QR code stands where the button would.
+            action={kiosk ? fromAPhone : <AddPhotosButton />}
+          />
         ) : (
           <>
+            {kiosk ? <div className="mb-6">{fromAPhone}</div> : null}
             {/* How many the screensaver shows, over the grid: the header has no second line. */}
             {library.isSuccess ? (
               <p className="mb-3 text-d-secondary font-semibold text-ink-soft">

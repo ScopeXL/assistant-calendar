@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { EyeOff, Play } from "lucide-react";
+import { EyeOff, Images, Play } from "lucide-react";
 import { useState } from "react";
 
 import { qk } from "../../api/keys";
@@ -46,7 +46,11 @@ export function PhotosTab() {
         ) : null}
       </div>
       {library.isSuccess && photos.length === 0 ? (
-        <EmptyState message="Photos added from a phone or a computer show here and on the screensaver." />
+        <EmptyState
+          icon={Images}
+          title="No photos yet"
+          note="Photos added from a phone or a computer show here and on the screensaver."
+        />
       ) : (
         <ul aria-label="Photos" className="grid grid-cols-3 gap-2">
           {photos.map((photo) => (

@@ -658,7 +658,7 @@ size, so the first-run test's phone became "This Computer". There is no Vitest f
 
 ### T9 Empty rooms: an icon, a line, one big button
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: an empty room shows an icon, a line and one big button")
 
 **Owner's note.** "In the Lists, Tasks, Photos views, redesign the 'empty' view to show an icon,
 a message indicating that nothing was found, and a large button to add a new one (i.e. 'New
@@ -704,6 +704,18 @@ projects if they aren't there; the tap check (the button ≥ 64 px on the wall).
 
 **CHANGELOG.** "An empty room (Lists, Tasks, Photos, Countdowns and the rest) shows an icon, what
 goes there, and one big button to add the first thing."
+
+**As built.** On a phone each room's button already sits in the screen's bottom bar (New List,
+Add, Add Photos, Add Countdown, New Saved Meal), so the phone's empty rooms show the icon, the
+line and the note and no second button; Stars & Rewards, which has no bar, keeps its own.
+`QuietLine` keeps the places that are empty without being rooms: a list with nothing on it,
+the Meals week with nothing planned (its grid is still there to add from), and a list that's
+gone gets the new shape with Back to Lists. Routines and Rewards in Settings → Tasks are
+settings groups, not `EmptyState`, and keep their line and Add button. `chores.spec.ts` and
+`lists.spec.ts` run only on `display-1080p` (every test skips itself elsewhere), so the empty
+rooms are checked there (an empty Tasks room also needs no children: their stars give them a
+column), and `screenshots.spec.ts` gains `lists-empty`, `tasks-empty` and `photos-empty` on the
+walls, a phone and a laptop.
 
 ### T10 The update check reads the tags
 

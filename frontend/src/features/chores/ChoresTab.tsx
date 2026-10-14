@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, ListTodo, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { weekOf, zonedParts } from "../../lib/dates";
@@ -74,7 +74,11 @@ function PhoneChores() {
         {rewards?.asked.length && viewer.answers ? <AskedStrip asked={rewards.asked} /> : null}
         {day?.waiting.length ? <WaitingStrip waiting={day.waiting} /> : null}
         {isSuccess && day.columns.length === 0 ? (
-          <EmptyState message="Tasks live here. Give each person a few, and watch them get stamped." />
+          <EmptyState
+            icon={ListTodo}
+            title="No tasks yet"
+            note="Give each person a few, and watch them get stamped."
+          />
         ) : day && mode === "today" ? (
           <Sections day={day} first={viewer.memberId} />
         ) : day ? (
