@@ -71,7 +71,7 @@ export function EraseSheet({
                   : "min-h-11 rounded-button px-5 text-body"
               }`}
             >
-              Download everything
+              Download Everything
             </a>
             <Button
               variant="secondary"
@@ -79,7 +79,7 @@ export function EraseSheet({
                 setStep("password");
               }}
             >
-              I have a copy
+              I Have a Copy
             </Button>
           </div>
           {downloading ? (
@@ -118,10 +118,10 @@ export function EraseSheet({
               pending={erase.isPending || erase.isSuccess}
               disabled={!password}
             >
-              Erase everything
+              Erase Everything
             </Button>
             <Button variant="secondary" onClick={onClose}>
-              Keep everything
+              Keep Everything
             </Button>
           </div>
         </form>

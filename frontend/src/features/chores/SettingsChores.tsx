@@ -104,7 +104,7 @@ function RewardsGroup() {
             setEditing("new");
           }}
         >
-          Add reward
+          Add Reward
         </Button>
       </div>
       <RewardPanel
@@ -155,7 +155,7 @@ function RoutinesGroup() {
             setEditing("new");
           }}
         >
-          Add routine
+          Add Routine
         </Button>
       </div>
       <SidePanel
@@ -451,7 +451,7 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
       ) : null}
       <PanelActions>
         <Button type="submit" block disabled={!ready} pending={saveRoutine.isPending}>
-          {routine ? "Save changes" : "Add routine"}
+          {routine ? "Save Changes" : "Add Routine"}
         </Button>
       </PanelActions>
     </form>
@@ -522,7 +522,7 @@ function AdjustGroup() {
               );
             }}
           >
-            {points > 0 ? "Give stars" : "Take stars"}
+            {points > 0 ? "Give Stars" : "Take Stars"}
           </Button>
         </div>
       </div>

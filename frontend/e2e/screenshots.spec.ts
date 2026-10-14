@@ -99,7 +99,7 @@ test("the wall screen", async ({ page }) => {
   await expect(page.getByRole("group", { name: "On-screen keyboard" })).toBeVisible();
   await shot(page, "display-keyboard");
   await page.getByLabel("Household password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Pair this screen" }).click();
+  await page.getByRole("button", { name: "Pair This Screen" }).click();
   await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
   await shot(page, "display-name");
   await page.getByRole("button", { name: "Done" }).click();
@@ -209,7 +209,7 @@ test("the wall screen", async ({ page }) => {
   await sheet.getByRole("button", { name: "Change" }).click();
   const editor = page.getByRole("dialog", { name: "Change" });
   await editor.getByLabel("Title").fill("Soccer training");
-  await editor.getByRole("button", { name: "Save changes" }).click();
+  await editor.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByRole("dialog", { name: "Change which?" })).toBeVisible();
   await shot(page, "change-which");
   await page
@@ -275,7 +275,7 @@ test("the wall screen", async ({ page }) => {
     data: { fail_next: Array.from({ length: 8 }, () => "unreachable") },
   });
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    // "Refresh now" waits a minute between syncs, and this clock only moves when told to.
+    // "Refresh Now" waits a minute between syncs, and this clock only moves when told to.
     await expect(async () => {
       await page.request.post("/api/_test/clock", {
         headers: CSRF,
@@ -352,7 +352,7 @@ test("the wall screen", async ({ page }) => {
     .getByRole("navigation", { name: "Settings" })
     .getByRole("link", { name: "Calendars & Accounts", exact: true })
     .click();
-  const addAccount = page.getByRole("button", { name: "Add an account" });
+  const addAccount = page.getByRole("button", { name: "Add an Account" });
   const adding = page.getByRole("dialog");
   await addAccount.click();
   await expect(adding.getByText("Or add it from a phone")).toBeVisible();
@@ -416,7 +416,7 @@ test("a phone", async ({ page, isMobile }) => {
     await shot(page, `setup-place-${scheme}`);
     await page.getByRole("button", { name: /^Sample Town/ }).click();
     await page.getByLabel("Your name").fill("Ana");
-    await page.getByRole("button", { name: "Add me" }).click();
+    await page.getByRole("button", { name: "Add Me" }).click();
     await page.getByLabel("Name", { exact: true }).fill("Mia");
     await page.getByRole("button", { name: "Child", exact: true }).click();
     await page.getByRole("button", { name: "Add", exact: true }).click();
@@ -427,7 +427,7 @@ test("a phone", async ({ page, isMobile }) => {
     await page.getByRole("button", { name: "Later" }).click();
     await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
     await shot(page, `setup-calendars-${scheme}`);
-    await page.getByRole("button", { name: "Skip for now" }).click();
+    await page.getByRole("button", { name: "Skip for Now" }).click();
     await shot(page, `setup-done-${scheme}`);
     await page.getByRole("button", { name: "Open Sunroom" }).click();
     await expect(page.getByRole("heading", { name: "Up next" })).toBeVisible();
@@ -437,7 +437,7 @@ test("a phone", async ({ page, isMobile }) => {
     await shot(page, `calendar-empty-${scheme}`);
     await page.getByRole("link", { name: "More" }).click();
     await shot(page, `more-${scheme}`);
-    await page.getByRole("link", { name: "Pair a display" }).click();
+    await page.getByRole("link", { name: "Pair a Display" }).click();
     await shot(page, `pair-a-display-${scheme}`);
     await page.goto("/who?from=more");
     await shot(page, `who-${scheme}`);
@@ -451,23 +451,23 @@ test("a phone", async ({ page, isMobile }) => {
     await expect(page.getByRole("dialog", { name: "Edit Mia" })).toBeVisible();
     await shot(page, `settings-change-a-person-${scheme}`);
     await page.goto("/settings/devices");
-    await page.getByRole("button", { name: "Add a phone" }).click();
-    await expect(page.getByRole("dialog", { name: "Add a phone" })).toBeVisible();
+    await page.getByRole("button", { name: "Add a Phone" }).click();
+    await expect(page.getByRole("dialog", { name: "Add a Phone" })).toBeVisible();
     await shot(page, `settings-add-a-phone-${scheme}`);
     await page.goto("/settings/devices");
-    await page.getByRole("button", { name: "Pair a display" }).click();
+    await page.getByRole("button", { name: "Pair a Display" }).click();
     await expect(page.getByRole("dialog", { name: "Pair a Display" })).toBeVisible();
     await shot(page, `settings-pair-a-display-${scheme}`);
     // Erase everything: both steps of its sheet (nothing is erased here).
     await page.goto("/settings/backup");
-    await page.getByRole("button", { name: "Erase everything…" }).click();
+    await page.getByRole("button", { name: "Erase Everything…" }).click();
     const erase = page.getByRole("dialog", { name: "Erase Everything?" });
     await expect(erase.getByText("Keep a copy first?")).toBeVisible();
     await shot(page, `settings-erase-copy-${scheme}`);
-    await erase.getByRole("button", { name: "I have a copy" }).click();
+    await erase.getByRole("button", { name: "I Have a Copy" }).click();
     await expect(erase.getByLabel("Household password")).toBeVisible();
     await shot(page, `settings-erase-password-${scheme}`);
-    await erase.getByRole("button", { name: "Keep everything" }).click();
+    await erase.getByRole("button", { name: "Keep Everything" }).click();
     await expect(erase).toBeHidden();
     await page.goto("/install?from=more");
     await shot(page, `install-${scheme}`);
@@ -541,7 +541,7 @@ test("a phone's calendar", async ({ page, isMobile }) => {
       ["Google", "google"],
     ];
     for (const [choice, name] of flows) {
-      await page.getByRole("button", { name: "Add an account" }).click();
+      await page.getByRole("button", { name: "Add an Account" }).click();
       const sheet = page.getByRole("dialog");
       if (name === "icloud") await shot(page, `add-account-${scheme}`);
       await sheet.getByRole("button", { name: new RegExp(`^${choice}`) }).click();
@@ -554,11 +554,11 @@ test("a phone's calendar", async ({ page, isMobile }) => {
       await expect(sheet).toBeHidden();
     }
     // Sign in with Google: the step asks for the app's keys itself (ADR 0030), then keeps them.
-    await page.getByRole("button", { name: "Add an account" }).click();
+    await page.getByRole("button", { name: "Add an Account" }).click();
     const google = page.getByRole("dialog");
     await google.getByRole("button", { name: /^Google/ }).click();
     await google.getByRole("button", { name: /^Sign in with Google/ }).click();
-    const save = google.getByRole("button", { name: "Save keys and continue" });
+    const save = google.getByRole("button", { name: "Save Keys and Continue" });
     await save.scrollIntoViewIfNeeded();
     await shot(page, `add-google-signin-keys-${scheme}`);
     await google.getByLabel("Google app's client ID").fill("sample-id.apps.example.com");
@@ -567,7 +567,7 @@ test("a phone's calendar", async ({ page, isMobile }) => {
     const signIn = google.getByRole("button", { name: "Sign in with Google" });
     await signIn.scrollIntoViewIfNeeded();
     await shot(page, `add-google-signin-${scheme}`);
-    await google.getByRole("button", { name: "Remove keys" }).click();
+    await google.getByRole("button", { name: "Remove Keys" }).click();
     await expect(save).toBeVisible();
     await google.getByRole("button", { name: "Close" }).click();
     await expect(google).toBeHidden();
@@ -588,7 +588,7 @@ test("a phone's account steps", async ({ page, isMobile }) => {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto("/settings/calendars");
     for (const [name, choices] of flows) {
-      await page.getByRole("button", { name: "Add an account" }).click();
+      await page.getByRole("button", { name: "Add an Account" }).click();
       const sheet = page.getByRole("dialog");
       for (const choice of choices) {
         await sheet.getByRole("button", { name: new RegExp(`^${choice}`) }).click();
@@ -705,7 +705,7 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
     );
     await shot(page, `photos-one-${theme}`);
     await page.getByRole("button", { name: "Close" }).click();
-    await page.getByRole("button", { name: "Start screensaver" }).click();
+    await page.getByRole("button", { name: "Start Screensaver" }).click();
     const saver = page.getByRole("button", { name: "Photos are showing. Tap to go back." });
     await expect(saver).toBeVisible();
     await shot(page, `screensaver-${theme}`);
@@ -807,7 +807,7 @@ test("a laptop", async ({ page }) => {
     .getByRole("navigation", { name: "Settings" })
     .getByRole("link", { name: "Phones & Screens", exact: true })
     .click();
-  await page.getByRole("button", { name: "Pair a display" }).click();
+  await page.getByRole("button", { name: "Pair a Display" }).click();
   const pairing = page.getByRole("dialog", { name: "Pair a Display" });
   await expect(pairing).toBeVisible();
   await shot(page, "settings-pair-a-display");

@@ -547,7 +547,7 @@ export function WaitingStrip({ waiting }: { waiting: Waiting[] }) {
                   answer.mutate({ waiting: item, yes: true });
                 }}
               >
-                Yes, it's done
+                Yes, It's Done
               </Button>
               <Button
                 variant="secondary"
@@ -555,7 +555,7 @@ export function WaitingStrip({ waiting }: { waiting: Waiting[] }) {
                   answer.mutate({ waiting: item, yes: false });
                 }}
               >
-                Not yet
+                Not Yet
               </Button>
             </span>
           </div>
@@ -622,7 +622,7 @@ function ChoreSheet({ open, box, onClose }: { open: boolean; box: Box; onClose: 
                 );
               }}
             >
-              Skip today
+              Skip Today
             </Button>
           ) : null}
           <Button

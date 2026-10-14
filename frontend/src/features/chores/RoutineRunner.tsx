@@ -238,7 +238,7 @@ export function RoutineRunner({
                 next(false);
               }}
             >
-              Skip this one
+              Skip This One
             </Button>
           </Step>
         </AnimatePresence>

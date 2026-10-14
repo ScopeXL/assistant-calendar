@@ -43,9 +43,9 @@ export function ScopeChooser({
             ? `${title} repeats: ${repeatText.charAt(0).toLowerCase()}${repeatText.slice(1)}.`
             : `${title} repeats.`}
         </p>
-        {choice("this", "Just this one")}
-        {choice("following", "This and the ones after")}
-        {choice("all", "All of them")}
+        {choice("this", "Just This One")}
+        {choice("following", "This and the Ones After")}
+        {choice("all", "All of Them")}
       </div>
     </Sheet>
   );

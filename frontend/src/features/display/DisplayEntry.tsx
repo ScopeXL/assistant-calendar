@@ -290,7 +290,7 @@ function PasswordPairing({ onCancel, onPaired }: { onCancel: () => void; onPaire
       />
       <div className="flex flex-wrap items-center gap-3 whitespace-nowrap">
         <Button type="submit" pending={pair.isPending} disabled={!password}>
-          Pair this screen
+          Pair This Screen
         </Button>
         <Button
           variant="secondary"
@@ -304,10 +304,10 @@ function PasswordPairing({ onCancel, onPaired }: { onCancel: () => void; onPaire
           ) : (
             <Eye aria-hidden="true" className="size-7" />
           )}
-          {visible ? "Hide password" : "Show password"}
+          {visible ? "Hide Password" : "Show Password"}
         </Button>
         <Button variant="quiet" onClick={onCancel}>
-          Show the code instead
+          Show the Code Instead
         </Button>
       </div>
     </form>

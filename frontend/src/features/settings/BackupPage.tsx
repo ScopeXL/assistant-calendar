@@ -87,7 +87,7 @@ export function BackupPage() {
         </Row>
         {status?.stale ? (
           <div className="py-4">
-            <Text>The newest backup is over a week old. Try Back up now, and check the log.</Text>
+            <Text>The newest backup is over a week old. Try Back Up Now, and check the log.</Text>
           </div>
         ) : null}
         <div className={display ? "py-5" : "py-4"}>
@@ -99,16 +99,16 @@ export function BackupPage() {
                 run.mutate();
               }}
             >
-              Back up now
+              Back Up Now
             </Button>
             {newest && own ? (
               <a href={`/api/admin/backups/${newest.name}`} download className={link}>
-                Download backup
+                Download Backup
               </a>
             ) : null}
             {status && own ? (
               <a href="/api/admin/backups/full.zip" download className={link}>
-                Download everything
+                Download Everything
               </a>
             ) : null}
           </div>
@@ -138,7 +138,7 @@ export function BackupPage() {
                 void exportAll();
               }}
             >
-              Export everything
+              Export Everything
             </Button>
           ) : null}
         </div>
@@ -155,7 +155,7 @@ export function BackupPage() {
                 setErasing(true);
               }}
             >
-              Erase everything…
+              Erase Everything…
             </Button>
           </div>
         </Group>

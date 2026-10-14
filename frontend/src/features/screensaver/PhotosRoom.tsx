@@ -62,7 +62,7 @@ export function PhotosRoom() {
               }}
             >
               <Play aria-hidden="true" className="size-7" />
-              Start screensaver
+              Start Screensaver
             </Button>
             {kiosk ? null : <AddPhotosButton />}
           </div>
@@ -132,7 +132,7 @@ export function PhotosRoom() {
                 void library.fetchNextPage();
               }}
             >
-              Show more
+              Show More
             </Button>
           </div>
         ) : null}
@@ -213,7 +213,7 @@ function Viewer({
             ) : (
               <EyeOff aria-hidden="true" className="size-7" />
             )}
-            {photo.hidden ? "Show on the screensaver" : "Hide from screensaver"}
+            {photo.hidden ? "Show on the Screensaver" : "Hide from Screensaver"}
           </Button>
           <Button variant="secondary" onClick={onClose}>
             <X aria-hidden="true" className="size-7" />

@@ -173,7 +173,7 @@ export function LocationSettings() {
                   setChanging(true);
                 }}
               >
-                {label ? "Change" : "Set the city"}
+                {label ? "Change" : "Set the City"}
               </Button>
             ) : null}
             {label && !changing ? (

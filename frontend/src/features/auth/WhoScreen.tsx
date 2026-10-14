@@ -92,7 +92,7 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
         <div className="mt-6 flex flex-col gap-3">
           <AddPersonRow
             label="Your name"
-            action="Add me"
+            action="Add Me"
             primary
             autoComplete="given-name"
             pending={addMe.isPending}
@@ -122,7 +122,7 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
               }}
             >
               <UserPlus aria-hidden="true" />
-              Someone else
+              Someone Else
             </Button>
           ) : null}
           <Button
@@ -132,7 +132,7 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
               choose.mutate(null);
             }}
           >
-            <UserRound aria-hidden="true" />A guest
+            <UserRound aria-hidden="true" />A Guest
           </Button>
         </div>
       )}
@@ -157,7 +157,7 @@ export function WhoScreen({ from }: { from?: WhoFrom | undefined }) {
             void navigate({ to: "/" });
           }}
         >
-          Skip for now
+          Skip for Now
         </Button>
       )}
     </main>

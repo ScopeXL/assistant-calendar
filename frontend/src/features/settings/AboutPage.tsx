@@ -163,7 +163,7 @@ function UpdatesGroup() {
               check.mutate();
             }}
           >
-            Check now
+            Check Now
           </Button>
         </div>
       ) : null}

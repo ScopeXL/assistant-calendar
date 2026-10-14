@@ -61,10 +61,10 @@ export function JoinScreen() {
       }}
     >
       {join.isPending
-        ? "Signing in…"
+        ? "Signing In…"
         : installFirst
           ? "Sign in here in Safari instead"
-          : "Sign in on this phone"}
+          : "Sign In on This Phone"}
     </Button>
   );
 
@@ -89,7 +89,7 @@ export function JoinScreen() {
                 void navigate({ to: "/install", search: {} });
               }}
             >
-              Show me how
+              Show Me How
             </Button>
             {signInHere}
           </div>

@@ -49,17 +49,17 @@ export const TIPS: readonly Tip[] = [
   },
   {
     id: "copy-week",
-    text: "Meals: Copy last week fills the whole week in one tap.",
+    text: "Meals: Copy Last Week fills the whole week in one tap.",
     needs: ["meals"],
   },
   {
     id: "ingredients",
-    text: "Meals: Add ingredients to Groceries puts a meal's shopping on your grocery list.",
+    text: "Meals: Add Ingredients to Groceries puts a meal's shopping on your grocery list.",
     needs: ["meals", "lists"],
   },
   {
     id: "countdown",
-    text: "Countdowns: open any event and tap Add a countdown.",
+    text: "Countdowns: open any event and tap Add a Countdown.",
     needs: ["countdowns"],
   },
   {
@@ -79,7 +79,7 @@ export const TIPS: readonly Tip[] = [
   },
   {
     id: "backup",
-    text: "On a phone or computer, Settings → Backup → Download everything saves a copy of it all.",
+    text: "On a phone or computer, Settings → Backup → Download Everything saves a copy of it all.",
   },
   {
     id: "install",
@@ -87,7 +87,7 @@ export const TIPS: readonly Tip[] = [
   },
   {
     id: "accounts",
-    text: "A calendar you already use? Settings → Calendars & Accounts → Add an account.",
+    text: "A calendar you already use? Settings → Calendars & Accounts → Add an Account.",
     needs: ["calendar_sync"],
   },
 ];

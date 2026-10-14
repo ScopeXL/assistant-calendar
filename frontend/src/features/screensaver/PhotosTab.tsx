@@ -41,7 +41,7 @@ export function PhotosTab() {
             }}
           >
             <Play aria-hidden="true" className="size-5" />
-            Start screensaver
+            Start Screensaver
           </Button>
         ) : null}
       </div>
@@ -86,7 +86,7 @@ export function PhotosTab() {
               void library.fetchNextPage();
             }}
           >
-            Show more
+            Show More
           </Button>
         </div>
       ) : null}
@@ -106,7 +106,7 @@ export function PhotosTab() {
                   setOpen(null);
                 }}
               >
-                {open.hidden ? "Show on the screensaver" : "Hide from screensaver"}
+                {open.hidden ? "Show on the Screensaver" : "Hide from Screensaver"}
               </Button>
               <Button
                 variant="quiet-danger"

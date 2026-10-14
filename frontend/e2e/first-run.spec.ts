@@ -45,7 +45,7 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   // Who lives here? Start with you, then a child.
   await expect(phonePage.getByRole("heading", { name: "Who lives here?" })).toBeVisible();
   await phonePage.getByLabel("Your name").fill("Ana");
-  await phonePage.getByRole("button", { name: "Add me" }).click();
+  await phonePage.getByRole("button", { name: "Add Me" }).click();
   await phonePage.getByLabel("Name", { exact: true }).fill("Mia");
   await phonePage.getByRole("button", { name: "Child", exact: true }).click();
   // One row: the name, Child, Add. The name clears for the next person; Child stays chosen.
@@ -56,7 +56,7 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
     "aria-pressed",
     "true",
   );
-  await expect(phonePage.getByRole("button", { name: "Add another" })).toHaveCount(0);
+  await expect(phonePage.getByRole("button", { name: "Add Another" })).toHaveCount(0);
   await phonePage.getByRole("button", { name: "Next", exact: true }).click();
 
   await phonePage.getByLabel("PIN (4 to 6 digits)").fill(PIN);
@@ -66,20 +66,20 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   // the kitchen screen is paired.
   await expect(phonePage.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
   await expect(phonePage.getByText("6 of 6")).toBeVisible();
-  await phonePage.getByRole("button", { name: "Skip for now" }).click();
+  await phonePage.getByRole("button", { name: "Skip for Now" }).click();
   await expect(phonePage.getByRole("heading", { name: "You’re set" })).toBeVisible();
   await expect(phonePage.getByText(/open More, then Pair a Display/)).toBeVisible();
   await phonePage.getByRole("button", { name: "Open Sunroom" }).click();
   await expect(phonePage.getByRole("heading", { name: "Up next" })).toBeVisible();
 
   // The wall shows its pair code by itself once setup is done; the phone types it in More.
-  await expect(page.getByRole("heading", { name: "Pair this screen" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Pair This Screen" })).toBeVisible({
     timeout: 15_000,
   });
   const code = (await page.getByTestId("pair-code").textContent()) ?? "";
   expect(code).toMatch(/^[A-Z2-9]{3} [A-Z2-9]{3}$/);
   await phonePage.getByRole("link", { name: "More" }).click();
-  await phonePage.getByRole("link", { name: "Pair a display" }).click();
+  await phonePage.getByRole("link", { name: "Pair a Display" }).click();
   await phonePage.getByLabel("The code on the screen").fill(code);
   await phonePage.getByRole("button", { name: "Pair", exact: true }).click();
   await expect(
@@ -124,7 +124,7 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.getByRole("link", { name: "Settings" }).click();
   await phonePage.getByRole("link", { name: "Phones & Screens" }).click();
   await expect(phonePage.getByText("Kitchen screen", { exact: true })).toBeVisible();
-  await phonePage.getByRole("button", { name: "Sign out of this phone" }).click();
+  await phonePage.getByRole("button", { name: "Sign Out of This Phone" }).click();
   await expect(phonePage).toHaveURL(/\/sign-in/);
   await context.close();
 });
@@ -147,7 +147,7 @@ test("a wall screen typed in with the password, and a toast that leaves under th
   await keyboard.getByRole("button", { name: "e", exact: true }).click();
   await expect(field).toHaveValue("e"); // a password: no automatic capital
   await field.fill(PASSWORD);
-  await screen.getByRole("button", { name: "Pair this screen" }).click();
+  await screen.getByRole("button", { name: "Pair This Screen" }).click();
   await expect(screen.getByRole("heading", { name: "Name this screen" })).toBeVisible();
   await screen.getByRole("button", { name: "Done" }).click();
   await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
@@ -191,7 +191,7 @@ test("Erase everything starts Sunroom over: from a computer, never from the wall
   await pairWall(screen);
   await screen.goto("/settings/backup");
   await expect(screen.getByRole("heading", { name: "Backups", exact: true })).toBeVisible();
-  await expect(screen.getByRole("button", { name: "Back up now" })).toBeVisible();
+  await expect(screen.getByRole("button", { name: "Back Up Now" })).toBeVisible();
   await expect(screen.getByRole("heading", { name: "Start Over" })).toHaveCount(0);
   await expect(screen.getByRole("button", { name: /^Erase everything/ })).toHaveCount(0);
   await screen.goto("/display");
@@ -200,21 +200,21 @@ test("Erase everything starts Sunroom over: from a computer, never from the wall
   // A computer has it, with the downloads the wall can't use.
   await signInPhone(page);
   await page.goto("/settings/backup");
-  await expect(page.getByRole("link", { name: "Download everything" })).toBeVisible();
-  await page.getByRole("button", { name: "Erase everything…" }).click();
+  await expect(page.getByRole("link", { name: "Download Everything" })).toBeVisible();
+  await page.getByRole("button", { name: "Erase Everything…" }).click();
   const sheet = page.getByRole("dialog", { name: "Erase Everything?" });
   await expect(sheet.getByText("Keep a copy first?")).toBeVisible();
-  await expect(sheet.getByRole("link", { name: "Download everything" })).toHaveAttribute(
+  await expect(sheet.getByRole("link", { name: "Download Everything" })).toHaveAttribute(
     "href",
     "/api/admin/backups/full.zip",
   );
-  await sheet.getByRole("button", { name: "I have a copy" }).click();
+  await sheet.getByRole("button", { name: "I Have a Copy" }).click();
   const password = sheet.getByLabel("Household password");
   await password.fill("not-the-household-password");
-  await sheet.getByRole("button", { name: "Erase everything" }).click();
+  await sheet.getByRole("button", { name: "Erase Everything" }).click();
   await expect(sheet.getByText("That password didn't match. Try again.")).toBeVisible();
   await password.fill(PASSWORD);
-  await sheet.getByRole("button", { name: "Erase everything" }).click();
+  await sheet.getByRole("button", { name: "Erase Everything" }).click();
 
   // This computer lands on a first run, and so does the wall, by itself.
   await expect(page.getByRole("heading", { name: "Welcome to Sunroom" })).toBeVisible();

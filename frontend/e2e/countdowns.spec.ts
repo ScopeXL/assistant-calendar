@@ -1,6 +1,6 @@
 /**
  * Countdowns end to end (PLAN §15 M4, UX §4 "Countdowns room"): Coming up on the Today panel
- * counts down to Mia's birthday from Family; "Add a countdown" from an event's sheet; on the
+ * counts down to Mia's birthday from Family; "Add a Countdown" from an event's sheet; on the
  * day the panel says so; and a surprise stays off the wall but shows on a phone. The server's
  * clock reads Wednesday, October 7, 2026 in New York. Synthetic data only.
  */
@@ -50,11 +50,11 @@ test("an event's sheet adds a countdown to it", async ({ page, request }) => {
     .getByRole("button", { name: /^Pajama day/ })
     .first()
     .click();
-  await page.getByRole("button", { name: "Add a countdown" }).click();
+  await page.getByRole("button", { name: "Add a Countdown" }).click();
   const add = page.getByRole("dialog", { name: "Add" });
   await expect(add.getByRole("button", { name: "Countdown", pressed: true })).toBeVisible();
   await expect(add.getByLabel("What it counts down to")).toHaveValue("Pajama day");
-  await add.getByRole("button", { name: "Add countdown" }).click();
+  await add.getByRole("button", { name: "Add Countdown" }).click();
   await expect(toast(page, "Added Pajama day")).toBeVisible();
   await page.goto("/countdowns");
   const tiles = page.getByRole("list", { name: "Countdowns" });

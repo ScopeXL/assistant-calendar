@@ -432,7 +432,7 @@ function ItemEditor({ item, onClose }: { item: Item; onClose: () => void }) {
       </Button>
       <PanelActions>
         <Button block pending={changes.patchItem.isPending} onClick={save}>
-          Save changes
+          Save Changes
         </Button>
       </PanelActions>
     </div>

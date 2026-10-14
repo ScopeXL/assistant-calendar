@@ -50,7 +50,7 @@ function ListTiles() {
             }}
           >
             <Plus aria-hidden="true" className="size-7" />
-            New list
+            New List
           </Button>
         }
       />
@@ -64,7 +64,7 @@ function ListTiles() {
                   setMaking(true);
                 }}
               >
-                New list
+                New List
               </Button>
             }
           />
@@ -196,7 +196,7 @@ export function NewListPanel({ open, onClose }: { open: boolean; onClose: () => 
         </div>
         <PanelActions>
           <Button type="submit" block disabled={!name.trim()} pending={createList.isPending}>
-            Add list
+            Add List
           </Button>
         </PanelActions>
       </form>
@@ -250,7 +250,7 @@ function ListPage({ listId }: { listId: string }) {
                   clearDone.mutate({ listId: list.id });
                 }}
               >
-                Clear done
+                Clear Done
               </Button>
             ) : null}
             <Button
@@ -259,7 +259,7 @@ function ListPage({ listId }: { listId: string }) {
                 setChanging(true);
               }}
             >
-              Change list
+              Change List
             </Button>
           </div>
         }
@@ -379,7 +379,7 @@ export function ChangeListPanel({
         )}
         <PanelActions>
           <Button type="submit" block disabled={!name.trim()} pending={renameList.isPending}>
-            Save changes
+            Save Changes
           </Button>
         </PanelActions>
       </form>

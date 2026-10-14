@@ -39,7 +39,7 @@ function CodeView({ code, onNew }: { code: JoinCode; onNew: () => void }) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-body">That code has run out. Codes work for 10 minutes.</p>
-        <Button onClick={onNew}>Make a new code</Button>
+        <Button onClick={onNew}>Make a New Code</Button>
       </div>
     );
   }
@@ -98,7 +98,7 @@ export function AddPhoneSheet({ open, onClose }: { open: boolean; onClose: () =>
               make.mutate();
             }}
           >
-            Try again
+            Try Again
           </Button>
         </div>
       ) : (

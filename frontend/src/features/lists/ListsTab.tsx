@@ -36,7 +36,7 @@ function PhoneLists() {
           }}
         >
           <Plus aria-hidden="true" className="size-5" />
-          New list
+          New List
         </Button>
       }
     >
@@ -116,7 +116,7 @@ function PhoneList({ listId }: { listId: string }) {
                 clearDone.mutate({ listId: list.id });
               }}
             >
-              Clear done
+              Clear Done
             </Button>
           ) : null}
           <Button
@@ -125,7 +125,7 @@ function PhoneList({ listId }: { listId: string }) {
               setChanging(true);
             }}
           >
-            Change list
+            Change List
           </Button>
         </div>
       </div>

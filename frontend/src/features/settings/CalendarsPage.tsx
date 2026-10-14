@@ -121,7 +121,7 @@ export function CalendarsPage() {
               setEditing({ kind: "new" });
             }}
           >
-            Add a calendar
+            Add a Calendar
           </Button>
         </div>
       </Group>
@@ -141,7 +141,7 @@ export function CalendarsPage() {
                   restore.mutate(calendar);
                 }}
               >
-                Put back
+                Put Back
                 <span className="sr-only"> {calendar.name}</span>
               </Button>
             </div>
@@ -290,7 +290,7 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button type="submit" disabled={!name.trim()} pending={save.isPending}>
-          {calendar ? "Save changes" : "Add calendar"}
+          {calendar ? "Save Changes" : "Add Calendar"}
         </Button>
         {calendar && !calendar.is_default ? (
           <Button

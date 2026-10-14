@@ -31,10 +31,10 @@ export function SetupCalendars({ onDone }: { onDone: () => void }) {
           setOpen(true);
         }}
       >
-        {accounts.length ? "Add another" : "Add a calendar"}
+        {accounts.length ? "Add Another" : "Add a Calendar"}
       </Button>
       <Button variant={accounts.length ? "primary" : "quiet"} block onClick={onDone}>
-        {accounts.length ? "Next" : "Skip for now"}
+        {accounts.length ? "Next" : "Skip for Now"}
       </Button>
       <AddAccountSheet
         open={open}

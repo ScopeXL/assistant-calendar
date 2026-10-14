@@ -182,7 +182,7 @@ function AccountPage({
                 changes.syncNow.mutate(account);
               }}
             >
-              Refresh now
+              Refresh Now
             </Button>
           </div>
         ) : !google ? (
@@ -192,7 +192,7 @@ function AccountPage({
                 onView({ kind: "reconnect" });
               }}
             >
-              Connect again
+              Connect Again
             </Button>
           </div>
         ) : account.helper_email ? (
@@ -212,7 +212,7 @@ function AccountPage({
                 signIn.mutate();
               }}
             >
-              Sign in again
+              Sign In Again
             </Button>
           </div>
         )}
@@ -273,7 +273,7 @@ function AccountPage({
           onView({ kind: "remove" });
         }}
       >
-        Remove account
+        Remove Account
       </Button>
     </div>
   );
@@ -465,7 +465,7 @@ function RemovePage({
           {`Remove ${account.label}`}
         </Button>
         <Button variant="secondary" onClick={onKeep}>
-          Keep it
+          Keep It
         </Button>
       </div>
     </div>

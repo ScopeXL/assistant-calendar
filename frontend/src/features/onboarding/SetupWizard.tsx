@@ -238,7 +238,7 @@ function PasswordStep({
           }}
         >
           {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-          {visible ? "Hide password" : "Show password"}
+          {visible ? "Hide Password" : "Show Password"}
         </Button>
         <Button type="submit" block disabled={password.length < (fromServer ? 1 : 12)}>
           Next
@@ -426,7 +426,7 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
       ) : null}
       <AddPersonRow
         label={first ? "Your name" : "Name"}
-        action={first ? "Add me" : "Add"}
+        action={first ? "Add Me" : "Add"}
         primary={first}
         autoComplete={first ? "given-name" : "off"}
         pending={add.isPending}

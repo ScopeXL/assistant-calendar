@@ -139,7 +139,7 @@ export function AddItem({ day: boardDay, onDone }: AddEditorProps) {
       ) : null}
       <PanelActions>
         <Button type="submit" block disabled={!texts.length} pending={addItems.isPending}>
-          {texts.length > 1 ? `Add ${String(texts.length)} items` : "Add item"}
+          {texts.length > 1 ? `Add ${String(texts.length)} Items` : "Add Item"}
         </Button>
       </PanelActions>
     </form>

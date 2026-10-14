@@ -84,7 +84,7 @@ function SourceGroup({ source }: { source: PhotoSource }) {
             scan.mutate(source.id);
           }}
         >
-          Check now
+          Check Now
         </Button>
       </div>
     </Group>

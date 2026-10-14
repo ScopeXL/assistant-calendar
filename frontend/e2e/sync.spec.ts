@@ -129,7 +129,7 @@ test("an account's calendar shows on the wall in its person's color, and changes
   await sheet.getByRole("button", { name: "Change" }).click();
   const editor = page.getByRole("dialog", { name: "Change" });
   await editor.getByLabel("Title").fill("Field trip to the farm");
-  await editor.getByRole("button", { name: "Save changes" }).click();
+  await editor.getByRole("button", { name: "Save Changes" }).click();
   await expect(week.getByRole("button", { name: /^Field trip to the farm, / })).toBeVisible();
 
   // The server gets it within the next push (every minute, or a few seconds after an edit).
@@ -182,7 +182,7 @@ test("a computer adds an account in a sheet, and Google's way back opens its cal
   test.skip(testInfo.project.name !== "desktop", "a computer");
   await signInPhone(page);
   await page.goto("/settings/calendars");
-  await page.getByRole("button", { name: "Add an account" }).click();
+  await page.getByRole("button", { name: "Add an Account" }).click();
   const sheet = page.getByRole("dialog", { name: "Add an Account" });
   await expect(sheet.getByRole("button", { name: /^iCloud/ })).toBeVisible();
   await expect(sheet.getByText("Or add it from a phone")).toHaveCount(0);
@@ -191,7 +191,7 @@ test("a computer adds an account in a sheet, and Google's way back opens its cal
   await expect(google.getByText("From a phone")).toHaveCount(0);
   await google.getByRole("button", { name: /^Share with a Sunroom helper/ }).click();
   const helper = page.getByRole("dialog", { name: "Google: Share with a Helper" });
-  await expect(helper.getByLabel("Upload the key file")).toBeVisible();
+  await expect(helper.getByLabel("Upload the Key File")).toBeVisible();
   await helper.getByRole("button", { name: "Close" }).click();
   await expect(helper).toBeHidden();
 
@@ -256,7 +256,7 @@ test("an account opens from its row: Sync, whose and color, Show on the screen, 
   await expect(row).toContainText("1 calendar");
   await row.click();
   const sheet = page.getByRole("dialog", { name: "Edit Test server" });
-  await expect(sheet.getByRole("button", { name: "Refresh now" })).toBeVisible();
+  await expect(sheet.getByRole("button", { name: "Refresh Now" })).toBeVisible();
   await expect(sheet.getByRole("heading", { name: "Sync" })).toBeVisible();
   // No screen is paired yet: nothing to show a calendar on.
   await expect(sheet.getByRole("heading", { name: /^Show on/ })).toHaveCount(0);
@@ -311,10 +311,10 @@ test("an account opens from its row: Sync, whose and color, Show on the screen, 
   await expect(sheet.getByRole("heading", { name: /^Show on/ })).toHaveCount(0);
 
   // Remove account asks first.
-  await sheet.getByRole("button", { name: "Remove account" }).click();
+  await sheet.getByRole("button", { name: "Remove Account" }).click();
   const asking = page.getByRole("dialog", { name: "Remove Test server?" });
-  await asking.getByRole("button", { name: "Keep it" }).click();
-  await sheet.getByRole("button", { name: "Remove account" }).click();
+  await asking.getByRole("button", { name: "Keep It" }).click();
+  await sheet.getByRole("button", { name: "Remove Account" }).click();
   await asking.getByRole("button", { name: "Remove Test server" }).click();
   await expect(toast(page, "Removed Test server")).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -328,7 +328,7 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
   test.skip(testInfo.project.name !== "display-1080p", "the wall screen");
   await pairWall(page);
   await page.goto("/settings/calendars");
-  const add = page.getByRole("button", { name: "Add an account" });
+  const add = page.getByRole("button", { name: "Add an Account" });
   await add.click();
   const sheet = page.getByRole("dialog", { name: "Add an Account" });
   await expect(sheet.getByText("Or add it from a phone")).toBeVisible();
@@ -401,7 +401,7 @@ test("Google's keys are asked for inside Sign in with Google: saved masked, kept
 
   // They're in the one step that uses them: Add an account → Google → Sign in with Google.
   await page.goto("/settings/calendars");
-  await page.getByRole("button", { name: "Add an account" }).click();
+  await page.getByRole("button", { name: "Add an Account" }).click();
   await page
     .getByRole("dialog", { name: "Add an Account" })
     .getByRole("button", { name: /^Google/ })
@@ -413,7 +413,7 @@ test("Google's keys are asked for inside Sign in with Google: saved masked, kept
   const step = page.getByRole("dialog", { name: "Sign in with Google" });
   await expect(step).toContainText("Paste the client ID and secret below.");
   // No keys yet: the two fields, and no way to sign in until they're saved.
-  const save = step.getByRole("button", { name: "Save keys and continue" });
+  const save = step.getByRole("button", { name: "Save Keys and Continue" });
   await expect(save).toBeDisabled();
   await expect(step.getByRole("button", { name: "Sign in with Google" })).toHaveCount(0);
   await step.getByLabel("Google app's client ID").fill("sample-id.apps.example.com");
@@ -433,16 +433,16 @@ test("Google's keys are asked for inside Sign in with Google: saved masked, kept
   expect(exported).not.toContain("sample-secret-0001");
 
   // Change keys: the ID is there to edit, the secret never comes back; Cancel leaves them be.
-  await step.getByRole("button", { name: "Change keys" }).click();
+  await step.getByRole("button", { name: "Change Keys" }).click();
   await expect(step.getByLabel("Google app's client ID")).toHaveValue("sample-id.apps.example.com");
   await expect(step.getByLabel("Google app's client secret")).toHaveValue("");
   await expect(step.getByText("Saved. Type a new one to replace it.")).toBeVisible();
   await step.getByRole("button", { name: "Cancel" }).click();
   await expect(step.locator("p", { hasText: /^Keys saved$/ })).toBeVisible();
   // Remove keys clears both, and the step asks for them again.
-  await step.getByRole("button", { name: "Remove keys" }).click();
+  await step.getByRole("button", { name: "Remove Keys" }).click();
   await expect(toast(page, "Removed Google's keys")).toBeVisible();
-  await expect(step.getByRole("button", { name: "Save keys and continue" })).toBeVisible();
+  await expect(step.getByRole("button", { name: "Save Keys and Continue" })).toBeVisible();
   await expect(step.getByRole("button", { name: "Sign in with Google" })).toHaveCount(0);
   expect(await keys()).toEqual({ google_client_id: null, google_client_secret: null });
 });

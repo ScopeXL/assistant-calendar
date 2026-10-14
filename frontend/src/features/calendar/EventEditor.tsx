@@ -444,7 +444,7 @@ export function EventEditor({
       </FormSection>
       <PanelActions>
         <Button type="submit" block pending={pending} disabled={!draft.title.trim()}>
-          {editing ? "Save changes" : "Add event"}
+          {editing ? "Save Changes" : "Add Event"}
         </Button>
       </PanelActions>
     </form>

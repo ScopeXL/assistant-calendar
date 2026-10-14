@@ -25,8 +25,8 @@ function lastUsed(device: Device): string {
 }
 
 function signOutLabel(device: Device): string {
-  if (device.kind === "kiosk") return device.is_current ? "Unpair this screen" : "Unpair";
-  return device.is_current ? "Sign out of this phone" : "Sign out";
+  if (device.kind === "kiosk") return device.is_current ? "Unpair This Screen" : "Unpair";
+  return device.is_current ? "Sign Out of This Phone" : "Sign Out";
 }
 
 /**
@@ -119,7 +119,7 @@ export function DevicesPage() {
             kidPhone.mutate({ device, kid: !device.is_kid_device });
           }}
         >
-          {device.is_kid_device ? "Not a child’s phone" : "Child’s phone"}
+          {device.is_kid_device ? "Not a Child’s Phone" : "Child’s Phone"}
         </Button>
       ) : null}
       <Button
@@ -153,7 +153,7 @@ export function DevicesPage() {
                 setPairing(true);
               }}
             >
-              Pair a display
+              Pair a Display
             </Button>
           </div>
         ) : null}
@@ -170,7 +170,7 @@ export function DevicesPage() {
               setAdding(true);
             }}
           >
-            Add a phone
+            Add a Phone
           </Button>
         </div>
       </Group>

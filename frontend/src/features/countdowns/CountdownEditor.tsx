@@ -182,7 +182,7 @@ export function CountdownEditor({
       ) : null}
       <PanelActions>
         <Button type="submit" block disabled={!ready} pending={pending}>
-          {countdown ? "Save changes" : "Add countdown"}
+          {countdown ? "Save Changes" : "Add Countdown"}
         </Button>
       </PanelActions>
     </form>

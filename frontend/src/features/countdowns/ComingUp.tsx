@@ -166,7 +166,7 @@ export function AddCountdownFromEvent({
       }}
     >
       <CalendarPlus aria-hidden="true" className={display ? "size-7" : "size-5"} />
-      Add a countdown
+      Add a Countdown
     </Button>
   );
 }

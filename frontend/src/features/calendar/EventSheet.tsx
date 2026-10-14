@@ -275,7 +275,7 @@ function MovePicker({
       />
       <div>
         <Button variant="quiet" onClick={onCancel}>
-          Don't move
+          Don't Move
         </Button>
       </div>
     </div>

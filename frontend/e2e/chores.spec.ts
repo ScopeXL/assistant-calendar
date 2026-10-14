@@ -152,10 +152,10 @@ test("a reward asked for on the wall shows on a parent's phone; Approve on the w
   await page.getByRole("link", { name: "Stars & Rewards" }).click();
   await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
   const tile = page.getByRole("listitem").filter({ hasText: "Ice cream run" });
-  await tile.getByRole("button", { name: "Ask for it" }).click();
+  await tile.getByRole("button", { name: "Ask for It" }).click();
   const ask = page.getByRole("dialog", { name: "Ask for Ice cream run" });
   await ask.getByRole("button", { name: "Mia" }).click();
-  await ask.getByRole("button", { name: "Ask for it" }).click();
+  await ask.getByRole("button", { name: "Ask for It" }).click();
   await expect(toast(page, "Asked for Ice cream run")).toBeVisible();
 
   // A parent's phone sees it on Today, with Approve and Not now.
@@ -255,7 +255,7 @@ test("a task every two weeks on two days, with all five people on one line of Wh
   await on.getByRole("button", { name: "Thursday" }).click();
   await on.getByRole("button", { name: "Wednesday" }).click();
   await expect(add).toContainText("Every 2 weeks on Tue and Thu");
-  await add.getByRole("button", { name: "Add task" }).click();
+  await add.getByRole("button", { name: "Add Task" }).click();
   await expect(add).toBeHidden();
   await expect(toast(page, "Added Water the garden")).toBeVisible();
 

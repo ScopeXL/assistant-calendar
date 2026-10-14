@@ -197,7 +197,7 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
                 : "min-h-11 rounded-button px-4 text-body"
             }`}
           >
-            {member.avatar_url ? "Change photo" : "Add a photo"}
+            {member.avatar_url ? "Change Photo" : "Add a Photo"}
             <input
               type="file"
               accept="image/*"
@@ -216,7 +216,7 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
               removePhoto.mutate();
             }}
           >
-            Remove photo
+            Remove Photo
           </Button>
         ) : null}
       </div>
@@ -226,7 +226,7 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
         </p>
       ) : null}
       <Button type="submit" block pending={save.isPending} disabled={!name.trim()}>
-        Save changes
+        Save Changes
       </Button>
       <Button
         variant="quiet-danger"

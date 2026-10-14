@@ -77,7 +77,7 @@ function ChoresBoard() {
         <div className="px-6">
           <EmptyState
             message="Tasks live here. Give each person a few, and watch them get stamped."
-            action={<Button onClick={add}>Add task</Button>}
+            action={<Button onClick={add}>Add Task</Button>}
           />
         </div>
       ) : mode === "today" && day ? (

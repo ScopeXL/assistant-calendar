@@ -207,7 +207,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Who lives here?" })).toBeVisible();
       await check(page, "setup: people");
       await page.getByLabel("Your name").fill("Ana");
-      await page.getByRole("button", { name: "Add me" }).click();
+      await page.getByRole("button", { name: "Add Me" }).click();
       await expect(page.getByRole("button", { name: "Add", exact: true })).toBeVisible();
       await check(page, "setup: people, one added");
       await page.getByRole("button", { name: "Next", exact: true }).click();
@@ -216,11 +216,11 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("button", { name: "Later" }).click();
       await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
       await check(page, "setup: calendars");
-      await page.getByRole("button", { name: "Add a calendar" }).click();
-      await expect(page.getByRole("dialog", { name: "Add an account" })).toBeVisible();
+      await page.getByRole("button", { name: "Add a Calendar" }).click();
+      await expect(page.getByRole("dialog", { name: "Add an Account" })).toBeVisible();
       await check(page, "setup: add an account");
       await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
-      await page.getByRole("button", { name: "Skip for now" }).click();
+      await page.getByRole("button", { name: "Skip for Now" }).click();
       await expect(page.getByRole("heading", { name: "You’re set" })).toBeVisible();
       await check(page, "setup: done");
     });
@@ -295,14 +295,14 @@ for (const scheme of ["light", "dark"] as const) {
       await page.goto("/countdowns");
       await expect(page.getByRole("heading", { name: "Countdowns", level: 1 })).toBeVisible();
       await check(page, "countdowns");
-      await sheet(page, "Add countdown", "countdowns: add");
+      await sheet(page, "Add Countdown", "countdowns: add");
       await page.goto("/photos");
       await expect(page.getByRole("heading", { name: "Photos", level: 1 })).toBeVisible();
       await check(page, "photos");
       await page.goto("/more");
       await expect(page.getByRole("heading", { name: "More", level: 1 })).toBeVisible();
-      await page.getByRole("link", { name: "Pair a display" }).click();
-      await expect(page.getByRole("heading", { name: "Pair a display", level: 1 })).toBeVisible();
+      await page.getByRole("link", { name: "Pair a Display" }).click();
+      await expect(page.getByRole("heading", { name: "Pair a Display", level: 1 })).toBeVisible();
       await check(page, "pair a display");
       await scriptedAccount(page.request);
       await page.goto("/settings");
@@ -315,12 +315,12 @@ for (const scheme of ["light", "dark"] as const) {
         await check(page, `settings: ${title}`);
         if (title === "Family") await sheet(page, "Edit Mia", "change a person");
         if (title === "Calendars & Accounts") {
-          await sheet(page, "Add a calendar", "add a calendar");
+          await sheet(page, "Add a Calendar", "add a calendar");
           await sheet(page, "Edit Test server", "an account");
         }
         if (title === "Phones & Screens") {
-          await sheet(page, "Add a phone", "add a phone");
-          await sheet(page, "Pair a display", "pair a display from Settings");
+          await sheet(page, "Add a Phone", "add a phone");
+          await sheet(page, "Pair a Display", "pair a display from Settings");
         }
       }
       await page.goto("/install?from=more");
@@ -349,7 +349,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("group", { name: "On-screen keyboard" })).toBeVisible();
       await check(page, "display: password and keyboard");
       await page.getByLabel("Household password").fill(PASSWORD);
-      await page.getByRole("button", { name: "Pair this screen" }).click();
+      await page.getByRole("button", { name: "Pair This Screen" }).click();
       await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
       await check(page, "display: name this screen");
       await page.getByRole("button", { name: "Done" }).click();
@@ -552,7 +552,7 @@ for (const scheme of ["light", "dark"] as const) {
         if (title === "Family") await sheet(page, "Edit Mia", "display: change a person");
         if (title === "Calendars & Accounts") {
           await sheet(page, "Edit Kids' activities", "display: change a calendar");
-          await sheet(page, "Add an account", "display: add an account");
+          await sheet(page, "Add an Account", "display: add an account");
           await sheet(page, "Edit Test server", "display: an account");
         }
       }
@@ -626,7 +626,7 @@ for (const scheme of ["light", "dark"] as const) {
         await check(page, `laptop settings: ${title}`);
         // A computer has no More: it pairs a screen from here.
         if (title === "Phones & Screens") {
-          await sheet(page, "Pair a display", "laptop: pair a display");
+          await sheet(page, "Pair a Display", "laptop: pair a display");
         }
       }
     });

@@ -418,7 +418,7 @@ function AddressFlow({
         />
       )}
       <Button type="submit" block pending={addIcs.isPending} disabled={!url.trim()}>
-        Add calendar
+        Add Calendar
       </Button>
     </form>
   );
@@ -503,7 +503,7 @@ function HolidaysFlow({ onDone }: { onDone: () => void }) {
         </p>
       ) : null}
       <Button type="submit" block pending={addHolidays.isPending}>
-        Add holidays
+        Add Holidays
       </Button>
     </form>
   );
@@ -707,7 +707,7 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
             display ? "min-h-tap rounded-button-d px-7" : "min-h-11 rounded-button px-5"
           } ${text.body}`}
         >
-          Upload the key file
+          Upload the Key File
           <input
             type="file"
             accept="application/json,.json"
@@ -777,7 +777,7 @@ function HelperFlow({ onFound }: { onFound: (account: Account) => void }) {
         error={find.isError ? errorMessage(find.error) : null}
       />
       <Button type="submit" block pending={find.isPending} disabled={!calendarId.trim()}>
-        Find calendar
+        Find Calendar
       </Button>
     </form>
   );
@@ -832,7 +832,7 @@ function SignInFlow() {
         <li>Paste the client ID and secret below.</li>
       </Steps>
       {/* The keys live here, the one step that uses them (ADR 0030). */}
-      <GoogleKeys firstSave="Save keys and continue" />
+      <GoogleKeys firstSave="Save Keys and Continue" />
       {keys.ready ? (
         <>
           <p className={`${text.secondary} text-ink-soft`}>

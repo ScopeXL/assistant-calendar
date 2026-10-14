@@ -66,7 +66,7 @@ test("items added on the wall reach a phone, and checking one folds it into Done
 test("Clear done comes back with Undo", async ({ page }) => {
   await groceriesOnTheWall(page);
   await expect(page.getByRole("region", { name: "Done" })).toContainText("Bread");
-  await page.getByRole("button", { name: "Clear done" }).click();
+  await page.getByRole("button", { name: "Clear Done" }).click();
   await expect(toast(page, "Cleared 1 done item")).toBeVisible();
   await expect(page.getByRole("region", { name: "Done" })).toHaveCount(0);
   await toast(page, "Cleared 1 done item").getByRole("button", { name: "Undo" }).click();
@@ -78,10 +78,10 @@ test("New list is one field, a usual name fills it, and the list opens once made
 }) => {
   await pairWall(page);
   await page.goto("/lists");
-  await page.getByRole("button", { name: "New list" }).click();
-  const panel = page.getByRole("dialog", { name: "New list" });
+  await page.getByRole("button", { name: "New List" }).click();
+  const panel = page.getByRole("dialog", { name: "New List" });
   await expect(panel.getByRole("textbox")).toHaveCount(1);
-  const add = panel.getByRole("button", { name: "Add list" });
+  const add = panel.getByRole("button", { name: "Add List" });
   await expect(add).toBeDisabled();
   await panel.getByRole("button", { name: "Pharmacy" }).click();
   await expect(panel.getByLabel("Name")).toHaveValue("Pharmacy");

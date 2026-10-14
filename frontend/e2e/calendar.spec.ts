@@ -88,8 +88,8 @@ test("quick add on the wall, seen on a phone, changed and undone, dragged and pu
     .getByRole("button")
     .evaluateAll((cells) => cells.map((cell) => Math.round(cell.getBoundingClientRect().y)));
   expect(new Set(kinds).size).toBe(1);
-  await expect(add.getByRole("button", { name: "Add event" })).toBeInViewport();
-  await add.getByRole("button", { name: "Add event" }).click();
+  await expect(add.getByRole("button", { name: "Add Event" })).toBeInViewport();
+  await add.getByRole("button", { name: "Add Event" }).click();
   await expect(add).toBeHidden();
   const dentist = board.getByRole("button", {
     name: "Dentist, 2:30 to 3:30 PM, Mia, Thursday October 8",
@@ -111,10 +111,10 @@ test("quick add on the wall, seen on a phone, changed and undone, dragged and pu
   await sheet.getByRole("button", { name: "Change" }).click();
   const editor = page.getByRole("dialog", { name: "Change" });
   await editor.getByLabel("Title").fill("Soccer training");
-  await editor.getByRole("button", { name: "Save changes" }).click();
+  await editor.getByRole("button", { name: "Save Changes" }).click();
   await page
     .getByRole("dialog", { name: "Change which?" })
-    .getByRole("button", { name: "This and the ones after" })
+    .getByRole("button", { name: "This and the Ones After" })
     .click();
   await expect(
     board.getByRole("button", { name: /^Soccer training, .*Thursday October 8/ }),
@@ -313,7 +313,7 @@ test("a birthday from Family is a chip in its person's color, and moves when it'
   await phonePage.goto("/settings/family");
   await phonePage.getByRole("button", { name: "Edit Mia" }).click();
   await phonePage.getByLabel("Birthday (optional)").fill("2017-10-08");
-  await phonePage.getByRole("button", { name: "Save changes" }).click();
+  await phonePage.getByRole("button", { name: "Save Changes" }).click();
   await expect(toast(phonePage, "Changes saved")).toBeVisible();
   const onThursday = thursday.getByRole("button", { name: /^Mia's birthday/ });
   await expect(onThursday).toBeVisible({ timeout: 3_000 });

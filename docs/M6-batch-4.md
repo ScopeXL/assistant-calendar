@@ -261,7 +261,7 @@ test file or one screen at a time."
 
 ### T1 Every button in Title Case
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: every button in Title Case")
 
 **Owner's note.** "Photos view the buttons in the header should be capitalized." (And, in other
 notes, "Add a Device", "New List", "New Task", "Add Photos".) The owner chose Title Case for every
@@ -300,6 +300,21 @@ touches everything), then `just e2e e2e/lists.spec.ts --project=display-1080p` a
 `e2e/sync.spec.ts --project=phone-webkit` as spot checks.
 
 **CHANGELOG.** "Buttons are written the way titles are: Add Photos, Save Changes, Check Now."
+
+**As built.** Two words the plan's rule didn't settle: **"from"** joins the small words ("Hide
+from Screensaver"; the plan's own "Code from Another Device" assumed it), and the "in" of
+signing in may keep its capital ("Sign In Again", "Sign In on This Phone"), since "Sign in
+Again" reads as a mistake; Google's Sign in with Google stays as Google writes it. The check
+reads the JSX through the TypeScript parser rather than a regex (an attribute's `=>` ends a
+regex's tag), every way a conditional or template can come out, plus header links, `action`
+and `submit` props and toast actions; labels a function returns (Unpair This Screen, the
+scope chooser's Just This One · This and the Ones After · All of Them, a meal's Add Dinner)
+were cased by hand. Also recased: links that look like buttons (Download Backup, Download
+Everything), the file pickers (Add a Photo, Upload the Key File), the tips and docs that name a
+button in a sentence ("tap Add a Countdown"), and every bolded button name in UX, PLAN, SYNC,
+DEPLOY and RESTORE. Only nine unit-test locators failed (most match by regex), and
+`e2e/sync.spec.ts` runs on `desktop` and `display-1080p`, not `phone-webkit`, where every test
+skips itself. ADR 0032 is started here and grows a row per task.
 
 ### T2 The zoom's order
 

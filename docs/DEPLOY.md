@@ -137,7 +137,7 @@ for it.
 
 - A verified copy is written every night at 03:30 (household time) into `/data/backups/`,
   keeping 14 daily and 8 weekly copies. **Settings → Backup** shows when the last one ran, and has
-  **Back up now**, **Download backup** (the newest copy) and **Download everything** (the
+  **Back Up Now**, **Download Backup** (the newest copy) and **Download Everything** (the
   database and every photo in one zip, which restores anywhere).
 - Photos are files on the volume, not in the database: only Download everything has them. Include
   the whole `sunroom_data` volume in your host's own backups too, or download everything now and

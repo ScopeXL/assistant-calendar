@@ -62,7 +62,7 @@ describe("Erase everything (UX §4 Backup, ADR 0029)", () => {
     expect(screen.getByText("Keep a copy first?")).toBeTruthy();
     expect(screen.getByText(/photos are deleted for good/)).toBeTruthy();
     expect(screen.queryByLabelText("Household password")).toBeNull();
-    const download = screen.getByRole("link", { name: "Download everything" });
+    const download = screen.getByRole("link", { name: "Download Everything" });
     expect(download.getAttribute("href")).toBe("/api/admin/backups/full.zip");
     expect(download.hasAttribute("download")).toBe(true);
     expect(screen.queryByText(/download has started/)).toBeNull();
@@ -76,10 +76,10 @@ describe("Erase everything (UX §4 Backup, ADR 0029)", () => {
   it("erases only with the household password, then reloads fresh", async () => {
     const sent = serverTakes("sample-family-passphrase");
     const { reload } = drawSheet();
-    fireEvent.click(screen.getByRole("button", { name: "I have a copy" }));
+    fireEvent.click(screen.getByRole("button", { name: "I Have a Copy" }));
     const password = screen.getByLabelText<HTMLInputElement>("Household password");
     expect(password.type).toBe("password");
-    const erase = screen.getByRole<HTMLButtonElement>("button", { name: "Erase everything" });
+    const erase = screen.getByRole<HTMLButtonElement>("button", { name: "Erase Everything" });
     expect(erase.disabled).toBe(true);
 
     fireEvent.change(password, { target: { value: "not-the-password" } });
@@ -101,8 +101,8 @@ describe("Erase everything (UX §4 Backup, ADR 0029)", () => {
   it("keeps everything when asked to", () => {
     const sent = serverTakes("sample-family-passphrase");
     const { onClose, reload } = drawSheet();
-    fireEvent.click(screen.getByRole("button", { name: "I have a copy" }));
-    fireEvent.click(screen.getByRole("button", { name: "Keep everything" }));
+    fireEvent.click(screen.getByRole("button", { name: "I Have a Copy" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keep Everything" }));
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(sent).toEqual([]);
     expect(reload).not.toHaveBeenCalled();
@@ -130,23 +130,23 @@ function drawPage(deviceKind: "phone" | "kiosk", shell: ShellKind) {
 describe("Settings → Backup goes by what the device is, not its size", () => {
   it("gives a laptop its downloads and Start Over, though it shows the wall's shell", () => {
     drawPage("phone", "display");
-    expect(screen.getByRole("link", { name: "Download backup" }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "Download Backup" }).getAttribute("href")).toBe(
       "/api/admin/backups/sunroom.2026-10-07.db",
     );
-    expect(screen.getByRole("link", { name: "Download everything" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Export everything" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Download Everything" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Export Everything" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Start Over" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Erase everything…" }));
+    fireEvent.click(screen.getByRole("button", { name: "Erase Everything…" }));
     expect(screen.getByRole("dialog", { name: "Erase Everything?" })).toBeTruthy();
   });
 
   it("gives the kitchen screen neither: it has no files, and a child can reach it", () => {
     drawPage("kiosk", "display");
     expect(screen.queryByRole("link", { name: /^Download/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Export everything" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Export Everything" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Start Over" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Erase everything…" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Erase Everything…" })).toBeNull();
     expect(screen.getByText(/^Download a backup from a phone or computer/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Back up now" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back Up Now" })).toBeTruthy();
   });
 });

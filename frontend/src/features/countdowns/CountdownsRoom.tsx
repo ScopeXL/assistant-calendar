@@ -145,7 +145,7 @@ function Tiles({ onAdd }: { onAdd: () => void }) {
   return (
     <>
       {isSuccess && items.length === 0 ? (
-        <EmptyState message={EMPTY} action={<Button onClick={onAdd}>Add countdown</Button>} />
+        <EmptyState message={EMPTY} action={<Button onClick={onAdd}>Add Countdown</Button>} />
       ) : (
         <ul
           aria-label="Countdowns"
@@ -194,7 +194,7 @@ export function CountdownsRoom() {
             }}
           >
             <Plus aria-hidden="true" className="size-7" />
-            Add countdown
+            Add Countdown
           </Button>
         }
       />
@@ -240,7 +240,7 @@ export function CountdownsTab({ path }: { path: string[] }) {
             setAdding(true);
           }}
         >
-          Add countdown
+          Add Countdown
         </Button>
       }
     >

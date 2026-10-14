@@ -111,7 +111,7 @@ export function AccountsSection() {
             setAdding(true);
           }}
         >
-          Add an account
+          Add an Account
         </Button>
       </div>
       <AccountSheet

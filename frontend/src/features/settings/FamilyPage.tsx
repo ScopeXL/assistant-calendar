@@ -74,7 +74,7 @@ export function FamilyPage() {
                   restore.mutate(member);
                 }}
               >
-                Put back
+                Put Back
               </Button>
             </Row>
           ))}

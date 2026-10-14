@@ -77,7 +77,7 @@ test("a parent's phone starts the screensaver on the wall", async ({ page, brows
   const { context, page: ana } = await phone(browser, watch);
   await signInPhone(ana, "Ana");
   await ana.goto("/photos");
-  await ana.getByRole("button", { name: "Start screensaver" }).click();
+  await ana.getByRole("button", { name: "Start Screensaver" }).click();
   await expect(toast(ana, "Started the screensaver on the kitchen screen")).toBeVisible();
   await expect(saver(page)).toBeVisible();
   await context.close();
@@ -92,7 +92,7 @@ test("a phone adds a photo, and removes it with Undo", async ({ browser, watch }
   // The Sample Family's eight.
   const before = 8;
   await expect(photos).toHaveCount(before);
-  await ana.getByLabel("Add photos").setInputFiles({
+  await ana.getByLabel("Add Photos").setInputFiles({
     name: "garden.jpg",
     mimeType: "image/jpeg",
     buffer: TINY_JPEG,
@@ -117,12 +117,12 @@ test("a computer adds photos itself, where the wall shows a code for a phone", a
     await pairWall(page);
     await page.goto("/photos");
     await expect(code).toBeVisible();
-    await expect(page.getByLabel("Add photos")).toHaveCount(0);
+    await expect(page.getByLabel("Add Photos")).toHaveCount(0);
     // A person's photo comes from a phone too.
     await page.goto("/settings/family");
     await page.getByRole("button", { name: "Edit Mia" }).click();
     await expect(mia).toContainText("Add a photo from a phone");
-    await expect(mia.getByLabel("Add a photo", { exact: true })).toHaveCount(0);
+    await expect(mia.getByLabel("Add a Photo", { exact: true })).toHaveCount(0);
     return;
   }
   await signInPhone(page, "Ana");
@@ -130,7 +130,7 @@ test("a computer adds photos itself, where the wall shows a code for a phone", a
   const photos = page.getByRole("list", { name: "Photos" }).getByRole("listitem");
   await expect(photos).toHaveCount(8);
   await expect(code).toHaveCount(0);
-  await page.getByLabel("Add photos").setInputFiles({
+  await page.getByLabel("Add Photos").setInputFiles({
     name: "garden.jpg",
     mimeType: "image/jpeg",
     buffer: TINY_JPEG,
@@ -140,5 +140,5 @@ test("a computer adds photos itself, where the wall shows a code for a phone", a
   // And a person's photo.
   await page.goto("/settings/family");
   await page.getByRole("button", { name: "Edit Mia" }).click();
-  await expect(mia.getByLabel("Add a photo", { exact: true })).toBeAttached();
+  await expect(mia.getByLabel("Add a Photo", { exact: true })).toBeAttached();
 });

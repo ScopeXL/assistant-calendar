@@ -226,7 +226,7 @@ export function ChoreEditor({
       ) : null}
       <PanelActions>
         <Button type="submit" block disabled={!ready} pending={pending}>
-          {chore ? "Save changes" : "Add task"}
+          {chore ? "Save Changes" : "Add Task"}
         </Button>
       </PanelActions>
     </form>

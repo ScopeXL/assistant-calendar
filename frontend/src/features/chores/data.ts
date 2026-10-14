@@ -284,7 +284,7 @@ export function useChoreChanges() {
       ),
     onSuccess: (redemption, { reward }) => {
       showToast(`Asked for ${reward.title}. A parent will say yes or no.`, {
-        label: "Take it back",
+        label: "Take It Back",
         onAction: () => {
           cancelAsk.mutate({ redemption });
         },

@@ -98,7 +98,7 @@ function RewardsBody() {
                 setEditing("new");
               }}
             >
-              Add reward
+              Add Reward
             </Button>
           }
         />
@@ -124,7 +124,7 @@ function RewardsBody() {
                   setEditing("new");
                 }}
               >
-                Add reward
+                Add Reward
               </Button>
             </div>
           ) : null}
@@ -191,7 +191,7 @@ function RewardTile({
           else onAsk();
         }}
       >
-        Ask for it
+        Ask for It
       </Button>
       {short && me && mine ? (
         <span
@@ -268,7 +268,7 @@ function AskPanel({
               redeem.mutate({ reward, member: chosen.id, name: chosen.name }, { onSuccess: close });
             }}
           >
-            Ask for it
+            Ask for It
           </Button>
         </div>
       ) : null}
@@ -319,7 +319,7 @@ export function AskedStrip({ asked }: { asked: Redemption[] }) {
                     decide.mutate({ redemption, yes: false, name });
                   }}
                 >
-                  Not now
+                  Not Now
                 </Button>
               </span>
             </Row>
@@ -420,7 +420,7 @@ function RewardForm({ reward, onClose }: { reward: Reward | null; onClose: () =>
       ) : null}
       <PanelActions>
         <Button type="submit" block disabled={!title.trim()} pending={saveReward.isPending}>
-          {reward ? "Save changes" : "Add reward"}
+          {reward ? "Save Changes" : "Add Reward"}
         </Button>
       </PanelActions>
     </form>

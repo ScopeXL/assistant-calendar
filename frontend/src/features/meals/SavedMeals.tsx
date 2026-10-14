@@ -42,7 +42,7 @@ export function SavedMeals() {
                 setEditing("new");
               }}
             >
-              New saved meal
+              New Saved Meal
             </Button>
           }
         />
@@ -103,7 +103,7 @@ export function SavedMeals() {
       }}
     >
       <Plus aria-hidden="true" className={display ? "size-7" : "size-5"} />
-      New saved meal
+      New Saved Meal
     </Button>
   );
   if (display) {
@@ -282,7 +282,7 @@ function SavedForm({ meal, onDone }: { meal: Saved | null; onDone: () => void })
       ) : null}
       <PanelActions>
         <Button type="submit" block disabled={!text.trim()} pending={pending}>
-          {meal ? "Save changes" : "Save meal"}
+          {meal ? "Save Changes" : "Save Meal"}
         </Button>
       </PanelActions>
     </form>

@@ -39,7 +39,7 @@ test("Tonight shows today's dinner, and a saved meal fills an empty day", async 
 
   const grid = await mealsRoom(page);
   await grid.getByRole("button", { name: "Add dinner on Sat, Oct 10" }).click();
-  const panel = page.getByRole("dialog", { name: "Add dinner" });
+  const panel = page.getByRole("dialog", { name: "Add Dinner" });
   // One box (ADR 0030): what's typed is the meal's name and the search of the saved meals,
   // which sit under it as one row of chips. Opened from Saturday's cell, the day is one line.
   const what = panel.getByLabel("What’s cooking");
@@ -69,7 +69,7 @@ test("Tonight shows today's dinner, and a saved meal fills an empty day", async 
   await expect(panel.getByRole("switch", { name: /^Add 5 items to Groceries/ })).toBeVisible();
   await what.fill("grilled");
   await panel.getByRole("button", { name: /Grilled cheese and soup/ }).click();
-  await panel.getByRole("button", { name: "Add dinner" }).click();
+  await panel.getByRole("button", { name: "Add Dinner" }).click();
   await expect(toast(page, "Added Grilled cheese and soup")).toBeVisible();
   await expect(grid.getByRole("row", { name: /Sat 10/ })).toContainText("Grilled cheese and soup");
 });
@@ -78,7 +78,7 @@ test("Swap days trades two dinners, and Undo trades them back", async ({ page })
   const grid = await mealsRoom(page);
   await grid.getByRole("button", { name: /Tacos/ }).click();
   const panel = page.getByRole("dialog", { name: /Tacos/ });
-  await panel.getByRole("button", { name: "Swap days" }).click();
+  await panel.getByRole("button", { name: "Swap Days" }).click();
   await panel.getByRole("button", { name: "Thu, Oct 8" }).click();
   await expect(toast(page, "Swapped Tacos and Leftovers")).toBeVisible();
   await expect(grid.getByRole("row", { name: /Thu 8/ })).toContainText("Tacos");
@@ -91,7 +91,7 @@ test("Copy last week fills next week, and Undo empties it again", async ({ page 
   const grid = await mealsRoom(page);
   await page.getByRole("button", { name: "Next week" }).click();
   await expect(grid.getByRole("row", { name: /Sun 11/ })).toBeVisible();
-  await page.getByRole("button", { name: "Copy last week" }).click();
+  await page.getByRole("button", { name: "Copy Last Week" }).click();
   await expect(toast(page, "Copied 6 meals")).toBeVisible();
   await expect(grid.getByRole("row", { name: /Wed 14/ })).toContainText("Tacos");
   await toast(page, "Copied 6 meals").getByRole("button", { name: "Undo" }).click();
@@ -103,7 +103,7 @@ test("a saved meal's ingredients go on Groceries", async ({ page }) => {
   await grid.getByRole("button", { name: /Tacos/ }).click();
   await page
     .getByRole("dialog", { name: /Tacos/ })
-    .getByRole("button", { name: "Add ingredients to Groceries" })
+    .getByRole("button", { name: "Add Ingredients to Groceries" })
     .click();
   await expect(toast(page, "Added 5 items to Groceries")).toBeVisible();
   await page.goto("/lists");

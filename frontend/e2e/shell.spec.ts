@@ -87,10 +87,10 @@ test.describe("a phone", () => {
     await expect(page.getByText("Free space", { exact: true })).toBeVisible();
     const daily = page.getByRole("switch", { name: "Check for new versions daily" });
     await expect(daily).not.toBeChecked();
-    await expect(page.getByRole("button", { name: "Check now" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Check Now" })).toBeHidden();
     await daily.click();
     await expect(daily).toBeChecked();
-    await page.getByRole("button", { name: "Check now" }).click();
+    await page.getByRole("button", { name: "Check Now" }).click();
     await expect(page.getByRole("status").filter({ hasText: "is available" })).toHaveText(
       /^Sunroom \d+\.\d+\.0 is available\. In Sunroom's folder on the server, run docker compose pull, then docker compose up -d\.$/,
     );
@@ -172,7 +172,7 @@ test.describe("a phone", () => {
     await expect(code).toBeVisible();
     await signInPhone(page);
     await page.getByRole("link", { name: "More" }).click();
-    await page.getByRole("link", { name: "Pair a display" }).click();
+    await page.getByRole("link", { name: "Pair a Display" }).click();
     await page.getByLabel("The code on the screen").fill((await code.textContent()) ?? "");
     await page.getByRole("button", { name: "Pair", exact: true }).click();
     await expect(screen.getByRole("heading", { name: "Name this screen" })).toBeVisible();
@@ -413,7 +413,7 @@ test.describe("the wall screen", () => {
     // It stays hidden from room to room, until someone shows it.
     await page.getByRole("link", { name: "Lists" }).click();
     await expect(header.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
-    await expect(header.getByRole("button", { name: "New list" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "New List" })).toBeVisible();
     await expect(today).toBeHidden();
     await header.getByRole("button", { name: "Show the Today panel" }).click();
     await expect(today).toBeVisible();
@@ -483,7 +483,7 @@ test.describe("the wall screen", () => {
     // It stays folded from room to room.
     await rail.getByRole("link", { name: "Lists", exact: true }).click();
     await expect(page.getByRole("banner").getByRole("heading", { name: "Lists" })).toBeVisible();
-    await expect(page.getByRole("banner").getByRole("button", { name: "New list" })).toBeVisible();
+    await expect(page.getByRole("banner").getByRole("button", { name: "New List" })).toBeVisible();
     expect(await width()).toBe(72);
     await rail.getByRole("link", { name: "Calendar", exact: true }).click();
     await expect(board).toBeVisible();
@@ -676,7 +676,7 @@ test.describe("the wall screen", () => {
     expect(keys && box && box.y + box.height <= keys.y).toBe(true);
     await keyboard.getByRole("button", { name: "Done" }).click();
     await expect(keyboard).toHaveCount(0);
-    await sheet.getByRole("button", { name: "Save changes" }).click();
+    await sheet.getByRole("button", { name: "Save Changes" }).click();
     await expect(page.getByRole("button", { name: "Edit Mia Rose" })).toBeVisible();
   });
 
@@ -901,7 +901,7 @@ test.describe("a laptop", () => {
     await signInPhone(page);
     await page.goto("/settings/devices");
     await expect(page.getByText(/^No screen paired yet/)).toBeVisible();
-    await page.getByRole("button", { name: "Pair a display" }).click();
+    await page.getByRole("button", { name: "Pair a Display" }).click();
     const sheet = page.getByRole("dialog", { name: "Pair a Display" });
     await sheet.getByLabel("The code on the screen").fill((await code.textContent()) ?? "");
     await sheet.getByRole("button", { name: "Pair", exact: true }).click();

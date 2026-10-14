@@ -106,7 +106,7 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
     draw(account());
     const sheet = screen.getByRole("dialog", { name: "Edit iCloud" });
     expect(within(sheet).getByText("ana@example.com")).toBeTruthy();
-    expect(within(sheet).getByRole("button", { name: "Refresh now" })).toBeTruthy();
+    expect(within(sheet).getByRole("button", { name: "Refresh Now" })).toBeTruthy();
     expect(within(sheet).getByRole("heading", { name: "Sync" })).toBeTruthy();
     expect(
       within(sheet).getByRole<HTMLInputElement>("switch", { name: "Sync School" }).checked,
@@ -179,12 +179,12 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
 
   it("removes the account only after asking", async () => {
     const { sent, onClose } = draw(account());
-    fireEvent.click(screen.getByRole("button", { name: "Remove account" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove Account" }));
     const asking = screen.getByRole("dialog", { name: "Remove iCloud?" });
-    fireEvent.click(within(asking).getByRole("button", { name: "Keep it" }));
+    fireEvent.click(within(asking).getByRole("button", { name: "Keep It" }));
     expect(screen.getByRole("dialog", { name: "Edit iCloud" })).toBeTruthy();
     expect(sent).toEqual([]);
-    fireEvent.click(screen.getByRole("button", { name: "Remove account" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove Account" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove iCloud" }));
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
@@ -195,20 +195,20 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
   it("offers the way back in that fits an account that stopped working", () => {
     const broken = { status: "needs_reconnect", last_error: "iCloud needs its password again." };
     draw(account(broken as Partial<Account>));
-    expect(screen.queryByRole("button", { name: "Refresh now" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Connect again" }));
+    expect(screen.queryByRole("button", { name: "Refresh Now" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Again" }));
     const again = screen.getByRole("dialog", { name: "Connect iCloud Again" });
     expect(within(again).getByLabelText("Password")).toBeTruthy();
     cleanup();
     // Google signs in on its own page: no password to type.
     const google = { ...broken, provider: "google", label: "Google", address: null };
     draw(account(google as Partial<Account>));
-    expect(screen.getByRole("button", { name: "Sign in again" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Connect again" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Sign In Again" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Connect Again" })).toBeNull();
     cleanup();
     // Its page can't open on the kitchen screen.
     draw(account(google as Partial<Account>), { kiosk: true });
-    expect(screen.queryByRole("button", { name: "Sign in again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Sign In Again" })).toBeNull();
     expect(screen.getByText(/^Sign in again from a phone/)).toBeTruthy();
     cleanup();
     // A helper's key is a file: the account is added again.

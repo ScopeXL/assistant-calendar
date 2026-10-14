@@ -85,7 +85,7 @@ export function RemovedRow({
         </span>
       </div>
       <Button variant="secondary" pending={pending} onClick={onPutBack}>
-        Put back
+        Put Back
         <span className="sr-only"> {title}</span>
       </Button>
     </div>

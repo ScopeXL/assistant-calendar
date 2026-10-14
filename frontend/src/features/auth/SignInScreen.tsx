@@ -76,7 +76,7 @@ function PasswordForm({ onUseCode }: { onUseCode: () => void }) {
         {error}
       </p>
       <Button type="submit" block pending={signIn.isPending} disabled={password.length === 0}>
-        {signIn.isPending ? "Signing in…" : "Sign in"}
+        {signIn.isPending ? "Signing In…" : "Sign In"}
       </Button>
       <p className="mt-2 text-secondary text-ink-soft">
         Ask whoever set up Sunroom for the password.
@@ -130,10 +130,10 @@ function CodeForm({ onUsePassword }: { onUsePassword: () => void }) {
         {join.isError ? errorMessage(join.error) : null}
       </p>
       <Button type="submit" block pending={join.isPending} disabled={!valid}>
-        {join.isPending ? "Signing in…" : "Sign in"}
+        {join.isPending ? "Signing In…" : "Sign In"}
       </Button>
       <Button variant="quiet" className="-ml-5 self-start" onClick={onUsePassword}>
-        Use the password instead
+        Use the Password Instead
       </Button>
     </form>
   );

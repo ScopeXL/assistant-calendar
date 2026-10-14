@@ -121,7 +121,7 @@ function MealsWeekPhone() {
             changes.copyWeek.mutate({ from: addDays(start, -7), to: start });
           }}
         >
-          Copy last week
+          Copy Last Week
         </Button>
       </div>
       <MealSidePanel

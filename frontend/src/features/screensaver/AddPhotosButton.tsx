@@ -21,7 +21,7 @@ export function AddPhotosButton({ block = false }: { block?: boolean }) {
       } ${block ? "w-full" : ""}`}
     >
       <ImagePlus aria-hidden="true" className={display ? "size-7" : "size-5"} />
-      {upload.isPending ? "Adding…" : "Add photos"}
+      {upload.isPending ? "Adding…" : "Add Photos"}
       <input
         type="file"
         accept="image/*"

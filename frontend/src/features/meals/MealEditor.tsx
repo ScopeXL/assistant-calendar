@@ -134,7 +134,7 @@ export function MealEditor({
     );
   };
 
-  const verb = entry ? "Save changes" : `Add ${SLOT_WORDS[slot].toLowerCase()}`;
+  const verb = entry ? "Save Changes" : `Add ${SLOT_WORDS[slot]}`;
   return (
     <form
       className={`flex flex-col ${display ? "gap-8" : "gap-6"}`}

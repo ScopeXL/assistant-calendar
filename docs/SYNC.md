@@ -2,7 +2,7 @@
 
 How Sunroom keeps Google, iCloud, other calendar servers, calendar addresses and holidays on
 the board (PLAN §8, ADRs 0004, 0005, 0020, 0024 and 0028), and every server quirk met so far. For
-a household: Settings → Calendars & Accounts → **Add an account**, on a phone, a computer or the
+a household: Settings → Calendars & Accounts → **Add an Account**, on a phone, a computer or the
 kitchen screen. On the kitchen screen, Google's helper (a key file) and Sign in with Google
 (Google's own page) show a code to scan and finish on a phone.
 

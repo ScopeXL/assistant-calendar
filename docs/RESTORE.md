@@ -10,13 +10,13 @@ you can always go back.
 |---|---|---|
 | Nightly copies | `backups/sunroom.YYYY-MM-DD.db` in the `sunroom_data` volume (14 daily and 8 weekly are kept) | The database |
 | The copy before each upgrade | `backups/pre-migrate/sunroom.<revision>.<time>.db` in the volume | The database |
-| The copy before **Erase everything** | `backups/pre-erase/sunroom.<time>.db` in the volume. Never tidied away: delete it yourself once you're sure | The database, as it was just before it was erased |
-| **Download backup** | Settings → Backup on a phone or computer: the newest nightly copy, a few MB | The database |
-| **Download everything** | Settings → Backup on a phone or computer: `sunroom-YYYY-MM-DD.zip` | The database, every photo, and a `manifest.json` |
+| The copy before **Erase Everything** | `backups/pre-erase/sunroom.<time>.db` in the volume. Never tidied away: delete it yourself once you're sure | The database, as it was just before it was erased |
+| **Download Backup** | Settings → Backup on a phone or computer: the newest nightly copy, a few MB | The database |
+| **Download Everything** | Settings → Backup on a phone or computer: `sunroom-YYYY-MM-DD.zip` | The database, every photo, and a `manifest.json` |
 
 The database holds everything the family added: people, calendars and events, lists, tasks,
 meals, countdowns, settings and the household password. Photos are files beside it, so only
-**Download everything** (or a copy of the whole volume) has them.
+**Download Everything** (or a copy of the whole volume) has them.
 
 No backup holds the server's secret key (`secret.key` in the volume), on purpose: a lost backup
 can't sign anyone in or unlock a connected account. A restore into the same volume keeps the key.
@@ -136,7 +136,7 @@ database refuses to start (exit 65) instead of guessing.
 - The kitchen screen shows a code. On a phone, open Sunroom, then **More**, then **Pair a
   display**, and type the code.
 - On a new volume, open **More**, then **Settings**, then **Calendars & accounts**, and tap
-  **Connect again** on each synced calendar.
+  **Connect Again** on each synced calendar.
 - Look at this week's events, a list or two, and Photos.
 - Keep the `sunroom.pre-restore.*` files for a week, then delete them:
 

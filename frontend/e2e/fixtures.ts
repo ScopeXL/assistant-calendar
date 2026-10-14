@@ -113,7 +113,7 @@ export async function wall(
 export async function signInPhone(page: Page, name = "Ana"): Promise<void> {
   await page.goto("/sign-in");
   await page.getByLabel("Household password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByRole("button", { name: "Sign In" }).click();
   await expect(page.getByRole("heading", { name: "Who’s using this phone?" })).toBeVisible();
   // Anchored: on a laptop the Today panel beside it can name the person too ("Pizza night Ana
   // cooks" on the seed's Fridays).

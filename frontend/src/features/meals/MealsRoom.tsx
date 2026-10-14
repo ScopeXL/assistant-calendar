@@ -121,7 +121,7 @@ function MealsWeek() {
                 }}
               >
                 <Copy aria-hidden="true" className="size-7" />
-                Copy last week
+                Copy Last Week
               </Button>
               <HeaderLink to="/$room/$" params={{ room: "meals", _splat: "saved" }}>
                 <BookOpen aria-hidden="true" className="size-7" />
@@ -299,7 +299,7 @@ export function MealSidePanel({
           }}
         >
           <ArrowLeftRight aria-hidden="true" className={display ? "size-7" : "size-5"} />
-          Swap days
+          Swap Days
         </Button>
         {listsOn && entry.ingredients.length ? (
           <Button
@@ -310,7 +310,7 @@ export function MealSidePanel({
             }}
           >
             <ShoppingBasket aria-hidden="true" className={display ? "size-7" : "size-5"} />
-            Add ingredients to Groceries
+            Add Ingredients to Groceries
           </Button>
         ) : null}
         <Button

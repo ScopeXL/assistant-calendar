@@ -34,7 +34,7 @@ export function useGoogleKeys(): { savedId: string; hasSecret: boolean; ready: b
  * key shouldn't save itself.
  */
 export function GoogleKeys({
-  firstSave = "Save keys",
+  firstSave = "Save Keys",
   removable = true,
 }: {
   /** What the button says while there are no keys yet. */
@@ -52,7 +52,7 @@ export function GoogleKeys({
       <KeysForm
         savedId={savedId}
         hasSecret={hasSecret}
-        submit={ready ? "Save keys" : firstSave}
+        submit={ready ? "Save Keys" : firstSave}
         primary={!ready}
         onDone={() => {
           setChanging(false);
@@ -77,7 +77,7 @@ export function GoogleKeys({
             setChanging(true);
           }}
         >
-          Change keys
+          Change Keys
         </Button>
         {removable ? (
           <Button
@@ -95,7 +95,7 @@ export function GoogleKeys({
               );
             }}
           >
-            Remove keys
+            Remove Keys
           </Button>
         ) : null}
       </div>

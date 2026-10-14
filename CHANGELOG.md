@@ -6,6 +6,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Buttons are written the way titles are: Add Photos, Save Changes, Check Now.
+
 ### Fixed
 
 - On a computer, Settings → Phones & Screens said to type the kitchen screen's code, with
