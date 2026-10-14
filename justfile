@@ -202,6 +202,10 @@ preflight:
     # A dry run sends nothing, so it skips the pre-push hook; `just scan` below covers those commits.
     GIT_TERMINAL_PROMPT=0 git push --dry-run --no-verify --quiet origin main \
       || { echo "The dry-run push to GitHub failed (above). See docs/RELEASING.md, Pushing to GitHub."; exit 1; }
+    # The next migration is tested against this release's data, so its fixture must ship with it.
+    head="$(cd backend && uv run --quiet python -c 'from sunroom.db import migrate; print(migrate.head_revision())')"
+    [ -f "backend/tests/fixtures/db/$head.sql" ] \
+      || { echo "Build the fixture database for migration $head first (docs/RELEASING.md, The fixture database)."; exit 1; }
     just check
     just e2e
     just scan

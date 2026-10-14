@@ -18,7 +18,7 @@ does the rest. This page explains the pieces, and how to release without Claude.
 
 | Step | Command | Stops the release when |
 |---|---|---|
-| Gate | `just preflight` | Not on main, uncommitted changes, behind origin, a dry-run push to GitHub fails, any check/e2e/scan failure, smoke-test failure, Docker not ready |
+| Gate | `just preflight` | Not on main, uncommitted changes, behind origin, a dry-run push to GitHub fails, the newest migration has no fixture database, any check/e2e/scan failure, smoke-test failure, Docker not ready |
 | Version | `just bump <level>` | `[Unreleased]` is empty |
 | Tag | `just release-tag ["Co-Authored-By: …"]` | Anything besides `VERSION`, `CHANGELOG.md`, `released.lock` and `kiosk/install.sh` changed since preflight. If only the push fails, run it again: it resumes |
 | Smoke | `just smoke-image vX.Y.Z` | The image from the tag doesn't start healthy on an empty volume with no settings, fails a probe or setup through the API, or starts on a bad volume |
@@ -69,7 +69,9 @@ Migrations are forward-only: a released migration is listed with its checksum in
 ## The fixture database
 
 A release whose newest migration is new needs `backend/tests/fixtures/db/<revision>.sql` for
-that revision, or the first migration written after the release fails its test. Build it in the
-task that adds the migration, before the release: add the revision's synthetic rows to `SEEDS` in
-`backend/tests/fixtures/db/build.py`, run
+that revision, or the first migration written after the release fails its test. Build the
+fixture for the released revision in the task that adds the migration, before the release: add
+the revision's synthetic rows to `SEEDS` in `backend/tests/fixtures/db/build.py`, run
 `cd backend && uv run python -m tests.fixtures.db.build <revision>`, and commit the file.
+`just preflight` refuses a release whose newest migration has no fixture (0.9.0 shipped without
+one, and a line here hadn't stopped it).

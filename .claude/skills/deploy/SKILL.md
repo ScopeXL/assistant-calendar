@@ -34,6 +34,9 @@ Requested level: "$level" (empty means you choose, below).
    scans, an amd64 smoke test of the image built from git, and the Docker checks.
    - On any failure: show the failing step's last lines, propose a fix, and **stop** before
      bumping. Never skip a check.
+   - It also stops when the newest migration has no fixture database. Building the fixture for
+     the released revision (docs/RELEASING.md, "The fixture database") is a working session's
+     job, not the deploy's: report it and stop.
    - Report private-terms hits as printed (`path:line: private term #n`). Never add them to an
      allowlist; the fix is to remove the value.
 3. **Version.** Use "$level" if given. Otherwise:
