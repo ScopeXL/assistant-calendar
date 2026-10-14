@@ -314,6 +314,21 @@ test("the wall screen", async ({ page }) => {
     await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);
   }
+  // Below the fold: Features → Countdowns' Birthdays in Coming Up, and About's New Versions.
+  await page
+    .getByRole("navigation", { name: "Settings" })
+    .getByRole("link", { name: "Features", exact: true })
+    .click();
+  await page.getByRole("group", { name: "Birthdays in Coming Up" }).scrollIntoViewIfNeeded();
+  await shot(page, "settings-features-countdowns");
+  await page
+    .getByRole("navigation", { name: "Settings" })
+    .getByRole("link", { name: "About", exact: true })
+    .click();
+  await page
+    .getByRole("switch", { name: /^Check for new versions daily/ })
+    .scrollIntoViewIfNeeded();
+  await shot(page, "settings-about-versions");
   await page
     .getByRole("navigation", { name: "Settings" })
     .getByRole("link", { name: "Family", exact: true })
@@ -328,6 +343,14 @@ test("the wall screen", async ({ page }) => {
   await expect(keys).toBeVisible();
   await shot(page, "settings-change-a-person-keyboard");
   await keys.getByRole("button", { name: "Done" }).click();
+  // Saved: the toast is on the page. Opened again while it shows, the sheet stays where it was
+  // and the toast stays on the page, under the backdrop (ADR 0032).
+  await person.getByRole("button", { name: "Save Changes" }).click();
+  await expect(person).toBeHidden();
+  await expect(page.locator("[data-toast]").filter({ hasText: "Changes saved" })).toBeVisible();
+  await page.getByRole("button", { name: /^Edit Mia/ }).click();
+  await expect(person).toBeVisible();
+  await shot(page, "settings-change-a-person-toast");
   await person.getByRole("button", { name: "Close" }).click();
   await expect(person).toBeHidden();
 
@@ -480,6 +503,9 @@ test("a phone", async ({ page, isMobile }) => {
       await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
       await shot(page, `settings-${key}-${scheme}`);
     }
+    await page.goto("/settings/features");
+    await page.getByRole("group", { name: "Birthdays in Coming Up" }).scrollIntoViewIfNeeded();
+    await shot(page, `settings-features-countdowns-${scheme}`);
     await page.goto("/settings/family");
     await page.getByRole("button", { name: "Edit Mia" }).click();
     await expect(page.getByRole("dialog", { name: "Edit Mia" })).toBeVisible();

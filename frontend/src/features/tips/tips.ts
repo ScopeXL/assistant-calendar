@@ -21,7 +21,7 @@ export const TIPS: readonly Tip[] = [
   { id: "weeks", text: "Swipe the week sideways or use the arrows. This Week brings you back." },
   {
     id: "show",
-    text: "Show: tap a person's picture to see only their week. It clears after two minutes.",
+    text: "Filter: pick a person to see only their week. It clears after two minutes.",
   },
   { id: "who", text: "People gives each person their own column." },
   { id: "hours", text: "Hours draws each day from midnight to midnight. Zoom in when it's busy." },
