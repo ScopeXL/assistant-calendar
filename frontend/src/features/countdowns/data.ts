@@ -19,19 +19,32 @@ export type CountdownPatch = Omit<
 > & { clear_color?: boolean; clear_time?: boolean; clear_member?: boolean };
 
 export const countdownKeys = {
-  upcoming: (limit: number | null) => ["countdowns", "upcoming", limit] as const,
+  upcoming: () => ["countdowns", "upcoming"] as const,
+  comingUp: (limit: number) => ["countdowns", "coming-up", limit] as const,
   all: () => ["countdowns", "all"] as const,
   removed: () => ["countdowns", "removed"] as const,
 };
 
-/** Soonest first: countdowns and birthdays; `limit` for the Today panel's three. */
-export function useUpcoming(limit: number | null = null) {
+/** Soonest first: every countdown and every birthday (the Countdowns room). */
+export function useUpcoming() {
   return useQuery({
-    queryKey: countdownKeys.upcoming(limit),
+    queryKey: countdownKeys.upcoming(),
+    queryFn: async () => unwrap(await api.GET("/api/countdowns/upcoming")),
+  });
+}
+
+/**
+ * The Today panel's Coming Up (UX §3): the nearest `limit`, where a birthday shows only within
+ * Settings → Features → Countdowns → Birthdays in Coming Up and a countdown always does
+ * (ADR 0032).
+ */
+export function useComingUp(limit: number) {
+  return useQuery({
+    queryKey: countdownKeys.comingUp(limit),
     queryFn: async () =>
       unwrap(
         await api.GET("/api/countdowns/upcoming", {
-          params: { query: limit ? { limit } : {} },
+          params: { query: { limit, coming_up: true } },
         }),
       ),
   });

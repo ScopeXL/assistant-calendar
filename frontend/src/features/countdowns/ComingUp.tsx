@@ -12,7 +12,7 @@ import { Button } from "../../ui/Button";
 import { celebrate } from "../../ui/Celebration";
 import { useShell } from "../../ui/shell";
 import type { Occurrence } from "../calendar/types";
-import { useUpcoming, type Upcoming } from "./data";
+import { useComingUp, type Upcoming } from "./data";
 import { comingUpText } from "./words";
 
 const SHOWN = 3;
@@ -62,7 +62,7 @@ function useDayCelebration(items: Upcoming[], members: Member[], today: string) 
  * "Today: Mia's birthday!". */
 export function ComingUpWall({ band = false }: { band?: boolean }) {
   const today = zonedParts(useMinute()).day;
-  const { data } = useUpcoming(band ? 1 : SHOWN);
+  const { data } = useComingUp(band ? 1 : SHOWN);
   const { data: members = [] } = useMembers();
   const navigate = useNavigate();
   const items = data?.items ?? [];
@@ -106,7 +106,7 @@ export function ComingUpWall({ band = false }: { band?: boolean }) {
 
 /** Today on a phone: the same three. */
 export function ComingUpPhone() {
-  const { data } = useUpcoming(SHOWN);
+  const { data } = useComingUp(SHOWN);
   const items = data?.items ?? [];
   const navigate = useNavigate();
   if (!items.length) return null;

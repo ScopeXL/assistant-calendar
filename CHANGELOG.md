@@ -12,6 +12,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - On the Hours grid the zoom's buttons read Fit the day, Zoom out, Zoom in.
 - The Today panel says "Nothing today"; on the People view a clear day reads "Free day".
 - In the header the date, the time and the weather line up.
+- Coming Up on the Today panel shows birthdays only within a window (a month by default;
+  Settings → Features → Countdowns → Birthdays in Coming Up). Countdowns you add always show.
 
 ### Fixed
 

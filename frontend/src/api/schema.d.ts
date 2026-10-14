@@ -8130,6 +8130,7 @@ export interface operations {
             query?: {
                 limit?: number | null;
                 include_birthdays?: boolean;
+                coming_up?: boolean;
                 date?: string | null;
             };
             header?: never;

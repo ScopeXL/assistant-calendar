@@ -546,7 +546,7 @@ it covers the last lines (Remove Mia) for its 8 seconds, as the plan chose.
 
 ### T7 Coming Up: birthdays within a window
 
-- [ ] Done (commit: )
+- [x] Done (commit: "countdowns: Coming Up shows birthdays within a window")
 
 **Owner's note.** "Some 'Coming Up' items (i.e. birthdays) seem pretty far out. When do 'Coming
 Up' items get shown now? Can there be a setting to limit the 'time until' …? Also think about
@@ -586,6 +586,14 @@ choosing "1 week" saves (then put it back in `finally`: the test server keeps pl
 **CHANGELOG.** "Coming Up on the Today panel shows birthdays only within a window (a month by
 default; Settings → Features → Countdowns → Birthdays in Coming Up). Countdowns you add always
 show."
+
+**As built.** The Countdowns room lists from the same `GET /api/countdowns/upcoming` (with no
+limit), so filtering birthdays there would have hidden them from the room that "always lists
+everything". The window applies only when the Today panel's block asks with `coming_up=true`
+(`useComingUp` on the frontend; `useUpcoming` lost its unused `limit`). `ParamField` already had
+`help`, which the form draws under a choice. The plugin's version stays 1.0.0: a new key with a
+default is read as its default from stored settings (PLUGINS.md bumps only for a rename or a
+reshape).
 
 ### T8 Devices
 

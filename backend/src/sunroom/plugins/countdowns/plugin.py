@@ -35,6 +35,20 @@ MANIFEST = PluginManifest(
             help="Birthdays set in Family count down by themselves.",
             default=True,
         ),
+        # Coming Up on the Today panel: a countdown someone added always shows, however far
+        # out; a birthday, which everyone gets for free, only within this window (ADR 0032).
+        ParamField(
+            "birthdays_within",
+            "Birthdays in Coming Up",
+            "choice",
+            help=(
+                "Countdowns you add always show in Coming Up. Birthdays further out still show "
+                "on the board on their day."
+            ),
+            default="30",
+            choices=("7", "14", "30", "90", "any"),
+            choice_labels=("1 week", "2 weeks", "1 month", "3 months", "Any time"),
+        ),
     ),
     tables=TABLES,
     export_tables=EXPORT_TABLES,

@@ -42,6 +42,47 @@ test("Coming up counts down to a birthday from Family", async ({ page, request }
   ).toBeVisible();
 });
 
+test("Coming Up shows birthdays within its window; the room lists every one", async ({
+  page,
+  request,
+}) => {
+  await seed(request);
+  await pairWall(page);
+  const comingUp = async () => {
+    const response = await page.request.get("/api/countdowns/upcoming?coming_up=true");
+    expect(response.ok()).toBe(true);
+    const found = (await response.json()) as { items: { title: string }[] };
+    return found.items.map((item) => item.title);
+  };
+  // A month by default (ADR 0032): Mia's birthday, in two days, is in it; Leo's, in February,
+  // isn't, though the Countdowns room lists it.
+  expect(await comingUp()).toContain("Mia's birthday");
+  expect(await comingUp()).not.toContain("Leo's birthday");
+  await page.goto("/settings/features");
+  const window = page.getByRole("group", { name: "Birthdays in Coming Up" });
+  await expect(window.getByRole("button", { name: "1 month" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByText("Countdowns you add always show in Coming Up.")).toBeVisible();
+  try {
+    await window.getByRole("button", { name: "1 week" }).click();
+    await expect(window.getByRole("button", { name: "1 week" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await window.getByRole("button", { name: "Any time" }).click();
+    await expect.poll(comingUp).toContain("Leo's birthday");
+  } finally {
+    // The test server keeps plugin settings between tests.
+    const back = await page.request.put("/api/plugins/countdowns/settings", {
+      headers: CSRF,
+      data: { values: { birthdays: true, birthdays_within: "30" } },
+    });
+    expect(back.ok()).toBe(true);
+  }
+});
+
 test("an event's sheet adds a countdown to it", async ({ page, request }) => {
   await seed(request);
   await pairWall(page);

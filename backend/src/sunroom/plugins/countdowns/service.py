@@ -71,6 +71,13 @@ def birthdays_on(ctx: PluginContext) -> bool:
     return bool(ctx.settings().get("birthdays", True))
 
 
+def birthdays_within(ctx: PluginContext) -> int | None:
+    """How many days ahead Coming Up shows a birthday (Birthdays in Coming Up, ADR 0032);
+    None: any time."""
+    value = str(ctx.settings().get("birthdays_within", "30"))
+    return None if value == "any" else int(value)
+
+
 def birthday_title(name: str) -> str:
     return f"{name}'s birthday"
 
@@ -219,9 +226,13 @@ async def upcoming(
     day: date | None = None,
     limit: int | None = None,
     include_birthdays: bool = True,
+    coming_up: bool = False,
 ) -> UpcomingListOut:
     """What's coming up from ``day`` (the household's today), soonest first: the countdowns
-    still to come, and each person's next birthday while the setting is on."""
+    still to come, and each person's next birthday while the setting is on. For the Today
+    panel's Coming Up (``coming_up``) a birthday shows only within Birthdays in Coming Up's
+    window, while a countdown always does: someone chose to count down to it (ADR 0032). The
+    Countdowns room asks without it, and lists every birthday."""
     today = day or household_today(ctx)
     async with ctx.read() as session:
         rows = await _listed(session, actor)
@@ -231,9 +242,12 @@ async def upcoming(
         if on is not None:
             items.append(_countdown_item(row, on, today))
     if include_birthdays and birthdays_on(ctx):
+        window = birthdays_within(ctx) if coming_up else None
         for member in await ctx.members.active():
             if member.birthday is not None:
-                items.append(_birthday_item(member, member.birthday, today))
+                item = _birthday_item(member, member.birthday, today)
+                if window is None or item.days <= window:
+                    items.append(item)
     items.sort(key=_soonest)
     return UpcomingListOut(today=today, items=items if limit is None else items[:limit])
 

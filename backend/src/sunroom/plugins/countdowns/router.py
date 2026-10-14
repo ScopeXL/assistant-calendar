@@ -42,10 +42,16 @@ def build(router: APIRouter, plugin: Countdowns) -> None:
         actor: ActorDep,
         limit: Annotated[int | None, Query(ge=1, le=50)] = None,
         include_birthdays: bool = True,
+        coming_up: bool = False,
         day: Annotated[date | None, Query(alias="date")] = None,
     ) -> UpcomingListOut:
         return await service.upcoming(
-            ctx(), actor, day=day, limit=limit, include_birthdays=include_birthdays
+            ctx(),
+            actor,
+            day=day,
+            limit=limit,
+            include_birthdays=include_birthdays,
+            coming_up=coming_up,
         )
 
     @router.get("/removed")

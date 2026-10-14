@@ -155,3 +155,75 @@ async def test_a_birthday_follows_the_family(parent: httpx.AsyncClient, family: 
         ("Leo's birthday", "2027-02-28", 11),
         ("Ana's birthday", "2027-04-12", 39),
     ]
+
+
+# ---- Coming Up's window (ADR 0032) -------------------------------------------------------------
+
+
+async def set_window(client: httpx.AsyncClient, value: str) -> None:
+    response = await client.put(
+        "/api/plugins/countdowns/settings",
+        json={"values": {"birthdays_within": value}},
+        headers=CSRF,
+    )
+    assert response.status_code == 200, response.text
+
+
+async def test_coming_up_shows_a_birthday_within_a_month_by_default(
+    parent: httpx.AsyncClient, family: Family
+) -> None:
+    # Mia's birthday, October 19, from 20 days before and from 45.
+    twenty = await upcoming(parent, coming_up="true", date="2026-09-29")
+    assert "Mia's birthday" in titles(twenty["items"])
+    forty_five = await upcoming(parent, coming_up="true", date="2026-09-04")
+    assert "Mia's birthday" not in titles(forty_five["items"])
+    # The Countdowns room asks without the window, and lists every birthday.
+    assert "Mia's birthday" in titles((await upcoming(parent, date="2026-09-04"))["items"])
+    assert titles((await upcoming(parent))["items"]) == [
+        "Mia's birthday",
+        "Leo's birthday",
+        "Ana's birthday",
+    ]
+
+
+async def test_a_shorter_window_and_any_time(parent: httpx.AsyncClient, family: Family) -> None:
+    await set_window(parent, "7")
+    ten = await upcoming(parent, coming_up="true", date="2026-10-09")
+    assert "Mia's birthday" not in titles(ten["items"])
+    seven = await upcoming(parent, coming_up="true", date="2026-10-12")
+    assert "Mia's birthday" in titles(seven["items"])  # the window's last day is in it
+    await set_window(parent, "any")
+    assert titles((await upcoming(parent, coming_up="true"))["items"]) == [
+        "Mia's birthday",
+        "Leo's birthday",
+        "Ana's birthday",
+    ]
+
+
+async def test_a_countdown_shows_in_coming_up_however_far_out(
+    parent: httpx.AsyncClient, family: Family
+) -> None:
+    await add_countdown(parent, "Beach trip", day(200))
+    for window in ("7", "14", "30", "90", "any"):
+        await set_window(parent, window)
+        found = await upcoming(parent, coming_up="true")
+        assert "Beach trip" in titles(found["items"]), window
+
+
+async def test_coming_up_still_has_three_lines_with_both_kinds(
+    parent: httpx.AsyncClient, family: Family
+) -> None:
+    await add_countdown(parent, "Beach trip", day(200))
+    await add_countdown(parent, "Grandma visits", day(5))
+    found = await upcoming(parent, coming_up="true", limit=3)
+    # Leo's (119 days) and Ana's (187) are past the month; the trip, 200 days out, still shows.
+    assert titles(found["items"]) == ["Grandma visits", "Mia's birthday", "Beach trip"]
+
+
+async def test_the_window_is_one_of_its_choices(parent: httpx.AsyncClient, family: Family) -> None:
+    response = await parent.put(
+        "/api/plugins/countdowns/settings",
+        json={"values": {"birthdays_within": "60"}},
+        headers=CSRF,
+    )
+    assert response.status_code == 422
