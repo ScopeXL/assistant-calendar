@@ -41,3 +41,20 @@
   Playwright's local reporter is `line`. CLAUDE.md's definition of done and PLAN §14.7 are the
   two tiers.
 - The design-rules test imports `typescript` to read the sources' JSX.
+- One migration, data only: `202610141930_sync_accounts_named_icloud_become_apple`, tested
+  against the 0.9.0 fixture database (built before the batch's first task), with its own 0.10.0
+  fixture (`202610141930.sql`) so the next migration has one to test against.
+- New in the frontend: `public/theme-boot.js` (a classic script in `<head>`, linted as a
+  browser script) and `localStorage["sunroom.appearance"]`; `data-theme-switching` on `<html>`;
+  `ui/sheetToasts`; `EmptyState`'s icon, title, note and action, and `QuietLine`;
+  `features/onboarding/SetupFrame` with `StepActions` and `SetupEnd`; `KeyboardHost`'s `rail`.
+  Gone: the surfaces' `data-surface` marks and their crossfade rule, the wizard's `Page`,
+  `AddPhoneSheet` (now `AddDeviceSheet`).
+- New in the API: `DeviceOut.form`; `GET /api/countdowns/upcoming?coming_up=true`; the
+  countdowns plugin's `birthdays_within` setting (no version bump: a new key reads as its
+  default).
+- The end-to-end fixture's extra phone sends a phone's user agent (the Pixel 7's).
+- The deploy skill waits for the push's CI run and reports it; preflight needs the newest
+  migration's fixture database.
+- What wasn't built, and why, is in each task's "As built" note; the follow-ups are at the end
+  of `docs/M6-batch-4.md`.

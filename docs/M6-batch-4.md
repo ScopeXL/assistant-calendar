@@ -1000,7 +1000,8 @@ both themes on two projects; CI's proof is the next release's run.
 
 ### T15 Wrap up the batch
 
-- [ ] Done (commit: )
+- [x] Done (commits: "frontend: an empty room's line is copy, not a title", "frontend: batch 4
+  polish", "docs: M6 batch 4 wrapped up")
 
 1. **The full gate.** `just check`; the whole `just e2e` (five projects); `just screenshots`.
    Review, against UX §10 and `.screenshots/before-0.9.1/`, **only these** at 1920×1080,
@@ -1044,6 +1045,28 @@ both themes on two projects; CI's proof is the next release's run.
      Add panel and in a sheet;
    - buttons in Title Case everywhere (Photos: Settings, Start Screensaver, Add Photos).
 
+**As built.** The full gate on the last code commit: `just check` green (1,120 backend and 598
+frontend tests, API types, migrations, release metadata), the whole `just e2e` green (110
+passed on five projects, none failed, 8.2 minutes), `just screenshots` green (20 runs), `just
+scan` clean. The first `just check` failed once: the design-rules test reads any component's
+`title="…"` as a heading, and T9's `EmptyState title="No lists yet"` is sentence-case copy, so
+the prop became `line` (its own commit; T9's quick gate hadn't run the design rules). Reviewed
+against UX §10 and `.screenshots/before-0.9.1/`: the header at Standard, Small and Extra large
+(one middle line), the Today panel ("Nothing else today.", Coming Up), the People view (Free
+day, absent where a person has a dinner), the empty Lists, Tasks and Photos rooms (the wall,
+the kitchen screen's QR, a phone, a laptop), Devices (a laptop icon and Sign Out of This
+Computer on the laptop, a phone's on the iPhone), Features → Countdowns (one row on the wall, a
+wrapped group on a phone), About's New Versions, Add an account's chooser and an account's
+sheet, Edit Mia reopened with a toast under its backdrop, the keyboard's dock (the Add panel in
+landscape and portrait, the pair screen's password) and Setup at 1440 × 900 and 390 × 844. The
+polish commit: a tip still described the Show row (Filter since 0.9.0), and the screenshot
+spec gains Edit Mia with a toast and the two settings below the fold. Seen and left: at 1440 px
+with the Today panel open, Sign Out of This Computer wraps onto two lines in the narrow Settings
+column (Sign out of this phone fit on one); Edit a person's birthday is still the native date
+input (unchanged by this batch). Not done by this session: the by-hand refresh of the wall in
+Light and Dark in `just display` (the end-to-end test checks the theme at load and when the
+fades are armed, and a theme change's crossfade), a walk on the Pi, and VoiceOver.
+
 ## Follow-ups noticed but not in this batch
 
 - Publishing a GitHub Release per tag from the deploy skill (`gh release create` with the
@@ -1060,3 +1083,19 @@ both themes on two projects; CI's proof is the next release's run.
   one line on the kiosk's fields, one HARDWARE.md test.
 - The rest of batch 3's list: the phone shell's headers, Filter by calendar or kind, drafts that
   survive a refresh, the week swipe following the finger, the Hours pinch, the filter's 30% fade.
+
+Found while building this batch:
+
+- Edit a person keeps Save Changes and Remove at the end of its body instead of pinning Save
+  Changes (`ui/PanelActions`), as the other editors do; a toast raised inside it floats over
+  those two buttons for its 8 seconds.
+- A wall whose household is on Auto, off across a sunrise or a sunset, paints the remembered
+  theme first and switches (without a fade) once the settings arrive. Remembering the sun's
+  times and the zone would let the boot script resolve Auto itself.
+- The phone's empty rooms have no button of their own (the bottom bar's is the button). If the
+  big button is wanted there too, it's one `action` prop per room.
+- A quick gate should include `src/styles/designRules.test.ts` whenever a task adds words to a
+  button or a `title` prop: T9's `EmptyState title` was caught only by the full gate.
+- `chores.spec.ts`, `lists.spec.ts` and `sync.spec.ts` skip themselves on the phone projects;
+  a plan naming one of them on `phone-webkit` runs nothing (the project-tags follow-up above
+  would make that visible).
