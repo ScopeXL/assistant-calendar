@@ -318,7 +318,7 @@ skips itself. ADR 0032 is started here and grows a row per task.
 
 ### T2 The zoom's order
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: the zoom reads Fit the day, Zoom out, Zoom in")
 
 **Owner's note.** "Re-order the zoom icons in Week view to 'Full | Zoom Out | Zoom In'."
 

@@ -71,6 +71,12 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   await expect(zoomIn).toBeEnabled();
   await expect(zoomOut).toBeDisabled();
   await expect(fitDay).toBeDisabled();
+  // Fit the day first, then Zoom out and Zoom in (ADR 0032).
+  expect(
+    await zoom
+      .getByRole("button")
+      .evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label"))),
+  ).toEqual(["Fit the day", "Zoom out", "Zoom in"]);
 
   // The whole day fits, and nothing scrolls.
   const wednesday = board.locator('[data-day="2026-10-07"] [data-day-body]');

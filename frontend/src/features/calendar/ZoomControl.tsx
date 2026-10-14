@@ -4,10 +4,10 @@ import { Button } from "../../ui/Button";
 import { zoomIn, zoomOut } from "./hours";
 
 /**
- * The Hours grid's zoom, on the grid itself (UX §4, ADR 0030): Zoom out · Fit the day · Zoom in
- * at the grid's bottom corner, like a map's, outside the scroller so it stays put while the
- * hours scroll under it. Each tap is half again, as far as the grid allows; Fit shows the whole
- * day again. A row, not a stack: fitted, it covers the last column's last two hours and no
+ * The Hours grid's zoom, on the grid itself (UX §4, ADR 0030): Fit the day · Zoom out · Zoom in
+ * (the whole day first since ADR 0032, as the owner reads it) at the grid's bottom corner, like
+ * a map's, outside the scroller so it stays put while the hours scroll under it. Each tap is
+ * half again, as far as the grid allows; Fit shows the whole day again. A row, not a stack: fitted, it covers the last column's last two hours and no
  * more. It belongs to the thing it zooms, and the header has no room for three more buttons.
  */
 export function ZoomControl({
@@ -33,17 +33,6 @@ export function ZoomControl({
       <Button
         variant="secondary"
         icon
-        aria-label="Zoom out"
-        disabled={fitted}
-        onClick={() => {
-          onZoom(zoomOut(zoom));
-        }}
-      >
-        <ZoomOut aria-hidden="true" className="size-8" />
-      </Button>
-      <Button
-        variant="secondary"
-        icon
         aria-label="Fit the day"
         disabled={fitted}
         onClick={() => {
@@ -51,6 +40,17 @@ export function ZoomControl({
         }}
       >
         <Maximize2 aria-hidden="true" className="size-8" />
+      </Button>
+      <Button
+        variant="secondary"
+        icon
+        aria-label="Zoom out"
+        disabled={fitted}
+        onClick={() => {
+          onZoom(zoomOut(zoom));
+        }}
+      >
+        <ZoomOut aria-hidden="true" className="size-8" />
       </Button>
       <Button
         variant="secondary"

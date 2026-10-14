@@ -9,6 +9,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 ### Changed
 
 - Buttons are written the way titles are: Add Photos, Save Changes, Check Now.
+- On the Hours grid the zoom's buttons read Fit the day, Zoom out, Zoom in.
 
 ### Fixed
 
