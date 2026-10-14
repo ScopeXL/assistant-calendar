@@ -1,7 +1,17 @@
-import { memo, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { Button } from "./Button";
 import { useShell } from "./shell";
+import { SheetToastsContext, type SheetToasts } from "./sheetToasts";
 import { ToastAnchor } from "./ToastAnchor";
 
 /**
@@ -65,6 +75,15 @@ export function Sheet({
     setWasOpen(open);
     setClosing(!open);
   }
+  // A pinned button bar in the body takes the toasts above itself (ui/sheetToasts).
+  const [pinned, setPinned] = useState(0);
+  const pin = useCallback(() => {
+    setPinned((count) => count + 1);
+    return () => {
+      setPinned((count) => count - 1);
+    };
+  }, []);
+  const toasts = useMemo<SheetToasts>(() => ({ open, pin }), [open, pin]);
 
   useEffect(() => {
     if (step === shownStep.current) return;
@@ -141,21 +160,31 @@ export function Sheet({
                 Close
               </Button>
             </header>
-            {/* Focusable, so a keyboard can scroll it even when nothing inside takes focus. */}
-            <div
-              ref={bodyRef}
-              role="region"
-              aria-labelledby={titleId}
-              tabIndex={0}
-              className={`flex-1 overflow-y-auto ${display ? "px-6 py-6" : "px-4 py-4"}`}
-            >
-              {children}
-            </div>
           </Frozen>
-          {/* Toasts (and their Undo) show here, since the page behind an open sheet can't be
-              tapped. In the layout, not over it, so they never cover the sheet's buttons. Gone as
-              soon as the sheet starts closing, so a new toast lands on the page. */}
-          {open ? <ToastAnchor className="not-empty:pb-3" /> : null}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <SheetToastsContext.Provider value={toasts}>
+              <Frozen frozen={!open}>
+                {/* Focusable, so a keyboard can scroll it even when nothing inside takes focus. */}
+                <div
+                  ref={bodyRef}
+                  role="region"
+                  aria-labelledby={titleId}
+                  tabIndex={0}
+                  className={`flex-1 overflow-y-auto ${display ? "px-6 py-6" : "px-4 py-4"}`}
+                >
+                  {children}
+                </div>
+              </Frozen>
+            </SheetToastsContext.Provider>
+            {/* Toasts raised while the sheet is open (and their Undo) show here, since the page
+                behind it can't be tapped. They float over the bottom of the body, above the
+                footer's buttons and taking no room, so the sheet never moves as one comes or goes;
+                a pinned button bar in the body takes them above itself instead (ADR 0032). Gone as
+                soon as the sheet starts closing: its toasts go back to the page. */}
+            {open && pinned === 0 ? (
+              <ToastAnchor className="absolute inset-x-0 bottom-0 pb-3" />
+            ) : null}
+          </div>
           <Frozen frozen={!open}>
             {footer ? (
               <footer className={`border-t border-line ${display ? "px-6 py-4" : "px-4 py-3"}`}>

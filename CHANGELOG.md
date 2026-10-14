@@ -23,6 +23,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A refresh paints the screen in its theme straight away: the header, the rails, the buttons and
   today's column no longer show another color and fade. Changing the theme crossfades
   everything together.
+- A sheet no longer shifts when a toast fades, and a toast no longer jumps into a sheet that
+  opens over it.
 
 ## [0.9.1] - 2026-10-14
 

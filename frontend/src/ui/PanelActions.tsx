@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+import { useContext, useEffect, type ReactNode } from "react";
 
 import { useShell } from "./shell";
+import { SheetToastsContext } from "./sheetToasts";
+import { ToastAnchor } from "./ToastAnchor";
 
 /**
  * An editor's primary button, pinned to the bottom of its panel or sheet so it stays in view
@@ -12,12 +14,18 @@ import { useShell } from "./shell";
  */
 export function PanelActions({ children }: { children: ReactNode }) {
   const display = useShell() === "display";
+  // In a sheet, its toasts float just above this bar, over the form, never over the button
+  // (ui/sheetToasts, ADR 0032). A side panel's go to the board, as before.
+  const sheet = useContext(SheetToastsContext);
+  const pin = sheet?.pin;
+  useEffect(() => pin?.(), [pin]);
   return (
     <div
       className={`sticky bottom-0 z-10 border-t border-line bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-6 after:bg-surface ${
         display ? "-mx-6 px-6 py-4" : "-mx-4 px-4 py-3"
       }`}
     >
+      {sheet?.open ? <ToastAnchor className="absolute inset-x-0 bottom-full mb-3" /> : null}
       {children}
     </div>
   );

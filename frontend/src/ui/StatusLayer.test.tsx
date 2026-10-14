@@ -13,7 +13,7 @@ vi.mock("virtual:pwa-register/react", () => ({
 
 const { OfflinePill, ToastRegion, UpdatePrompt } = await import("./StatusLayer");
 const { connection } = await import("../lib/connection");
-const { showToast, toasts } = await import("../lib/toast");
+const { anchorToasts, showToast, toasts } = await import("../lib/toast");
 
 afterEach(() => {
   cleanup();
@@ -80,5 +80,34 @@ describe("toasts", () => {
     alone.unmount();
     render(<ToastRegion display panelShown={false} />);
     expect(region()).toContain("left-[var(--rail-w)] right-0");
+  });
+
+  it("stay where they were raised: on the page under a sheet, in a sheet while it's open", () => {
+    render(<ToastRegion />);
+    const region = screen.getByRole("status");
+    act(() => {
+      showToast("Changes saved");
+    });
+    // A sheet opens over it: the toast stays on the page, under the sheet's backdrop.
+    const sheet = document.createElement("div");
+    document.body.append(sheet);
+    let sheetGone: () => void = () => undefined;
+    act(() => {
+      sheetGone = anchorToasts(sheet);
+    });
+    const saved = screen.getByText("Changes saved");
+    expect(region.contains(saved)).toBe(true);
+    // Raised while the sheet is open: in the sheet.
+    act(() => {
+      showToast("Copied the helper's address");
+    });
+    expect(sheet.contains(screen.getByText("Copied the helper's address"))).toBe(true);
+    expect(region.contains(screen.getByText("Changes saved"))).toBe(true);
+    // The sheet goes: its toast goes back to the page.
+    act(() => {
+      sheetGone();
+    });
+    expect(region.contains(screen.getByText("Copied the helper's address"))).toBe(true);
+    sheet.remove();
   });
 });

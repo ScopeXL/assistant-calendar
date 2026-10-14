@@ -10,6 +10,11 @@ export interface Toast {
   message: string;
   actionLabel?: string;
   onAction?: () => void;
+  /**
+   * Where it was raised: the newest anchor then (an open sheet, a screen's bar), or null on the
+   * page. It stays there while that anchor is on screen (ADR 0032).
+   */
+  anchor: HTMLElement | null;
 }
 
 export const toasts = createStore<Toast[]>([]);
@@ -27,9 +32,10 @@ export function setToastProfile(display: boolean): void {
 
 export function showToast(message: string, action?: { label: string; onAction: () => void }) {
   const id = nextId++;
+  const anchor = toastAnchor.get();
   const toast: Toast = action
-    ? { id, message, actionLabel: action.label, onAction: action.onAction }
-    : { id, message };
+    ? { id, message, anchor, actionLabel: action.label, onAction: action.onAction }
+    : { id, message, anchor };
   // One too many: the oldest goes to make room.
   toasts.set((list) => [...list, toast].slice(-mostShown));
   setTimeout(() => {
@@ -55,20 +61,25 @@ export function clearToasts(): void {
 
 /**
  * Where toasts sit: just above a screen's bottom bar when it has one (so they never cover its
- * buttons), else above the tab bar. While a sheet is open they sit at its bottom, since the page
- * behind it can't be tapped. Bars and sheets register an anchor element (ui/ToastAnchor); the
- * newest one still on screen wins.
+ * buttons), else above the tab bar. While a sheet is open a new toast sits at its bottom, since
+ * the page behind it can't be tapped. Bars and sheets register an anchor element
+ * (ui/ToastAnchor); a new toast goes to the newest one still on screen, and stays where it was
+ * raised (ADR 0032): one on the page stays on the page when a sheet opens over it, and one in a
+ * sheet goes back to the page when the sheet closes.
  */
 export const toastAnchor = createStore<HTMLElement | null>(null);
-const anchors: HTMLElement[] = [];
+
+/** Every anchor on screen, oldest first, each with a key that stays while it does. */
+export const toastAnchors = createStore<readonly { node: HTMLElement; key: number }[]>([]);
+let nextAnchorKey = 1;
 
 /** Toasts show in `node` until the returned function runs (when it leaves the screen). */
 export function anchorToasts(node: HTMLElement): () => void {
-  anchors.push(node);
+  const key = nextAnchorKey++;
+  toastAnchors.set((list) => [...list, { node, key }]);
   toastAnchor.set(node);
   return () => {
-    const at = anchors.lastIndexOf(node);
-    if (at !== -1) anchors.splice(at, 1);
-    toastAnchor.set(anchors.at(-1) ?? null);
+    toastAnchors.set((list) => list.filter((anchor) => anchor.key !== key));
+    toastAnchor.set(toastAnchors.get().at(-1)?.node ?? null);
   };
 }

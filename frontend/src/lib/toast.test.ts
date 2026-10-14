@@ -9,6 +9,7 @@ import {
   showToast,
   TOAST_MS,
   toastAnchor,
+  toastAnchors,
   toasts,
 } from "./toast";
 
@@ -24,6 +25,22 @@ describe("where toasts sit", () => {
     expect(toastAnchor.get()).toBe(bar);
     barGone();
     expect(toastAnchor.get()).toBeNull();
+  });
+
+  it("remembers where each toast was raised (ADR 0032)", () => {
+    clearToasts();
+    showToast("On the page");
+    const sheet = document.createElement("div");
+    const sheetGone = anchorToasts(sheet);
+    showToast("In the sheet");
+    expect(toasts.get().map((toast) => [toast.message, toast.anchor])).toEqual([
+      ["On the page", null],
+      ["In the sheet", sheet],
+    ]);
+    expect(toastAnchors.get().map((anchor) => anchor.node)).toEqual([sheet]);
+    sheetGone();
+    expect(toastAnchors.get()).toEqual([]);
+    clearToasts();
   });
 
   it("stays in the sheet when the screen's bar goes first", () => {

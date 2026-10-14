@@ -3,6 +3,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { toastAnchor } from "../lib/toast";
 import { Sheet } from "./Sheet";
+import { PanelActions } from "./PanelActions";
 import { ToastAnchor } from "./ToastAnchor";
 
 // The sheet's slide-away animation; a test ends it with finishSlide().
@@ -75,6 +76,43 @@ describe("toasts while a sheet is open", () => {
     expect(toastAnchor.get()).toBe(inSheet);
     view.rerender(<Screen open={false} renders={3} />);
     expect(toastAnchor.get()).toBe(onBar);
+  });
+
+  it("float over the bottom of the sheet's body, so the sheet never moves for one (ADR 0032)", () => {
+    const view = render(<Screen open={false} renders={1} />);
+    view.rerender(<Screen open renders={1} />);
+    const anchor = toastAnchor.get();
+    const body = screen.getByRole("region", { name: "Shredded cheddar" });
+    // Out of the layout, at the bottom of the box that holds the body, and above the footer.
+    expect(anchor?.className).toMatch(/\babsolute\b.*\bbottom-0\b/);
+    expect(anchor?.parentElement).toBe(body.parentElement);
+    expect(body.parentElement?.className).toMatch(/\brelative\b/);
+  });
+});
+
+describe("toasts in a sheet with a pinned button (ADR 0032)", () => {
+  function Editor({ open }: { open: boolean }) {
+    return (
+      <Sheet open={open} title="Edit Feed the dog" onClose={vi.fn()}>
+        <p>Sample line</p>
+        <PanelActions>
+          <button type="button">Save Changes</button>
+        </PanelActions>
+      </Sheet>
+    );
+  }
+
+  it("float just above the pinned button, never over it", () => {
+    const view = render(<Editor open={false} />);
+    view.rerender(<Editor open />);
+    const anchor = toastAnchor.get();
+    const bar = screen.getByRole("button", { name: "Save Changes" }).parentElement;
+    expect(anchor?.parentElement).toBe(bar);
+    expect(anchor?.className).toMatch(/\babsolute\b.*\bbottom-full\b/);
+    // The sheet's own place at the bottom of its body steps aside.
+    expect(screen.getByRole("dialog").querySelectorAll("[role=status]")).toHaveLength(1);
+    view.rerender(<Editor open={false} />);
+    expect(toastAnchor.get()).toBeNull();
   });
 });
 

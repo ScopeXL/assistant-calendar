@@ -7,7 +7,17 @@
  */
 import type { Page } from "@playwright/test";
 
-import { expect, pairWall, PASSWORD, PIN, seed, signInPhone, test, wall } from "./fixtures";
+import {
+  expect,
+  pairWall,
+  PASSWORD,
+  PIN,
+  seed,
+  settled,
+  signInPhone,
+  test,
+  wall,
+} from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 
@@ -727,6 +737,50 @@ test.describe("the wall screen", () => {
     await page.getByRole("banner").getByRole("button", { name: "Lock" }).click();
     await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     await expect(settings).toHaveAttribute("data-icon", "lock");
+  });
+
+  test("keeps a toast where it was raised, and a sheet still while one comes and goes", async ({
+    page,
+    request,
+  }) => {
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/settings/family");
+    await hearsLive(page);
+    // Saved from a sheet: the toast is on the page once the sheet has gone.
+    await page.getByRole("button", { name: "Edit Mia" }).click();
+    const sheet = page.getByRole("dialog", { name: "Edit Mia" });
+    await sheet.getByRole("button", { name: "Save Changes" }).click();
+    await expect(sheet).toBeHidden();
+    const saved = page.locator("[data-toast]").filter({ hasText: "Changes saved" });
+    await expect(saved).toBeVisible();
+
+    // Edit Mia again while it shows: the toast stays on the page, under the sheet's backdrop,
+    // and the sheet doesn't move when it goes (ADR 0032).
+    await page.getByRole("button", { name: "Edit Mia" }).click();
+    await expect(sheet).toBeVisible();
+    await settled(page);
+    await expect(sheet.locator("[data-toast]")).toHaveCount(0);
+    const before = await sheet.boundingBox();
+    await expect(saved).toHaveCount(0, { timeout: 10_000 });
+    await settled(page);
+    expect(await sheet.boundingBox()).toEqual(before);
+
+    // One raised while the sheet is open shows in it, floating over its body, and the sheet
+    // stays where it is: the server was updated (the screen waits to refresh while it's open).
+    const updated = await request.post("/api/_test/version", {
+      headers: CSRF,
+      data: { version: "9.9.9" },
+    });
+    expect(updated.status()).toBe(204);
+    const dropped = await request.post("/api/_test/drop-streams", { headers: CSRF });
+    expect(dropped.status()).toBe(204);
+    const said = sheet.locator("[data-toast]").filter({ hasText: "Sunroom was updated to 9.9.9" });
+    await expect(said).toBeVisible();
+    await settled(page);
+    expect(await sheet.boundingBox()).toEqual(before);
+    const toast = await said.boundingBox();
+    expect(toast && before && toast.y + toast.height <= before.y + before.height).toBe(true);
   });
 
   test("types into a sheet with its own keyboard, and the sheet rises above the keys", async ({

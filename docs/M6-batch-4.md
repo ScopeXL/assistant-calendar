@@ -489,7 +489,7 @@ the screen is off paints the remembered theme, then snaps (no fade) when the set
 
 ### T6 Toasts stay put, and float inside a sheet
 
-- [ ] Done (commit: )
+- [x] Done (commit: "frontend: a toast stays where it was raised, and floats in a sheet")
 
 **Owner's note.** "When a modal is already open when a toast notification is visible, the modal
 shifts when it disappears. Also, if you open a modal when a toast is visible, it moves the toast
@@ -532,6 +532,17 @@ the sheet, something that toasts (if nothing in Edit Mia does, use an account's 
 
 **CHANGELOG.** "A sheet no longer shifts when a toast fades, and a toast no longer jumps into a
 sheet that opens over it."
+
+**As built.** The anchor a toast was raised in is kept on the toast itself (the element), and
+`lib/toast` keeps every anchor on screen with a stable key, so `ToastRegion` draws one group
+per anchor plus the fixed region. Two things the plan missed: **sheets that pin their primary
+button in the body** (`ui/PanelActions`: a task's, a reward's, a routine's, an item's, a saved
+meal's) would have had the toast float over that button, so in a sheet a pinned bar takes the
+toasts just above itself (`ui/sheetToasts`, a small context; a side panel's bar doesn't);
+and nothing in Edit Mia, or an account's Refresh Now, raises a toast while the sheet stays open,
+so the end-to-end test raises one with the update notice (the wall waits to refresh while a
+sheet is open). In Edit a person, whose buttons sit at the end of its body, a toast raised in
+it covers the last lines (Remove Mia) for its 8 seconds, as the plan chose.
 
 ### T7 Coming Up: birthdays within a window
 
