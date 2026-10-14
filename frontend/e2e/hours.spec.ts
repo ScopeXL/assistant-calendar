@@ -1,7 +1,7 @@
 /**
  * The Week board's Hours layout end to end (UX §4 "Week board, Hours layout", ADR 0028): the
  * whole day with nothing to scroll, Zoom in, Zoom out and Fit the day, a drop that keeps the time, a tap
- * that adds at a time, and the layout and zoom going back after two minutes idle. The server's
+ * that adds at a time, and the layout and zoom staying through two idle minutes. The server's
  * clock reads Wednesday, October 7, 2026, 10:00 AM in New York. Synthetic data only.
  */
 import type { Locator, Page } from "@playwright/test";
@@ -186,40 +186,39 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   ).toHaveAttribute("aria-pressed", "true");
 });
 
-test("the zoom and the layout go back after two minutes idle", async ({ page }) => {
+test("the layout and the zoom stay through two idle minutes, with now back in view", async ({
+  page,
+}) => {
   await page.clock.install();
   await pairWall(page);
   await page.goto("/display");
   const board = page.getByRole("region", { name: "This Week" });
   const grid = board.locator("[data-hours]");
-  await page.getByRole("button", { name: "Hours", exact: true }).click();
+  const hoursButton = page.getByRole("button", { name: "Hours", exact: true });
+  const fitDay = page.getByRole("button", { name: "Fit the day" });
+  await hoursButton.click();
   await page.getByRole("button", { name: "Zoom in" }).click();
-  await expect(grid).toBeVisible();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(fitDay).toBeEnabled();
+  expect(await grid.evaluate((node) => node.scrollHeight - node.clientHeight)).toBeGreaterThan(0);
+  // Scrolled up to midnight, far from now (10 AM).
+  await grid.evaluate((node) => {
+    node.scrollTop = 0;
+  });
   await page.clock.fastForward("02:05");
-  await expect(grid).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Agenda", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  // Still Hours and still zoomed in (ADR 0031), and the grid has come back to now.
+  await expect.poll(() => grid.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+  await expect(hoursButton).toHaveAttribute("aria-pressed", "true");
+  await expect(fitDay).toBeEnabled();
 
-  // The household's choice: Hours with no tap, fitting the day.
+  // The household's next choice of layout wins over this screen's own.
+  await page.getByRole("button", { name: "Agenda", exact: true }).click();
+  await expect(grid).toHaveCount(0);
   const hours = await page.request.patch("/api/settings", {
     headers: CSRF,
     data: { display_week_layout: "hours" },
   });
   expect(hours.ok()).toBe(true);
-  await page.reload();
   await expect(grid).toBeVisible();
-  const fitDay = page.getByRole("button", { name: "Fit the day" });
-  await expect(fitDay).toBeDisabled();
-  await page.getByRole("button", { name: "Zoom in" }).click();
-  await page.getByRole("button", { name: "Zoom in" }).click();
-  await expect(fitDay).toBeEnabled();
-  expect(await grid.evaluate((node) => node.scrollHeight - node.clientHeight)).toBeGreaterThan(0);
-  await page.clock.fastForward("02:05");
-  await expect(fitDay).toBeDisabled();
-  await expect(grid).toBeVisible();
-  expect(await grid.evaluate((node) => node.scrollHeight - node.clientHeight)).toBeLessThanOrEqual(
-    0,
-  );
+  await expect(hoursButton).toHaveAttribute("aria-pressed", "true");
 });

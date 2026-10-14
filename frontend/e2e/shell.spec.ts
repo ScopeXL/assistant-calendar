@@ -405,7 +405,7 @@ test.describe("the wall screen", () => {
     await expect(today).toBeVisible();
     await header.getByRole("button", { name: "Hide the Today panel" }).click();
     await expect(today).toBeHidden();
-    // It stays hidden from room to room, until someone shows it or the screen sits idle.
+    // It stays hidden from room to room, until someone shows it.
     await page.getByRole("link", { name: "Lists" }).click();
     await expect(header.getByRole("heading", { name: "Lists", level: 1 })).toBeVisible();
     await expect(header.getByRole("button", { name: "New list" })).toBeVisible();
@@ -414,7 +414,7 @@ test.describe("the wall screen", () => {
     await expect(today).toBeVisible();
   });
 
-  test("folds its rail to icons, and opens it again after two minutes idle", async ({
+  test("folds its rail to icons, and keeps it folded through two idle minutes", async ({
     page,
     request,
   }) => {
@@ -487,9 +487,22 @@ test.describe("the wall screen", () => {
     await expect.poll(width).toBe(192);
     await header.getByRole("button", { name: "Hide the rail" }).click();
     await expect.poll(width).toBe(72);
-    // Left alone for two minutes, the screen goes back to how the household set it.
+    // Left alone for two minutes, the board comes back to now and keeps what this screen chose
+    // for itself: its view, the rail and the Today panel (ADR 0031).
+    await header.getByRole("button", { name: "Hide the Today panel" }).click();
+    const today = page.getByRole("complementary", { name: "Today" });
+    await expect(today).toBeHidden();
+    await header.getByRole("button", { name: "Month", exact: true }).click();
+    await header.getByRole("button", { name: "Next month" }).click();
+    const thisMonth = header.getByRole("button", { name: "This month" });
+    await expect(thisMonth).toBeEnabled();
     await page.clock.fastForward(121_000);
-    await expect.poll(width).toBe(192);
+    await expect(thisMonth).toBeDisabled();
+    await expect(
+      header.getByRole("button", { name: "Month", exact: true, pressed: true }),
+    ).toBeVisible();
+    expect(await width()).toBe(72);
+    await expect(today).toBeHidden();
   });
 
   test("keeps its rail folded when the household picks Compact rail", async ({ page, request }) => {
@@ -510,10 +523,24 @@ test.describe("the wall screen", () => {
     await page.clock.fastForward(121_000);
     await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     expect(await width()).toBe(72);
-    // Anyone can open it back out for now; idle puts it back to the household's choice.
-    await page.getByRole("banner").getByRole("button", { name: "Show the rail" }).click();
+    // Anyone can open it back out, and it stays out while the screen sits idle.
+    const header = page.getByRole("banner");
+    await header.getByRole("button", { name: "Show the rail" }).click();
     await expect.poll(width).toBe(192);
+    await header.getByRole("button", { name: "Next week" }).click();
+    const thisWeek = header.getByRole("button", { name: "This week" });
+    await expect(thisWeek).toBeEnabled();
     await page.clock.fastForward(121_000);
+    await expect(thisWeek).toBeDisabled();
+    expect(await width()).toBe(192);
+    // Until the household chooses again: the latest choice wins (ADR 0031).
+    await page.goto("/settings/display");
+    await expect(compact).toBeChecked();
+    await compact.click();
+    await expect(compact).not.toBeChecked();
+    expect(await width()).toBe(192);
+    await compact.click();
+    await expect(compact).toBeChecked();
     await expect.poll(width).toBe(72);
   });
 

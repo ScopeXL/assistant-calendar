@@ -2,14 +2,15 @@
  * What the wall screen is showing right now, beyond the URL: the board's view, which week, day
  * or month, the person filter, whether the Today panel is hidden and the rail folded on this
  * screen, the Week layout and zoom chosen on it, and the event sheet or Add panel that's open.
- * The idle machine puts it back after 2 minutes, so the next person who glances sees this week
- * (UX §1 "Idle, wake and reset").
+ * After 2 minutes idle the board goes back to now, so the next person who glances sees this
+ * week, and what the screen chose for itself stays (UX §1 "Idle, wake and reset", ADR 0031).
  *
  * A screen remembers it (ADR 0030): everything here but the open panel, and the room the screen
  * is in, are kept in this browser, so a refresh, an update or a restart comes back to them,
- * unless Settings → Display → When it starts says the home view. The idle reset is remembered
- * like any other change, which is the point: a screen that sat idle comes back home.
+ * unless Settings → Display → When it starts says the home view. Going back to now is
+ * remembered like any other change: a screen that sat idle comes back to this week.
  */
+import { lastActivity } from "./idle";
 import { createStore } from "./store";
 
 export type BoardView = "week" | "day" | "month" | "people" | "today";
@@ -197,10 +198,10 @@ export function setRemembering(on: boolean): void {
   else forget();
 }
 
-/** Start on the home view: nothing kept, and nothing overridden on this screen. */
+/** Start on the home view: nothing kept, and nothing chosen on this screen. */
 export function forgetView(): void {
   forget();
-  resetBoard();
+  displayState.set(INITIAL);
 }
 
 // A room's address ("/lists", "/chores/rewards"), never Settings or a page from before sign-in.
@@ -274,19 +275,59 @@ export function holdIdle(): () => void {
   };
 }
 
-export function resetBoard(): void {
+/**
+ * Whether nobody has touched the screen since the board went back to now. Meanwhile a zoomed
+ * Hours grid keeps now in view (ADR 0031). Any touch ends it.
+ */
+export const resting = createStore<boolean>(false);
+lastActivity.subscribe(() => {
+  resting.set(false);
+});
+
+/**
+ * Back to now, after 2 minutes idle (UX §1 "Idle, wake and reset", ADR 0031): this week, today
+ * and this month, everyone's events, and nothing open. What the screen chose for itself stays:
+ * its view, the Week layout and zoom, the Today panel and the rail. A board already there is
+ * left alone, so nothing redraws, and the screen rests either way.
+ */
+export function backToNow(): void {
   displayState.set((state) =>
-    state.view === null &&
     state.weekOffset === 0 &&
     state.day === null &&
     state.monthOffset === 0 &&
-    state.panelShown === null &&
-    state.railCollapsed === null &&
-    state.weekLayout === null &&
-    state.hoursZoom === 1 &&
     state.people.length === 0 &&
     state.panel === null
       ? state
-      : INITIAL,
+      : { ...state, weekOffset: 0, day: null, monthOffset: 0, people: [], panel: null },
   );
+  resting.set(true);
+}
+
+/** The household's choices (Settings → Display) that a screen can also make for itself. */
+export interface HouseholdChoices {
+  homeView: string;
+  weekLayout: WeekLayout;
+  todayPanel: boolean;
+  compactRail: boolean;
+}
+
+// What this page last read of them; null until the settings first arrive.
+let household: HouseholdChoices | null = null;
+
+/**
+ * The household's choices, each time the settings arrive. When one changes (in Settings, on
+ * this screen or a phone), this screen's own choice of the same thing gives way, so the change
+ * shows at once: the latest choice wins (ADR 0031). The first ones a page reads are only noted,
+ * so what a screen kept from before its start stands.
+ */
+export function householdChose(next: HouseholdChoices): void {
+  const before = household;
+  household = next;
+  if (!before) return;
+  const change: Partial<DisplayState> = {};
+  if (next.homeView !== before.homeView) change.view = null;
+  if (next.weekLayout !== before.weekLayout) change.weekLayout = null;
+  if (next.todayPanel !== before.todayPanel) change.panelShown = null;
+  if (next.compactRail !== before.compactRail) change.railCollapsed = null;
+  if (Object.keys(change).length) updateDisplay(change);
 }

@@ -12,7 +12,9 @@ import {
 
 import { useArrived } from "../../lib/arrivals";
 import { dayNumber, formatWallTime, longWeekday, shortWeekday } from "../../lib/dates";
+import { resting } from "../../lib/displayState";
 import type { Member } from "../../lib/household";
+import { useStore } from "../../lib/store";
 import { Leaves } from "../../ui/Leaves";
 import { Draggable, MoreButton } from "./Draggable";
 import {
@@ -153,21 +155,23 @@ export function HoursGrid(props: HoursGridProps) {
   }, []);
 
   // Fitting the day, the grid never scrolls. Zooming in from there starts at now (or 7 AM on
-  // another week); between zooms the minute in the middle of the view stays there.
+  // another week); between zooms the minute in the middle of the view stays there. A screen
+  // left alone since the board went back to now keeps now in view, minute by minute (ADR 0031).
+  const rest = useStore(resting);
   const previous = useRef<{ zoom: number; pph: number } | null>(null);
   useLayoutEffect(() => {
     const node = scroller.current;
     if (!node || !measure || pph <= 0) return;
     const before = previous.current;
-    if (!before || before.zoom <= 1 || zoom <= 1) {
-      if (before?.zoom !== zoom || before.pph !== pph) {
+    if (rest || !before || before.zoom <= 1 || zoom <= 1) {
+      if (rest || before?.zoom !== zoom || before.pph !== pph) {
         node.scrollTop = initialScrollTop({ zoom, pph, fit: measure.fit, now, days });
       }
     } else if (before.pph !== pph) {
       node.scrollTop = rescaledScrollTop(node.scrollTop, measure.fit, before.pph, pph);
     }
     previous.current = { zoom, pph };
-  }, [zoom, pph, measure, now, days]);
+  }, [zoom, pph, measure, now, days, rest]);
 
   const style = {
     "--pph": `${String(pph)}px`,

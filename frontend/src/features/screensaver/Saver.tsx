@@ -10,7 +10,7 @@ import {
   wallNow,
   zonedParts,
 } from "../../lib/dates";
-import { idleHolds, resetBoard, updateDisplay } from "../../lib/displayState";
+import { backToNow, idleHolds } from "../../lib/displayState";
 import { useMembers } from "../../lib/household";
 import { swallowFollowingClick, whenIdle } from "../../lib/idle";
 import { useMinute } from "../../lib/time";
@@ -136,8 +136,7 @@ function SaverScreen({
     swallowFollowingClick();
     setLeaving(true);
     if (Date.now() - since >= LONG_AWAY_MS) {
-      updateDisplay({ panel: null });
-      resetBoard();
+      backToNow();
       void navigate({ to: home });
     }
     setTimeout(onGone, OUT_MS);

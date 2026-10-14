@@ -11,12 +11,13 @@ import { usePluginRooms, useScreenOverlays } from "../features/usePluginModules"
 import { TipsBar } from "../features/tips/TipsBar";
 import { zonedParts } from "../lib/dates";
 import {
+  backToNow,
   displayState,
   editorOpen,
   forgetView,
+  householdChose,
   idleHolds,
   rememberRoom,
-  resetBoard,
   roomAtStart,
   setRemembering,
   updateDisplay,
@@ -49,7 +50,7 @@ import { kioskCommands } from "./kioskCommands";
 import { Night } from "./Night";
 import { Rail } from "./Rail";
 
-const RESET_BOARD_MS = 2 * 60_000;
+const BACK_TO_NOW_MS = 2 * 60_000;
 const EDITOR_IDLE_MS = 10 * 60_000;
 const SETTINGS_LOCK_MS = 2 * 60_000;
 const WAKE_MS = 2 * 60_000;
@@ -198,16 +199,28 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     else if (inPluginRoom) rememberRoom(pathname);
   }, [startMode, atHome, inPluginRoom, pathname, home, navigate]);
 
-  // After 2 minutes idle the board goes back to this week, with the household's panel setting;
-  // an editor left open gets 10 minutes before it closes too (UX §1 "Undo, drafts").
+  // After 2 minutes idle the board goes back to now, in the view, panel and rail this screen
+  // chose (ADR 0031); an editor left open gets 10 minutes before it closes too (UX §1 "Undo,
+  // drafts").
   useEffect(
     () =>
-      whenIdle(RESET_BOARD_MS, () => {
-        if (!editorOpen()) resetBoard();
+      whenIdle(BACK_TO_NOW_MS, () => {
+        if (!editorOpen()) backToNow();
       }),
     [],
   );
-  useEffect(() => whenIdle(EDITOR_IDLE_MS, resetBoard), []);
+  useEffect(() => whenIdle(EDITOR_IDLE_MS, backToNow), []);
+
+  // A change in Settings → Display wins over this screen's own choice of the same thing.
+  useEffect(() => {
+    if (!settings) return;
+    householdChose({
+      homeView: settings.display_home_view,
+      weekLayout: settings.display_week_layout,
+      todayPanel: settings.display_show_today_panel,
+      compactRail: settings.display_rail_compact,
+    });
+  }, [settings]);
 
   // Settings lock themselves after 2 minutes idle; other rooms return home after the household's
   // chosen minutes (0: never).
@@ -276,7 +289,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   // In every room, Settings included: its pages are capped at a reading width anyway.
   const showPanel = panelShown ?? settings?.display_show_today_panel ?? true;
   const railSide = settings?.display_rail_side ?? "left";
-  // Folded to its icons on this screen (until it sits idle), or by the household's setting.
+  // Folded to its icons on this screen, or by the household's setting, whichever came last.
   const railCompact = railCollapsed ?? settings?.display_rail_compact ?? false;
   const mirrored = railSide === "right" ? "landscape:flex-row-reverse" : "";
 

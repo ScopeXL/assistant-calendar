@@ -73,3 +73,10 @@ size limit.
 - The update e2e failed only around 3:30 PM: it counted every toast, and the seed's 4 PM
   practice reminds 30 minutes ahead on the real clock. Count the toast the test means, or set
   the server's clock.
+- A wait for the board to come back to this week passed at once: the Week board's region is
+  named "This Week" on every week. Wait for the header's This week button to be disabled (This
+  month on the Month view).
+- The portrait layout test (`lays out its rail or bottom bar…`) fails about one run in seven
+  under `--repeat-each`, at 0.9.0 too: it reads the Today band's box, then the header's, and the
+  header has grown 8 px in between. A first run in a fresh worker passes, which is all `just e2e`
+  does. Not fixed yet: find what grows the header after the board shows.

@@ -6,6 +6,17 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Left alone for two minutes, the kitchen screen went back to the Week with the rail and the
+  Today panel open, undoing what you'd picked. Now it only comes back to this week, shows
+  everyone's events again and closes what was open. A folded rail, a hidden Today panel, the
+  view (Month, Day…), Agenda or Hours and the zoom all stay, and a zoomed Hours grid scrolls
+  back to the time now.
+- A change in Settings → Display to the home view, the Week layout, the Today panel or Compact
+  rail shows at once, even on a screen that had picked its own. Compact rail's hint now says
+  the rail opens back out from the header.
+
 ## [0.9.0] - 2026-10-14
 
 ### Added

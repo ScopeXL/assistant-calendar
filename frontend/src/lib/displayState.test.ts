@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  backToNow,
   displayState,
   editorOpen,
+  forgetView,
   holdIdle,
   idleHolds,
-  resetBoard,
+  resting,
   updateDisplay,
 } from "./displayState";
+import { lastActivity } from "./idle";
 
 const MEMORY_KEY = "sunroom.display.view";
 const ROOM_KEY = "sunroom.display.room";
@@ -31,8 +34,8 @@ async function freshPage(): Promise<typeof import("./displayState")> {
 }
 
 afterEach(() => {
-  updateDisplay({ panel: null });
-  resetBoard();
+  forgetView();
+  resting.set(false);
   localStorage.clear();
 });
 
@@ -46,34 +49,92 @@ describe('what the wall is showing (UX §1 "Idle, wake and reset")', () => {
     expect(state.people).toEqual([]);
   });
 
-  it("goes back to them after two minutes idle: the rail, the panel, the week, the people", () => {
+  it("goes back to now after two minutes idle, keeping what the screen chose (ADR 0031)", () => {
     updateDisplay({
+      view: "month",
+      monthOffset: 2,
+      weekOffset: 3,
+      day: "2026-10-20",
       railCollapsed: true,
       panelShown: false,
-      weekOffset: 3,
+      weekLayout: "hours",
+      hoursZoom: 2.25,
       people: ["mia"],
-      view: "month",
+      panel: { kind: "event", eventId: "e", recurrenceId: null, key: "k" },
     });
-    expect(displayState.get().railCollapsed).toBe(true);
-    resetBoard();
+    backToNow();
     const state = displayState.get();
-    expect(state.railCollapsed).toBeNull();
-    expect(state.panelShown).toBeNull();
+    // This week, today and this month, everyone's events, nothing open.
+    expect(state.monthOffset).toBe(0);
     expect(state.weekOffset).toBe(0);
+    expect(state.day).toBeNull();
     expect(state.people).toEqual([]);
-    expect(state.view).toBeNull();
+    expect(state.panel).toBeNull();
+    // The view, the layout and zoom, the panel and the rail stay as the screen had them.
+    expect(state.view).toBe("month");
+    expect(state.weekLayout).toBe("hours");
+    expect(state.hoursZoom).toBe(2.25);
+    expect(state.panelShown).toBe(false);
+    expect(state.railCollapsed).toBe(true);
   });
 
-  it("opening the rail back out is a change too, and resets the same way", () => {
+  it("keeps a rail opened back out, too", () => {
     updateDisplay({ railCollapsed: false });
-    resetBoard();
-    expect(displayState.get().railCollapsed).toBeNull();
+    backToNow();
+    expect(displayState.get().railCollapsed).toBe(false);
   });
 
-  it("leaves a screen already at rest alone, so nothing redraws", () => {
+  it("leaves a board already at now alone, so nothing redraws", () => {
+    updateDisplay({ view: "day", railCollapsed: true });
     const before = displayState.get();
-    resetBoard();
+    backToNow();
     expect(displayState.get()).toBe(before);
+  });
+
+  it("rests from going back to now until the next touch", () => {
+    expect(resting.get()).toBe(false);
+    backToNow();
+    expect(resting.get()).toBe(true);
+    lastActivity.set(lastActivity.get() + 1);
+    expect(resting.get()).toBe(false);
+  });
+
+  it("gives way to the household's later choice, one thing at a time (ADR 0031)", async () => {
+    const page = await freshPage();
+    const household = {
+      homeView: "week",
+      weekLayout: "agenda",
+      todayPanel: true,
+      compactRail: false,
+    } as const;
+    const chosen = { view: "month", weekLayout: "hours", panelShown: false, railCollapsed: true };
+    page.updateDisplay({
+      view: "month",
+      weekLayout: "hours",
+      panelShown: false,
+      railCollapsed: true,
+    });
+    // The first settings a page reads change nothing: what the screen kept stands.
+    page.householdChose(household);
+    expect(page.displayState.get()).toMatchObject(chosen);
+    // Nor do the same ones again (another setting changed).
+    page.householdChose({ ...household });
+    expect(page.displayState.get()).toMatchObject(chosen);
+    // Compact rail changed: only the rail's own choice gives way.
+    page.householdChose({ ...household, compactRail: true });
+    expect(page.displayState.get()).toMatchObject({ ...chosen, railCollapsed: null });
+    page.householdChose({
+      homeView: "today",
+      weekLayout: "hours",
+      todayPanel: false,
+      compactRail: true,
+    });
+    expect(page.displayState.get()).toMatchObject({
+      view: null,
+      weekLayout: null,
+      panelShown: null,
+      railCollapsed: null,
+    });
   });
 
   it("knows when an editor is open, and when something holds the screen", () => {
@@ -127,7 +188,7 @@ describe("what a screen remembers for its next start (ADR 0030)", () => {
     }
   });
 
-  it("keeps every change but the panel, and the idle reset too", async () => {
+  it("keeps every change but the panel, and going back to now too", async () => {
     const page = await freshPage();
     page.updateDisplay({ view: "day", day: "2026-10-14", people: ["mia"] });
     expect(page.remembered()).toMatchObject({ view: "day", day: "2026-10-14", people: ["mia"] });
@@ -135,10 +196,10 @@ describe("what a screen remembers for its next start (ADR 0030)", () => {
     page.updateDisplay({ panel: { kind: "add", day: null, hour: null } });
     expect(localStorage.getItem(MEMORY_KEY)).toBe(kept);
     expect(kept).not.toContain('panel"');
-    // A screen that sat idle comes back home: the reset is remembered like any other change.
+    // A screen that sat idle comes back to today, in its own view: remembered like any change.
     page.updateDisplay({ panel: null });
-    page.resetBoard();
-    expect(page.remembered()).toMatchObject({ view: null, day: null, people: [] });
+    page.backToNow();
+    expect(page.remembered()).toMatchObject({ view: "day", day: null, people: [] });
   });
 
   it("forgets on request: the home view, and nothing kept", async () => {
