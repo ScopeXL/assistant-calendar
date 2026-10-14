@@ -21,6 +21,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   and one big button to add the first thing.
 - Add an account starts with Apple (it said iCloud), then Google, Holidays, Another calendar and
   A calendar server; an account's sheet lists the calendars that sync first.
+- Setup fills a computer's screen: the six steps are listed at the left with the current one
+  marked, and each step's form sits beside them. On a phone a progress bar shows how far along
+  you are.
 
 ### Fixed
 

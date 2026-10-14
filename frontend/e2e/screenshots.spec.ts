@@ -393,6 +393,40 @@ test("the wall screen", async ({ page }) => {
   await shot(page, "pin");
 });
 
+test("setup on a laptop: the steps beside the form", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a laptop");
+  test.setTimeout(120_000);
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await resetServer(page.request);
+    await page.context().clearCookies();
+    await page.goto("/setup");
+    await expect(page.getByRole("heading", { name: "Welcome to Sunroom" })).toBeVisible();
+    await shot(page, `setup-welcome-${scheme}`);
+    await page.getByRole("button", { name: "Start" }).click();
+    await page.getByLabel("Household password").fill(PASSWORD);
+    await shot(page, `setup-password-${scheme}`);
+    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByLabel("Household name").fill("Sample Family");
+    await shot(page, `setup-household-${scheme}`);
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
+    await page.getByRole("button", { name: "Later" }).click();
+    await page.getByLabel("Your name").fill("Ana");
+    await page.getByRole("button", { name: "Add Me" }).click();
+    await page.getByLabel("Name", { exact: true }).fill("Mia");
+    await page.getByRole("button", { name: "Child", exact: true }).click();
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.getByRole("listitem").filter({ hasText: "Mia" })).toBeVisible();
+    await shot(page, `setup-people-${scheme}`);
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await page.getByRole("button", { name: "Later" }).click();
+    await page.getByRole("button", { name: "Skip for Now" }).click();
+    await expect(page.getByRole("heading", { name: "You’re set" })).toBeVisible();
+    await shot(page, `setup-done-${scheme}`);
+  }
+});
+
 test("a phone", async ({ page, isMobile }) => {
   test.skip(!isMobile, "phones");
   test.setTimeout(240_000);

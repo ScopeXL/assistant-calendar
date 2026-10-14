@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
@@ -13,9 +13,9 @@ import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { Segmented } from "../../ui/Segmented";
 import { Select } from "../../ui/Select";
-import { Brand } from "../../ui/Brand";
 import { TextField } from "../../ui/TextField";
 import { usePluginModules } from "../usePluginModules";
+import { SetupEnd, SetupFrame, StepActions } from "./SetupFrame";
 
 export type SetupStep =
   "welcome" | "password" | "household" | "place" | "people" | "pin" | "calendars" | "done";
@@ -48,34 +48,6 @@ function zones(): string[] {
   }
 }
 
-function Page({
-  title,
-  children,
-  step,
-  wide = false,
-}: {
-  title: string;
-  children: ReactNode;
-  step?: string;
-  /** A step whose row of controls wants more room (the people). */
-  wide?: boolean;
-}) {
-  return (
-    <main
-      className={`mx-auto flex min-h-dvh w-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-12 ${
-        wide ? "max-w-lg" : "max-w-md"
-      }`}
-    >
-      <div className="mb-8 flex items-center gap-3">
-        <Brand size="line" />
-        {step ? <span className="ml-auto text-secondary text-ink-soft">{step}</span> : null}
-      </div>
-      <h1 className="mb-4 text-title font-bold">{title}</h1>
-      <div className="flex flex-col gap-5">{children}</div>
-    </main>
-  );
-}
-
 /**
  * First run (UX §6, PLAN §12.1): on whatever device opened Sunroom first, usually a phone. The
  * password and the household are set together in one request that closes setup for good and
@@ -93,19 +65,18 @@ export function SetupWizard({ step }: { step: SetupStep }) {
   switch (step) {
     case "welcome":
       return (
-        <Page title="Welcome to Sunroom">
-          <p className="text-body">
-            Let’s set it up. It takes about three minutes, and everything can be changed later.
-          </p>
+        <SetupEnd title="Welcome to Sunroom">
+          <p>Let’s set it up. It takes about three minutes, and everything can be changed later.</p>
           <Button
             block
+            className="lg:min-h-16 lg:w-auto lg:min-w-72 lg:text-d-body"
             onClick={() => {
               go("password");
             }}
           >
             Start
           </Button>
-        </Page>
+        </SetupEnd>
       );
     case "password":
       return (
@@ -163,24 +134,25 @@ export function SetupWizard({ step }: { step: SetupStep }) {
       );
     case "done":
       return (
-        <Page title="You’re Set">
-          <p className="text-body">
+        <SetupEnd title="You’re Set" done>
+          <p>
             Everyone at home can sign in with the household password, or with a code from Settings,
             then Devices.
           </p>
-          <p className="text-body">
+          <p>
             To put Sunroom on a kitchen screen, open More, then Pair a Display, when the screen
             shows its code. Or type the household password on the screen itself.
           </p>
           <Button
             block
+            className="lg:min-h-16 lg:w-auto lg:min-w-72 lg:text-d-body"
             onClick={() => {
               void navigate({ to: "/" });
             }}
           >
             Open Sunroom
           </Button>
-        </Page>
+        </SetupEnd>
       );
   }
 }
@@ -202,15 +174,15 @@ function PasswordStep({
   const fromServer = status?.password_from_env ?? false;
   const short = !fromServer && password.length > 0 && password.length < 12;
   return (
-    <Page
+    <SetupFrame
+      step="password"
       title={fromServer ? "Type the Household Password" : "Set a Household Password"}
-      step="1 of 6"
-    >
-      <p className="text-body text-ink-soft">
-        {fromServer
+      lead={
+        fromServer
           ? "This server already has one (APP_PASSWORD). Type it to set up the household."
-          : "Everyone at home signs in on their phone with this one password. The kitchen screen never needs it."}
-      </p>
+          : "Everyone at home signs in on their phone with this one password. The kitchen screen never needs it."
+      }
+    >
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {
@@ -232,6 +204,7 @@ function PasswordStep({
         />
         <Button
           variant="secondary"
+          className="self-start"
           aria-pressed={visible}
           onClick={() => {
             setVisible((value) => !value);
@@ -240,11 +213,13 @@ function PasswordStep({
           {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
           {visible ? "Hide Password" : "Show Password"}
         </Button>
-        <Button type="submit" block disabled={password.length < (fromServer ? 1 : 12)}>
-          Next
-        </Button>
+        <StepActions>
+          <Button type="submit" block disabled={password.length < (fromServer ? 1 : 12)}>
+            Next
+          </Button>
+        </StepActions>
       </form>
-    </Page>
+    </SetupFrame>
   );
 }
 
@@ -284,16 +259,18 @@ function HouseholdStep({
   });
   if (!password) {
     return (
-      <Page title="Name Your Household" step="2 of 6">
+      <SetupFrame step="household" title="Name Your Household">
         <p className="text-body">Choose the household password first.</p>
-        <Button block onClick={onBack}>
-          Back
-        </Button>
-      </Page>
+        <StepActions>
+          <Button block onClick={onBack}>
+            Back
+          </Button>
+        </StepActions>
+      </SetupFrame>
     );
   }
   return (
-    <Page title="Name Your Household" step="2 of 6">
+    <SetupFrame step="household" title="Name Your Household">
       <form
         className="flex flex-col gap-5"
         onSubmit={(event) => {
@@ -370,14 +347,19 @@ function HouseholdStep({
             {errorMessage(setup.error)}
           </p>
         ) : null}
-        <Button type="submit" block pending={setup.isPending} disabled={!name.trim()}>
-          Next
-        </Button>
-        <Button variant="quiet" block onClick={onBack}>
-          Back
-        </Button>
+        <StepActions
+          back={
+            <Button variant="quiet" block onClick={onBack}>
+              Back
+            </Button>
+          }
+        >
+          <Button type="submit" block pending={setup.isPending} disabled={!name.trim()}>
+            Next
+          </Button>
+        </StepActions>
       </form>
-    </Page>
+    </SetupFrame>
   );
 }
 
@@ -402,12 +384,15 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
     },
   });
   return (
-    <Page title="Who Lives Here?" step="4 of 6" wide>
-      <p className="text-body text-ink-soft">
-        {first
+    <SetupFrame
+      step="people"
+      title="Who Lives Here?"
+      lead={
+        first
           ? "Start with you. Each person gets a color, used everywhere they appear."
-          : "Add everyone, children included."}
-      </p>
+          : "Add everyone, children included."
+      }
+    >
       {members.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {members.map((member) => (
@@ -434,11 +419,13 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
         onAdd={(name, role) => add.mutateAsync({ name, role })}
       />
       {!first ? (
-        <Button block onClick={onNext}>
-          Next
-        </Button>
+        <StepActions>
+          <Button block onClick={onNext}>
+            Next
+          </Button>
+        </StepActions>
       ) : null}
-    </Page>
+    </SetupFrame>
   );
 }
 
@@ -452,11 +439,11 @@ function PinStep({ onNext }: { onNext: () => void }) {
     onSuccess: onNext,
   });
   return (
-    <Page title="Set a Parent PIN?" step="5 of 6">
-      <p className="text-body text-ink-soft">
-        It keeps children out of Settings on the kitchen screen. Adding events and checking off
-        tasks never ask for it.
-      </p>
+    <SetupFrame
+      step="pin"
+      title="Set a Parent PIN?"
+      lead="It keeps children out of Settings on the kitchen screen. Adding events and checking off tasks never ask for it."
+    >
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {
@@ -476,14 +463,19 @@ function PinStep({ onNext }: { onNext: () => void }) {
             setPin(event.target.value.replace(/\D/g, ""));
           }}
         />
-        <Button type="submit" block pending={set.isPending} disabled={!/^\d{4,6}$/.test(pin)}>
-          Set a PIN
-        </Button>
+        <StepActions
+          back={
+            <Button variant="quiet" block onClick={onNext}>
+              Later
+            </Button>
+          }
+        >
+          <Button type="submit" block pending={set.isPending} disabled={!/^\d{4,6}$/.test(pin)}>
+            Set a PIN
+          </Button>
+        </StepActions>
       </form>
-      <Button variant="quiet" block onClick={onNext}>
-        Later
-      </Button>
-    </Page>
+    </SetupFrame>
   );
 }
 
@@ -492,15 +484,17 @@ function PinStep({ onNext }: { onNext: () => void }) {
 function PlaceStep({ onNext }: { onNext: () => void }) {
   const Setup = usePluginModules().find((m) => m.id === "weather")?.onboarding;
   return (
-    <Page title="Where’s Home?" step="3 of 6">
+    <SetupFrame step="place" title="Where’s Home?">
       {Setup ? (
         <Setup onDone={onNext} />
       ) : (
-        <Button block onClick={onNext}>
-          Next
-        </Button>
+        <StepActions>
+          <Button block onClick={onNext}>
+            Next
+          </Button>
+        </StepActions>
       )}
-    </Page>
+    </SetupFrame>
   );
 }
 
@@ -509,14 +503,16 @@ function PlaceStep({ onNext }: { onNext: () => void }) {
 function CalendarsStep({ onNext }: { onNext: () => void }) {
   const Setup = usePluginModules().find((m) => m.id === "calendar_sync")?.onboarding;
   return (
-    <Page title="Bring in Your Calendars" step="6 of 6">
+    <SetupFrame step="calendars" title="Bring in Your Calendars">
       {Setup ? (
         <Setup onDone={onNext} />
       ) : (
-        <Button block onClick={onNext}>
-          Next
-        </Button>
+        <StepActions>
+          <Button block onClick={onNext}>
+            Next
+          </Button>
+        </StepActions>
       )}
-    </Page>
+    </SetupFrame>
   );
 }

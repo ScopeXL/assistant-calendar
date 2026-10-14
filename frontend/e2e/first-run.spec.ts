@@ -26,6 +26,10 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.goto("/");
   await expect(phonePage).toHaveURL(/\/setup/);
   await phonePage.getByRole("button", { name: "Start" }).click();
+  // A phone shows how far along it is as a bar, not the list (ADR 0032).
+  const progress = phonePage.getByRole("progressbar", { name: "Setup" });
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(phonePage.getByRole("list", { name: "Setup steps" })).toBeHidden();
   await phonePage.getByLabel("Household password").fill(PASSWORD);
   await phonePage.getByRole("button", { name: "Next" }).click();
   await phonePage.getByLabel("Household name").fill("Sample Family");
@@ -66,6 +70,7 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   // the kitchen screen is paired.
   await expect(phonePage.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
   await expect(phonePage.getByText("6 of 6")).toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "6");
   await phonePage.getByRole("button", { name: "Skip for Now" }).click();
   await expect(phonePage.getByRole("heading", { name: "You’re set" })).toBeVisible();
   await expect(phonePage.getByText(/open More, then Pair a Display/)).toBeVisible();
@@ -224,5 +229,12 @@ test("Erase everything starts Sunroom over: from a computer, never from the wall
     setup_complete: boolean;
   };
   expect(status.setup_complete).toBe(false);
+  // A computer's setup lists the six steps beside the form (ADR 0032), the current one marked.
+  await page.getByRole("button", { name: "Start" }).click();
+  const steps = page.getByRole("list", { name: "Setup steps" }).getByRole("listitem");
+  await expect(steps).toHaveCount(6);
+  await expect(steps.nth(0)).toHaveAttribute("aria-current", "step");
+  await expect(steps.nth(0)).toContainText("Household password");
+  await expect(page.getByRole("progressbar")).toBeHidden();
   await context.close();
 });

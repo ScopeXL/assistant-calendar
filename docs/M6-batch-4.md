@@ -822,7 +822,7 @@ order and runs on `desktop` and `display-1080p` (every test skips itself on the 
 
 ### T12 Setup: the six steps beside the form
 
-- [ ] Done (commit: )
+- [x] Done (commit: "onboarding: setup lists its six steps beside the form")
 
 **Owner's note.** "Redesign the 'Setup' workflow. Mostly the UI/UX. The steps are good, but there
 is a lot of unused space so perhaps it can be designed more user friendly for first time use. The
@@ -881,6 +881,15 @@ aren't. `just e2e e2e/first-run.spec.ts --project=desktop` and `--project=phone-
 **CHANGELOG.** "Setup fills a computer's screen: the six steps are listed at the left with the
 current one marked, and each step's form sits beside them. On a phone a progress bar shows how
 far along you are."
+
+**As built.** One commit. On a phone the step starts at the top, under the bar, rather than
+centred: a form that grows (the places under Your city, the people) would otherwise move under
+the finger. The step's column isn't a labelled region (labelled by its title, "Set a Household
+Password" also answered `getByLabel("Household password")`). `StepActions` puts the main button
+first on a phone and at the right from 1024 px; the plugins' steps keep their own buttons. The
+first-run spec checks the list on `desktop` (after Erase everything) and the bar on its phone;
+`screenshots.spec.ts` gains a laptop pass (`setup-welcome`, `-password`, `-household`,
+`-people`, `-done`).
 
 ### T13 The keyboard: a centred dock with a number row
 
