@@ -893,7 +893,7 @@ first-run spec checks the list on `desktop` (after Erase everything) and the bar
 
 ### T13 The keyboard: a centred dock with a number row
 
-- [ ] Done (commit: )
+- [x] Done (commit: "keyboard: a dock across the bottom, keys centred, numbers above the letters")
 
 **Owner's note.** "Why is the app using a custom keyboard instead of a default one provided by
 the system for touch screens? … If the answer is to keep the custom one, redesign the view for
@@ -941,6 +941,15 @@ tap-target check over the keys (80 × 64, 8 px apart). `just e2e e2e/shell.spec.
 
 **CHANGELOG.** "The kitchen screen's keyboard sits centred across the bottom of the screen, with a
 row of numbers above the letters."
+
+**As built.** `KeyboardHost` takes `rail` (`"left"`, `"right"` or `null` before pairing) in place
+of `railSide`; the keys sit in a `data-keys` block, `w-[var(--keyboard-w)]` centred in the dock.
+The Shift and Delete keys follow the last letter row now that the numbers are the first. No
+shadow either: a dock, not a card. The new end-to-end test measures the dock from the rail's
+edge to the screen's (and mirrored, with the rail moved right), the keys' centre against the
+dock's, the field above the keys, the number row above the letters, and the keys' 80 × 64 (88 ×
+72 portrait) with 8 px between; checked in the screenshots: the Add panel, the pair screen's
+password and portrait.
 
 ### T14 The e2e job on GitHub
 

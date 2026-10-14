@@ -388,7 +388,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
         <CelebrationLayer />
         <ToastRegion display railSide={railSide} panelShown={showPanel} />
         <OfflinePill display />
-        {kiosk ? <KeyboardHost railSide={railSide} /> : null}
+        {kiosk ? <KeyboardHost rail={railSide} /> : null}
         <PinDialog />
         {screenOverlays.map(({ id, Overlay }) => (
           <Overlay key={id} asleep={sleeping} home={home} />

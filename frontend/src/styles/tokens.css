@@ -70,6 +70,8 @@
      doesn't shrink with the text. */
   --header-h: max(5rem, calc(var(--tap) + 1.5rem));
   --band-h: 24rem; /* portrait's Today band: room for every block in three columns */
+  /* The wall keyboard's keys, centred in its dock (ui/Keyboard): ten keys and their gaps fit at
+     either key size. */
   --keyboard-w: 960px;
   --tabbar-h: 3.5rem;
   /* The wall's tap targets (UX §1): 56 px, 64 for a primary button. They grow with the text

@@ -14,12 +14,15 @@ import {
 import { useStore } from "../lib/store";
 
 /**
- * The wall display's own keyboard (UX §1): the Pi's touchscreen has no physical one, and the
- * system's keyboard covers half the screen. Letters, numbers and symbols, and a number pad;
- * shift is automatic for a first letter; holding a vowel offers its accents. Keys are 80 × 64 in
- * landscape and 88 × 72 in portrait. It docks under the side panel in landscape (960 px) and
- * spans the screen in portrait, and it never takes focus from the field.
+ * The wall display's own keyboard (UX §1, ADR 0022): the Pi's touchscreen has no physical one,
+ * and the system's keyboard covers half the screen. Letters with a row of numbers above them,
+ * numbers and symbols, and a number pad; shift is automatic for a first letter; holding a vowel
+ * offers its accents. Keys are 80 × 64 in landscape and 88 × 72 in portrait. It's a dock across
+ * the bottom of the screen, from the rail to the screen's edge, with the keys centred in it
+ * (ADR 0032: it was a 960 px box under the side panel), the whole width in portrait and before
+ * pairing, and it never takes focus from the field.
  */
+const DIGITS = "1234567890";
 const LETTERS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 const SYMBOLS = ["1234567890", '-/:;()$&@"', ".,?!'#%*+="];
 const NUMBERS = ["123", "456", "789"];
@@ -102,7 +105,16 @@ function Row({ children }: { children: ReactNode }) {
   return <div className="flex justify-center gap-2">{children}</div>;
 }
 
-export function KeyboardHost({ railSide }: { railSide: "left" | "right" }) {
+// The dock spans whatever isn't rail: from the rail to the screen's edge in landscape, the whole
+// width in portrait (where the rail is a bar at the bottom) and before pairing (no rail). Static
+// strings, so Tailwind sees them.
+const DOCK = {
+  left: "portrait:inset-x-0 landscape:right-0 landscape:left-[var(--rail-w)]",
+  right: "portrait:inset-x-0 landscape:right-[var(--rail-w)] landscape:left-0",
+  none: "inset-x-0",
+} as const;
+
+export function KeyboardHost({ rail }: { rail: "left" | "right" | null }) {
   const { target, layout, open } = useStore(keyboard);
   // Still sliding away: shown, marked closing, until the exit animation ends.
   const [closing, setClosing] = useState(false);
@@ -167,12 +179,12 @@ export function KeyboardHost({ railSide }: { railSide: "left" | "right" }) {
       data-state={open ? "open" : "closing"}
       role="group"
       aria-label="On-screen keyboard"
-      className={`fixed bottom-0 z-50 rounded-t-panel border border-b-0 border-line bg-wall p-3 pb-4 shadow-[0_-8px_24px_rgb(0_0_0/0.12)] portrait:inset-x-0 portrait:w-auto landscape:w-[var(--keyboard-w)] ${
-        railSide === "left" ? "landscape:right-0" : "landscape:left-0"
-      }`}
+      className={`fixed bottom-0 z-50 border-t border-line bg-wall px-3 pt-3 pb-4 ${DOCK[rail ?? "none"]}`}
       onPointerDown={keep}
     >
-      {target ? <Keys key={layout} target={target} layout={layout} /> : null}
+      <div data-keys="" className="mx-auto w-[var(--keyboard-w)] max-w-full">
+        {target ? <Keys key={layout} target={target} layout={layout} /> : null}
+      </div>
     </div>
   );
   return dialog?.open && dialog.isConnected ? createPortal(keys, dialog) : keys;
@@ -284,7 +296,8 @@ function Keys({ target, layout }: { target: HTMLInputElement; layout: KeyboardLa
     );
   }
 
-  const rows = page === "letters" ? LETTERS : SYMBOLS;
+  // The letters have the numbers above them, as a tablet's do (ADR 0032); 123 keeps its symbols.
+  const rows = page === "letters" ? [DIGITS, ...LETTERS] : SYMBOLS;
   return (
     <div className="flex flex-col gap-2">
       {/* The accents of a held key. No row at all until then (ADR 0030): it used to hold 56 px
@@ -307,7 +320,7 @@ function Keys({ target, layout }: { target: HTMLInputElement; layout: KeyboardLa
       </div>
       {rows.map((row, index) => (
         <Row key={row}>
-          {index === 2 && page === "letters" ? (
+          {index === rows.length - 1 && page === "letters" ? (
             <Key
               label="Shift"
               tone={capital ? "primary" : "action"}
@@ -339,7 +352,7 @@ function Keys({ target, layout }: { target: HTMLInputElement; layout: KeyboardLa
               />
             );
           })}
-          {index === 2 ? (
+          {index === rows.length - 1 ? (
             <Key
               label="Delete"
               tone="action"

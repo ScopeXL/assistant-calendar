@@ -24,6 +24,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Setup fills a computer's screen: the six steps are listed at the left with the current one
   marked, and each step's form sits beside them. On a phone a progress bar shows how far along
   you are.
+- The kitchen screen's keyboard sits centred across the bottom of the screen, with a row of
+  numbers above the letters.
 
 ### Fixed
 

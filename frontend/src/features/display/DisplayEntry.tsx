@@ -130,7 +130,7 @@ function Frame({ children }: { children: ReactNode }) {
         >
           {children}
         </main>
-        <KeyboardHost railSide="left" />
+        <KeyboardHost rail={null} />
       </MotionProvider>
     </ShellContext.Provider>
   );

@@ -783,6 +783,75 @@ test.describe("the wall screen", () => {
     expect(toast && before && toast.y + toast.height <= before.y + before.height).toBe(true);
   });
 
+  test("docks its keyboard across the bottom, the keys centred, numbers above the letters", async ({
+    page,
+    request,
+  }) => {
+    await seed(request);
+    await pairWall(page);
+    await page.goto("/display");
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    const size = page.viewportSize() ?? { width: 0, height: 0 };
+    const portrait = size.height > size.width;
+    const keyboard = page.getByRole("group", { name: "On-screen keyboard" });
+
+    /** Raise the keyboard from the Add panel's field and measure the dock (ADR 0032). */
+    const measure = async () => {
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      const field = page.getByRole("dialog", { name: "Add" }).getByLabel("What, when, who");
+      await field.click();
+      await expect(keyboard).toBeVisible();
+      await settled(page);
+      const dock = await keyboard.boundingBox();
+      const keys = await keyboard.locator("[data-keys]").boundingBox();
+      const rail = await page.getByRole("navigation", { name: "Rooms" }).boundingBox();
+      const above = await field.boundingBox();
+      if (!dock || !keys || !rail || !above) throw new Error("nothing to measure");
+      // The field stays above the keys.
+      expect(above.y + above.height).toBeLessThanOrEqual(dock.y);
+      // The keys are centred in the dock, whatever its width.
+      expect(Math.abs(keys.x + keys.width / 2 - (dock.x + dock.width / 2))).toBeLessThanOrEqual(2);
+      expect(Math.round(dock.y + dock.height)).toBe(size.height);
+      return { dock, rail };
+    };
+
+    const { dock, rail } = await measure();
+    // From the rail to the screen's edge in landscape; the whole width in portrait.
+    expect(Math.round(dock.x)).toBe(portrait ? 0 : Math.round(rail.x + rail.width));
+    expect(Math.round(dock.x + dock.width)).toBe(size.width);
+
+    // A row of numbers above the letters, the keys at their size and 8 px apart.
+    const one = await keyboard.getByRole("button", { name: "1", exact: true }).boundingBox();
+    const two = await keyboard.getByRole("button", { name: "2", exact: true }).boundingBox();
+    const q = await keyboard.getByRole("button", { name: /^q$/i }).boundingBox();
+    if (!one || !two || !q) throw new Error("no keys");
+    expect(one.y + one.height).toBeLessThan(q.y);
+    expect([Math.round(one.width), Math.round(one.height)]).toEqual(portrait ? [88, 72] : [80, 64]);
+    expect(Math.round(two.x - (one.x + one.width))).toBe(8);
+    await keyboard.getByRole("button", { name: "Done" }).click();
+    await expect(keyboard).toHaveCount(0);
+    await page.getByRole("dialog", { name: "Add" }).getByRole("button", { name: "Close" }).click();
+
+    if (portrait) return;
+    // Mirrored: with the rail on the right, the dock runs from the screen's left edge to the rail.
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    const right = await request.patch("/api/settings", {
+      headers: CSRF,
+      data: { display_rail_side: "right" },
+    });
+    expect(right.ok()).toBe(true);
+    await expect
+      .poll(async () => (await page.getByRole("navigation", { name: "Rooms" }).boundingBox())?.x)
+      .toBeGreaterThan(size.width / 2);
+    const mirrored = await measure();
+    expect(Math.round(mirrored.dock.x)).toBe(0);
+    expect(Math.round(mirrored.dock.x + mirrored.dock.width)).toBe(Math.round(mirrored.rail.x));
+  });
+
   test("types into a sheet with its own keyboard, and the sheet rises above the keys", async ({
     page,
     request,

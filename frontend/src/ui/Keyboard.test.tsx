@@ -52,7 +52,7 @@ describe("the on-screen keyboard (UX §1)", () => {
     render(
       <>
         <Field />
-        <KeyboardHost railSide="left" />
+        <KeyboardHost rail="left" />
       </>,
     );
     expect(screen.queryByRole("group", { name: "On-screen keyboard" })).toBeNull();
@@ -70,13 +70,44 @@ describe("the on-screen keyboard (UX §1)", () => {
     expect((input as HTMLInputElement).value).toBe("Mi");
   });
 
+  it("has a row of numbers above the letters, and no second one on the number pad", () => {
+    render(
+      <>
+        <Field />
+        <KeyboardHost rail="left" />
+      </>,
+    );
+    const input = screen.getByLabelText<HTMLInputElement>("Name");
+    act(() => {
+      input.focus();
+    });
+    // The digits are a row of their own, above q: they type as they are, shift or not.
+    const keys = screen.getByRole("group", { name: "On-screen keyboard" });
+    const labels = [...keys.querySelectorAll("button")].map((key) =>
+      key.getAttribute("aria-label"),
+    );
+    expect(labels.slice(0, 11)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Q"]);
+    press("2");
+    press("b");
+    expect(input.value).toBe("2b");
+    // The symbols page keeps its own top row of numbers: only one row of them either way.
+    press("Numbers and symbols");
+    expect(screen.getAllByRole("button", { name: "1" })).toHaveLength(1);
+    // The number pad has its digits, and no row above them.
+    act(() => {
+      keyboard.set({ ...keyboard.get(), layout: "numeric" });
+    });
+    expect(screen.getAllByRole("button", { name: "1" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Q" })).toBeNull();
+  });
+
   it("goes inside an open sheet, because the page behind a modal dialog can't be tapped", () => {
     render(
       <>
         <dialog open aria-label="Edit Mia">
           <Field />
         </dialog>
-        <KeyboardHost railSide="left" />
+        <KeyboardHost rail="left" />
       </>,
     );
     const input = screen.getByLabelText("Name");
@@ -94,7 +125,7 @@ describe("the on-screen keyboard (UX §1)", () => {
     render(
       <>
         <Field onSubmit={submitted} />
-        <KeyboardHost railSide="left" />
+        <KeyboardHost rail="left" />
       </>,
     );
     const input = screen.getByLabelText("Name");
@@ -115,7 +146,7 @@ describe("the on-screen keyboard (UX §1)", () => {
     render(
       <>
         <Field />
-        <KeyboardHost railSide="left" />
+        <KeyboardHost rail="left" />
       </>,
     );
     fireEvent.keyDown(window, { key: "a" });
