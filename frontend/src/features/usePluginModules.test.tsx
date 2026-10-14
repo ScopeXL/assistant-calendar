@@ -18,6 +18,10 @@ function Rooms({ drawn }: { drawn: string[][] }) {
   );
 }
 
+// The rooms come from lazily imported plugin modules: under a full, parallel run that can take
+// longer than waitFor's usual second.
+const LOADS = { timeout: 5000 };
+
 const listed = (...on: string[]) =>
   ["lists", "meals", "countdowns"].map((id) => ({ id, enabled: on.includes(id) }));
 
@@ -38,7 +42,7 @@ describe("the plugins' rooms (PLAN §6.5)", () => {
         "Lists",
         "Meals",
       ]);
-    });
+    }, LOADS);
     // A parent's phone turns Meals off, then Countdowns on: the list of plugins changes.
     drawn.length = 0;
     act(() => {
@@ -46,7 +50,7 @@ describe("the plugins' rooms (PLAN §6.5)", () => {
     });
     await waitFor(() => {
       expect(screen.getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Lists"]);
-    });
+    }, LOADS);
     act(() => {
       client.setQueryData(qk.plugins(), listed("lists", "countdowns"));
     });
@@ -55,7 +59,7 @@ describe("the plugins' rooms (PLAN §6.5)", () => {
         "Lists",
         "Countdowns",
       ]);
-    });
+    }, LOADS);
     // In between, the rail showed what it had: Lists never left it.
     expect(drawn.length).toBeGreaterThan(1);
     expect(drawn.every((rooms) => rooms.includes("Lists"))).toBe(true);

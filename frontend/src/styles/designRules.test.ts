@@ -110,7 +110,9 @@ const BUTTON_PROPS = new Set(["action", "submit", "firstSave"]);
  * header link's children, a component's `action` or `submit` prop, and a toast's action (an
  * object with `label` and `onAction`), with where each one is.
  */
+let labelsFound: { where: string; label: string }[] | undefined;
 function buttonLabels(): { where: string; label: string }[] {
+  if (labelsFound) return labelsFound;
   const found: { where: string; label: string }[] = [];
   for (const [path, text] of Object.entries(sources)) {
     const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -144,6 +146,7 @@ function buttonLabels(): { where: string; label: string }[] {
     };
     visit(file);
   }
+  labelsFound = found;
   return found;
 }
 
