@@ -87,12 +87,17 @@ function draw(shown: Account, { screens = ["Kitchen"], kiosk = false } = {}) {
     { id: "p", kind: "phone", label: "Ana's phone" },
   ]);
   const onClose = vi.fn();
-  render(
+  const sheet = (next: Account | null) => (
     <QueryClientProvider client={client}>
-      <AccountSheet account={shown} kiosk={kiosk} onClose={onClose} />
-    </QueryClientProvider>,
+      <AccountSheet account={next} kiosk={kiosk} onClose={onClose} />
+    </QueryClientProvider>
   );
-  return { sent, onClose };
+  const view = render(sheet(shown));
+  /** The same sheet given another account, or none (closed). */
+  const again = (next: Account | null) => {
+    view.rerender(sheet(next));
+  };
+  return { sent, onClose, again };
 }
 
 afterEach(() => {
@@ -102,6 +107,33 @@ afterEach(() => {
 });
 
 describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
+  it("lists the calendars that sync first, then by name, and keeps that order while open", () => {
+    const first = account({
+      calendars: [
+        calendar({ id: "zoo", name: "Zoo trips", mapped: false }),
+        calendar({ id: "work", name: "Work" }),
+        calendar({ id: "art", name: "Art club", mapped: false }),
+        calendar({ id: "band", name: "Band" }),
+      ],
+    });
+    const { again } = draw(first);
+    const order = () =>
+      screen
+        .getAllByRole("switch")
+        .map((input) => input.getAttribute("aria-label"))
+        .filter(Boolean);
+    expect(order()).toEqual(["Sync Band", "Sync Work", "Sync Art club", "Sync Zoo trips"]);
+    // Art club switched on: its row stays under the finger until the sheet opens again (ADR 0032).
+    const switched = account({
+      calendars: first.calendars.map((one) => (one.id === "art" ? { ...one, mapped: true } : one)),
+    });
+    again(switched);
+    expect(order()).toEqual(["Sync Band", "Sync Work", "Sync Art club", "Sync Zoo trips"]);
+    again(null);
+    again(switched);
+    expect(order()).toEqual(["Sync Art club", "Sync Band", "Sync Work", "Sync Zoo trips"]);
+  });
+
   it("lists its calendars under Sync, and the synced ones under Show on the screen's name", () => {
     draw(account());
     const sheet = screen.getByRole("dialog", { name: "Edit iCloud" });

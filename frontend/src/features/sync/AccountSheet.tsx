@@ -52,6 +52,22 @@ function useScreens(enabled: boolean): string[] {
  * calendar, once a screen is paired; and Remove account, which asks first. Every switch and chip
  * saves as it changes: the sheet keeps no draft and shows what the server holds.
  */
+/** An account's calendars as its sheet lists them: the ones that sync first, then by name. */
+export function syncedFirst(calendars: readonly RemoteCalendar[]): string[] {
+  return [...calendars]
+    .sort((a, b) => Number(b.mapped) - Number(a.mapped) || a.name.localeCompare(b.name))
+    .map((calendar) => calendar.id);
+}
+
+/** The calendars in an order fixed earlier; any found since go last, by name. */
+function inOrder(calendars: readonly RemoteCalendar[], order: readonly string[]): RemoteCalendar[] {
+  const at = (id: string) => {
+    const index = order.indexOf(id);
+    return index === -1 ? order.length : index;
+  };
+  return [...calendars].sort((a, b) => at(a.id) - at(b.id) || a.name.localeCompare(b.name));
+}
+
 export function AccountSheet({
   account,
   kiosk,
@@ -62,11 +78,15 @@ export function AccountSheet({
   onClose: () => void;
 }) {
   const [view, setView] = useState<View>({ kind: "account" });
-  // Another account (or this one opened again) starts on its first page.
+  // The calendars that sync first, then by name: ordered as the sheet opens and kept while it's
+  // open, so a row never moves under the finger that just switched it (ADR 0032).
+  const [order, setOrder] = useState(() => syncedFirst(account?.calendars ?? []));
+  // Another account (or this one opened again) starts on its first page, freshly ordered.
   const [shown, setShown] = useState(account?.id ?? null);
   if ((account?.id ?? null) !== shown) {
     setShown(account?.id ?? null);
     setView({ kind: "account" });
+    setOrder(syncedFirst(account?.calendars ?? []));
   }
   const { data: members = [] } = useMembers();
   const screens = useScreens(account !== null);
@@ -102,6 +122,7 @@ export function AccountSheet({
       ) : (
         <AccountPage
           account={account}
+          order={order}
           members={members}
           screens={screens}
           kiosk={kiosk}
@@ -124,12 +145,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function AccountPage({
   account,
+  order,
   members,
   screens,
   kiosk,
   onView,
 }: {
   account: Account;
+  /** The calendars' order, fixed when the sheet opened (synced first, then by name). */
+  order: readonly string[];
   members: Member[];
   screens: string[];
   kiosk: boolean;
@@ -153,7 +177,8 @@ function AccountPage({
       window.location.assign(result.authorize_url);
     },
   });
-  const synced = account.calendars.filter((calendar) => calendar.mapped);
+  const calendars = inOrder(account.calendars, order);
+  const synced = calendars.filter((calendar) => calendar.mapped);
   const error = signIn.error ?? (changes.syncNow.isError ? changes.syncNow.error : null);
   return (
     <div className="flex flex-col gap-6">
@@ -233,7 +258,7 @@ function AccountPage({
       ) : null}
       {account.calendars.length > 0 ? (
         <Section title="Sync">
-          {account.calendars.map((calendar) => (
+          {calendars.map((calendar) => (
             <SyncRow
               key={calendar.id}
               account={account}
