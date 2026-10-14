@@ -77,7 +77,7 @@ Nothing a finger taps is under 56 px on the display or 44 px on phones, with at 
 
 **What never appears.** Internal ids, full feed URLs (secret addresses show as "…/private-3f9a…/basic.ics"), tokens, keys after upload; jargon (users see "iCloud", "a calendar address (.ics)", "Sign in with Google", "the kitchen screen", never "CalDAV", "ICS feed", "OAuth", "kiosk"); native tooltips, hover-only affordances, double-taps, pinch as the only way; all-caps labels, "A · B · C" strings in running text, emoji in the app's own copy; machine timestamps, "null", HTTP codes; subscription or upsell language of any kind.
 
-**Theme and first paint.** Light, Dark and Auto (dark from sunset to sunrise using the household's location, or 7 PM–7 AM without one); the wall tint follows the time of day in both themes (§7), AA holding at every stop. Nothing animates on first paint or a room switch; the board opens on this week with today visible and the Today panel on Now / Up Next.
+**Theme and first paint.** Light, Dark and Auto (dark from sunset to sunrise using the household's location, or 7 PM–7 AM without one); the wall tint follows the time of day in both themes (§7), AA holding at every stop. A page's first paint is the theme, tint and text size this browser last showed (a small script in the page's head reads them before anything paints), so a refresh never shows another theme first; the fades wait until the household's own appearance is on, and a pair screen loading its board keeps what it last showed (ADR 0032). Nothing animates on first paint or a room switch; the board opens on this week with today visible and the Today panel on Now / Up Next.
 
 ## 2. Words
 

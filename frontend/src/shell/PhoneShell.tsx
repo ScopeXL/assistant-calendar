@@ -8,7 +8,7 @@ import { useLiveUpdates } from "../lib/live";
 import { useServerUpdate } from "../lib/update";
 import { MotionProvider } from "../lib/motion";
 import { sunDay } from "../lib/sun";
-import { applyAppearance } from "../lib/theme";
+import { applyAppearance, rememberAppearance } from "../lib/theme";
 import { useMinute } from "../lib/time";
 import { zonedParts } from "../lib/dates";
 import { CelebrationLayer } from "../ui/Celebration";
@@ -104,17 +104,24 @@ export function PhoneShell({ children, tabs = true }: { children: ReactNode; tab
   const minuteOfDay = hour * 60 + minute;
   useEffect(() => {
     if (!settings) return;
-    applyAppearance(
+    const sun = sunDay(day, settings.latitude, settings.longitude);
+    const shown = applyAppearance(
       {
         theme: settings.theme,
         daylightTint: settings.daylight_tint,
         textSize: "standard",
         reduceMotion: false,
         display: false,
-        sun: sunDay(day, settings.latitude, settings.longitude),
+        sun,
       },
       minuteOfDay,
     );
+    // The next page paints this first (public/theme-boot.js, ADR 0032).
+    rememberAppearance(shown, {
+      choice: settings.theme,
+      daylightTint: settings.daylight_tint,
+      sun,
+    });
   }, [settings, day, minuteOfDay]);
   return (
     <ShellContext.Provider value="phone">

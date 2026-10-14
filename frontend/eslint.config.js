@@ -48,4 +48,9 @@ export default defineConfig(
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: { globals: globals.node },
   },
+  {
+    // A classic script the page loads before anything paints (public/theme-boot.js).
+    files: ["public/**/*.js"],
+    languageOptions: { globals: globals.browser, sourceType: "script" },
+  },
 );

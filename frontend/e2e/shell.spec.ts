@@ -267,6 +267,62 @@ test.describe("the wall screen", () => {
     }
   });
 
+  test("paints its theme before anything else, and fades nothing in", async ({ page, request }) => {
+    await seed(request);
+    const parent = await request.post("/api/auth/login", {
+      headers: CSRF,
+      data: { password: PASSWORD },
+    });
+    expect(parent.ok()).toBe(true);
+    // Dark, on a browser that prefers light and a clock that says day: a first paint that
+    // guessed would be light.
+    const dark = await request.patch("/api/settings", { headers: CSRF, data: { theme: "dark" } });
+    expect(dark.ok()).toBe(true);
+    await pairWall(page);
+    // From the page's first script on: the theme when the page has loaded, and the theme at the
+    // moment the fades are armed (ADR 0032).
+    await page.addInitScript(() => {
+      // This runs before <html> exists: watch the document for the one attribute.
+      const marks = window as unknown as { themeAtLoad?: string; themeAtReady?: string };
+      document.addEventListener("DOMContentLoaded", () => {
+        marks.themeAtLoad = document.documentElement.dataset.theme ?? "none";
+      });
+      new MutationObserver(() => {
+        const root = document.documentElement;
+        if ("motionReady" in root.dataset && marks.themeAtReady === undefined) {
+          marks.themeAtReady = root.dataset.theme ?? "none";
+        }
+      }).observe(document, { subtree: true, attributeFilter: ["data-motion-ready"] });
+    });
+    const marks = () =>
+      page.evaluate(() => {
+        const kept = window as unknown as { themeAtLoad?: string; themeAtReady?: string };
+        return { load: kept.themeAtLoad, ready: kept.themeAtReady };
+      });
+    const html = page.locator("html");
+
+    // Nothing remembered yet: the fades wait for the household's Dark.
+    await page.goto("/display");
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    await expect(html).toHaveAttribute("data-motion-ready", "");
+    expect((await marks()).ready).toBe("dark");
+
+    // A refresh paints Dark before anything else: the boot script remembers it.
+    await page.reload();
+    await expect(html).toHaveAttribute("data-motion-ready", "");
+    expect(await marks()).toEqual({ load: "dark", ready: "dark" });
+
+    // A memory that's wrong (another household's Light) paints first, and the household's own
+    // Dark replaces it before anything is allowed to fade.
+    await page.evaluate((key) => {
+      const kept = JSON.parse(localStorage.getItem(key) ?? "{}") as Record<string, unknown>;
+      localStorage.setItem(key, JSON.stringify({ ...kept, theme: "light", daypart: "midday" }));
+    }, "sunroom.appearance");
+    await page.reload();
+    await expect(html).toHaveAttribute("data-motion-ready", "");
+    expect(await marks()).toEqual({ load: "light", ready: "dark" });
+  });
+
   test("shows nothing in its corner while it hears live updates, and says so when it can't", async ({
     page,
     request,

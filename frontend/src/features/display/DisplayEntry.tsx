@@ -11,7 +11,12 @@ import { watchKeyboardFields } from "../../lib/keyboard";
 import { MotionProvider } from "../../lib/motion";
 import { watchPointer } from "../../lib/pointer";
 import { fetchSession, type Session } from "../../lib/session";
-import { applyAppearance } from "../../lib/theme";
+import {
+  applyAppearance,
+  REMEMBERED_FRESH_MS,
+  rememberedAppearance,
+  showAppearance,
+} from "../../lib/theme";
 import { useMinute } from "../../lib/time";
 import { DisplayShell } from "../../shell/DisplayShell";
 import { Button } from "../../ui/Button";
@@ -78,18 +83,30 @@ export function DisplayEntry() {
   );
 }
 
-/** The display's look and keyboard, for the screens shown before it's paired. */
+/**
+ * The display's look and keyboard, for the screens shown before it's paired, and for the moment
+ * a paired one spends finding out that it is. A page loaded soon after this browser last showed
+ * the household's appearance keeps it exactly as the boot script put it (a refresh, the Pi's
+ * nightly restart: ADR 0032). A screen off for a while follows the household's choices by its
+ * clock, and one that never knew the household guesses: Auto, dark from 7 PM.
+ */
 function Frame({ children }: { children: ReactNode }) {
   const { hour, minute } = zonedParts(useMinute());
   const minuteOfDay = hour * 60 + minute;
   useEffect(() => {
+    const known = rememberedAppearance();
+    if (known && Date.now() - known.at < REMEMBERED_FRESH_MS) {
+      showAppearance(known);
+      return;
+    }
     applyAppearance(
       {
-        theme: "auto",
-        daylightTint: true,
-        textSize: "standard",
-        reduceMotion: false,
+        theme: known?.choice ?? "auto",
+        daylightTint: known?.daylightTint ?? true,
+        textSize: known?.textSize ?? "standard",
+        reduceMotion: known?.reduceMotion ?? false,
         display: true,
+        ...(known?.sun ? { sun: known.sun } : {}),
       },
       minuteOfDay,
     );

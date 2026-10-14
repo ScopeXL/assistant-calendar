@@ -1,6 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { applyAppearance, daypart, resolveTheme } from "./theme";
+import boot from "../../public/theme-boot.js?raw";
+import {
+  APPEARANCE_KEY,
+  applyAppearance,
+  daypart,
+  rememberAppearance,
+  rememberedAppearance,
+  resolveTheme,
+} from "./theme";
 
 const at = (hour: number, minute = 0) => hour * 60 + minute;
 const OCTOBER = { sunrise: at(6, 59), sunset: at(18, 30) };
@@ -77,5 +85,98 @@ describe("the theme (ADR 0008)", () => {
     expect(sized("small")).toBe("small");
     expect(sized("standard")).toBeUndefined();
     expect(sized("large")).toBe("large");
+  });
+});
+
+describe("the appearance a browser remembers (ADR 0032)", () => {
+  afterEach(() => {
+    localStorage.clear();
+    const data = document.documentElement.dataset;
+    for (const key of ["theme", "daypart", "textSize", "reduceMotion"])
+      Reflect.deleteProperty(data, key);
+  });
+
+  /** Run the boot script's text as the page does, from <head>, before anything paints. */
+  const runBoot = () => {
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval -- a classic script, no exports
+    (new Function(boot) as () => void)();
+  };
+
+  it("keeps what a page showed, with the household's choices, and reads it back", () => {
+    const shown = applyAppearance(
+      { theme: "light", daylightTint: true, textSize: "xl", reduceMotion: false, display: true },
+      at(15),
+      document.createElement("html"),
+    );
+    rememberAppearance(shown, { choice: "light", daylightTint: true, sun: OCTOBER }, 1000);
+    expect(rememberedAppearance()).toEqual({
+      v: 1,
+      at: 1000,
+      theme: "light",
+      daypart: "afternoon",
+      textSize: "xl",
+      reduceMotion: false,
+      choice: "light",
+      daylightTint: true,
+      sun: OCTOBER,
+    });
+  });
+
+  it("ignores a memory it can't read", () => {
+    const good = {
+      v: 1,
+      at: 1,
+      theme: "dark",
+      daypart: "night",
+      textSize: null,
+      reduceMotion: false,
+      choice: "auto",
+      daylightTint: true,
+      sun: null,
+    };
+    for (const junk of [
+      "{",
+      "null",
+      "[]",
+      JSON.stringify({ ...good, v: 2 }),
+      JSON.stringify({ ...good, theme: "pink" }),
+      JSON.stringify({ ...good, daypart: "noon" }),
+      JSON.stringify({ ...good, sun: { sunrise: "early" } }),
+    ]) {
+      localStorage.setItem(APPEARANCE_KEY, junk);
+      expect(rememberedAppearance(), junk).toBeNull();
+    }
+    localStorage.setItem(APPEARANCE_KEY, JSON.stringify(good));
+    expect(rememberedAppearance()).toEqual(good);
+  });
+
+  it("is on <html> before anything paints: the boot script", () => {
+    rememberAppearance(
+      { theme: "dark", daypart: "evening", textSize: "large", reduceMotion: true },
+      { choice: "auto", daylightTint: true, sun: null },
+    );
+    runBoot();
+    expect(document.documentElement.dataset).toMatchObject({
+      theme: "dark",
+      daypart: "evening",
+      textSize: "large",
+      reduceMotion: "",
+    });
+  });
+
+  it("leaves the first paint to the device when nothing usable is remembered", () => {
+    runBoot();
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    localStorage.setItem(APPEARANCE_KEY, "{");
+    runBoot();
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    // A phone on Auto remembers no theme: the device keeps deciding.
+    rememberAppearance(
+      { theme: null, daypart: "midday", textSize: null, reduceMotion: false },
+      { choice: "auto", daylightTint: true, sun: null },
+    );
+    runBoot();
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(document.documentElement.dataset.daypart).toBe("midday");
   });
 });

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { api } from "../api/client";
 import { qk } from "../api/keys";
@@ -36,7 +36,12 @@ import { useQuietTheme } from "../lib/quietTheme";
 import { fetchSession } from "../lib/session";
 import { useStore } from "../lib/store";
 import { sunDay } from "../lib/sun";
-import { allowAppearanceMotion, applyAppearance, resolveTheme } from "../lib/theme";
+import {
+  allowAppearanceMotion,
+  applyAppearance,
+  rememberAppearance,
+  resolveTheme,
+} from "../lib/theme";
 import { useMinute } from "../lib/time";
 import { setToastProfile } from "../lib/toast";
 import { useKeepAwake } from "../lib/wakeLock";
@@ -138,10 +143,14 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     settings ? resolveTheme(settings.theme, minuteOfDay, sun) : null,
   );
 
-  // Theme, wall tint and text size follow the household's settings, the clock and the sun.
+  // Theme, wall tint and text size follow the household's settings, the clock and the sun. What
+  // was shown is kept for the next page's first paint (public/theme-boot.js), and the fades are
+  // armed only once it's on (ADR 0032): armed sooner, a theme that came with the settings would
+  // fade in from whatever the page painted first.
+  const motionArmed = useRef(false);
   useEffect(() => {
     if (!settings || !theme) return;
-    applyAppearance(
+    const shown = applyAppearance(
       {
         theme: nightTime ? "dark" : theme,
         daylightTint: settings.daylight_tint,
@@ -152,11 +161,19 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
       },
       minuteOfDay,
     );
+    rememberAppearance(shown, {
+      choice: settings.theme,
+      daylightTint: settings.daylight_tint,
+      sun,
+    });
+    if (!motionArmed.current) {
+      motionArmed.current = true;
+      allowAppearanceMotion();
+    }
   }, [settings, theme, minuteOfDay, nightTime, sun]);
 
   useEffect(() => {
     setToastProfile(true);
-    allowAppearanceMotion();
     const stopActivity = watchActivity();
     const stopKeyboard = kiosk ? watchKeyboardFields() : () => undefined;
     // A paired screen hides a resting pointer; a laptop has a person behind its mouse.
