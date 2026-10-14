@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-14
+
 ### Added
 
 - A kitchen screen comes back to what it was showing after a refresh, an update or a restart:
@@ -37,6 +39,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - The rail shows the Sunroom mark alone at its top, as tall as the header; Hide the rail moved
   into the header beside the date, across from the Today panel's button; folded, Add is the
   size of a room's icon and the rail eases shut and open instead of jumping.
+- Behind the scenes: the upgrade tests start from 0.8.0's database, and the end-to-end tests
+  know when a screen hears live updates without looking for the icon.
 
 ### Fixed
 
@@ -400,5 +404,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.7.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.6.0...v0.7.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.8.0...HEAD
 [0.8.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.7.0...v0.8.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.8.0...v0.9.0
