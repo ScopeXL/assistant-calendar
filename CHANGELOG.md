@@ -10,7 +10,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - Settings → Calendars & Accounts starts with Default calendar: where new events go. It can be
   an Apple or Google calendar too. Add starts with it, and you can still pick another there,
-  where an account's calendars are named after it (Apple · Family).
+  where an account's calendars are named after it (Apple · Family). Sunroom always keeps one
+  calendar of its own, so the last one can't be removed.
 
 ### Changed
 

@@ -1070,10 +1070,13 @@ fades are armed, and a theme change's crossfade), a walk on the Pi, and VoiceOve
 
 ### T16 The default calendar
 
-- [x] Done (commit: "calendars: a Default calendar for new events, an account's too")
+- [x] Done (commits: "calendars: a Default calendar for new events, an account's too",
+  "calendars: Sunroom always keeps one calendar of its own")
 
 **Owner's note.** "Can you put in one more thing? Add the ability to set a "Default" calendar
 that is selected when adding new events." Asked once T0 to T15 were built and committed.
+Then, told that every calendar of the household's own could now be removed: "Sunroom should
+always have one of its own calendars."
 
 **What existed.** The household has kept a default since M1 (`household.default_calendar_id`),
 and Add preselected it. A local calendar's row said "New events go here", and the switch that
@@ -1085,7 +1088,14 @@ changed it sat inside each local calendar's Edit sheet. An account's calendar co
   with the new `strong` label of a Settings row) whose list is every calendar that can be
   written to, the household's own first and then an account's ("Apple · Family"). It saves as
   it's picked, with "Saved" under it; "Not saved — …" is a toast. The switch left the Edit sheet,
-  and the chosen calendar's row says "Default calendar" (it still has no Remove).
+  and the chosen calendar's row says "Default calendar".
+- **Sunroom always keeps one calendar of its own** (the owner's rule). The last one's Edit sheet
+  has no Remove, and a line under Save Changes says "Sunroom keeps one calendar of its own, so
+  this one stays." The default calendar's sheet has none either, now with its line ("New events
+  go here, so it stays while it's the default calendar."; before, Remove just wasn't there).
+  The server refuses the last one (409 `last_calendar`, checked before `default_calendar`), so
+  new events always have somewhere to go, even when an account's calendar is the default and
+  then goes.
 - `POST /api/calendar/calendars/{id}/default` (a parent's, so the wall asks for the PIN when
   one is set) sets it; a read-only or removed calendar is refused. `CalendarUpdate.is_default`
   is gone.
@@ -1096,19 +1106,21 @@ changed it sat inside each local calendar's Edit sheet. An account's calendar co
   line taken out). Nothing schedules that prune yet.
 - Add's Calendar row names an account's calendars the same way (`calendarChoiceLabel`), so two
   calendars of one name can be told apart.
-- Tests: three API tests (an account's calendar as the default, the fallback and back, the
-  prune), the wall's PIN for it, two unit tests (which calendars take events, their names), and
-  an end-to-end test (`sync.spec`, desktop: pick the account's calendar, Add starts with it, the
-  event lands there). The screenshot spec opens the list on the wall and a phone.
-- Gate: `just quick`; both unit suites in full (1,123 backend, 600 frontend); `sync.spec` on
-  desktop; the wall and phone screenshot runs on display-1080p, display-portrait and
-  phone-webkit, reviewed in light and dark. The full `just e2e` runs at the release's preflight.
+- Tests: four API tests (an account's calendar as the default, the fallback and back, one of
+  the household's own kept, the prune), the wall's PIN for it, four unit tests (which calendars
+  take events, their names, why a calendar stays), and an end-to-end test (`sync.spec`,
+  desktop: pick the account's calendar, Add starts with it, the event lands there; then with
+  Kids' activities removed, Home has no Remove and says why). The screenshot spec opens the
+  list, and Home's sheet, on the wall and a phone.
+- Gate: `just quick`; both unit suites in full (1,124 backend and 602 frontend tests);
+  `sync.spec` on desktop; the wall and phone screenshot runs on display-1080p, display-portrait
+  and phone-webkit, reviewed in light and dark. The full `just e2e` runs at the release's
+  preflight.
 - Seen and left: the test server's account names its calendars "a calendar address", so its
-  calendar reads "a calendar address · School"; a real account reads "Apple · Family". With an
-  account's calendar as the default, the household's own calendars can all be removed; if that
-  account's calendar then goes too, Add says "Add a calendar first: Settings, then Calendars &
-  Accounts." (it said "Calendars") until one is put back or added. Keeping one local calendar
-  for good is a choice for the owner.
+  calendar reads "a calendar address · School"; a real account reads "Apple · Family". The
+  message for no calendar at all now names the page ("Add a calendar first: Settings, then
+  Calendars & Accounts."); with one calendar always kept, only a database changed by hand can
+  reach it.
 
 ## Follow-ups noticed but not in this batch
 

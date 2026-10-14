@@ -10,7 +10,7 @@ import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
 import { ColorPicker, usedBy } from "../../ui/ColorPicker";
-import { useFieldLabel } from "../../ui/Field";
+import { useFieldHint, useFieldLabel } from "../../ui/Field";
 import { ListRow } from "../../ui/ListRow";
 import { SavedMark } from "../../ui/SavedMark";
 import { Sheet } from "../../ui/Sheet";
@@ -214,6 +214,24 @@ function DefaultCalendar({ calendars }: { calendars: CalendarInfo[] }) {
   );
 }
 
+/**
+ * Why one of the household's own calendars has no Remove (ADR 0032): Sunroom always keeps one
+ * of its own, so new events have somewhere to go even if an account's calendar goes; and the
+ * default calendar stays while it's the default. Null when it can go.
+ */
+export function whyItStays(
+  calendar: CalendarInfo,
+  calendars: readonly CalendarInfo[],
+): string | null {
+  const others = calendars.filter(
+    (other) => other.kind === "local" && takesEvents(other) && other.id !== calendar.id,
+  );
+  if (!others.length) return "Sunroom keeps one calendar of its own, so this one stays.";
+  if (calendar.is_default)
+    return "New events go here, so it stays while it's the default calendar.";
+  return null;
+}
+
 function CalendarSheet({ editing, onClose }: { editing: Editing; onClose: () => void }) {
   const calendar = editing?.kind === "change" ? editing.calendar : null;
   return (
@@ -231,6 +249,7 @@ function CalendarSheet({ editing, onClose }: { editing: Editing; onClose: () => 
 
 function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onDone: () => void }) {
   const { data: members = [] } = useMembers();
+  const { data: calendars = [] } = useCalendars();
   const refresh = useRefreshCalendars();
   const [name, setName] = useState(calendar?.name ?? "");
   const [color, setColor] = useState<PersonColor>(calendar?.color ?? "sky");
@@ -284,7 +303,12 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
     },
   });
   const label = useFieldLabel();
+  const hint = useFieldHint();
   const error = save.error ?? remove.error;
+  // As it is now: another screen may have picked a new default since the sheet opened.
+  const stays = calendar
+    ? whyItStays(calendars.find((other) => other.id === calendar.id) ?? calendar, calendars)
+    : null;
   return (
     <form
       className="flex flex-col gap-6"
@@ -339,7 +363,7 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
         <Button type="submit" disabled={!name.trim()} pending={save.isPending}>
           {calendar ? "Save Changes" : "Add Calendar"}
         </Button>
-        {calendar && !calendar.is_default ? (
+        {calendar && !stays ? (
           <Button
             variant="quiet-danger"
             pending={remove.isPending}
@@ -351,6 +375,7 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
           </Button>
         ) : null}
       </div>
+      {stays ? <p className={hint}>{stays}</p> : null}
     </form>
   );
 }

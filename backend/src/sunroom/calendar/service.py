@@ -209,6 +209,22 @@ async def make_default(tx: WriteTx, calendar_id: str) -> Calendar:
 
 async def remove_calendar(tx: WriteTx, calendar_id: str, ctx: Context) -> Calendar:
     calendar = await _local_calendar(tx.session, calendar_id)
+    # Sunroom always keeps one calendar of its own (the owner's rule, ADR 0032), so new events
+    # have somewhere to go when an account's calendar is the default and then goes.
+    others = await tx.session.scalar(
+        select(func.count())
+        .select_from(Calendar)
+        .where(
+            Calendar.kind == CalendarKind.LOCAL,
+            Calendar.deleted_at.is_(None),
+            Calendar.read_only.is_(False),
+            Calendar.id != calendar.id,
+        )
+    )
+    if not others:
+        raise AppError(
+            409, "last_calendar", "Sunroom keeps one calendar of its own, so this one stays."
+        )
     if calendar.id == await default_calendar_id(tx.session):
         raise AppError(
             409,

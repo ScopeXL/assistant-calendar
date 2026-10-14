@@ -499,6 +499,8 @@ async def test_new_events_go_home_while_the_default_cant_take_them(
     Home until it's back; then it's the default again."""
     state = state_of(app)
     home = next(c for c in (await parent.get("/api/calendar/calendars")).json())["id"]
+    # Another of the household's own, so Home isn't kept just for being the last one.
+    await parent.post("/api/calendar/calendars", json={"name": "Kids' activities"}, headers=CSRF)
     family = await synced(app, "Family")
     await parent.post(f"/api/calendar/calendars/{family}/default", headers=CSRF)
     async with state.db.write() as tx:
@@ -515,6 +517,39 @@ async def test_new_events_go_home_while_the_default_cant_take_them(
     # Home is where new events go now, so it stays.
     refused = await parent.delete(f"/api/calendar/calendars/{home}", headers=CSRF)
     assert refused.status_code == 409 and refused.json()["error"]["code"] == "default_calendar"
+
+
+async def test_sunroom_keeps_one_calendar_of_its_own(
+    parent: httpx.AsyncClient, app: FastAPI
+) -> None:
+    """With an account's calendar as the default, the household's own calendars can go, but
+    never the last of them (the owner's rule, ADR 0032): if the account's calendar goes too, new
+    events still have somewhere to go."""
+    state = state_of(app)
+    home = next(c for c in (await parent.get("/api/calendar/calendars")).json())["id"]
+    family = await synced(app, "Family")
+    await parent.post(f"/api/calendar/calendars/{family}/default", headers=CSRF)
+    refused = await parent.delete(f"/api/calendar/calendars/{home}", headers=CSRF)
+    assert refused.status_code == 409
+    assert refused.json()["error"]["code"] == "last_calendar"
+    assert refused.json()["error"]["message"] == (
+        "Sunroom keeps one calendar of its own, so this one stays."
+    )
+    kids = (
+        await parent.post(
+            "/api/calendar/calendars", json={"name": "Kids' activities"}, headers=CSRF
+        )
+    ).json()
+    gone = await parent.delete(f"/api/calendar/calendars/{home}", headers=CSRF)
+    assert gone.status_code == 200, gone.text  # another of its own is left
+    refused = await parent.delete(f"/api/calendar/calendars/{kids['id']}", headers=CSRF)
+    assert refused.status_code == 409
+    assert refused.json()["error"]["code"] == "last_calendar"
+    # The account's calendar goes too: new events go to the one that's left.
+    async with state.db.write() as tx:
+        await sync_merge.remove_calendar(tx, family, state.clock.now())
+    added = await add(parent, title="Dentist", start="2026-10-07T09:00")
+    assert added["event"]["calendar_id"] == kids["id"]
 
 
 async def test_a_synced_default_can_go_for_good(parent: httpx.AsyncClient, app: FastAPI) -> None:

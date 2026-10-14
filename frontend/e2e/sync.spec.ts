@@ -6,8 +6,9 @@
  * sheet, and Google's way back opens a new account's calendars; the wall types a password on
  * its own keyboard and hands Google's file and page to a phone. An account opens from its row
  * (ADR 0029): Sync, whose a calendar is and its color, Show on the screen, Remove account. An
- * account's calendar can be the Default calendar, where Add starts (ADR 0032). The server's
- * clock reads Wednesday, October 7, 2026, 10:00 AM in New York. Synthetic data only.
+ * account's calendar can be the Default calendar, where Add starts, and the household's last
+ * calendar of its own stays (ADR 0032). The server's clock reads Wednesday, October 7, 2026,
+ * 10:00 AM in New York. Synthetic data only.
  */
 import type { APIRequestContext, Locator, Page } from "@playwright/test";
 
@@ -329,7 +330,7 @@ test("an account opens from its row: Sync, whose and color, Show on the screen, 
   await context.close();
 });
 
-test("an account's calendar can be the default: Add starts with it, and what's added goes there", async ({
+test("an account's calendar can be the default: Add starts with it, and one of Sunroom's own stays", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "a computer");
@@ -368,6 +369,21 @@ test("an account's calendar can be the default: Add starts with it, and what's a
   expect(found.occurrences.find((o) => o.title === "Dentist")?.calendar_id).toBe(
     calendars.find((c) => c.name === "School")?.id,
   );
+
+  // Sunroom keeps one calendar of its own: with Kids' activities removed, Home can't go too,
+  // and its sheet says why.
+  await page.goto("/settings/calendars");
+  await page.getByRole("button", { name: /^Edit Kids/ }).click();
+  const kids = page.getByRole("dialog", { name: /^Edit Kids/ });
+  await kids.getByRole("button", { name: /^Remove Kids/ }).click();
+  await expect(toast(page, "Removed Kids")).toBeVisible();
+  await expect(kids).toBeHidden();
+  await home.click();
+  const homeSheet = page.getByRole("dialog", { name: "Edit Home" });
+  await expect(homeSheet).toContainText(
+    "Sunroom keeps one calendar of its own, so this one stays.",
+  );
+  await expect(homeSheet.getByRole("button", { name: "Remove Home" })).toHaveCount(0);
 });
 
 test("the wall adds an account itself, and hands Google's file and page to a phone", async ({

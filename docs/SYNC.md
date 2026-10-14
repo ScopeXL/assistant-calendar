@@ -29,7 +29,8 @@ kitchen screen. On the kitchen screen, Google's helper (a key file) and Sign in 
 - **The Default calendar** (Settings → Calendars & Accounts) can be an account's calendar that
   works both ways: an event added without picking another calendar goes there, and out to the
   server. While it's unmapped (Sync off, or its account removed) or turns read-only, new events
-  go to the household's first own calendar, and it's the default again when it's back.
+  go to the household's first own calendar (Sunroom always keeps one), and it's the default
+  again when it's back.
 - **Merging** (PLAN §7.5):
   - a series is known by its calendar, its UID and the occurrence it changes;
   - an unchanged etag is skipped;
