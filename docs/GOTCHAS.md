@@ -90,8 +90,8 @@ size limit.
 - The portrait layout test (`lays out its rail or bottom bar…`) failed about one run in seven:
   it read the Today band's box, then the header's, and the header had grown 8 px in between. The
   weather arrives after the board, and in portrait (two header rows) its stacked high and low
-  make the first row taller. The test waits for the weather button. The 8 px shift itself is
-  still there on a portrait wall as the weather loads.
+  make the first row taller. Since 0.11.0 the today block is `min-h-tap`, so the row no longer
+  grows; the test still waits for the weather button, which it measures.
 - A click just after a dnd-kit drop did nothing: dnd-kit swallows clicks for 50 ms after a drop.
   Tests wait 100 ms.
 - A heading locator matched twice in Settings: the Today panel shows beside it. Use `exact`.

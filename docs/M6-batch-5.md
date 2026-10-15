@@ -358,7 +358,7 @@ asked; wrapping by default).
 
 ### T3 The header's today block: one baseline, and the weather as a pill
 
-- [ ] Done (commit: )
+- [x] Done (commit: "shell: the header's date and time on one baseline, the weather as a pill")
 
 **Owner's note.** "Can you propose a more polished design for the 'Date, Time, Weather' piece of
 the header. The alignment feels off. It feels a bit scrunched, and there is nothing visually
@@ -502,7 +502,26 @@ is a round button with a chevron that opens the forecast; the day's high and low
 forecast's first line." (Fixed) "On a tall screen the header no longer grows when the weather
 arrives."
 
-**As built.**
+**As built.** As planned, measured with a throwaway spec (not committed) at Small, Standard,
+Large and Extra large, light and dark, on both wall projects: the date's and the time's
+baselines 0 px apart everywhere; the pill's middle 0 px from the digits' boxes and under 1 px
+from their ink; the header 80 px at Standard (77 at Small) with the rail's mark block meeting
+it; portrait's first row 56 px with the weather, and with Features → Weather off. The new
+baseline check failed on the old header with 6 px, as "Answers" said. Two things here were
+wrong:
+- *The one-row budget.* UX §3's "about 58 px to spare" was measured for 0.9.0. Measured again
+  (the clock at Wed, Sep 30, 12:30 PM before the seed, so the forecast has that day; the Week
+  view; Ana, Sam, Mia and Leo filtered; both panels open), 0.10.0's header was already 8 px over
+  and wrapped, and the planned pill (148 px wide, 16 px padding at both ends) missed by 0.1 px.
+  The pill has 12 px after its chevron instead (`pr-3 pl-4`, 144 px): lucide's chevron keeps
+  about 7 px of room inside its box, so the ends now read even, and the worst case is one row
+  with about 4 px to spare. UX §3 and ADR 0030 say so. A temperature of three digits would still wrap it there.
+- *The old forecast.* The stale text is "as of 9:10 AM" (`formatTime` keeps the AM or PM, as UX
+  §2 writes times), so the stale pill is about 224 px, not 190, and in the worst case the room's
+  part takes a second row while the forecast is old. 0.10.0's stale block was wider still, so
+  this was kept; the docs say it.
+The a11y journeys on both wall projects pass (the pill is 56 px and clear of its neighbours),
+and the phone's weather block is untouched.
 
 ### T4 Rolling week
 

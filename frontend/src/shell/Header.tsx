@@ -10,11 +10,13 @@ import { LiveStatusButton } from "../ui/LiveStatus";
 import { roomHeader } from "./roomHeader";
 
 /**
- * Today, at the header's left (UX §3): the date in bold, the time at glance size (weight 800,
- * digits in fixed boxes so it never jiggles, AM or PM small on its baseline), then what the
- * plugins put by the clock (the weather), 24 px apart. Each is centred on the header's middle
- * line (ADR 0032): on the time's baseline, the date sat low and the time rode high against the
- * weather's centred 56 px button.
+ * Today, at the header's left (UX §3): the date (semi-bold), the time at glance size (weight
+ * 800, digits in fixed boxes so it never jiggles, AM or PM small and soft), then what the plugins
+ * put by the clock (the weather's pill), 24 px apart. The date and the time are text and share
+ * one baseline; a plugin's block is an object, centred on the time's line box, which is
+ * symmetric about its digits. The block is a tap target tall, so portrait's first row never
+ * grows when the weather arrives (ADR 0033; ADR 0032 centred all three, and the date floated
+ * 6 px above the line the time stands on).
  */
 function HeaderToday() {
   const now = useMinute();
@@ -23,16 +25,18 @@ function HeaderToday() {
   const suffix = clockSuffix(now);
   const blocks = useRailBlocks();
   return (
-    <div className="mr-3 flex shrink-0 items-center gap-x-6 landscape:ml-3">
-      <p className="text-d-body font-bold whitespace-nowrap">{shortDate(day)}</p>
-      <p className="text-d-glance font-extrabold whitespace-nowrap">
-        <Digits value={time} spoken={suffix ? `${time} ${suffix}` : time} />
-        {suffix ? (
-          <span aria-hidden="true" className="ml-1.5 text-d-secondary font-bold">
-            {suffix}
-          </span>
-        ) : null}
-      </p>
+    <div className="mr-3 flex min-h-tap shrink-0 items-center gap-x-6 landscape:ml-3">
+      <div className="flex items-baseline gap-x-6">
+        <p className="text-d-body font-semibold whitespace-nowrap">{shortDate(day)}</p>
+        <p className="text-d-glance font-extrabold whitespace-nowrap">
+          <Digits value={time} spoken={suffix ? `${time} ${suffix}` : time} />
+          {suffix ? (
+            <span aria-hidden="true" className="ml-1.5 text-d-secondary font-bold text-ink-soft">
+              {suffix}
+            </span>
+          ) : null}
+        </p>
+      </div>
       <div className="flex items-center gap-x-6 empty:hidden">
         {blocks.map((Block, index) => (
           <Block key={index} place="header" />

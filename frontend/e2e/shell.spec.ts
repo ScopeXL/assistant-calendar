@@ -5,7 +5,7 @@
  * sideways. The evening dim on the wall, and About's New versions on a phone. Synthetic data
  * only.
  */
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import {
   expect,
@@ -207,8 +207,8 @@ test.describe("the wall screen", () => {
     await expect(board).toBeVisible();
     await expect(board.locator("[aria-current=date]")).toHaveCount(1);
     await noSidewaysScroll(page, "the board");
-    // The weather arrives after the board, and in portrait it makes the header's first row
-    // taller: measure once it's there.
+    // The weather arrives after the board, and its pill is measured below: wait for it. (Since
+    // ADR 0033 the header's first row is a tap target tall either way, so nothing moves.)
     await expect(
       page.getByRole("banner").getByRole("button", { name: /^The weather/ }),
     ).toBeVisible();
@@ -219,20 +219,35 @@ test.describe("the wall screen", () => {
     const panel = await today.boundingBox();
     const header = await page.getByRole("banner").boundingBox();
     await steadyDigits(page);
-    // Today's three things share the header's middle line (ADR 0032): the date's, the time's
-    // and the weather's middles within 2 px of one another.
     const bar = page.getByRole("banner");
-    const middles = await Promise.all(
-      [
-        bar.locator("p").nth(0),
-        bar.locator("p").nth(1),
-        bar.getByRole("button", { name: /^The weather/ }),
-      ].map(async (part) => {
-        const box = await part.boundingBox();
-        return (box?.y ?? 0) + (box?.height ?? 0) / 2;
-      }),
-    );
-    expect(Math.max(...middles) - Math.min(...middles)).toBeLessThanOrEqual(2);
+    const pill = bar.getByRole("button", { name: /^The weather/ });
+    const middle = async (part: Locator) => {
+      const box = await part.boundingBox();
+      return (box?.y ?? 0) + (box?.height ?? 0) / 2;
+    };
+    // The weather's pill is centred on the clock's digits (ADR 0033).
+    expect(
+      Math.abs((await middle(pill)) - (await middle(bar.locator(".digit").first()))),
+    ).toBeLessThanOrEqual(2);
+    // The date and the time share a baseline: an empty inline-block's baseline is its bottom
+    // edge, so a probe set at the end of each line says where its baseline is.
+    const baseline = (part: Locator) =>
+      part.evaluate((node) => {
+        const probe = document.createElement("span");
+        probe.style.display = "inline-block";
+        probe.style.width = "0";
+        probe.style.height = "0";
+        probe.style.verticalAlign = "baseline";
+        node.append(probe);
+        const y = probe.getBoundingClientRect().bottom;
+        probe.remove();
+        return y;
+      });
+    expect(
+      Math.abs(
+        (await baseline(bar.locator("p").nth(0))) - (await baseline(bar.locator("p").nth(1))),
+      ),
+    ).toBeLessThanOrEqual(1);
     if (size.height > size.width) {
       // Portrait: the header across the top, the Today band under it, the bar at the bottom.
       expect(header).toMatchObject({ x: 0, y: 0, width: size.width });

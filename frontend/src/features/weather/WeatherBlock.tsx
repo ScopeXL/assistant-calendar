@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { formatTime, formatWallTime, shortWeekday, zonedParts } from "../../lib/dates";
@@ -26,9 +27,12 @@ function nowLine(weather: Weather, day: WeatherDay | undefined): string | null {
 }
 
 /**
- * The weather by the clock (UX §3): the sky's icon and the temperature, with the day's high over
- * its low beside them in the wall's header, or under them at the top of a phone's Today. A tap
- * opens the forecast: Today and the days ahead. Nothing shows until there's a forecast.
+ * The weather by the clock (UX §3). In the wall's header, a round outlined pill like This Week
+ * and Filter beside it: the sky's icon, the temperature (or, when the forecast is old, when it's
+ * from) and a chevron that says it opens something (ADR 0033); the day's high and low are the
+ * forecast's first line, and in the pill's spoken name. At the top of a phone's Today, the icon
+ * and the temperature with the high and low under them. A tap opens the forecast: Today and the
+ * days ahead. Nothing shows until there's a forecast.
  */
 export function WeatherBlock({ place }: { place: RailPlace }) {
   const { data } = useWeather();
@@ -45,41 +49,59 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
   ]
     .filter(Boolean)
     .join(". ");
-  const header = place === "header";
-  const button = header
-    ? "press flex min-h-tap shrink-0 items-center gap-3 rounded-chip-d px-2 text-left"
-    : "press flex min-h-11 items-center gap-3 self-start rounded-chip px-1 text-left";
+  const label = `The weather: ${spoken}. Open the forecast.`;
+  const show = () => {
+    setOpen(true);
+  };
+  const forecast = (
+    <Forecast
+      weather={data}
+      day={day}
+      open={open}
+      onClose={() => {
+        setOpen(false);
+      }}
+    />
+  );
+  if (place === "header") {
+    // 12 px after the chevron, not 16: its glyph keeps room of its own, so the two ends read
+    // even, and the header's worst case stays one row at 1920 Standard (ADR 0033).
+    return (
+      <>
+        <button
+          type="button"
+          aria-label={label}
+          onClick={show}
+          className="press inline-flex min-h-tap shrink-0 items-center gap-2 rounded-full border-2 border-line bg-surface pr-3 pl-4 whitespace-nowrap"
+        >
+          <Icon aria-hidden="true" className="size-7 shrink-0" strokeWidth={2} />
+          {/* A three-hour-old number shouldn't read as now: when it's from takes its place. */}
+          {stale ? (
+            <span className="text-d-caption font-semibold text-ink-soft">{stale}</span>
+          ) : (
+            <span className="text-d-body font-semibold">{degrees(data.current.temperature)}</span>
+          )}
+          <ChevronDown aria-hidden="true" className="size-7 shrink-0 text-ink-soft" />
+        </button>
+        {forecast}
+      </>
+    );
+  }
   return (
     <>
       <button
         type="button"
-        aria-label={`The weather: ${spoken}. Open the forecast.`}
-        onClick={() => {
-          setOpen(true);
-        }}
-        className={button}
+        aria-label={label}
+        onClick={show}
+        className="press flex min-h-11 items-center gap-3 self-start rounded-chip px-1 text-left"
       >
         <span className="flex items-center gap-2">
-          <Icon aria-hidden="true" className={header ? "size-8" : "size-7"} strokeWidth={2} />
-          <span className={`${header ? "text-d-title" : "text-title"} font-bold whitespace-nowrap`}>
+          <Icon aria-hidden="true" className="size-7" strokeWidth={2} />
+          <span className="text-title font-bold whitespace-nowrap">
             {degrees(data.current.temperature)}
           </span>
         </span>
-        {header ? (
-          day || stale ? (
-            // The high over the low; an old forecast says when it's from instead.
-            <span className="flex flex-col text-d-caption leading-tight font-semibold whitespace-nowrap text-ink-soft">
-              {stale ? (
-                <span>{stale}</span>
-              ) : (
-                <>
-                  <span>{day ? degrees(day.high) : null}</span>
-                  <span>{day ? degrees(day.low) : null}</span>
-                </>
-              )}
-            </span>
-          ) : null
-        ) : day || stale ? (
+        {day || stale ? (
           <span className="text-secondary font-semibold whitespace-nowrap text-ink-soft">
             {day ? `${degrees(day.high)} / ${degrees(day.low)}` : null}
             {day && stale ? " · " : null}
@@ -87,14 +109,7 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
           </span>
         ) : null}
       </button>
-      <Forecast
-        weather={data}
-        day={day}
-        open={open}
-        onClose={() => {
-          setOpen(false);
-        }}
-      />
+      {forecast}
     </>
   );
 }
