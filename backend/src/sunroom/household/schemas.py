@@ -70,6 +70,7 @@ class SettingsOut(BaseModel):
     display_dim_past: bool
     display_reduce_motion: bool
     display_week_layout: WeekLayoutName  # how the Week board draws a day (ADR 0028)
+    display_rolling_week: bool  # the Week view: a window around today, not the week (ADR 0033)
     show_tips: bool  # a tip under the board on the wall and laptops
     sleep_from: str | None
     sleep_to: str | None
@@ -107,6 +108,7 @@ class SettingsUpdate(BaseModel):
     display_dim_past: bool | None = None
     display_reduce_motion: bool | None = None
     display_week_layout: WeekLayoutName | None = None
+    display_rolling_week: bool | None = None
     show_tips: bool | None = None
     sleep_from: Clock24 | None = None  # send null (with sleep_to) to turn sleep off
     sleep_to: Clock24 | None = None

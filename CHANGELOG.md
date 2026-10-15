@@ -6,6 +6,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Settings → Display → Rolling week: the Week view shows yesterday, today and the five days
+  after, so today always sits in the same column. Off, as before, it shows the calendar week.
+
 ### Changed
 
 - The weather's sheet says Today and Forecast, names your town without its country on one line,

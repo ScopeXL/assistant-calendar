@@ -112,6 +112,13 @@ export function weekOf(day: string, weekStartsOn: number): string[] {
   return Array.from({ length: 7 }, (_, index) => addDays(start, index));
 }
 
+/** A rolling week (Settings → Display, ADR 0033): seven days with `day` in a fixed column.
+ * The split lives here: ROLLING_BEFORE days before it, the rest after. */
+const ROLLING_BEFORE = 1;
+export function rollingWeek(day: string): string[] {
+  return Array.from({ length: 7 }, (_, index) => addDays(day, index - ROLLING_BEFORE));
+}
+
 export interface MonthGrid {
   first: string; // the month's first day
   days: string[]; // whole weeks covering the month

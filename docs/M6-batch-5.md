@@ -525,7 +525,7 @@ and the phone's weather block is untouched.
 
 ### T4 Rolling week
 
-- [ ] Done (commits: )
+- [x] Done (commits: "calendar: Rolling week, yesterday, today and the five days after")
 
 **Owner's note.** "I've been thinking of adding a setting to the header for a 'rolling week' when
 the app is in Week view. Explore this feature and give an honest opinion on usefulness, and how
@@ -651,7 +651,16 @@ on)". `PLAN.md:411` (the household's columns): add `display_rolling_week`. ADR 0
 and the five days after, so today always sits in the same column. Off, as before, it shows the
 calendar week."
 
-**As built.**
+**As built.** As planned, in one commit: the migration is `202610151730_household_rolling_week`
+(`server_default=sa.false()`), its fixture `tests/fixtures/db/202610151730.sql` is built from
+`_v0_11_0()` (0.10.0's rows with the household on Rolling week), and `test_migrations.py` gains
+an explicit check that a 0.10.0 household comes out with it off. `DisplayPage.test.tsx` checks
+the switch's place (after Week layout) and state rather than the PATCH body, which would need a
+fetch mock. The end-to-end test also checks the window's last day. By hand, with a throwaway
+spec (not committed) on both wall projects at Friday 10 AM: the board followed the setting at
+once; Agenda showed Thu 8 to Wed 14 with today lit in the second column (the second row in
+portrait); Hours zoomed twice started with now a third of the way into the hours; Month kept
+the calendar month and People its one day; the new row reads under Week layout.
 
 ### T5 Wrap up the batch
 

@@ -99,6 +99,9 @@ class Household(Base):
     display_reduce_motion: Mapped[bool] = mapped_column(Boolean, default=False)
     # Settings → Display → Week layout: Agenda (stacked chips) or Hours (the grid), ADR 0028.
     display_week_layout: Mapped[str] = mapped_column(String(8), default=WeekLayout.AGENDA)
+    # Settings → Display → Rolling week: the Week view shows yesterday, today and the five days
+    # after instead of the calendar week (ADR 0033).
+    display_rolling_week: Mapped[bool] = mapped_column(Boolean, default=False)
     # Settings → Display → Show tips: a strip under the board on the wall and laptops.
     show_tips: Mapped[bool] = mapped_column(Boolean, default=False)
     sleep_from: Mapped[str | None] = mapped_column(String(5), default=None)  # "HH:MM"

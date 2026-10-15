@@ -198,6 +198,21 @@ def test_unknown_revision_is_detected(tmp_path: Path) -> None:
         migrate.check_known(db)
 
 
+def test_a_household_from_0_10_0_keeps_the_calendar_week(tmp_path: Path) -> None:
+    """0.11.0 (ADR 0033): Rolling week is new and off, so an upgraded wall still shows the
+    calendar week until a parent turns it on."""
+    db = tmp_path / "sunroom.db"
+    conn = sqlite3.connect(db)
+    conn.executescript((FIXTURE_DBS / "202610141930.sql").read_text())
+    conn.close()
+    assert migrate.upgrade(db) == migrate.head_revision()
+    conn = sqlite3.connect(db)
+    try:
+        assert conn.execute("SELECT display_rolling_week FROM household").fetchall() == [(0,)]
+    finally:
+        conn.close()
+
+
 def test_accounts_named_icloud_become_apple(tmp_path: Path) -> None:
     """0.10.0 (ADR 0032): the family reads "Apple", so a CalDAV account 0.9.0 named "iCloud · …"
     as it connected reads "Apple · …". A name someone chose, and a calendar address, keep theirs."""

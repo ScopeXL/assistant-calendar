@@ -383,6 +383,14 @@ def _v0_10_0() -> list[Statement]:
     ]
 
 
+def _v0_11_0() -> list[Statement]:
+    """0.11.0 (M6 batch 5): 0.10.0's rows, with the Week view on Rolling week."""
+    return [
+        *_v0_10_0(),
+        "UPDATE household SET display_rolling_week = 1",
+    ]
+
+
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
@@ -395,6 +403,7 @@ SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610121749": _v0_8_0,
     "202610131907": _v0_9_0,
     "202610141930": _v0_10_0,
+    "202610151730": _v0_11_0,
 }
 
 

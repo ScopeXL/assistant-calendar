@@ -7,6 +7,7 @@ import {
   formatTime,
   monthGrid,
   orderedWeekdays,
+  rollingWeek,
   setDatePreferences,
   weekOf,
   weekSpan,
@@ -44,6 +45,30 @@ describe("calendar days", () => {
   it("names a week's span as the board title does (UX §3)", () => {
     expect(weekSpan(weekOf("2026-10-07", 6))).toBe("Oct 4–10");
     expect(weekSpan(weekOf("2026-09-30", 6))).toBe("Sep 27 – Oct 3");
+  });
+
+  it("rolls a week around a day: the day before it, the day, and the five after (ADR 0033)", () => {
+    expect(rollingWeek("2026-10-09")).toEqual([
+      "2026-10-08",
+      "2026-10-09",
+      "2026-10-10",
+      "2026-10-11",
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14",
+    ]);
+    // Paging moves it seven days, and it's named by its span like any other week.
+    expect(rollingWeek(addDays("2026-10-09", 7))[0]).toBe("2026-10-15");
+    expect(weekSpan(rollingWeek("2026-10-09"))).toBe("Oct 8–14");
+    expect(rollingWeek("2026-10-31")).toEqual([
+      "2026-10-30",
+      "2026-10-31",
+      "2026-11-01",
+      "2026-11-02",
+      "2026-11-03",
+      "2026-11-04",
+      "2026-11-05",
+    ]);
   });
 });
 

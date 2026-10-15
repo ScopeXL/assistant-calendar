@@ -19,6 +19,7 @@ async def test_settings_start_with_the_household_defaults(parent: httpx.AsyncCli
     assert settings["theme"] == "auto"
     assert settings["display_home_view"] == "week"
     assert settings["display_week_layout"] == "agenda"  # stacked chips until a parent picks Hours
+    assert settings["display_rolling_week"] is False  # the calendar week until a parent rolls it
     assert settings["show_tips"] is False
     assert settings["text_size"] == "standard"
     assert settings["display_rail_compact"] is False  # the full rail until a parent folds it
@@ -64,6 +65,18 @@ async def test_the_week_layout_and_tips_are_a_parents_to_change(
     assert (tips.json()["display_week_layout"], tips.json()["show_tips"]) == ("hours", True)
     again = (await parent.get("/api/settings")).json()
     assert (again["display_week_layout"], again["show_tips"]) == ("hours", True)
+
+
+async def test_a_parent_turns_on_the_rolling_week(parent: httpx.AsyncClient) -> None:
+    rolling = await parent.patch("/api/settings", json={"display_rolling_week": True}, headers=CSRF)
+    assert rolling.status_code == 200, rolling.text
+    assert rolling.json()["display_rolling_week"] is True
+    # Another setting leaves it as it is.
+    hours = await parent.patch("/api/settings", json={"display_week_layout": "hours"}, headers=CSRF)
+    assert hours.json()["display_rolling_week"] is True
+    assert (await parent.get("/api/settings")).json()["display_rolling_week"] is True
+    off = await parent.patch("/api/settings", json={"display_rolling_week": False}, headers=CSRF)
+    assert off.json()["display_rolling_week"] is False
 
 
 async def test_a_parent_folds_the_rail_and_picks_small_text(parent: httpx.AsyncClient) -> None:

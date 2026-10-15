@@ -49,6 +49,14 @@ describe("Settings → Display (UX §4)", () => {
     expect(screen.queryByText(/7 PM/)).toBeNull();
   });
 
+  it("has Rolling week after Week layout, as the household has it (ADR 0033)", () => {
+    draw({ display_week_layout: "agenda", display_rolling_week: true });
+    const rolling = screen.getByRole<HTMLInputElement>("switch", { name: /^Rolling week/ });
+    expect(rolling.checked).toBe(true);
+    const layout = screen.getByRole("group", { name: "Week layout" });
+    expect(layout.compareDocumentPosition(rolling) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("offers Never first, and brightness as numbers", () => {
     draw();
     expect(choices("Return to the calendar after")).toEqual(["Never", "2 min", "5 min", "10 min"]);

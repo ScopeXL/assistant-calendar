@@ -7546,6 +7546,10 @@
             "title": "Display Return Minutes",
             "type": "integer"
           },
+          "display_rolling_week": {
+            "title": "Display Rolling Week",
+            "type": "boolean"
+          },
           "display_show_today_panel": {
             "title": "Display Show Today Panel",
             "type": "boolean"
@@ -7733,6 +7737,7 @@
           "display_dim_past",
           "display_reduce_motion",
           "display_week_layout",
+          "display_rolling_week",
           "show_tips",
           "sleep_from",
           "sleep_to",
@@ -7900,6 +7905,17 @@
               }
             ],
             "title": "Display Return Minutes"
+          },
+          "display_rolling_week": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Rolling Week"
           },
           "display_show_today_panel": {
             "anyOf": [

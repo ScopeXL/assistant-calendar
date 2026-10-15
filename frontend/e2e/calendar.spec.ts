@@ -6,7 +6,7 @@
  */
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, pairWall, phone, seed, signInPhone, test } from "./fixtures";
+import { expect, pairWall, PASSWORD, phone, seed, signInPhone, test } from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 const WEDNESDAY_10AM = "2026-10-07T14:00:00Z";
@@ -410,4 +410,52 @@ test("an event added from a phone eases onto the wall, and one removed fades awa
   await expect(calmChip).toBeVisible({ timeout: 3_000 });
   expect(await calmChip.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   await context.close();
+});
+
+test("a rolling week keeps today in the same column, and still pages by seven days", async ({
+  page,
+  request,
+}) => {
+  // A Friday: the calendar week (Oct 4–10) and the rolling one (Oct 8–14) differ.
+  const friday = await request.post("/api/_test/clock", {
+    headers: CSRF,
+    data: { set: "2026-10-09T14:00:00Z" },
+  });
+  expect(friday.status()).toBe(204);
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  const days = board.locator("[data-day]");
+  const today = board.locator("[aria-current=date]");
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-04");
+  await expect(days.nth(5)).toHaveAttribute("aria-current", "date");
+
+  // A parent turns it on (Settings → Display → Rolling week); the wall follows at once.
+  const parent = await request.post("/api/auth/login", {
+    headers: CSRF,
+    data: { password: PASSWORD },
+  });
+  expect(parent.ok()).toBe(true);
+  const rolling = await request.patch("/api/settings", {
+    headers: CSRF,
+    data: { display_rolling_week: true },
+  });
+  expect(rolling.ok()).toBe(true);
+  // Yesterday, today in the second column, and the five days after (ADR 0033).
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-08", { timeout: 5_000 });
+  await expect(days.nth(1)).toHaveAttribute("aria-current", "date");
+  await expect(today).toContainText("Fri");
+  await expect(days.last()).toHaveAttribute("data-day", "2026-10-14");
+
+  // The arrows page seven days; This Week comes back to the window around today.
+  const banner = page.getByRole("banner");
+  await banner.getByRole("button", { name: "Next week" }).click();
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-15");
+  await expect(today).toHaveCount(0);
+  const thisWeek = banner.getByRole("button", { name: "This Week" });
+  await thisWeek.click();
+  // The region is named This Week on every week: wait for the button (docs/GOTCHAS.md).
+  await expect(thisWeek).toBeDisabled();
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-08");
+  await expect(days.nth(1)).toHaveAttribute("aria-current", "date");
 });

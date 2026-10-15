@@ -145,6 +145,14 @@ export function DisplayPage() {
           />
         </Row>
         <Switch
+          label="Rolling week"
+          hint="The Week view keeps today in the same column: yesterday, today and the five days after. Off, it shows the calendar week."
+          checked={settings.display_rolling_week}
+          onChange={(display_rolling_week) => {
+            update.mutate({ display_rolling_week });
+          }}
+        />
+        <Switch
           label="Show tips"
           hint="A line under the board with one thing Sunroom can do, changing every half hour. Not on phones."
           checked={settings.show_tips}

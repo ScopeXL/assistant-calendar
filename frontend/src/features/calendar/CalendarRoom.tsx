@@ -4,6 +4,7 @@ import {
   addDays,
   monthGrid,
   monthYear,
+  rollingWeek,
   shortDate,
   wallNow,
   weekOf,
@@ -66,11 +67,14 @@ export function CalendarRoom() {
     null,
   );
 
-  // One array per week, not per render: the Hours grid follows now while `days` holds still.
-  const week = useMemo(
-    () => weekOf(addDays(today, state.weekOffset * 7), weekStartsOn),
-    [today, state.weekOffset, weekStartsOn],
-  );
+  // The calendar week, or with Rolling week on a window that keeps today in one column (ADR
+  // 0033). One array per week, not per render: the Hours grid follows now while `days` holds
+  // still.
+  const rolling = settings?.display_rolling_week ?? false;
+  const week = useMemo(() => {
+    const anchor = addDays(today, state.weekOffset * 7);
+    return rolling ? rollingWeek(anchor) : weekOf(anchor, weekStartsOn);
+  }, [today, state.weekOffset, rolling, weekStartsOn]);
   const focusDay = state.day ?? today;
   const month = monthGrid(today, state.monthOffset, weekStartsOn);
   const range =
