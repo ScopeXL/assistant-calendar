@@ -16,7 +16,8 @@ recurrence engine, ADR 0023); synced calendars (ADR 0024, docs/SYNC.md); lists a
 (ADR 0025); meals, countdowns, photos and weather (ADR 0026); the wall, polished (ADR 0027).
 M6 batch 1 (the owner's notes: docs/M6.md, ADR 0028) is built in 0.7.0, batch 2
 (docs/M6-batch-2.md, ADR 0029) in 0.8.0, batch 3 (docs/M6-batch-3.md, ADR 0030) in 0.9.0,
-and batch 4 (docs/M6-batch-4.md, ADR 0032) for 0.10.0; more M6 comes from use.
+batch 4 (docs/M6-batch-4.md, ADR 0032) in 0.10.0, and batch 5 (docs/M6-batch-5.md, ADR 0033)
+for 0.11.0; more M6 comes from use.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -218,5 +219,3 @@ part your task touches, and move lines there when this file nears its limit.
   at once. Poll for what the test means.
 - `motion` still fades under Reduce Motion, and an endless CSS animation at 0.01 ms flickers:
   leave `exit` out (`useMotionReduced`), and give the loop `animation: none`.
-- The update e2e flaked with the new version named on one hello: a later hello naming the
-  page's own cancels the refresh. Name it on every hello.

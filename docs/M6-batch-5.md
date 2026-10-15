@@ -664,7 +664,7 @@ the calendar month and People its one day; the new row reads under Week layout.
 
 ### T5 Wrap up the batch
 
-- [ ] Done (commit: )
+- [x] Done (commit: "docs: M6 batch 5 wrapped up")
 
 1. **The full gate.** `just check`; the whole `just e2e`; `just screenshots`. Review, against
    UX §10 and `.screenshots/before-0.10.0/`, on `display-1080p` and `display-portrait`:
@@ -703,7 +703,31 @@ the calendar month and People its one day; the new row reads under Week layout.
    the wall: the header at a glance, a tap on the weather, Hours zoomed in and left alone for
    three minutes, Settings → Display → Rolling week on and off. The owner deploys.
 
+**As built.** The full gate on the last code commit, with this task's docs in the tree: `just
+check` green (1,127 backend and 607 frontend tests, API types, migrations, release metadata),
+the whole `just e2e` green (114 passed on five projects, none failed, 8.3 minutes), `just
+screenshots` green (20 runs), `just scan` clean. Reviewed against UX §10 and
+`.screenshots/before-0.10.0/`: the header at Standard (09:40, 16:10 and 21:30, light and dark),
+Small (one row) and Extra large (two rows) on both wall projects, and the laptop's: the date and
+the time on one baseline, the pill centred on the digits, the rule still meeting the rail's;
+Hours zoomed in both themes with no bar; the forecast sheet in both themes (Today, its line,
+Forecast); the Today view; a phone's weather block, unchanged. Nothing needed polishing (one
+comment in `WeatherBlock.tsx` now says "as of 9:10 AM", as the line does). The screenshot of
+Settings → Display stops above Layout, so the new row was checked in T4's walkthrough.
+CLAUDE.md stays under 15 KB (14,859 bytes): its gotcha about the update e2e moved to
+`docs/GOTCHAS.md`, beside two new ones from this batch. Not done by this session: a look at the
+kitchen screen itself (only its overlay scrollbar flickered, and headless Chromium can't show
+that), and Hours left alone for three minutes by hand (the end-to-end test fast-forwards two
+idle minutes and checks the grid came back to now).
+
 ## Follow-ups noticed but not in this batch
+
+- Found while building T3: the header's one-row worst case (1920 Standard, both panels, Wed,
+  Sep 30, 12:30 PM, four people filtered) has about 4 px to spare, so a temperature of three
+  digits (100°F and up) or an old forecast's "as of 9:10 AM" wraps the Calendar's controls to a
+  second row there. Nothing tests that worst case: the layout test measures an ordinary day. A
+  test that pins it (the clock moved before the seed, so the forecast has that day), and a
+  decision on what gives way first, if the owner sees it wrap.
 
 - The hourly icons in the forecast sheet always use the day's variant (`sky(hour.code)` defaults
   `isDay` to true; `ForecastHourOut` has no `is_day`), so "12 AM" shows a sun behind a cloud.

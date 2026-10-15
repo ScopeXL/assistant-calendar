@@ -17,7 +17,7 @@ function staleText(weather: Weather): string | null {
 }
 
 /** The forecast's first line, the weather now: "Partly cloudy, 64° now. High 72°, low 55°.",
- * with ", as of 9:10" after "now" when the forecast is old. */
+ * with ", as of 9:10 AM" after "now" when the forecast is old. */
 function nowLine(weather: Weather, day: WeatherDay | undefined): string | null {
   if (!weather.current) return null;
   const { words } = sky(weather.current.code, weather.current.is_day);

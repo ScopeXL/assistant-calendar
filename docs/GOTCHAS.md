@@ -101,3 +101,11 @@ size limit.
   deploy skill now reports the run.
 - A test that skipped itself at once ended "Test ended." and showed as flaky on CI: the `guard`
   fixture fired `page.addInitScript` without awaiting it. `watch` awaits it now.
+- The update e2e flaked with the new version named on one hello: a later hello naming the
+  page's own cancels the refresh. Name it on every hello.
+- A scrollbar check passed on the code it was meant to catch: headless Chromium on a Mac draws
+  overlay scrollbars (no width), while Linux and CI draw classic ones. Read the computed
+  `scrollbar-width` (or `scrollbar-gutter`) as well as the width.
+- A header measured on Sep 30 had no high and low beside the weather: the test moved the
+  server's clock back after seeding, and the forecast cached at the seed started at the real
+  today. Move the clock before `seed()` when a test needs that day's forecast.

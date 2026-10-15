@@ -13,16 +13,16 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Changed
 
-- The weather's sheet says Today and Forecast, names your town without its country on one line,
-  and opens with what the weather is now and today's high and low.
 - In the header the date and the time sit on one line, and the weather is a round button with a
   chevron that opens the forecast; the day's high and low moved into the forecast's first line.
+- The weather's sheet says Today and Forecast, names your town without its country on one line,
+  and opens with what the weather is now and today's high and low.
 
 ### Fixed
 
-- On a tall screen the header no longer grows when the weather arrives.
 - On the Hours grid, zoomed in, the scrollbar no longer flickers every minute: there is no
   scrollbar. The hours still scroll under a finger, and Fit the day shows the whole day.
+- On a tall screen the header no longer grows when the weather arrives.
 
 ## [0.10.0] - 2026-10-14
 
