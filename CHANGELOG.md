@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-15
+
 ### Added
 
 - Settings → Display → Rolling week: the Week view shows yesterday, today and the five days
@@ -23,6 +25,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - On the Hours grid, zoomed in, the scrollbar no longer flickers every minute: there is no
   scrollbar. The hours still scroll under a finger, and Fit the day shows the whole day.
 - On a tall screen the header no longer grows when the weather arrives.
+- Behind the scenes: new tests check the forecast's sheet, the header's line and that the Hours
+  grid draws no scrollbar, and the next update's upgrade tests start from this version's
+  database.
 
 ## [0.10.0] - 2026-10-14
 
@@ -487,5 +492,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.9.1]: https://github.com/ScopeXL/assistant-calendar/compare/v0.9.0...v0.9.1
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.10.0...HEAD
 [0.10.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.9.1...v0.10.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.10.0...v0.11.0
