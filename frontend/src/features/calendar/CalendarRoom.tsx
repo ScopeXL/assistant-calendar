@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   addDays,
@@ -66,7 +66,11 @@ export function CalendarRoom() {
     null,
   );
 
-  const week = weekOf(addDays(today, state.weekOffset * 7), weekStartsOn);
+  // One array per week, not per render: the Hours grid follows now while `days` holds still.
+  const week = useMemo(
+    () => weekOf(addDays(today, state.weekOffset * 7), weekStartsOn),
+    [today, state.weekOffset, weekStartsOn],
+  );
   const focusDay = state.day ?? today;
   const month = monthGrid(today, state.monthOffset, weekStartsOn);
   const range =

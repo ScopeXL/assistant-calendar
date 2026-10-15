@@ -6,6 +6,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- On the Hours grid, zoomed in, the scrollbar no longer flickers every minute: there is no
+  scrollbar. The hours still scroll under a finger, and Fit the day shows the whole day.
+
 ## [0.10.0] - 2026-10-14
 
 ### Added

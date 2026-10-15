@@ -1,8 +1,9 @@
 /**
  * The Week board's Hours layout end to end (UX §4 "Week board, Hours layout", ADR 0028): the
- * whole day with nothing to scroll, Zoom in, Zoom out and Fit the day, a drop that keeps the time, a tap
- * that adds at a time, and the layout and zoom staying through two idle minutes. The server's
- * clock reads Wednesday, October 7, 2026, 10:00 AM in New York. Synthetic data only.
+ * whole day with nothing to scroll, Zoom in (with no scrollbar), Zoom out and Fit the day, a
+ * drop that keeps the time, a tap that adds at a time, and the layout and zoom staying through
+ * two idle minutes. The server's clock reads Wednesday, October 7, 2026, 10:00 AM in New York.
+ * Synthetic data only.
  */
 import type { Locator, Page } from "@playwright/test";
 
@@ -107,6 +108,15 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
   expect(Math.abs((await scrolled()) - ((10 / 24) * 1.5 * fit - fit / 3))).toBeLessThanOrEqual(2);
   await expect(zoomOut).toBeEnabled();
   await expect(fitDay).toBeEnabled();
+  // It scrolls with no scrollbar, and none is kept room for (ADR 0033: on the kitchen screen
+  // the overlay bar flashed once a minute while a resting grid followed now). The width only
+  // tells where bars are classic (Linux); a Mac's headless Chromium draws overlay ones.
+  expect(
+    await grid.evaluate((node) => getComputedStyle(node).getPropertyValue("scrollbar-width")),
+  ).toBe("none");
+  expect(
+    await grid.evaluate((node) => node.getBoundingClientRect().width - node.clientWidth),
+  ).toBeLessThan(1);
   // The control stays put while the hours scroll under it.
   const at = await scrolled();
   await grid.evaluate((node) => {

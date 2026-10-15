@@ -84,9 +84,12 @@ interface Measure {
 /**
  * The Week board's Hours layout (UX §4 "Week board, Hours layout", ADR 0028): each day from
  * midnight to midnight, events placed by their time and as tall as they last, the now line
- * creeping down today. Fitting the day (zoom 1) nothing scrolls; zoomed in it scrolls, with a
- * visible scrollbar. Each day's head (its name, then its all-day events) stays on top.
- * A tap on an empty spot adds an event there; a long press lifts a chip to another day.
+ * creeping down today. Fitting the day (zoom 1) nothing scrolls; zoomed in it scrolls with no
+ * scrollbar: the hour cut off at the bottom edge, the hours under a finger and the zoom's
+ * buttons say so, and Fit the day always shows the whole day (ADR 0033; the overlay bar flashed
+ * once a minute while the grid followed now). Each day's head (its name, then its all-day
+ * events) stays on top. A tap on an empty spot adds an event there; a long press lifts a chip to
+ * another day.
  */
 export function HoursGrid(props: HoursGridProps) {
   const { days, today, now, onZoom } = props;
@@ -187,7 +190,7 @@ export function HoursGrid(props: HoursGridProps) {
         ref={scroller}
         data-hours=""
         style={style}
-        className="relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain border-t border-line [scrollbar-gutter:stable] [touch-action:pan-y]"
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain border-t border-line [scrollbar-width:none] [touch-action:pan-y]"
       >
         <div className="grid grid-cols-[6rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_var(--grid-h)]">
           <div className="row-span-2 grid grid-rows-subgrid">

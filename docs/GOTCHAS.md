@@ -51,6 +51,9 @@ size limit.
   has `scroll-px-1`.
 - At Small text, 8 px gaps became 7 and failed the tap check: rem shrinks. `--spacing-2` is
   `max(0.5rem, 8px)`; Hours chips size by `tapPx(rem)`.
+- The Hours grid's scrollbar flickered once a minute on the kitchen screen: Chromium's overlay
+  bar shows on every scroll, and a resting grid sets `scrollTop` each minute to follow now. That
+  scroller is `scrollbar-width: none`.
 
 ## Time and live updates
 

@@ -211,7 +211,7 @@ this plan builds the recommended one.
 
 ### T1 The Hours grid loses its scrollbar
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: no scrollbar on the Hours grid")
 
 **Owner's note.** "Remove the scrollbar on the calendar view. When zoomed in, the app
 automatically scrolls to keep the current time in view. When it does, the scrollbar flickers when
@@ -261,7 +261,12 @@ each minute to follow now. That scroller is `scrollbar-width: none`."
 minute: there is no scrollbar. The hours still scroll under a finger, and Fit the day shows the
 whole day."
 
-**As built.**
+**As built.** As planned, and `hours.spec.ts` now checks it: zoomed in, the scroller's
+`scrollbar-width` is `none` and no width is kept for a bar. One thing here was wrong: on this
+Mac, headless Chromium draws overlay scrollbars too (it follows macOS), so the old gutter kept
+no width there and the fitted columns don't move; the width check only bites where bars are
+classic (Linux, CI), which is why the test reads the computed style as well (it failed with
+`auto` on the old class). ADR 0033 was started here, its rows added task by task.
 
 ### T2 The forecast sheet: Today, Forecast, and the place on one line
 
