@@ -6,6 +6,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The weather's sheet says Today and Forecast, names your town without its country on one line,
+  and opens with what the weather is now and today's high and low.
+
 ### Fixed
 
 - On the Hours grid, zoomed in, the scrollbar no longer flickers every minute: there is no

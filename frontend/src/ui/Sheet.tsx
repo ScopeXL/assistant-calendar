@@ -50,6 +50,7 @@ export function Sheet({
   children,
   footer,
   step,
+  oneLineTitle = false,
 }: {
   open: boolean;
   title: string;
@@ -58,6 +59,9 @@ export function Sheet({
   footer?: ReactNode;
   /** For a sheet with steps: when it changes, the new step starts at the top, with focus. */
   step?: string;
+  /** The title never takes a second line: one too long for it is cut with an ellipsis (the
+   * forecast's place). Off, a long title wraps, as an event's should. */
+  oneLineTitle?: boolean;
 }) {
   const display = useShell() === "display";
   const ref = useRef<HTMLDialogElement>(null);
@@ -150,9 +154,12 @@ export function Sheet({
                 display ? "py-2 pr-3 pl-6" : "py-1.5 pr-2 pl-4"
               }`}
             >
+              {/* The heading is the flex item that gives way: Close's least width is its word. */}
               <h2
                 id={titleId}
-                className={display ? "text-d-title font-bold" : "text-row font-bold"}
+                className={`${display ? "text-d-title font-bold" : "text-row font-bold"} ${
+                  oneLineTitle ? "min-w-0 truncate" : ""
+                }`}
               >
                 {title}
               </h2>

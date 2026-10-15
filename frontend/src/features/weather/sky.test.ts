@@ -1,7 +1,7 @@
 import { Cloud, CloudMoon, CloudRain, CloudSnow, Moon, Sun } from "lucide-react";
 import { describe, expect, it } from "vitest";
 
-import { degrees, highLow, rainChance, sky } from "./sky";
+import { degrees, highLow, placeWithoutCountry, rainChance, sky } from "./sky";
 
 describe("the weather's words", () => {
   it("names the sky from its WMO code, by day and by night", () => {
@@ -26,5 +26,18 @@ describe("the weather's words", () => {
     expect(rainChance(20)).toBeNull();
     expect(rainChance(60)).toBe("60%");
     expect(rainChance(null)).toBeNull();
+  });
+
+  it("names the place without its country, the last of its parts", () => {
+    expect(placeWithoutCountry("Sample Town, Sample State, United States")).toBe(
+      "Sample Town, Sample State",
+    );
+    expect(placeWithoutCountry("Sampleton, United Kingdom")).toBe("Sampleton");
+    expect(placeWithoutCountry("Sample Town")).toBe("Sample Town");
+    expect(placeWithoutCountry("  Sample Town ,  Sample State , United States ")).toBe(
+      "Sample Town, Sample State",
+    );
+    expect(placeWithoutCountry(null)).toBeNull();
+    expect(placeWithoutCountry(" , ")).toBeNull();
   });
 });

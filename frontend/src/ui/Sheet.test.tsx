@@ -51,6 +51,32 @@ describe("a sheet with steps", () => {
   });
 });
 
+describe("a sheet's title", () => {
+  it("keeps to one line when asked, cut rather than wrapped, and still names the sheet", () => {
+    render(
+      <Sheet open oneLineTitle title="Sample Town, Sample State" onClose={vi.fn()}>
+        <p>Sample line</p>
+      </Sheet>,
+    );
+    // The heading is what gives way beside Close, whose least width is its one word.
+    expect(screen.getByRole("heading", { name: "Sample Town, Sample State" }).className).toMatch(
+      /\bmin-w-0\b.*\btruncate\b/,
+    );
+    expect(screen.getByRole("dialog", { name: "Sample Town, Sample State" })).toBeTruthy();
+  });
+
+  it("wraps by default, as an event's long title should", () => {
+    render(
+      <Sheet open title="Soccer practice at the far field" onClose={vi.fn()}>
+        <p>Sample line</p>
+      </Sheet>,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Soccer practice at the far field" }).className,
+    ).not.toMatch(/\btruncate\b/);
+  });
+});
+
 describe("toasts while a sheet is open", () => {
   function Screen({ open, renders }: { open: boolean; renders: number }) {
     return (

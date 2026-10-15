@@ -270,7 +270,7 @@ classic (Linux, CI), which is why the test reads the computed style as well (it 
 
 ### T2 The forecast sheet: Today, Forecast, and the place on one line
 
-- [ ] Done (commit: )
+- [x] Done (commit: "weather: the forecast says Today and Forecast, its place on one line")
 
 **Owner's note.** "When tapping the weather in the header the modal has some phrasing that needs
 polishing. 'The Next Hours' should simply say 'Today'. 'The Week' should say 'Forecast'. Remove
@@ -346,7 +346,15 @@ and Weather by Open-Meteo at the foot"; no other doc names the old headings. ADR
 **CHANGELOG** (Changed). "The weather's sheet says Today and Forecast, names your town without
 its country on one line, and opens with what the weather is now and today's high and low."
 
-**As built.**
+**As built.** As planned, with three small differences. The Today line's high and low come from
+today's own forecast (`useWeatherDay(today)`, which the header's spoken name already used, handed
+to the sheet), not `daily[0]`; `highLow` takes the two numbers. `placeWithoutCountry` also
+answers null for an empty label, so the sheet still falls back to "The Weather". And
+`weather.spec.ts` goes one step further than planned: with the sheet open, a parent changes the
+place to a name too long for the line, and the title follows at once (`settings.changed`
+refreshes the forecast), stays one line, is cut (`scrollWidth > clientWidth`) and still names the
+dialog. It passes on both wall projects. `Sheet.test.tsx` has a case each way (one line when
+asked; wrapping by default).
 
 ### T3 The header's today block: one baseline, and the weather as a pill
 

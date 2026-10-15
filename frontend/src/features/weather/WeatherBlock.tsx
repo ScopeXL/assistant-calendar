@@ -5,8 +5,8 @@ import { useMinute } from "../../lib/time";
 import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import type { RailPlace } from "../registry";
-import { useWeather, useWeatherDay, type Weather } from "./data";
-import { degrees, highLow, rainChance, sky } from "./sky";
+import { useWeather, useWeatherDay, type Weather, type WeatherDay } from "./data";
+import { degrees, highLow, placeWithoutCountry, rainChance, sky } from "./sky";
 
 /** "as of 9:10" once the forecast is over 3 hours old (PLAN §11.4). */
 function staleText(weather: Weather): string | null {
@@ -15,10 +15,20 @@ function staleText(weather: Weather): string | null {
     : null;
 }
 
+/** The forecast's first line, the weather now: "Partly cloudy, 64° now. High 72°, low 55°.",
+ * with ", as of 9:10" after "now" when the forecast is old. */
+function nowLine(weather: Weather, day: WeatherDay | undefined): string | null {
+  if (!weather.current) return null;
+  const { words } = sky(weather.current.code, weather.current.is_day);
+  const stale = staleText(weather);
+  const now = `${words}, ${degrees(weather.current.temperature)} now${stale ? `, ${stale}` : ""}.`;
+  return day ? `${now} ${highLow(day.high, day.low)}.` : now;
+}
+
 /**
  * The weather by the clock (UX §3): the sky's icon and the temperature, with the day's high over
  * its low beside them in the wall's header, or under them at the top of a phone's Today. A tap
- * opens the day's hours and the week. Nothing shows until there's a forecast.
+ * opens the forecast: Today and the days ahead. Nothing shows until there's a forecast.
  */
 export function WeatherBlock({ place }: { place: RailPlace }) {
   const { data } = useWeather();
@@ -79,6 +89,7 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
       </button>
       <Forecast
         weather={data}
+        day={day}
         open={open}
         onClose={() => {
           setOpen(false);
@@ -88,13 +99,20 @@ export function WeatherBlock({ place }: { place: RailPlace }) {
   );
 }
 
-/** The day's hours and the week, from the header's weather. */
+/**
+ * The forecast, from the weather by the clock (UX §3, ADR 0033): titled with the place without
+ * its country, on one line; **Today**, a line on the weather now with the day's high and low,
+ * then the next twelve hours; **Forecast**, the days ahead.
+ */
 function Forecast({
   weather,
+  day,
   open,
   onClose,
 }: {
   weather: Weather;
+  /** Today's forecast, for its high and low. */
+  day: WeatherDay | undefined;
   open: boolean;
   onClose: () => void;
 }) {
@@ -102,11 +120,18 @@ function Forecast({
   const text = display ? "text-d-body" : "text-body";
   const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
   const today = weather.daily[0]?.date;
+  const now = nowLine(weather, day);
   return (
-    <Sheet open={open} title={weather.location_label ?? "The Weather"} onClose={onClose}>
+    <Sheet
+      open={open}
+      title={placeWithoutCountry(weather.location_label) ?? "The Weather"}
+      oneLineTitle
+      onClose={onClose}
+    >
       <div className="flex flex-col gap-6">
-        <section aria-label="The Next Hours" className="flex flex-col gap-3">
-          <h3 className={`${text} font-bold`}>The Next Hours</h3>
+        <section aria-label="Today" className="flex flex-col gap-3">
+          <h3 className={`${text} font-bold`}>Today</h3>
+          {now ? <p className={soft}>{now}</p> : null}
           <ul className="grid grid-cols-4 gap-3 sm:grid-cols-6">
             {weather.hourly.slice(0, 12).map((hour) => {
               const { icon: Icon, words } = sky(hour.code);
@@ -127,8 +152,8 @@ function Forecast({
             })}
           </ul>
         </section>
-        <section aria-label="The Week" className="flex flex-col gap-1">
-          <h3 className={`${text} font-bold`}>The Week</h3>
+        <section aria-label="Forecast" className="flex flex-col gap-1">
+          <h3 className={`${text} font-bold`}>Forecast</h3>
           <ul className="flex flex-col divide-y divide-line">
             {weather.daily.map((day) => {
               const { icon: Icon, words } = sky(day.code);
