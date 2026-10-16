@@ -84,13 +84,14 @@ async def stars_now(client: httpx.AsyncClient, member_id: str) -> dict[str, Any]
 
 
 async def give(client: httpx.AsyncClient, member_id: str, points: int) -> dict[str, Any]:
+    """One child's stars after a parent gives (or takes, below zero) some."""
     response = await client.post(
         "/api/chores/points/adjust",
-        json={"member_id": member_id, "points": points, "reason": "A head start"},
+        json={"member_ids": [member_id], "points": points, "reason": "A head start"},
         headers=CSRF,
     )
     assert response.status_code == 200, response.text
-    found: dict[str, Any] = response.json()
+    found: dict[str, Any] = response.json()["stars"][0]
     return found
 
 

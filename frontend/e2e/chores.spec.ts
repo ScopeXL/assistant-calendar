@@ -212,6 +212,59 @@ test("a reward asked for on the wall shows on a parent's phone; Approve on the w
   await expect(page.getByRole("region", { name: "Asked" })).toHaveCount(0);
 });
 
+test("stars: a parent takes a custom amount from two children at once (ADR 0034)", async ({
+  page,
+  request,
+}) => {
+  await seed(request, { pin: PIN });
+  await pairWall(page);
+  const balances = async (): Promise<Record<string, number>> => {
+    const members = (await (await page.request.get("/api/members")).json()) as {
+      id: string;
+      name: string;
+    }[];
+    const points = (await (await page.request.get("/api/chores/points")).json()) as {
+      stars: { member_id: string; balance: number }[];
+    };
+    return Object.fromEntries(
+      points.stars.map((s) => [members.find((m) => m.id === s.member_id)?.name, s.balance]),
+    );
+  };
+  const before = await balances();
+  await page.goto("/display");
+  await page.getByRole("button", { name: "Settings" }).click();
+  const pin = page.getByRole("dialog", { name: "Parent PIN" });
+  for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
+  await expect(pin).toBeHidden();
+  await page
+    .getByRole("navigation", { name: "Settings" })
+    .getByRole("link", { name: "Tasks", exact: true })
+    .click();
+  // The Stars group: the section its heading heads.
+  const group = page.getByRole("heading", { name: "Stars", exact: true }).locator("xpath=..");
+  await expect(group).toBeVisible();
+  const who = group.getByRole("group", { name: "Who" });
+  await who.getByRole("button", { name: "Mia" }).click();
+  await who.getByRole("button", { name: "Leo" }).click();
+  await group.getByRole("button", { name: "Custom…" }).click();
+  await group
+    .getByRole("group", { name: "Give or take" })
+    .getByRole("button", { name: "Take" })
+    .click();
+  const many = group.getByRole("group", { name: "How many stars" });
+  // Custom starts at the chosen amount, 1: two more make 3.
+  await many.getByRole("button", { name: "How many stars: more" }).click();
+  await many.getByRole("button", { name: "How many stars: more" }).click();
+  await expect(many).toContainText("3 stars");
+  await group.getByRole("button", { name: "Take Stars" }).click();
+  await expect(toast(page, "Took 3 stars from Mia and Leo")).toBeVisible();
+  const after = await balances();
+  expect(after.Mia).toBe((before.Mia ?? 0) - 3);
+  expect(after.Leo).toBe((before.Leo ?? 0) - 3);
+  // The children stay picked for the next one.
+  await expect(who.getByRole("button", { name: "Mia" })).toHaveAttribute("aria-pressed", "true");
+});
+
 test("a task every two weeks on two days, with all five people on one line of Who", async ({
   page,
   request,

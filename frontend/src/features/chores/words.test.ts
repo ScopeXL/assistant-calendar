@@ -6,9 +6,12 @@ import {
   boxLabel,
   boxLine,
   countText,
+  customPoints,
   doneLine,
+  namesText,
   routineTitle,
   starsLine,
+  starsToast,
 } from "./words";
 
 const people = [
@@ -70,5 +73,26 @@ describe("chores' words", () => {
   it("names whose routine it is", () => {
     expect(routineTitle("Bedtime routine", "Leo")).toBe("Leo's bedtime routine");
     expect(routineTitle("Leo's bedtime", "Leo")).toBe("Leo's bedtime");
+  });
+});
+
+describe("stars for several children (ADR 0034)", () => {
+  it("names one, two, or more in a sentence", () => {
+    expect(namesText(["Mia"])).toBe("Mia");
+    expect(namesText(["Mia", "Leo"])).toBe("Mia and Leo");
+    expect(namesText(["Mia", "Leo", "Sam"])).toBe("Mia, Leo and Sam");
+    expect(namesText([])).toBe("");
+  });
+
+  it("says what was given or taken, and from whom", () => {
+    expect(starsToast(5, ["Mia"])).toBe("Gave Mia 5 stars");
+    expect(starsToast(5, ["Mia", "Leo"])).toBe("Gave Mia and Leo 5 stars");
+    expect(starsToast(-1, ["Mia", "Leo", "Sam"])).toBe("Took 1 star from Mia, Leo and Sam");
+    expect(starsToast(1, ["Leo"])).toBe("Gave Leo 1 star");
+  });
+
+  it("turns Custom… into stars to give or take", () => {
+    expect(customPoints("give", 7)).toBe(7);
+    expect(customPoints("take", 3)).toBe(-3);
   });
 });

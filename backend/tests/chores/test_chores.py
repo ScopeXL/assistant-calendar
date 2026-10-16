@@ -546,12 +546,12 @@ async def test_streaks_and_this_week_in_stars(
     assert (done["stars"]["streak"], done["stars"]["week"], done["stars"]["balance"]) == (5, 4, 5)
     taken = await parent.post(
         "/api/chores/points/adjust",
-        json={"member_id": family.mia, "points": -2, "reason": "Fair's fair"},
+        json={"member_ids": [family.mia], "points": -2, "reason": "Fair's fair"},
         headers=CSRF,
     )
-    assert taken.json()["balance"] == 3
+    assert taken.json()["stars"][0]["balance"] == 3
     nothing = await parent.post(
-        "/api/chores/points/adjust", json={"member_id": family.mia, "points": 0}, headers=CSRF
+        "/api/chores/points/adjust", json={"member_ids": [family.mia], "points": 0}, headers=CSRF
     )
     assert error(nothing) == (422, "invalid", "Give or take at least one star.")
     every = (await parent.get("/api/chores/points")).json()["stars"]
@@ -618,3 +618,52 @@ async def test_every_change_goes_out_live(
         change,
         stars_moved,
     ]
+
+
+async def test_a_parent_gives_stars_to_several_children_at_once(
+    parent: httpx.AsyncClient, family: Family
+) -> None:
+    """ADR 0034: one row each, one transaction, the stars in the order asked; a child named
+    twice counts once."""
+    given = await parent.post(
+        "/api/chores/points/adjust",
+        json={"member_ids": [family.leo, family.mia, family.leo], "points": 3, "reason": "Bins"},
+        headers=CSRF,
+    )
+    assert given.status_code == 200, given.text
+    stars = given.json()["stars"]
+    assert [(s["member_id"], s["balance"]) for s in stars] == [(family.leo, 3), (family.mia, 3)]
+    taken = await parent.post(
+        "/api/chores/points/adjust",
+        json={"member_ids": [family.mia, family.leo], "points": -1},
+        headers=CSRF,
+    )
+    assert [s["balance"] for s in taken.json()["stars"]] == [2, 2]
+    every = (await parent.get("/api/chores/points")).json()["stars"]
+    assert {s["member_id"]: s["balance"] for s in every}[family.mia] == 2
+
+
+async def test_stars_for_too_many_or_someone_gone_are_refused(
+    parent: httpx.AsyncClient, family: Family
+) -> None:
+    many = await parent.post(
+        "/api/chores/points/adjust",
+        json={"member_ids": [family.mia] * 21, "points": 1},
+        headers=CSRF,
+    )
+    assert many.status_code == 422
+    none = await parent.post(
+        "/api/chores/points/adjust", json={"member_ids": [], "points": 1}, headers=CSRF
+    )
+    assert none.status_code == 422
+    archived = await parent.post(f"/api/members/{family.leo}/archive", headers=CSRF)
+    assert archived.status_code == 200, archived.text
+    gone = await parent.post(
+        "/api/chores/points/adjust",
+        json={"member_ids": [family.mia, family.leo], "points": 1},
+        headers=CSRF,
+    )
+    assert error(gone) == (422, "unknown_member", "That person isn't in the household.")
+    # Nothing was written for Mia either.
+    every = (await parent.get("/api/chores/points")).json()["stars"]
+    assert {s["member_id"]: s["balance"] for s in every}[family.mia] == 0

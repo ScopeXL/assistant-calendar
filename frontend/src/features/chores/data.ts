@@ -12,6 +12,7 @@ import { qk } from "../../api/keys";
 import { usePlugins } from "../../lib/household";
 import { asParent } from "../../lib/parent";
 import { showToast } from "../../lib/toast";
+import { starsToast } from "./words";
 
 export type Day = components["schemas"]["DayOut"];
 export type Column = components["schemas"]["ColumnOut"];
@@ -451,32 +452,29 @@ export function useChoreChanges() {
     onSettled: refresh,
   });
 
+  // To one child or several at once (ADR 0034); the toast names them all.
   const adjust = useMutation({
     mutationFn: async ({
-      member,
+      members,
       points,
       reason,
     }: {
-      member: string;
+      members: string[];
       points: number;
       reason: string;
-      name: string;
+      names: string[];
     }) =>
       asParent(
         async () =>
           unwrap(
             await api.POST("/api/chores/points/adjust", {
-              body: { member_id: member, points, reason },
+              body: { member_ids: members, points, reason },
             }),
           ),
         PARENT_CHANGE,
       ),
-    onSuccess: (_data, { points, name }) => {
-      showToast(
-        points > 0
-          ? `Gave ${name} ${String(points)} ${points === 1 ? "star" : "stars"}`
-          : `Took ${String(-points)} ${points === -1 ? "star" : "stars"} from ${name}`,
-      );
+    onSuccess: (_data, { points, names }) => {
+      showToast(starsToast(points, names));
     },
     onSettled: refresh,
   });

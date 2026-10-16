@@ -41,7 +41,6 @@ from sunroom.plugins.chores.schemas import (
     RoutinePatch,
     RoutineRunOut,
     RoutinesOut,
-    StarsOut,
     StepsIn,
     WeekOut,
 )
@@ -101,7 +100,7 @@ def build(router: APIRouter, plugin: Chores) -> None:
         return await service.stars_view(ctx())
 
     @router.post("/points/adjust")
-    async def adjust(body: AdjustIn, actor: ParentDep) -> StarsOut:  # pyright: ignore[reportUnusedFunction]
+    async def adjust(body: AdjustIn, actor: ParentDep) -> PointsOut:  # pyright: ignore[reportUnusedFunction]
         return await service.adjust(ctx(), actor, body)
 
     # ---- rewards -----------------------------------------------------------------------------

@@ -231,9 +231,14 @@
       },
       "AdjustIn": {
         "properties": {
-          "member_id": {
-            "title": "Member Id",
-            "type": "string"
+          "member_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Member Ids",
+            "type": "array"
           },
           "points": {
             "maximum": 1000.0,
@@ -249,7 +254,7 @@
           }
         },
         "required": [
-          "member_id",
+          "member_ids",
           "points"
         ],
         "title": "AdjustIn",
@@ -12013,7 +12018,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/StarsOut"
+                  "$ref": "#/components/schemas/PointsOut"
                 }
               }
             },

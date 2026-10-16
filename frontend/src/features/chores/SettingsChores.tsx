@@ -8,11 +8,13 @@ import { useMinute } from "../../lib/time";
 import { Button } from "../../ui/Button";
 import { PanelActions } from "../../ui/PanelActions";
 import { Chip, ChipRow } from "../../ui/Chip";
-import { useFieldLabel } from "../../ui/Field";
+import { Field, useFieldLabel } from "../../ui/Field";
 import { LengthField } from "../../ui/LengthField";
 import { ListRow } from "../../ui/ListRow";
+import { Segmented } from "../../ui/Segmented";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
+import { Stepper } from "../../ui/Stepper";
 import { TextField } from "../../ui/TextField";
 import { TimeField } from "../../ui/TimeField";
 import { WeekdayPicker } from "../../ui/WeekStrip";
@@ -31,7 +33,7 @@ import {
 } from "./data";
 import { STEP_ICONS, stepIcon } from "./icons";
 import { RewardPanel } from "./RewardsPage";
-import { clockText } from "./words";
+import { clockText, customPoints } from "./words";
 
 const SUGGESTED_STEPS: { icon: string; title: string }[] = [
   { icon: "toothbrush", title: "Brush teeth" },
@@ -458,15 +460,26 @@ function RoutineForm({ routine, onClose }: { routine: Routine | null; onClose: (
   );
 }
 
-/** Give or take stars (a parent): for a reward outside the app, or a chore done twice. */
+/** The ready-made amounts; Custom… picks any other (ADR 0034). */
+const PRESETS = [-5, -1, 1, 5, 10];
+
+/**
+ * Give or take stars (a parent): for a reward outside the app, or a chore done twice. One child
+ * or several at once, a preset or Custom… (Give or Take, 1 to 100), with a reason; the children
+ * stay picked after, the reason clears (ADR 0034).
+ */
 function AdjustGroup() {
   const display = useShell() === "display";
   const { data: members = [] } = useMembers();
   const { adjust } = useChoreChanges();
-  const [kid, setKid] = useState<string | null>(null);
-  const [points, setPoints] = useState(1);
+  const [kids, setKids] = useState<string[]>([]);
+  const [preset, setPreset] = useState(1);
+  const [custom, setCustom] = useState(false);
+  const [direction, setDirection] = useState<"give" | "take">("give");
+  const [count, setCount] = useState(1);
   const [reason, setReason] = useState("");
-  const chosen = personOf(members, kid);
+  const chosen = kids.flatMap((id) => personOf(members, id) ?? []);
+  const points = custom ? customPoints(direction, count) : preset;
   return (
     <Group title="Stars">
       <div className={`flex flex-col ${display ? "gap-5 py-5" : "gap-4 py-4"}`}>
@@ -475,24 +488,63 @@ function AdjustGroup() {
           members={members}
           kidsOnly
           everyone={false}
-          value={kid ? [kid] : []}
-          onChange={(ids) => {
-            setKid(ids[0] ?? null);
-          }}
+          multiple
+          value={kids}
+          onChange={setKids}
         />
         <ChipRow label="How many">
-          {[-5, -1, 1, 5, 10].map((value) => (
+          {PRESETS.map((value) => (
             <Chip
               key={value}
-              on={points === value}
+              on={!custom && preset === value}
               onClick={() => {
-                setPoints(value);
+                setPreset(value);
+                setCustom(false);
               }}
             >
               {value > 0 ? `+${String(value)}` : `−${String(-value)}`}
             </Chip>
           ))}
+          <Chip
+            opener
+            expanded={custom}
+            onClick={() => {
+              if (!custom) {
+                // It starts where the chosen amount was: +5 opens on Give, 5.
+                setDirection(preset > 0 ? "give" : "take");
+                setCount(Math.abs(preset));
+              }
+              setCustom(!custom);
+            }}
+          >
+            Custom…
+          </Chip>
         </ChipRow>
+        {custom ? (
+          <>
+            <Field label="Give or take">
+              <Segmented
+                label="Give or take"
+                value={direction}
+                onChange={setDirection}
+                options={[
+                  { value: "give", label: "Give" },
+                  { value: "take", label: "Take" },
+                ]}
+              />
+            </Field>
+            <Field label="How many stars">
+              <Stepper
+                label="How many stars"
+                value={count}
+                min={1}
+                max={100}
+                words={(n) => `${String(n)} ${n === 1 ? "star" : "stars"}`}
+                onChange={setCount}
+              />
+            </Field>
+          </>
+        ) : null}
         <TextField
           label="What for (optional)"
           autoComplete="off"
@@ -508,12 +560,17 @@ function AdjustGroup() {
         ) : null}
         <div>
           <Button
-            disabled={!chosen}
+            disabled={chosen.length === 0}
             pending={adjust.isPending}
             onClick={() => {
-              if (!chosen) return;
+              if (chosen.length === 0) return;
               adjust.mutate(
-                { member: chosen.id, points, reason: reason.trim(), name: chosen.name },
+                {
+                  members: chosen.map((kid) => kid.id),
+                  points,
+                  reason: reason.trim(),
+                  names: chosen.map((kid) => kid.name),
+                },
                 {
                   onSuccess: () => {
                     setReason("");

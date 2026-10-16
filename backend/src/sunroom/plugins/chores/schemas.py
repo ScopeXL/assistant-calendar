@@ -219,7 +219,8 @@ class PointsOut(BaseModel):
 
 
 class AdjustIn(BaseModel):
-    member_id: str
+    # One child or several at once (ADR 0034): a ledger row each, the same stars and reason.
+    member_ids: Annotated[list[str], Field(min_length=1, max_length=20)]
     points: Annotated[int, Field(ge=-1000, le=1000)]
     reason: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] = ""
 

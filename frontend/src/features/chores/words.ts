@@ -13,6 +13,27 @@ export interface Named {
 const nameOf = (people: Named[], id: string | null | undefined) =>
   id ? people.find((person) => person.id === id)?.name : undefined;
 
+/** Names in a sentence: "Mia", "Mia and Leo", "Mia, Leo and Sam". */
+export function namesText(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
+}
+
+/** The toast after a parent gives or takes stars (UX §2): "Gave Mia and Leo 5 stars", "Took
+ * 1 star from Mia". The button that sent it says Give Stars or Take Stars by the same sign. */
+export function starsToast(points: number, names: readonly string[]): string {
+  const count = Math.abs(points);
+  const stars = `${String(count)} ${count === 1 ? "star" : "stars"}`;
+  return points > 0
+    ? `Gave ${namesText(names)} ${stars}`
+    : `Took ${stars} from ${namesText(names)}`;
+}
+
+/** What Custom… gives or takes (ADR 0034): the stepper's count, below zero to take. */
+export function customPoints(direction: "give" | "take", count: number): number {
+  return direction === "give" ? count : -count;
+}
+
 /** "17:00" → "5:00 PM" (or "17:00" on a 24-hour household). */
 export function clockText(hhmm: string): string {
   return formatWallTime(`2000-01-01T${hhmm}:00`);

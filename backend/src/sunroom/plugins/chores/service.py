@@ -39,8 +39,8 @@ from sunroom.plugins.chores.common import (
     now_of,
     possessive,
     rule_of,
-    stars_for,
     stars_of,
+    streak_book,
     switches,
     unknown_member,
 )
@@ -58,7 +58,6 @@ from sunroom.plugins.chores.schemas import (
     DayOut,
     PointsOut,
     RemovedChoreOut,
-    StarsOut,
     WaitingOut,
     WeekCellOut,
     WeekColumnOut,
@@ -592,27 +591,31 @@ async def stars_view(ctx: PluginContext) -> PointsOut:
         return PointsOut(stars=await stars_of(session, now, ids, book))
 
 
-async def adjust(ctx: PluginContext, actor: Actor, body: AdjustIn) -> StarsOut:
-    """A parent gives or takes stars, with a reason."""
+async def adjust(ctx: PluginContext, actor: Actor, body: AdjustIn) -> PointsOut:
+    """A parent gives or takes stars, with a reason: to one child or several at once, a ledger
+    row each in one transaction (ADR 0034). Answers their stars, in the order asked."""
     if body.points == 0:
         raise invalid("Give or take at least one star.", "points")
     now = await now_of(ctx)
     active = await _active_ids(ctx)
-    if body.member_id not in active:
+    ids = list(dict.fromkeys(body.member_ids))
+    if any(member_id not in active for member_id in ids):
         raise unknown_member()
     async with ctx.write() as tx:
-        tx.session.add(
-            PointAdjustment(
-                member_id=body.member_id,
-                points=body.points,
-                reason=body.reason,
-                by_member_id=actor.member_id,
-                created_at=now.utc,
+        for member_id in ids:
+            tx.session.add(
+                PointAdjustment(
+                    member_id=member_id,
+                    points=body.points,
+                    reason=body.reason,
+                    by_member_id=actor.member_id,
+                    created_at=now.utc,
+                )
             )
-        )
-        tx.publish("points.changed", {"member_id": body.member_id})
+            tx.publish("points.changed", {"member_id": member_id})
     async with ctx.read() as session:
-        return await stars_for(session, now, body.member_id, active)
+        book = await streak_book(session, now, active)
+        return PointsOut(stars=await stars_of(session, now, ids, book))
 
 
 # ---- housekeeping --------------------------------------------------------------------------------

@@ -747,7 +747,7 @@ in both themes is left to T17's screenshots (`settings-change-a-person`).
 
 ### T7 Stars for several children, and a custom amount
 
-- [ ] Done (commit: )
+- [x] Done (commit: "chores: stars for several children at once, and a custom amount")
 
 **Owner's note.** "The 'Stars' section should allow the person to select multiple children. Also,
 add a 'Custom' button that lets them choose how many to give or take."
@@ -794,7 +794,14 @@ row.
 **CHANGELOG** (Added). "Settings → Tasks → Stars gives or takes stars for several children at
 once, and Custom… picks any number from 1 to 100."
 
-**As built.** (fill in)
+**As built.** As planned, with two small differences. The route answers `PointsOut` (`{stars:
+[...]}`, as `GET /api/chores/points` does) rather than a bare list. The words live in
+`chores/words.ts`: `namesText` (the plan's `names()`), `starsToast` and `customPoints`, with
+cases in `words.test.ts`; Custom… opens on the chosen preset's direction and size, and closing
+it goes back to that preset. `test_chores.py` has two new cases (two children, a name twice,
+two balances; none, 21 and an archived child refused with nothing written); the e2e case in
+`chores.spec.ts` unlocks Settings with the PIN on the wall, picks Mia and Leo, Custom…, Take,
+3, and checks the toast, both balances 3 lower, and the children still picked.
 
 ### T8 Room around a chosen person
 

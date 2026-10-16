@@ -9,6 +9,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 ### Added
 
 - Four more colors for people and calendars: Orange, Brown, Gray and Lime.
+- Settings → Tasks → Stars gives or takes stars for several children at once, and Custom… picks
+  any number from 1 to 100.
 
 ### Changed
 

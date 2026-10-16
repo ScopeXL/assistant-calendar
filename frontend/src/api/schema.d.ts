@@ -2498,8 +2498,8 @@ export interface components {
         };
         /** AdjustIn */
         AdjustIn: {
-            /** Member Id */
-            member_id: string;
+            /** Member Ids */
+            member_ids: string[];
             /** Points */
             points: number;
             /**
@@ -7295,7 +7295,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StarsOut"];
+                    "application/json": components["schemas"]["PointsOut"];
                 };
             };
             /** @description Validation Error */
