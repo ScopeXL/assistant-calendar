@@ -144,6 +144,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Restore State */
+        get: operations["restore_state_api_admin_restore_get"];
+        put?: never;
+        /**
+         * Stage Upload
+         * @description The file itself is the body (as a photo upload's is), with its name in X-Filename. It is
+         *     checked and kept, ready to restore; nothing changes yet.
+         */
+        post: operations["stage_upload_api_admin_restore_post"];
+        /**
+         * Discard
+         * @description Keep everything: the file sent is forgotten.
+         */
+        delete: operations["discard_api_admin_restore_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/restore/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply
+         * @description Restore the file sent, with the household password, checked as at sign-in and as Erase
+         *     everything does (the same bar: what's on the server now survives only as a copy).
+         */
+        post: operations["apply_api_admin_restore_apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/update": {
         parameters: {
             query?: never;
@@ -4550,6 +4597,71 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** RestoreApplyIn */
+        RestoreApplyIn: {
+            /** Password */
+            password: string;
+        };
+        /** RestoreApplyOut */
+        RestoreApplyOut: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
+        /**
+         * RestoreOutcomeOut
+         * @description How the last restore went (it's applied as Sunroom starts again).
+         */
+        RestoreOutcomeOut: {
+            /** At */
+            at: string;
+            /** File Name */
+            file_name: string | null;
+            /** Ok */
+            ok: boolean;
+            /** Photos */
+            photos: string | null;
+            /** Previous */
+            previous: string | null;
+            /** Problem */
+            problem: string | null;
+        };
+        /** RestoreStateOut */
+        RestoreStateOut: {
+            last: components["schemas"]["RestoreOutcomeOut"] | null;
+            staged: components["schemas"]["RestoreSummaryOut"] | null;
+        };
+        /**
+         * RestoreSummaryOut
+         * @description What the chosen file holds (Restore from a File?).
+         */
+        RestoreSummaryOut: {
+            /** App Version */
+            app_version: string | null;
+            /** Bytes */
+            bytes: number;
+            /** Created At */
+            created_at: string | null;
+            /** File Name */
+            file_name: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "db" | "zip";
+            /** Needs Upgrade */
+            needs_upgrade: boolean;
+            /** Photo Files */
+            photo_files: number;
+            /** Row Counts */
+            row_counts: {
+                [key: string]: number;
+            };
+            /** Schema Revision */
+            schema_revision: string;
+        };
         /** RewardIn */
         RewardIn: {
             /** Cost Points */
@@ -5618,6 +5730,111 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EraseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_state_api_admin_restore_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreStateOut"];
+                };
+            };
+        };
+    };
+    stage_upload_api_admin_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreSummaryOut"];
+                };
+            };
+            /** @description No Content-Length */
+            411: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not enough free space */
+            507: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    discard_api_admin_restore_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apply_api_admin_restore_apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreApplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreApplyOut"];
                 };
             };
             /** @description Validation Error */

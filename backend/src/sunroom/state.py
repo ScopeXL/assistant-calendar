@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated
@@ -21,6 +22,7 @@ from sunroom.core.clock import Clock
 from sunroom.core.config import Settings
 from sunroom.core.http import GuardedHttp
 from sunroom.core.jobs import Jobs
+from sunroom.core.logging import get_logger
 from sunroom.core.updates import UpdateCheck
 from sunroom.db.backup import BackupPolicy, BackupService
 from sunroom.db.engine import Database
@@ -28,6 +30,8 @@ from sunroom.events.hub import EventHub
 from sunroom.household.screenwatch import ScreenWatch
 from sunroom.photos.store import PhotoStore
 from sunroom.plugins.manager import PluginManager
+
+log = get_logger(__name__)
 
 RECENT_HOSTS = 12
 
@@ -58,6 +62,11 @@ class HelloVersion:
         if self.once:
             self.stand_in = None
         return named
+
+
+def _no_restart() -> None:
+    """Tests and `sunroom openapi` never run themselves again."""
+    log.info("app.restart_skipped")
 
 
 @dataclass
@@ -92,6 +101,10 @@ class AppState:
     updates: UpdateCheck = field(default_factory=UpdateCheck)
     # What the stream's hello says this server is (every screen reloads on a new one).
     hello_version: HelloVersion = field(default_factory=HelloVersion)
+    # How this process runs itself again after a restore (boot.reexec; under `--reload`, the dev
+    # server's reload), and one upload or restore at a time (meta/restore.py, ADR 0034).
+    restart: Callable[[], None] = _no_restart
+    restore_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     started: bool = False
 
     def zone(self) -> ZoneInfo:

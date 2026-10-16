@@ -71,6 +71,19 @@ On a plain home network you can skip the proxy entirely: leave every variable em
   | Caddy | `reverse_proxy` already streams events. If you use `encode`, exclude the stream: `@notsse not path /api/events` then `encode @notsse zstd gzip` |
   | Cloudflare (proxied DNS or Tunnel) | Add a Cache Rule that bypasses `/api/*` |
 
+- **Restore from a File** (Settings → Backup) sends a whole backup in one request, and a zip with
+  every photo can be a few GB. Let the proxy take it:
+
+  | Proxy | Uploads (Restore from a File) |
+  |---|---|
+  | Nginx Proxy Manager / nginx | `client_max_body_size 0;` (nginx's default is 1 MB); in Nginx Proxy Manager, in the host's **Advanced** tab |
+  | Traefik | Nothing, unless the `buffering` middleware sets `maxRequestBodyBytes`: raise it |
+  | Caddy | Nothing, unless a `request_body` sets `max_size`: raise it |
+  | Cloudflare (proxied DNS or Tunnel) | 100 MB per request on the Free plan: restore a bigger zip from the home network, or restore Data Only |
+
+  When a file is more than the proxy lets through, Sunroom says "The file is bigger than your
+  proxy allows" instead of restoring it.
+
 ## 3. Check the proxy's headers
 
 There is nothing to set for the proxy (ADR 0034). Sunroom believes forwarded headers (https,

@@ -44,7 +44,12 @@ const BEFORE_UPGRADE: BackupCopy = {
 function drawPage(
   deviceKind: "phone" | "kiosk",
   shell: ShellKind,
-  { files = [NIGHTLY, BEFORE_UPGRADE], enabled = true, busy = false } = {},
+  {
+    files = [NIGHTLY, BEFORE_UPGRADE],
+    enabled = true,
+    busy = false,
+    last = null as Record<string, unknown> | null,
+  } = {},
 ) {
   const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } });
   client.setQueryData(qk.session(), { device_kind: deviceKind });
@@ -63,6 +68,7 @@ function drawPage(
     stale: false,
     files,
   });
+  client.setQueryData(qk.restore(), { staged: null, last });
   render(
     <QueryClientProvider client={client}>
       <ShellContext.Provider value={shell}>
@@ -91,6 +97,7 @@ describe("Settings → Backup goes by what the device is, not its size (ADR 0034
       "Backups",
       "Copies on the Server",
       "Download",
+      "Restore from a File",
       "Take Your Data with You",
       "Start Over",
     ]) {
@@ -109,6 +116,9 @@ describe("Settings → Backup goes by what the device is, not its size (ADR 0034
       screen.getByRole("button", { name: "Remove the copy from Wed, Oct 7, 3:30 AM" }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Export" })).toBeTruthy();
+    const choose = screen.getByLabelText<HTMLInputElement>("Choose a File…");
+    expect(choose.type).toBe("file");
+    expect(choose.accept).toBe(".db,.zip,application/zip,application/vnd.sqlite3");
     fireEvent.click(screen.getByRole("button", { name: "Download…" }));
     const sheet = screen.getByRole("dialog", { name: "Download Which?" });
     expect(sheet).toBeTruthy();
@@ -128,8 +138,26 @@ describe("Settings → Backup goes by what the device is, not its size (ADR 0034
     expect(screen.queryByRole("button", { name: "Download…" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Export" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Start Over" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Restore from a File" })).toBeNull();
+    expect(screen.queryByLabelText("Choose a File…")).toBeNull();
     // No line about what only a signed-in device can do.
     expect(screen.queryByText(/Data & Photos|from a (phone|computer|device)/)).toBeNull();
+  });
+
+  it("says why the last restore didn't go through", () => {
+    drawPage("phone", "phone", {
+      last: {
+        ok: false,
+        at: "2026-10-07T14:00:00+00:00",
+        file_name: "sunroom.db",
+        problem: "The copy to restore didn't pass its check.",
+        previous: null,
+        photos: null,
+      },
+    });
+    expect(screen.getByRole("alert").textContent).toBe(
+      "The last restore didn't go through: The copy to restore didn't pass its check.",
+    );
   });
 
   it("says when there are no copies yet, and why", () => {

@@ -26,6 +26,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Settings → Backup: Nightly backups can be turned off, and you choose how many daily and weekly
   copies to keep; every copy on the server is listed, newest first, to download or remove; one
   Download button offers Data Only (a fresh copy) or Data & Photos.
+- Settings → Backup → Restore from a File: choose a copy you downloaded (Data Only, or Data &
+  Photos), see what it holds, type the household password, and Sunroom restarts with it; every
+  phone signs in again and wall screens show a pair code. The data from before is kept on the
+  server as a copy.
 
 ### Changed
 

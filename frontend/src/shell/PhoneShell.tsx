@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from "react";
 import { usePluginRooms } from "../features/usePluginModules";
 import { useDatePreferences, useSettings } from "../lib/household";
 import { useLiveUpdates } from "../lib/live";
+import { useServerRestart } from "../lib/restart";
 import { useServerUpdate } from "../lib/update";
 import { MotionProvider } from "../lib/motion";
 import { sunDay } from "../lib/sun";
@@ -97,6 +98,7 @@ export function PhoneShell({ children, tabs = true }: { children: ReactNode; tab
   // Screens before signing in (no tabs) have no stream to open.
   useLiveUpdates(tabs);
   useServerUpdate();
+  useServerRestart();
   useDatePreferences({ enabled: tabs });
   const { data: settings } = useSettings({ enabled: tabs });
   const now = useMinute();

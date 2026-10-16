@@ -7,7 +7,7 @@ import { useSettings, useUpdateSettings, type SettingsChange } from "../../lib/h
 import { asParent } from "../../lib/parent";
 import { fetchSession } from "../../lib/session";
 import { showToast } from "../../lib/toast";
-import { Button, ButtonLink } from "../../ui/Button";
+import { Button, ButtonLink, FileButton } from "../../ui/Button";
 import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import { Stepper } from "../../ui/Stepper";
@@ -23,6 +23,7 @@ import {
 import { DownloadSheet } from "./DownloadSheet";
 import { EraseSheet } from "./EraseSheet";
 import { Group, Row, Text } from "./parts";
+import { RestoreSheet } from "./RestoreSheet";
 
 /**
  * Settings → Backup (UX §4; PLAN §13.7; ADR 0034): the nightly copies and how many stay, every
@@ -46,9 +47,16 @@ export function BackupPage() {
   // The copy Remove This Copy? asks about; kept while the sheet slides away.
   const [removing, setRemoving] = useState<BackupCopy | null>(null);
   const [asking, setAsking] = useState(false);
+  const [restoring, setRestoring] = useState<File | null>(null);
   const { data: status, error } = useQuery({
     queryKey: qk.backups(),
     queryFn: () => asParent(async () => unwrap(await api.GET("/api/admin/backups"))),
+  });
+  // How the last restore went: one that didn't go through says why (ADR 0034).
+  const { data: restoreState } = useQuery({
+    queryKey: qk.restore(),
+    queryFn: () => asParent(async () => unwrap(await api.GET("/api/admin/restore"))),
+    enabled: own,
   });
   const run = useMutation({
     mutationFn: () => asParent(async () => unwrap(await api.POST("/api/admin/backups/run"))),
@@ -235,6 +243,28 @@ export function BackupPage() {
       ) : null}
       {own ? (
         <Group
+          title="Restore from a File"
+          note="Put back a copy you downloaded: a .db, or a zip with photos. Everything on the server is replaced, and every phone and screen signs in again."
+        >
+          {restoreState?.last && !restoreState.last.ok ? (
+            <div className={block}>
+              <p role="alert" className={`${body} font-semibold text-alert`}>
+                {`The last restore didn't go through: ${restoreState.last.problem ?? "Sunroom didn't say why."}`}
+              </p>
+            </div>
+          ) : null}
+          <div className={block}>
+            <FileButton
+              accept=".db,.zip,application/zip,application/vnd.sqlite3"
+              onFile={setRestoring}
+            >
+              Choose a File…
+            </FileButton>
+          </div>
+        </Group>
+      ) : null}
+      {own ? (
+        <Group
           title="Take Your Data with You"
           note="One file anyone can open and read: everything you added (people, calendars and events, lists, tasks, meals, countdowns and settings) as plain text (JSON), for your own records or for moving on. Sunroom can't restore from it; Download is for that."
         >
@@ -268,6 +298,12 @@ export function BackupPage() {
           </div>
         </Group>
       ) : null}
+      <RestoreSheet
+        file={restoring}
+        onClose={() => {
+          setRestoring(null);
+        }}
+      />
       <DownloadSheet
         open={choosing}
         onClose={() => {

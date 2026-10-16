@@ -384,7 +384,12 @@ _REPACKED = f"That zip was packed in a way Sunroom can't read. {_AS_MADE}"
 
 
 class ArchiveError(Exception):
-    """This zip can't be restored. The message says why and what to do, in plain words."""
+    """This zip can't be restored. The message says why and what to do, in plain words; ``code``
+    names the cause for the API (Settings → Backup → Restore from a File, ADR 0034)."""
+
+    def __init__(self, message: str, code: str = "zip_not_ours") -> None:
+        super().__init__(message)
+        self.code = code
 
 
 @dataclass(frozen=True, slots=True)
@@ -462,7 +467,7 @@ def _read_manifest(archive: zipfile.ZipFile, info: zipfile.ZipInfo) -> dict[str,
     try:
         loaded: object = json.loads(archive.read(info))
     except (zipfile.BadZipFile, zlib.error, EOFError) as exc:
-        raise ArchiveError(_DAMAGED) from exc
+        raise ArchiveError(_DAMAGED, "backup_damaged") from exc
     except NotImplementedError as exc:  # a compression zipfile can't read
         raise ArchiveError(_REPACKED) from exc
     except ValueError as exc:
@@ -476,7 +481,8 @@ def _read_manifest(archive: zipfile.ZipFile, info: zipfile.ZipInfo) -> dict[str,
     if version > FORMAT_VERSION:
         raise ArchiveError(
             f"That zip is from a newer Sunroom ({manifest.get('app_version') or 'unknown'}). "
-            "Run restore with that version's image or newer."
+            "Run restore with that version's image or newer.",
+            "backup_newer",
         )
     return manifest
 
@@ -506,7 +512,7 @@ def extract(archive: zipfile.ZipFile, info: zipfile.ZipInfo, destination: Path) 
             os.fsync(target.fileno())
     except (zipfile.BadZipFile, zlib.error, EOFError) as exc:
         destination.unlink(missing_ok=True)
-        raise ArchiveError(_DAMAGED) from exc
+        raise ArchiveError(_DAMAGED, "backup_damaged") from exc
     except NotImplementedError as exc:  # a compression zipfile can't read
         destination.unlink(missing_ok=True)
         raise ArchiveError(_REPACKED) from exc

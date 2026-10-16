@@ -175,6 +175,12 @@ export class LiveUpdates {
       liveStatus.set("signed-out");
       forgetStreamPosition();
       this.stop();
+    } else if (event.type === "server.restarting") {
+      // Sunroom is running itself again (a restore, ADR 0034): the page reloads once it's back
+      // (lib/restart), so the stream doesn't try again meanwhile.
+      liveStatus.set("connecting");
+      forgetStreamPosition();
+      this.stop();
     }
   }
 

@@ -116,6 +116,13 @@ describe("event router", () => {
     });
   });
 
+  it("says when Sunroom is running itself again (ADR 0034)", () => {
+    const onRestarting = vi.fn();
+    const handle = createEventHandler(client, { onSignedOut: vi.fn(), onRestarting });
+    handle({ type: "server.restarting", reason: "restore" });
+    expect(onRestarting).toHaveBeenCalledWith("restore");
+  });
+
   it("signs out on session.expired and refetches everything on resync", () => {
     const onSignedOut = vi.fn();
     const spy = vi.spyOn(client, "invalidateQueries");

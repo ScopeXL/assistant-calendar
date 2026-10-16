@@ -2,8 +2,12 @@
 
 1. settings (exit 78)                    5. pre-migration backup (exit 74)
 2. data dir + instance lock (73/74)      6. migrate in one transaction (exit 70)
-3. the secret key, generated once (73)   7. verify + reconcile app_meta (exit 70)
+   and a restore armed from the app      7. verify + reconcile app_meta (exit 70)
+3. the secret key, generated once (73)
 4. inspect the revision (exit 65)
+
+A restore from Settings → Backup ends with Sunroom running itself again (``reexec``), so the
+copy is put in place here, with the lock held and before anything reads the database (ADR 0034).
 """
 
 from __future__ import annotations
@@ -11,8 +15,10 @@ from __future__ import annotations
 import os
 import shutil
 import sqlite3
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import NoReturn
 
 from sunroom.core import secretkey
 from sunroom.core.clock import Clock
@@ -20,7 +26,7 @@ from sunroom.core.config import Settings
 from sunroom.core.crypto import key_check, password_fingerprint
 from sunroom.core.logging import get_logger
 from sunroom.core.version import build_info
-from sunroom.db import backup, instance_lock, migrate
+from sunroom.db import backup, instance_lock, migrate, restore
 
 log = get_logger(__name__)
 
@@ -205,6 +211,8 @@ def prepare(settings: Settings, clock: Clock, *, mounts: list[MountEntry] | None
         instance_lock.acquire(settings.lock_path)
     except instance_lock.InstanceLockError as exc:
         raise BootError(EXIT_DATA_DIR, str(exc)) from None
+    # The pre-migration copy and the migrations below then run on the restored database.
+    restore.apply_armed(settings, clock)
     try:
         secret = secretkey.resolve(settings)
     except (secretkey.SecretKeyError, OSError) as exc:
@@ -228,3 +236,20 @@ def prepare(settings: Settings, clock: Clock, *, mounts: list[MountEntry] | None
     log.info("migrations.at_head", head=migrate.head_revision())
     reconcile_app_meta(settings, secret)
     return secret
+
+
+def reexec() -> NoReturn:
+    """Run this same command line again in this process (a restore from the app, ADR 0034). The
+    PID and the container stay, so Docker sees no exit; the kernel closes the listening socket,
+    the database files and the instance lock (all close-on-exec), and the new program runs this
+    module's sequence from the start, the armed restore first."""
+    argv = [sys.executable, *sys.orig_argv[1:]]
+    log.info("boot.reexec", argv=argv)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    try:
+        os.execv(sys.executable, argv)  # noqa: S606 - this same program, its own command line
+    except OSError as exc:
+        log.error("boot.reexec_failed", reason=str(exc))
+        # Not 0: a restart policy of on-failure starts it again too, and boot applies the restore.
+        os._exit(1)

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { receiveKioskCommand } from "../shell/kioskCommands";
 import { createEventHandler } from "./eventRouter";
 import { LiveUpdates, liveStatus } from "./events";
+import { announceRestart } from "./restart";
 import { probeSession } from "./session";
 
 let onSignedOut: () => void = () => undefined;
@@ -29,6 +30,9 @@ export function useLiveUpdates(enabled = true): void {
           onSignedOut();
         },
         onKioskCommand: receiveKioskCommand,
+        onRestarting: (reason) => {
+          announceRestart(reason);
+        },
       }),
       onPoll: () => {
         void client.invalidateQueries();

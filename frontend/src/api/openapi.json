@@ -6514,6 +6514,204 @@
         "title": "RemovedSavedOut",
         "type": "object"
       },
+      "RestoreApplyIn": {
+        "properties": {
+          "password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "RestoreApplyIn",
+        "type": "object"
+      },
+      "RestoreApplyOut": {
+        "properties": {
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "title": "RestoreApplyOut",
+        "type": "object"
+      },
+      "RestoreOutcomeOut": {
+        "description": "How the last restore went (it's applied as Sunroom starts again).",
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "photos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photos"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          }
+        },
+        "required": [
+          "ok",
+          "at",
+          "file_name",
+          "problem",
+          "previous",
+          "photos"
+        ],
+        "title": "RestoreOutcomeOut",
+        "type": "object"
+      },
+      "RestoreStateOut": {
+        "properties": {
+          "last": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RestoreOutcomeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "staged": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RestoreSummaryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "staged",
+          "last"
+        ],
+        "title": "RestoreStateOut",
+        "type": "object"
+      },
+      "RestoreSummaryOut": {
+        "description": "What the chosen file holds (Restore from a File?).",
+        "properties": {
+          "app_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "App Version"
+          },
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "db",
+              "zip"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "needs_upgrade": {
+            "title": "Needs Upgrade",
+            "type": "boolean"
+          },
+          "photo_files": {
+            "title": "Photo Files",
+            "type": "integer"
+          },
+          "row_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Row Counts",
+            "type": "object"
+          },
+          "schema_revision": {
+            "title": "Schema Revision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_name",
+          "kind",
+          "bytes",
+          "app_version",
+          "schema_revision",
+          "needs_upgrade",
+          "created_at",
+          "row_counts",
+          "photo_files"
+        ],
+        "title": "RestoreSummaryOut",
+        "type": "object"
+      },
       "RewardIn": {
         "properties": {
           "cost_points": {
@@ -9694,6 +9892,108 @@
           }
         },
         "summary": "Erase",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/restore": {
+      "delete": {
+        "description": "Keep everything: the file sent is forgotten.",
+        "operationId": "discard_api_admin_restore_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Discard",
+        "tags": [
+          "meta"
+        ]
+      },
+      "get": {
+        "operationId": "restore_state_api_admin_restore_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreStateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Restore State",
+        "tags": [
+          "meta"
+        ]
+      },
+      "post": {
+        "description": "The file itself is the body (as a photo upload's is), with its name in X-Filename. It is\nchecked and kept, ready to restore; nothing changes yet.",
+        "operationId": "stage_upload_api_admin_restore_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "411": {
+            "description": "No Content-Length"
+          },
+          "507": {
+            "description": "Not enough free space"
+          }
+        },
+        "summary": "Stage Upload",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/admin/restore/apply": {
+      "post": {
+        "description": "Restore the file sent, with the household password, checked as at sign-in and as Erase\neverything does (the same bar: what's on the server now survives only as a copy).",
+        "operationId": "apply_api_admin_restore_apply_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreApplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreApplyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply",
         "tags": [
           "meta"
         ]

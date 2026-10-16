@@ -381,3 +381,43 @@ def test_what_isnt_a_backup_is_refused(tmp_path: Path, restore: Restore) -> None
     ran = restore(unzipped, tmp_path / "volume")
     assert ran.code == 1
     assert ran.err.strip() == f"{unzipped} is a folder. Give restore the .db or .zip file itself."
+
+
+def test_every_device_signs_in_again_and_the_copy_from_before_is_one_file(
+    data_dir: Path, tmp_path: Path, restore: Restore
+) -> None:
+    """ADR 0034: the sign-in epoch goes above both databases' (the backup's own plus one could
+    be the live one, keeping its cookies), and the database moved aside folds in what its -wal
+    held, so Settings → Backup can list, download and remove it as one file."""
+    db = data_dir / "sunroom.db"
+    nightly = tmp_path / "sunroom.2026-10-06.db"
+    backup.take_backup(db, nightly)
+    conn = sqlite3.connect(nightly)
+    try:
+        conn.execute("UPDATE app_meta SET auth_epoch = 3")
+        conn.commit()
+    finally:
+        conn.close()
+    writer = sqlite3.connect(db)
+    writer.execute("PRAGMA journal_mode=WAL")
+    writer.execute("PRAGMA wal_autocheckpoint=0")
+    writer.execute("UPDATE app_meta SET auth_epoch = 5")
+    writer.execute(
+        "INSERT INTO members (id, name, role, color, sort, created_at) "
+        "VALUES ('m2', 'Sam', 'parent', 'clay', 0, '2026-10-06 12:00:00')"
+    )
+    writer.commit()
+    unwritten = Path(f"{db}-wal").read_bytes()
+    before = db.read_bytes()
+    writer.close()
+    # As a pulled plug leaves it: the last changes only in the -wal.
+    db.write_bytes(before)
+    Path(f"{db}-wal").write_bytes(unwritten)
+
+    ran = restore(nightly, data_dir)
+
+    assert ran.code == 0, ran.err
+    assert scalar(db, "SELECT auth_epoch FROM app_meta") == 6
+    asides = sorted(path.name for path in data_dir.glob("sunroom.pre-restore.*"))
+    assert len(asides) == 1 and asides[0].endswith(".db"), asides
+    assert people(data_dir / asides[0]) == ["Sam"]

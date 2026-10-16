@@ -1838,7 +1838,7 @@ Photos", the list in Settings).
 
 ### T16 Restore from a file
 
-- [ ] Done (commit: )
+- [x] Done (commit: "backup: restore from a file, applied as Sunroom runs itself again")
 
 **Owner's note.** "Add the ability to restore from backup by uploading a backed up db file, or
 compressed zip of everything including photos."
@@ -1998,7 +1998,29 @@ password, screens can't restore or remove).
 restarts with it; every phone signs in again and wall screens show a pair code. The data from
 before is kept on the server as a copy."
 
-**As built.** (fill in)
+**As built.** As planned, with these differences. `db/restore.py` has the plan's pieces; `swap_in`
+takes the stamp so the marker can name the moved-aside file before anything moves, and
+`prepare` closes the zip again (the photos come back through `photos_back`, which reads it once
+more). `full_backup.ArchiveError` gained a `code`, so the API names each cause. The summary's
+photo count comes from the zip's own entries (pictures, not thumbnails), not the manifest.
+`apply_armed` handles three interrupted cases, not one: the database moved aside and nothing in
+its place (put back), the copy in place (finish the photos and the tidying), neither moved (swap
+again). `boot.reexec` exits 1, not 0, if `execv` itself fails, so an `on-failure` restart policy
+starts it too. `devserver.reload` writes its own file's bytes back. The upload also answers 400
+for a body longer or shorter than its `Content-Length`, and `X-Filename` is percent-decoded. The
+summary step's button is **Restore This Copy…** (the plan didn't name it), and a refused file
+gets its own step with the server's words and Close. The sheet doesn't reload itself: the
+shells' `useServerRestart` does, for every page alike (one wait per page however often the wall
+remounts its shell; no toast on the page that asked, which sets `askingHere` before the apply
+because the frame can come before the answer; a server seen "ok" for 15 s counts as having
+restarted between two looks); the sheet keeps its three-minute line. The stream's status reads
+"connecting" after the frame. `ui/Button.tsx` gained `FileButton`. Found by the e2e case:
+`.then(refresh)` handed the waiter's `true` to `reloadFresh` as its reload function; it is
+`() => refresh()` now, and the unit test checks the call. Also ADR 0027's status (a T17 item)
+and PLAN §11.5's `server.restarting`. Tests: `test_restore.py` (one more), `test_restore_api.py`
+(9), `test_boot.py` (5 more, the re-exec in a child process), `test_devserver.py`,
+`restart.test.tsx`, `RestoreSheet.test.tsx`, the router, stream and Backup page tests, and the
+e2e case, which restarts the test server in place.
 
 ### T17 Wrap up the batch
 

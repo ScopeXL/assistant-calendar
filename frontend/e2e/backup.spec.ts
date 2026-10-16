@@ -2,11 +2,15 @@
  * Settings → Backup end to end (UX §4 Backup, ADR 0034): on a computer, the nightly copies with
  * their counts, Back Up Now beside the heading, a Data Only download made now, and a copy
  * removed after one question; on a paired screen, the backups and the copies and nothing that
- * saves or sends a file. Each test starts with no copies on the server. Synthetic data only.
+ * saves or sends a file; and Restore from a File, after which Sunroom runs itself again and
+ * every device signs in again. Each test starts with no copies on the server. Synthetic data
+ * only.
  */
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, pairWall, seed, signInPhone, test, wall } from "./fixtures";
+import { expect, pairWall, PASSWORD, seed, signInPhone, test, wall } from "./fixtures";
+
+const CSRF = { "X-Sunroom": "1" };
 
 /** A settings group: its heading's section. */
 function group(page: Page, name: string): Locator {
@@ -107,5 +111,67 @@ test("a paired screen sees the backups switch and the copies, and nothing that s
   await expect(screen.getByRole("button", { name: "Export" })).toHaveCount(0);
   await expect(screen.getByRole("heading", { name: "Start Over" })).toHaveCount(0);
   await expect(screen.getByText(/Data & Photos|from a (phone|computer|device)/i)).toHaveCount(0);
+  await context.close();
+});
+
+test("Restore from a file: a zip made here brings the data back, Sunroom restarts and every device signs in again", async ({
+  page,
+  request,
+  browser,
+  watch,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a computer sends the file");
+  test.setTimeout(120_000);
+  await seed(request);
+  // A wall screen, paired first: afterwards it shows its pair code again.
+  const { page: screen, context } = await wall(browser, watch);
+  await pairWall(screen);
+  await screen.goto("/display");
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
+
+  await signInPhone(page);
+  const added = await page.request.post("/api/calendar/events", {
+    headers: CSRF,
+    data: { title: "Pottery class", start_date: "2026-10-08" },
+  });
+  expect(added.status()).toBe(201);
+  const { event } = (await added.json()) as { event: { id: string } };
+  const made = await page.request.get("/api/admin/backups/full.zip");
+  expect(made.ok()).toBe(true);
+  const zip = await made.body();
+  // Removed after the copy was made: the restore brings it back.
+  const removed = await page.request.delete(`/api/calendar/events/${event.id}`, { headers: CSRF });
+  expect(removed.ok()).toBe(true);
+  const week = async () => {
+    const answer = await page.request.get("/api/calendar/occurrences", {
+      params: { from: "2026-10-04", to: "2026-10-11" },
+    });
+    const { occurrences } = (await answer.json()) as { occurrences: { title: string }[] };
+    return occurrences.map((occurrence) => occurrence.title);
+  };
+  expect(await week()).not.toContain("Pottery class");
+
+  await page.goto("/settings/backup");
+  await page.getByLabel("Choose a File…").setInputFiles({
+    name: "sunroom-2026-10-07.zip",
+    mimeType: "application/zip",
+    buffer: zip,
+  });
+  const sheet = page.getByRole("dialog", { name: "Restore from a File?" });
+  await expect(sheet.getByText(/^sunroom-2026-10-07\.zip, made /)).toBeVisible();
+  await sheet.getByRole("button", { name: "Restore This Copy…" }).click();
+  await sheet.getByLabel("Household password").fill(PASSWORD);
+  await sheet.getByRole("button", { name: "Restore", exact: true }).click();
+  await expect(sheet.getByText(/^Restoring… Sunroom restarts with the copy\./)).toBeVisible();
+
+  // Sunroom runs itself again; every device signs in again, the wall with its pair code.
+  await expect(page).toHaveURL(/\/sign-in/, { timeout: 60_000 });
+  await expect(screen.getByRole("heading", { name: "Pair This Screen" })).toBeVisible({
+    timeout: 60_000,
+  });
+  await signInPhone(page);
+  expect(await week()).toContain("Pottery class");
+  await page.goto("/settings/backup");
+  await expect(page.getByText(/^Before a restore · /)).toBeVisible();
   await context.close();
 });

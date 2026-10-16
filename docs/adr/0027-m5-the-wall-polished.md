@@ -1,6 +1,6 @@
 # ADR 0027: The wall, polished: one screen state, who dims, the update check, Download everything
 
-- **Status:** Accepted
+- **Status:** Accepted; Restore changed by [0034](0034-m6-batch-6-the-owners-sixth-notes.md) (a Restore from a File in Settings → Backup: the server still never swaps its own database, it runs itself again and boot puts the copy in place)
 - **Date:** 2026-10-08
 
 ## Context

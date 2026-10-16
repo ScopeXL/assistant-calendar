@@ -27,6 +27,7 @@ import { idleFor, swallowFollowingClick, watchActivity, whenIdle } from "../lib/
 import { watchKeyboardFields } from "../lib/keyboard";
 import { MotionProvider } from "../lib/motion";
 import { useLiveUpdates } from "../lib/live";
+import { useServerRestart } from "../lib/restart";
 import { reloadFresh, useServerUpdate } from "../lib/update";
 import { noteDimmer } from "../lib/dimmer";
 import { dimmedTo, isNight } from "../lib/night";
@@ -109,6 +110,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   useKeepAwake(kiosk);
   useLiveUpdates();
   useServerUpdate();
+  useServerRestart();
   useDatePreferences();
   useReminders();
 

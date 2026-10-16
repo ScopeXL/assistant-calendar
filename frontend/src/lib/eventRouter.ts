@@ -52,6 +52,8 @@ export interface EventHandlers {
   onSignedOut: () => void;
   /** A parent asked every wall screen to do something now (wall screens act; phones ignore). */
   onKioskCommand?: (command: string, event: ServerEvent) => void;
+  /** Sunroom is running itself again (a restore, ADR 0034): every page waits and reloads. */
+  onRestarting?: (reason: string) => void;
 }
 
 export function createEventHandler(queryClient: QueryClient, handlers: EventHandlers) {
@@ -142,6 +144,9 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         break;
       case "session.expired":
         handlers.onSignedOut();
+        break;
+      case "server.restarting":
+        handlers.onRestarting?.(typeof event.reason === "string" ? event.reason : "restart");
         break;
       default:
         break;

@@ -4,6 +4,29 @@ Use this when the database is damaged, to roll back after a release that changed
 or to move Sunroom to a new server or a new Raspberry Pi. Every step keeps the previous files, so
 you can always go back.
 
+## From the app
+
+While Sunroom runs, a parent can restore a file they downloaded, from a phone or a computer
+(never from the wall screen):
+
+1. **More**, then **Settings**, then **Backup**, then **Choose a File…** under **Restore from a
+   File**. Pick the `.db` (Data Only) or the `.zip` (Data & Photos) you saved.
+2. The file goes to the server, which checks it and says what it holds: when it was made, by
+   which Sunroom, and how many people, events, lists and photos. Nothing has changed yet;
+   **Keep Everything** forgets the file.
+3. **Restore This Copy…**, then the household password, then **Restore**.
+4. Sunroom restarts with the copy, which takes a few seconds (a copy from an older Sunroom is
+   brought up to date as it starts). Every phone signs in again with the household password of
+   the copy, and wall screens show a code to pair again.
+
+The data that was on the server is kept as a copy: **Copies on the Server** lists it as "Before
+a restore", to download, restore again, or remove. A restore that couldn't be finished leaves
+the data as it was, and Backup says why.
+
+Through a reverse proxy, a big zip can be more than the proxy lets through: raise its upload
+limit ([DEPLOY.md](DEPLOY.md)), or restore from the home network. When Sunroom itself won't
+start, restore with the server stopped instead, as below.
+
 ## What you can restore from
 
 | Backup | Where it is | What's in it |
@@ -111,8 +134,8 @@ checks all of that before it changes anything. Then it:
 
 1. copies the backup's database in beside the current one and checks it again;
 2. moves the current database and its `-wal` and `-shm` files aside together, as
-   `sunroom.pre-restore.<time>.db…` (a stale `-wal` next to a restored file would corrupt it),
-   and swaps the backup in;
+   `sunroom.pre-restore.<time>.db` (a stale `-wal` next to a restored file would corrupt it),
+   folds what the `-wal` held into that one file, and swaps the backup in;
 3. signs every device out: phones sign in again, and wall screens show a code to pair again;
 4. from a zip, puts the photos back into the volume's `photos` folder, keeps any photo that is
    already there exactly as it is, and says how many came back;
@@ -156,8 +179,7 @@ docker run --rm -v sunroom_data:/data --user 10001:10001 \
   scopexl/sunroom:latest restore /data/sunroom.pre-restore.20261008T101500Z.db
 ```
 
-Its `-wal` file, if it has one, comes along by itself, and the database you're leaving is moved
-aside in turn. Restore never deletes photos: photos a zip brought back stay, and those the older
+The database you're leaving is moved aside in turn. Restore never deletes photos: photos a zip brought back stay, and those the older
 database doesn't know about move to `photos/.orphans` when Sunroom starts. Then start Sunroom
 again (step 5).
 

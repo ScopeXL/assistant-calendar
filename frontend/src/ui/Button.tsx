@@ -1,5 +1,5 @@
 import { LoaderCircle } from "lucide-react";
-import type { ComponentPropsWithRef } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 
 import { useShell } from "./shell";
 
@@ -81,6 +81,47 @@ export function ButtonLink({
     >
       {children}
     </a>
+  );
+}
+
+/**
+ * A button that opens the browser's file picker (Restore from a File's Choose a File…): a label
+ * around a hidden file input, so the browser's own picker opens, drawn as the variant, with the
+ * input's keyboard focus shown on it. One file; `onFile` gets it.
+ */
+export function FileButton({
+  variant = "secondary",
+  accept,
+  disabled = false,
+  onFile,
+  children,
+}: {
+  variant?: Variant;
+  accept: string;
+  disabled?: boolean;
+  onFile: (file: File) => void;
+  children: ReactNode;
+}) {
+  const display = useShell() === "display";
+  return (
+    <label
+      className={`${buttonClasses(display, variant, false, false, "cursor-pointer has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink")} ${
+        disabled ? "cursor-not-allowed opacity-60" : ""
+      }`}
+    >
+      {children}
+      <input
+        type="file"
+        accept={accept}
+        className="sr-only"
+        disabled={disabled}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) onFile(file);
+        }}
+      />
+    </label>
   );
 }
 

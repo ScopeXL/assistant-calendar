@@ -8,6 +8,8 @@ export const qk = {
   diagnostics: () => ["diagnostics"] as const,
   update: () => ["update"] as const,
   backups: () => ["backups"] as const,
+  /** Restore from a File: what's staged, and how the last restore went (ADR 0034). */
+  restore: () => ["restore"] as const,
   kioskLayout: () => ["kiosk-layout"] as const,
   plugins: () => ["plugins"] as const,
   pluginSettings: (id: string) => ["plugins", id, "settings"] as const,

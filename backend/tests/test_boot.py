@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -15,10 +18,11 @@ import pytest
 from sunroom import boot
 from sunroom.core import secretkey
 from sunroom.core.clock import FakeClock
-from sunroom.db import backup, instance_lock, migrate
+from sunroom.db import backup, instance_lock, migrate, restore
 from tests.support import make_settings
 
 CLOCK = FakeClock(datetime(2026, 10, 7, 14, 0, tzinfo=UTC))
+FIXTURES = Path(__file__).parent / "fixtures" / "db"
 OTHER_SECRET = "another-secret-" + "1" * 32
 
 
@@ -236,3 +240,151 @@ def test_a_second_process_cannot_take_the_lock(tmp_path: Path) -> None:
     )
     result = subprocess.run([sys.executable, "-c", script], check=False)  # noqa: S603
     assert result.returncode == 3
+
+
+# ---- a restore armed from the app (ADR 0034) ----------------------------------------------
+
+
+def _people(db: Path) -> list[str]:
+    with closing(sqlite3.connect(db)) as conn:
+        return [row[0] for row in conn.execute("SELECT name FROM members ORDER BY name")]
+
+
+def _add(db: Path, member_id: str, name: str) -> None:
+    with closing(sqlite3.connect(db)) as conn:
+        conn.execute(
+            "INSERT INTO members (id, name, role, color, sort, created_at) "
+            "VALUES (?, ?, 'parent', 'clay', 0, '2026-10-06 12:00:00')",
+            (member_id, name),
+        )
+        conn.commit()
+
+
+def _arm(data_dir: Path, database: Path, name: str = "sunroom-2026-10-06.db") -> None:
+    """As Settings → Backup does it: the file sent, checked and kept, then Restore."""
+    settings = make_settings(data_dir)
+    upload = restore.stage_dir(settings) / restore.UPLOAD
+    upload.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(database, upload)
+    restore.stage(settings, upload, name)
+    restore.arm(settings, CLOCK.now(), "a-phone")
+
+
+def test_an_armed_restore_is_applied_first_and_signs_everyone_out(
+    data_dir: Path, tmp_path: Path
+) -> None:
+    db = data_dir / "sunroom.db"
+    _reboot(data_dir)
+    _add(db, "m1", "Ana")
+    saved = tmp_path / "sunroom-2026-10-06.db"
+    backup.take_backup(db, saved)
+    _add(db, "m2", "Sam")  # added after the copy
+    epoch = _epoch(db)
+    _arm(data_dir, saved)
+
+    _reboot(data_dir)
+
+    assert _people(db) == ["Ana"]
+    assert _epoch(db) == epoch + 1
+    settings = make_settings(data_dir)
+    last = restore.last_outcome(settings)
+    assert last is not None and last.ok and last.file_name == "sunroom-2026-10-06.db"
+    assert last.previous is not None
+    assert _people(data_dir / last.previous) == ["Ana", "Sam"]  # the data from before, kept
+    assert sorted(p.name for p in restore.stage_dir(settings).iterdir()) == ["last.json"]
+    _reboot(data_dir)  # the marker is gone: nothing happens twice
+    assert _people(db) == ["Ana"]
+
+
+def test_an_armed_older_database_is_brought_up_to_date_after_its_own_copy(
+    data_dir: Path, tmp_path: Path
+) -> None:
+    older = tmp_path / "sunroom-0.10.0.db"
+    with closing(sqlite3.connect(older)) as conn:
+        conn.executescript((FIXTURES / "202610141930.sql").read_text())
+    _reboot(data_dir)
+    _arm(data_dir, older, "sunroom-0.10.0.db")
+    settings = make_settings(data_dir)
+    summary = restore.staged(settings)
+    assert summary is not None and summary.needs_upgrade
+
+    _reboot(data_dir)
+
+    assert migrate.current_revision(settings.db_path) == migrate.head_revision()
+    copies = list((settings.backup_dir / backup.PRE_MIGRATE_DIR).glob("sunroom.202610141930.*"))
+    assert len(copies) == 1  # the restored database, as it came, before its migrations
+    assert "Sample Parent" in _people(settings.db_path)
+
+
+def test_a_bad_copy_is_set_aside_and_the_database_there_boots(
+    data_dir: Path, tmp_path: Path
+) -> None:
+    db = data_dir / "sunroom.db"
+    _reboot(data_dir)
+    _add(db, "m1", "Ana")
+    saved = tmp_path / "sunroom-2026-10-06.db"
+    backup.take_backup(db, saved)
+    _arm(data_dir, saved)
+    settings = make_settings(data_dir)
+    staged = restore.stage_dir(settings) / restore.STAGED_DB
+    staged.write_bytes(b"SQLite format 3\x00" + b"\xff" * 4096)  # damaged after it was checked
+
+    _reboot(data_dir)
+
+    assert _people(db) == ["Ana"]
+    last = restore.last_outcome(settings)
+    assert last is not None and not last.ok and last.problem
+    folder = restore.stage_dir(settings)
+    failed = [p for p in folder.iterdir() if p.name.startswith("failed-")]
+    assert len(failed) == 1 and (failed[0] / restore.MARKER).is_file()
+    _reboot(data_dir)  # and again: never tried twice
+    assert _people(db) == ["Ana"]
+    assert len([p for p in folder.iterdir() if p.name.startswith("failed-")]) == 1
+
+
+def test_a_restore_stopped_halfway_puts_the_database_back(data_dir: Path, tmp_path: Path) -> None:
+    db = data_dir / "sunroom.db"
+    _reboot(data_dir)
+    _add(db, "m1", "Ana")
+    saved = tmp_path / "sunroom-2026-10-06.db"
+    backup.take_backup(db, saved)
+    _add(db, "m2", "Sam")
+    _arm(data_dir, saved)
+    settings = make_settings(data_dir)
+    # Stopped (a pulled plug) after the database was moved aside, before the copy went in.
+    aside = "sunroom.pre-restore.20261007T140000Z.db"
+    marker = restore.stage_dir(settings) / restore.MARKER
+    marker.write_text(json.dumps({"step": "swapping", "aside": aside}))
+    for suffix in ("", "-wal", "-shm"):
+        if Path(f"{db}{suffix}").exists():
+            os.replace(f"{db}{suffix}", data_dir / f"{aside}{suffix}")
+
+    _reboot(data_dir)
+
+    assert _people(db) == ["Ana", "Sam"]
+    last = restore.last_outcome(settings)
+    assert last is not None and not last.ok
+    assert last.problem == "The restore was interrupted, so the data from before it is back."
+
+
+def test_reexec_runs_the_same_command_line_again_and_frees_the_lock(tmp_path: Path) -> None:
+    """The second life takes the lock the first one held, with the same process id."""
+    lock, seen = tmp_path / ".lock", tmp_path / "pid"
+    script = textwrap.dedent(
+        f"""
+        import os, sys
+        from pathlib import Path
+        from sunroom import boot
+        from sunroom.db import instance_lock
+        instance_lock.acquire(Path({str(lock)!r}))
+        seen = Path({str(seen)!r})
+        if seen.exists():
+            sys.exit(7 if seen.read_text() == str(os.getpid()) else 8)
+        seen.write_text(str(os.getpid()))
+        boot.reexec()
+        """
+    )
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, "-c", script], check=False, capture_output=True, timeout=60
+    )
+    assert result.returncode == 7, result.stderr.decode()

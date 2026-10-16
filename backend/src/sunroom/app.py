@@ -42,6 +42,7 @@ from sunroom.household import service as household_service
 from sunroom.household.models import AppMeta, NetworkAllowEntry
 from sunroom.household.router import router as household_router
 from sunroom.meta import updates as meta_updates
+from sunroom.meta.restore import router as restore_router
 from sunroom.meta.router import router as meta_router
 from sunroom.meta.setup import router as setup_router
 from sunroom.meta.testing import router as testing_router
@@ -132,6 +133,7 @@ def create_app(
     resolver: Resolver = system_resolve,
     http_transport: Callable[[], httpx.AsyncBaseTransport] | None = None,
     ping_interval_s: float = 15.0,
+    restart: Callable[[], None] | None = None,
 ) -> FastAPI:
     """``secret`` comes from boot (APP_SECRET_KEY or the generated key file); tests and the
     OpenAPI dump pass one in or let it resolve from settings."""
@@ -217,6 +219,8 @@ def create_app(
             household=household,
             calendar=calendar_runtime,
         )
+        if restart is not None:
+            state.restart = restart
         holder["state"] = state
         async with db.read() as session:
             await load_devices(session, state)
@@ -296,6 +300,7 @@ def create_app(
     install_error_handlers(app)
     app.include_router(meta_router)
     app.include_router(meta_updates.router)
+    app.include_router(restore_router)
     app.include_router(setup_router)
     app.include_router(auth_router)
     app.include_router(kiosk_router)

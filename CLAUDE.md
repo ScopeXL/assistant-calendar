@@ -216,3 +216,5 @@ part your task touches, and move lines there when this file nears its limit.
   list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
 - The test server keeps plugin settings between tests (`/api/_test/reset` leaves
   `plugin_state`): a test that changes one puts it back in `finally`.
+- An in-app restart can't `exec` under `uvicorn --reload`: the worker is a spawned child with
+  multiprocessing's argv. The dev server writes a watched file instead (`devserver.reload`).

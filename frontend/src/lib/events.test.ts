@@ -140,6 +140,22 @@ describe("LiveUpdates", () => {
     next.live.stop();
   });
 
+  it("stops while Sunroom runs itself again, and starts from now after (ADR 0034)", () => {
+    const { live, events } = setup();
+    live.start();
+    const first = latest();
+    first.emit({ type: "hello", mode: "live", epoch: "e1", seq: 4 });
+    first.emit({ type: "server.restarting", reason: "restore" }, "e1:5");
+    expect(events.map((e) => e.type)).toEqual(["hello", "server.restarting"]);
+    expect(first.closed).toBe(true);
+    vi.advanceTimersByTime(WATCHDOG_MS * 2);
+    expect(FakeSource.all).toHaveLength(1); // no reconnecting meanwhile
+    const next = setup();
+    next.live.start();
+    expect(latest().url).toBe("/api/events");
+    next.live.stop();
+  });
+
   it("treats a gap in the sequence as a reason to reconnect", () => {
     const { live, events } = setup();
     live.start();
