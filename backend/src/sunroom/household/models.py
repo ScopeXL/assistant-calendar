@@ -110,7 +110,7 @@ class Household(Base):
     # The evening: the screen dims from this time until it sleeps (with a sleep schedule only).
     dim_from: Mapped[str | None] = mapped_column(String(5), default=None)  # "HH:MM"
     dim_level: Mapped[int] = mapped_column(Integer, default=40)  # percent of full brightness
-    # Settings → About → "Check for new versions daily" (off by default: it reaches GitHub).
+    # Settings → About → "Check for updates daily" (off by default: it reaches GitHub).
     update_check: Mapped[bool] = mapped_column(Boolean, default=False)
     kid_safe_editing: Mapped[bool] = mapped_column(Boolean, default=True)
     # Where quick add puts an event when nothing else says (the Home calendar).

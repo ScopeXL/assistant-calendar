@@ -2,7 +2,7 @@
  * The two shells at every size (ADR 0014, UX §3): the wall screen's rail and Today panel in
  * landscape, the Today band and bottom bar in portrait, a laptop in the display shell with its
  * own keyboard, the wall's keyboard inside a sheet, phones with the tab bar. Nothing scrolls
- * sideways. The evening dim on the wall, and About's New versions on a phone. Synthetic data
+ * sideways. The evening dim on the wall, and About's Updates on a phone. Synthetic data
  * only.
  */
 import type { Locator, Page } from "@playwright/test";
@@ -95,7 +95,12 @@ test.describe("a phone", () => {
     // Connection shows the live-updates icon, named in words; Storage says Free space.
     await expect(page.getByRole("img", { name: "Live updates: connected" })).toBeVisible();
     await expect(page.getByText("Free space", { exact: true })).toBeVisible();
-    const daily = page.getByRole("switch", { name: "Check for new versions daily" });
+    // ADR 0034's words: URL, Updates, and the small print with Open-Meteo and no "Not affiliated".
+    await expect(page.getByText("URL", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Updates", exact: true })).toBeVisible();
+    await expect(page.getByText("Weather by Open-Meteo.")).toBeVisible();
+    await expect(page.getByText(/Not affiliated/)).toHaveCount(0);
+    const daily = page.getByRole("switch", { name: "Check for updates daily" });
     await expect(daily).not.toBeChecked();
     await expect(page.getByRole("button", { name: "Check Now" })).toBeHidden();
     await daily.click();

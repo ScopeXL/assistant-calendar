@@ -15,6 +15,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Setup asks for a household password of 8 characters or more (it was 12), starts the
   household's name as Home, offers Family as a choice, and lets you pick Light, Dark or Auto
   before you finish. Its words say "devices" and "paired screens".
+- About says URL, Updates, "Check for updates daily" and "This is the latest version", and its
+  small print credits Open-Meteo for the weather.
 
 ## [0.11.0] - 2026-10-15
 

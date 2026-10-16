@@ -45,7 +45,7 @@ Settings → Features stops it.
 | **The weather** | Open-Meteo (`api.open-meteo.com`) | About once an hour, once you've set where home is | The place's coordinates (rounded to about 10 m), the time zone and the units, and the server's internet address |
 | **Finding your place** for the weather | Open-Meteo's place search (`geocoding-api.open-meteo.com`) | When a parent searches for a place | The words typed into the search |
 | **Calendars you connect** | iCloud, Google, or the calendar server or address you add | Every 5 minutes or so (a calendar address as often as you chose) | Those calendars' events, both ways for iCloud, Google and other calendar servers; the sign-in you gave for them |
-| **Check for new versions daily** (off unless you turn it on) | GitHub (`api.github.com`) | Once a day | The server's internet address and Sunroom's version |
+| **Check for updates daily** (off unless you turn it on) | GitHub (`api.github.com`) | Once a day | The server's internet address and Sunroom's version |
 
 Holidays calendars are made on the server from a built-in list; nothing is sent for them.
 

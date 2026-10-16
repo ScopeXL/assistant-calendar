@@ -1,6 +1,6 @@
 """The opt-in daily check for a newer Sunroom (PLAN §13.6).
 
-Off unless a parent turns on Settings → About → "Check for new versions daily", and pinned off by
+Off unless a parent turns on Settings → About → "Check for updates daily", and pinned off by
 ``SUNROOM_UPDATE_CHECK=0``: one request a day to GitHub's list of the repository's tags tells
 GitHub the server's address, so nothing goes out until someone asks for it. Tags, not Releases:
 every release is a tag (the deploy skill pushes one), and none is published as a GitHub Release,
@@ -73,7 +73,7 @@ def newer(candidate: str | None, current: str) -> bool:
 
 
 async def check(http: GuardedHttp, current: str, now: datetime, into: UpdateCheck) -> None:
-    """Ask GitHub for the newest version; never raises (a quiet line in About says why)."""
+    """Ask GitHub for the latest version; never raises (a quiet line in About says why)."""
     into.checked_at = now
     try:
         answer = await http.get(

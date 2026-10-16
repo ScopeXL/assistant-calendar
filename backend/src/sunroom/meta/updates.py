@@ -21,7 +21,7 @@ CHECK_NOW_EVERY = timedelta(minutes=1)
 
 
 class UpdateOut(BaseModel):
-    enabled: bool  # "Check for new versions daily" is on (and not pinned off)
+    enabled: bool  # "Check for updates daily" is on (and not pinned off)
     locked: bool  # SUNROOM_UPDATE_CHECK=0 keeps it off
     current: str
     latest: str | None
@@ -82,7 +82,7 @@ async def check_now(state: StateDep, actor: ParentDep) -> UpdateOut:
     if found.locked:
         raise AppError(409, "update_check_off", "This server keeps update checks off.")
     if not found.enabled:
-        raise AppError(409, "update_check_off", "Turn on Check for new versions daily first.")
+        raise AppError(409, "update_check_off", "Turn on Check for updates daily first.")
     now = state.clock.now()
     last = state.updates.checked_at
     if last is not None and now - last < CHECK_NOW_EVERY:

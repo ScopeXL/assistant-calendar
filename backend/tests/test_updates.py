@@ -114,6 +114,7 @@ async def test_nothing_asks_github_until_the_household_says_so(
     )
     refused = await phone.post("/api/admin/update/check", headers=CSRF)
     assert refused.status_code == 409
+    assert refused.json()["error"]["message"] == "Turn on Check for updates daily first."
 
 
 async def test_once_on_it_asks_once_a_day_and_says_a_newer_one_is_out(

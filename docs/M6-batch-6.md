@@ -483,7 +483,7 @@ or Auto before you finish. Its words say 'devices' and 'paired screens'."
 
 ### T3 About: URL, Updates, the latest version, and the author
 
-- [ ] Done (commit: )
+- [x] Done (commit: "settings: About says URL and Updates, and credits Open-Meteo"; the author line waits for the owner)
 
 **Owner's note.** "'This device uses' to 'URL'. Remove 'Sunroom sees it as' (with the proxies
 decision). 'New Versions' to 'Updates'. 'Check for new versions daily' to 'Check for updates
@@ -529,7 +529,15 @@ the old title or switch, then `just e2e e2e/shell.spec.ts --project=phone-chromi
 **CHANGELOG** (Changed). "About says URL, Updates and 'Check for updates daily', 'This is the
 latest version', and names Sunroom's author in The Small Print."
 
-**As built.** (fill in)
+**As built.** Everything but the author's line, which waits for the owner: the scan question
+above was never answered in this session, so "Made by …" isn't in the page, the docs or any
+commit (ADR 0034 says so). Once the owner chooses, it is one `<Text>` after the licence line in
+`AboutPage.tsx`, the matching words in UX §4's About row, and a CHANGELOG line. The rest as
+planned: URL (its TRUSTED_PROXIES hint stays for T13 to delete with its field), Updates, "Check
+for updates daily", "This is the latest version", the 409's words (now asserted in
+`test_updates.py`), "Weather by Open-Meteo." and no "Not affiliated…". `shell.spec.ts`'s About
+case also checks URL, Updates, Open-Meteo and the missing line; it passes on `phone-chromium`.
+PRIVACY.md and DEPLOY.md named the switch too.
 
 ### T4 Household → Location: what it's for, and what leaves
 

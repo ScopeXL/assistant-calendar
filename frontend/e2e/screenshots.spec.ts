@@ -314,7 +314,7 @@ test("the wall screen", async ({ page }) => {
     await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);
   }
-  // Below the fold: Features → Countdowns' Birthdays in Coming Up, and About's New Versions.
+  // Below the fold: Features → Countdowns' Birthdays in Coming Up, and About's Updates.
   await page
     .getByRole("navigation", { name: "Settings" })
     .getByRole("link", { name: "Features", exact: true })
@@ -325,9 +325,7 @@ test("the wall screen", async ({ page }) => {
     .getByRole("navigation", { name: "Settings" })
     .getByRole("link", { name: "About", exact: true })
     .click();
-  await page
-    .getByRole("switch", { name: /^Check for new versions daily/ })
-    .scrollIntoViewIfNeeded();
+  await page.getByRole("switch", { name: /^Check for updates daily/ }).scrollIntoViewIfNeeded();
   await shot(page, "settings-about-versions");
   await page
     .getByRole("navigation", { name: "Settings" })

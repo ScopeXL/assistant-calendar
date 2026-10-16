@@ -49,7 +49,7 @@ export function AboutPage() {
         {diagnostics ? (
           <>
             <Row
-              label="This device uses"
+              label="URL"
               hint={
                 diagnostics.client.scheme === "http" &&
                 diagnostics.client.x_forwarded_proto === "https"
@@ -80,17 +80,17 @@ export function AboutPage() {
       <Group title="The Small Print">
         <div className="flex flex-col gap-2 py-4">
           <Text>Sunroom is open source, under the MIT licence.</Text>
-          <Text soft>Not affiliated with Google or Apple.</Text>
           <Text soft>
             Your data stays on your server. No analytics, no ads, no outside scripts.
           </Text>
+          <Text soft>Weather by Open-Meteo.</Text>
         </div>
       </Group>
     </>
   );
 }
 
-/** New versions (PLAN §13.6): off until a parent turns it on, because it asks GitHub. */
+/** Updates (PLAN §13.6): off until a parent turns it on, because it asks GitHub. */
 function UpdatesGroup() {
   const display = useShell() === "display";
   const queryClient = useQueryClient();
@@ -111,19 +111,19 @@ function UpdatesGroup() {
     ? `Sunroom ${status.latest ?? ""} is available. ${status.how}.`
     : (status.problem ??
       (status.checked_at
-        ? `This is the newest version (checked at ${formatTime(new Date(status.checked_at))}).`
+        ? `This is the latest version (checked at ${formatTime(new Date(status.checked_at))}).`
         : null));
   return (
     <Group
-      title="New Versions"
+      title="Updates"
       note={
         status.locked
           ? "This server keeps update checks off."
-          : "Once a day Sunroom asks GitHub for the newest version. GitHub sees your server's address."
+          : "Once a day Sunroom asks GitHub for the latest version. GitHub sees your server's address."
       }
     >
       <Switch
-        label="Check for new versions daily"
+        label="Check for updates daily"
         checked={settings.update_check}
         disabled={status.locked}
         onChange={(value) => {
