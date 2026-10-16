@@ -1675,7 +1675,7 @@ before the fix).
 
 ### T15 Backup: the policy, the copies, one Download, Export
 
-- [ ] Done (commit: )
+- [x] Done (commit: "backup: the policy, every copy listed, Data Only, and Export")
 
 **Owner's note.** "Polish 'A checked copy of everything is made every night and kept on the
 server: 14 daily and 8 weekly.' Make Backups a setting they can turn on or off (on by default);
@@ -1814,7 +1814,27 @@ many daily and weekly copies to keep; every copy on the server is listed, newest
 or remove; one Download button offers Data Only (a fresh copy) or Data & Photos." (Changed) "Back
 Up Now sits in the Backups heading; Export says what it is for and is named Export."
 
-**As built.** (fill in)
+**As built.** As planned (migration `202610161644`, fixture `tests/fixtures/db/202610161644.sql`
+from `_v0_12_0`), with these differences. `list_copies` and `locate` take the household's zone,
+and a copy's `made_at` is the time in its name for the three kinds that carry one, the file's
+time only for a nightly copy: a restore moves the old database aside without touching it, so its
+file time is the old database's, not the restore's. `remove()` looks the name up first (404
+before 409) and unlinks in a thread; `status()` is never `stale` while the nightly copies are off
+(Needs Attention already gated on that). Fewer copies to keep takes effect with the next backup,
+never at the tap. Beyond the plan: the test server's reset (`/api/_test/reset`) now clears every
+copy and what the service remembers, so `e2e/backup.spec.ts` starts like a new server; it would
+otherwise list other tests' copies. The page: the Backups note's second sentence ("Photos are
+files beside it: only Data & Photos has them.") is on a device only, since a paired screen has no
+Data & Photos; "Not yet." and "No copies yet. Back Up Now makes one." while the nightly copies are
+off; Weekly copies at 0 reads "None"; each row's Download and Remove are named for their copy
+("Remove the copy from Wed, Oct 7, 3:30 AM"); "A backup is being written." is the Copies group's
+note; Remove This Copy? says "The copy from … goes for good." over its detail line. Download
+Which?'s Close sits beside the sheet's own ✕, also named Close (the tests take the last). The
+Erase sheet keeps its Download Everything link. The page tests moved from `EraseSheet.test.tsx`
+to `BackupPage.test.tsx`; `DownloadSheet.test.tsx` is new; the first-run Erase case opens
+Download Which? instead of the old link. Docs: also PRIVACY.md (Export, Download, Remove a
+backup, and Settings → Devices, a name T1 missed) and RESTORE.md's steps ("Download Data &
+Photos", the list in Settings).
 
 ### T16 Restore from a file
 

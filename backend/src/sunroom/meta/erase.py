@@ -89,6 +89,7 @@ def forget(state: AppState, epoch: int, signed_out: Collection[str] = ()) -> Non
     state.household.setup_complete = False
     state.household.password_set = state.settings.app_password is not None
     state.household.members.clear()
+    state.household.backups = backup.BackupPolicy()
     state.household.zone = household_service.effective_zone(
         Household(timezone=None), state.settings
     )

@@ -9,6 +9,7 @@ from enum import StrEnum
 from sqlalchemy import Boolean, CheckConstraint, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from sunroom.db.backup import KEEP_DAILY, KEEP_WEEKLY
 from sunroom.db.base import Base
 from sunroom.db.types import IsoDate, UTCDateTime, new_id, utcnow
 
@@ -139,6 +140,10 @@ class Household(Base):
     # Settings → Calendars & Accounts → Default reminder: minutes before, for events with no
     # reminder of their own (None: none). Resolved by the wall, not stored on events (ADR 0034).
     default_reminder_minutes: Mapped[int | None] = mapped_column(Integer, default=None)
+    # Settings → Backup (ADR 0034): a checked copy every night, and how many stay.
+    backups_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    backups_keep_daily: Mapped[int] = mapped_column(Integer, default=KEEP_DAILY)
+    backups_keep_weekly: Mapped[int] = mapped_column(Integer, default=KEEP_WEEKLY)
     parent_pin_hash: Mapped[str | None] = mapped_column(String(160), default=None)
     # How many digits, so the PIN pad accepts as soon as they're typed (UX §4).
     pin_length: Mapped[int | None] = mapped_column(Integer, default=None)

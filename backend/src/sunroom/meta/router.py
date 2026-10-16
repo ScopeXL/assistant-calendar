@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import shutil
-from typing import Annotated, Any
+from pathlib import Path
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import FileResponse, StreamingResponse
@@ -19,10 +20,10 @@ from sunroom.core.errors import AppError
 from sunroom.core.logging import get_logger
 from sunroom.core.version import build_info
 from sunroom.db import full_backup, migrate
-from sunroom.db.backup import NIGHTLY_RE, BackupError, NoRoomError
+from sunroom.db.backup import BackupBusyError, BackupError, NoRoomError
 from sunroom.db.export import export_data
 from sunroom.meta.erase import erase_everything
-from sunroom.state import StateDep
+from sunroom.state import AppState, StateDep
 from sunroom.web.hosts import host_name, is_ip_literal
 
 router = APIRouter(prefix="/api", tags=["meta"])
@@ -60,7 +61,12 @@ class ClientInfo(BaseModel):
 
 
 class BackupFileOut(BaseModel):
+    """One copy on the server (ADR 0034): a nightly one, the one before an upgrade, the one
+    Erase everything kept, or the database a restore moved aside."""
+
     name: str
+    kind: Literal["nightly", "pre-migrate", "pre-erase", "pre-restore"]
+    made_at: str
     bytes: int
 
 
@@ -68,10 +74,14 @@ class BackupStatusOut(BaseModel):
     directory: str
     schedule: str
     retention: str
+    enabled: bool  # a copy every night (Settings → Backup)
+    keep_daily: int
+    keep_weekly: int
+    busy: bool  # a copy is being written: none can be removed until it's done
     last_success_at: str | None
     last_error: str | None
     stale: bool
-    files: list[BackupFileOut]
+    files: list[BackupFileOut]  # newest first
 
 
 class BackupRunOut(BaseModel):
@@ -189,19 +199,20 @@ class FullBackupResponse(StreamingResponse):
             self.download.close()
 
 
-# Before /admin/backups/{name}, which would otherwise take "full.zip" as a name.
-@router.get(
-    "/admin/backups/full.zip",
-    status_code=200,  # FastAPI would look for it in the response class's __init__
-    response_class=FullBackupResponse,
-    responses={507: {"description": "Not enough free space for the database copy"}},
-)
-async def download_everything(state: StateDep, actor: ParentDep) -> FullBackupResponse:
-    """Download everything (PLAN §13.7): the database, the photos and a manifest in one zip,
-    streamed as it is written."""
-    now = state.clock.now()
+class FreshCopyResponse(FileResponse):
+    """A copy made for one download (Data Only): it goes however the response ends."""
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            await asyncio.to_thread(Path(self.path).unlink, missing_ok=True)
+
+
+async def _fresh_copy(state: AppState) -> Path:
+    """A verified copy of the database made now, for one download (under backups/.download/)."""
     try:
-        copy = await asyncio.to_thread(
+        return await asyncio.to_thread(
             full_backup.make_database_copy, state.settings.db_path, state.settings.backup_dir
         )
     except NoRoomError as exc:
@@ -216,6 +227,20 @@ async def download_everything(state: StateDep, actor: ParentDep) -> FullBackupRe
         raise AppError(
             500, "backup_failed", "The download couldn't be made. Try again in a minute."
         ) from exc
+
+
+# Before /admin/backups/{name}, which would otherwise take "full.zip" as a name.
+@router.get(
+    "/admin/backups/full.zip",
+    status_code=200,  # FastAPI would look for it in the response class's __init__
+    response_class=FullBackupResponse,
+    responses={507: {"description": "Not enough free space for the database copy"}},
+)
+async def download_everything(state: StateDep, actor: ParentDep) -> FullBackupResponse:
+    """Download everything (PLAN §13.7): the database, the photos and a manifest in one zip,
+    streamed as it is written. Settings → Backup calls it Data & Photos."""
+    now = state.clock.now()
+    copy = await _fresh_copy(state)
     download = full_backup.FullBackupStream(
         db_copy=copy,
         photos_root=state.photos.root,
@@ -226,19 +251,58 @@ async def download_everything(state: StateDep, actor: ParentDep) -> FullBackupRe
     return FullBackupResponse(download, full_backup.zip_name(now.astimezone(state.zone()).date()))
 
 
+# Before /admin/backups/{name} too: "data.db" is no copy's name.
+@router.get(
+    "/admin/backups/data.db",
+    status_code=200,
+    response_class=FreshCopyResponse,
+    responses={507: {"description": "Not enough free space for the database copy"}},
+)
+async def download_data(state: StateDep, actor: ParentDep) -> FreshCopyResponse:
+    """Data Only (Settings → Backup → Download, ADR 0034): a checked copy of the database made
+    now, not the newest nightly one, so it holds what was added today."""
+    copy = await _fresh_copy(state)
+    day = state.clock.now().astimezone(state.zone()).date()
+    return FreshCopyResponse(
+        copy,
+        media_type="application/vnd.sqlite3",
+        filename=f"sunroom-{day.isoformat()}.db",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+def _located(state: AppState, name: str) -> Path:
+    copy = state.backups.locate(name)
+    if copy is None:
+        raise AppError(404, "not_found", "That backup doesn't exist.")
+    return copy.path
+
+
 @router.get("/admin/backups/{name}")
 async def download_backup(name: str, state: StateDep, actor: ParentDep) -> FileResponse:
-    if not NIGHTLY_RE.match(name):
-        raise AppError(404, "not_found", "That backup doesn't exist.")
-    path = state.settings.backup_dir / name
-    if not path.is_file():
-        raise AppError(404, "not_found", "That backup doesn't exist.")
+    """One copy on the server, any of the four kinds."""
     return FileResponse(
-        path,
+        _located(state, name),
         media_type="application/vnd.sqlite3",
         filename=name,
         headers={"Cache-Control": "no-store"},
     )
+
+
+@router.delete("/admin/backups/{name}", status_code=204)
+async def remove_backup(name: str, state: StateDep, actor: ParentDep) -> None:
+    """Remove one copy (ADR 0034). Never from a paired screen, as Erase everything: it can't be
+    undone, it's never urgent, and a parent's grant outlives the parent at the wall."""
+    if actor.is_kiosk:
+        raise AppError(403, "not_on_a_screen", "Remove backups from a signed-in device.")
+    try:
+        await state.backups.remove(name)
+    except LookupError as exc:
+        raise AppError(404, "not_found", "That backup doesn't exist.") from exc
+    except BackupBusyError as exc:
+        raise AppError(
+            409, "backup_busy", "A backup is being written. Try again in a moment."
+        ) from exc
 
 
 class EraseIn(BaseModel):

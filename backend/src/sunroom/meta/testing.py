@@ -56,8 +56,17 @@ async def reset(state: StateDep) -> None:
         state.clock.reset()
     await asyncio.to_thread(shutil.rmtree, state.photos.root, True)
     state.photos.ensure_folders()
+    # Nor any copies on the server, which Settings → Backup lists (ADR 0034).
+    await asyncio.to_thread(_remove_copies, state)
+    state.backups.last_success_at = state.backups.last_error = None
     state.hello_version.stand_in = None
     erase.forget(state, epoch)
+
+
+def _remove_copies(state: AppState) -> None:
+    shutil.rmtree(state.backups.backup_dir, ignore_errors=True)
+    for aside in state.settings.data_dir.glob("sunroom.pre-restore.*"):
+        aside.unlink(missing_ok=True)
 
 
 @router.post("/drop-streams", status_code=204)

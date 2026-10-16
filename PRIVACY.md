@@ -66,21 +66,24 @@ when someone signs in. Tailscale doesn't: it's encrypted from end to end
 
 ## Your control
 
-- **Export everything** as JSON: Settings → Backup → Export everything, on a phone or computer.
+- **Export** as JSON: Settings → Backup → Take Your Data with You → Export, on a phone or computer.
   It leaves out every password and key: the household password, the PIN, calendar passwords,
   and Google's client secret, which shows only as set (`***`).
-- **Download everything** (the database and every photo, to restore from): Settings → Backup.
-  Keep it somewhere safe: it holds everything the family added.
+- **Download** (Data Only, or Data & Photos: the database and every photo, to restore from):
+  Settings → Backup. Keep it somewhere safe: it holds everything the family added.
+- **Remove a backup:** Settings → Backup → Copies on the Server → the copy's Remove, from a
+  parent's phone or a computer. The nightly copies, and the ones before an upgrade, Erase
+  everything or a restore, are all listed there.
 - **Remove a person:** Settings → Family → the person's row → Remove (with Undo).
 - **Remove a synced account:** Settings → Calendars & Accounts → the account's row → Remove
   account. Its sign-in is deleted at once.
-- **Sign out a phone or unpair a screen:** Settings → Phones & screens.
+- **Sign out a device or unpair a screen:** Settings → Devices.
 - **Erase everything:** Settings → Backup → Start Over → Erase everything, from a parent's phone
   or a computer, with the household password. Every person, calendar, event, list, task, meal,
   countdown, photo and setting is removed, and every phone and screen is signed out. One copy of
   the database from just before stays on the server in `backups/pre-erase`, so a mistake can be
-  put right (docs/RESTORE.md); earlier nightly copies stay too. Delete those files to be rid of
-  them as well.
+  put right (docs/RESTORE.md); earlier nightly copies stay too. Remove them in Settings → Backup
+  (or delete the files) to be rid of them as well.
 - **Delete all data, backups included:** whoever runs the server removes the `sunroom_data`
   volume.
 

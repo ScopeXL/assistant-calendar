@@ -282,7 +282,14 @@ test("Erase everything starts Sunroom over: from a computer, never from the wall
   // A computer has it, with the downloads the wall can't use.
   await signInPhone(page);
   await page.goto("/settings/backup");
-  await expect(page.getByRole("link", { name: "Download Everything" })).toBeVisible();
+  await page.getByRole("button", { name: "Download…" }).click();
+  const which = page.getByRole("dialog", { name: "Download Which?" });
+  await expect(which.getByRole("link", { name: "Data & Photos" })).toHaveAttribute(
+    "href",
+    "/api/admin/backups/full.zip",
+  );
+  await which.getByRole("button", { name: "Close" }).click();
+  await expect(which).toBeHidden();
   await page.getByRole("button", { name: "Erase Everything…" }).click();
   const sheet = page.getByRole("dialog", { name: "Erase Everything?" });
   await expect(sheet.getByText("Keep a copy first?")).toBeVisible();

@@ -324,10 +324,25 @@
         "type": "object"
       },
       "BackupFileOut": {
+        "description": "One copy on the server (ADR 0034): a nightly one, the one before an upgrade, the one\nErase everything kept, or the database a restore moved aside.",
         "properties": {
           "bytes": {
             "title": "Bytes",
             "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "nightly",
+              "pre-migrate",
+              "pre-erase",
+              "pre-restore"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "made_at": {
+            "title": "Made At",
+            "type": "string"
           },
           "name": {
             "title": "Name",
@@ -336,6 +351,8 @@
         },
         "required": [
           "name",
+          "kind",
+          "made_at",
           "bytes"
         ],
         "title": "BackupFileOut",
@@ -366,9 +383,17 @@
       },
       "BackupStatusOut": {
         "properties": {
+          "busy": {
+            "title": "Busy",
+            "type": "boolean"
+          },
           "directory": {
             "title": "Directory",
             "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
           },
           "files": {
             "items": {
@@ -376,6 +401,14 @@
             },
             "title": "Files",
             "type": "array"
+          },
+          "keep_daily": {
+            "title": "Keep Daily",
+            "type": "integer"
+          },
+          "keep_weekly": {
+            "title": "Keep Weekly",
+            "type": "integer"
           },
           "last_error": {
             "anyOf": [
@@ -416,6 +449,10 @@
           "directory",
           "schedule",
           "retention",
+          "enabled",
+          "keep_daily",
+          "keep_weekly",
+          "busy",
           "last_success_at",
           "last_error",
           "stale",
@@ -7623,6 +7660,18 @@
       },
       "SettingsOut": {
         "properties": {
+          "backups_enabled": {
+            "title": "Backups Enabled",
+            "type": "boolean"
+          },
+          "backups_keep_daily": {
+            "title": "Backups Keep Daily",
+            "type": "integer"
+          },
+          "backups_keep_weekly": {
+            "title": "Backups Keep Weekly",
+            "type": "integer"
+          },
           "daylight_tint": {
             "title": "Daylight Tint",
             "type": "boolean"
@@ -7893,6 +7942,9 @@
           "display_rolling_week",
           "show_tips",
           "default_reminder_minutes",
+          "backups_enabled",
+          "backups_keep_daily",
+          "backups_keep_weekly",
           "sleep_from",
           "sleep_to",
           "sleep_mode",
@@ -7913,6 +7965,43 @@
       },
       "SettingsUpdate": {
         "properties": {
+          "backups_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backups Enabled"
+          },
+          "backups_keep_daily": {
+            "anyOf": [
+              {
+                "maximum": 30.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backups Keep Daily"
+          },
+          "backups_keep_weekly": {
+            "anyOf": [
+              {
+                "maximum": 12.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backups Keep Weekly"
+          },
           "daylight_tint": {
             "anyOf": [
               {
@@ -9408,9 +9497,27 @@
         ]
       }
     },
+    "/api/admin/backups/data.db": {
+      "get": {
+        "description": "Data Only (Settings \u2192 Backup \u2192 Download, ADR 0034): a checked copy of the database made\nnow, not the newest nightly one, so it holds what was added today.",
+        "operationId": "download_data_api_admin_backups_data_db_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "507": {
+            "description": "Not enough free space for the database copy"
+          }
+        },
+        "summary": "Download Data",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
     "/api/admin/backups/full.zip": {
       "get": {
-        "description": "Download everything (PLAN \u00a713.7): the database, the photos and a manifest in one zip,\nstreamed as it is written.",
+        "description": "Download everything (PLAN \u00a713.7): the database, the photos and a manifest in one zip,\nstreamed as it is written. Settings \u2192 Backup calls it Data & Photos.",
         "operationId": "download_everything_api_admin_backups_full_zip_get",
         "responses": {
           "200": {
@@ -9455,7 +9562,42 @@
       }
     },
     "/api/admin/backups/{name}": {
+      "delete": {
+        "description": "Remove one copy (ADR 0034). Never from a paired screen, as Erase everything: it can't be\nundone, it's never urgent, and a parent's grant outlives the parent at the wall.",
+        "operationId": "remove_backup_api_admin_backups__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Backup",
+        "tags": [
+          "meta"
+        ]
+      },
       "get": {
+        "description": "One copy on the server, any of the four kinds.",
         "operationId": "download_backup_api_admin_backups__name__get",
         "parameters": [
           {

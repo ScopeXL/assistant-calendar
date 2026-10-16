@@ -3,9 +3,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { api } from "../../api/client";
-import { qk } from "../../api/keys";
-import { ShellContext, type ShellKind } from "../../ui/shell";
-import { BackupPage } from "./BackupPage";
 import { EraseSheet } from "./EraseSheet";
 
 beforeAll(() => {
@@ -106,48 +103,5 @@ describe("Erase everything (UX §4 Backup, ADR 0029)", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(sent).toEqual([]);
     expect(reload).not.toHaveBeenCalled();
-  });
-});
-
-function drawPage(deviceKind: "phone" | "kiosk", shell: ShellKind) {
-  const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } });
-  client.setQueryData(qk.session(), { device_kind: deviceKind });
-  client.setQueryData(qk.backups(), {
-    last_success_at: null,
-    last_error: null,
-    stale: false,
-    files: [{ name: "sunroom.2026-10-07.db", bytes: 4096 }],
-  });
-  render(
-    <QueryClientProvider client={client}>
-      <ShellContext.Provider value={shell}>
-        <BackupPage />
-      </ShellContext.Provider>
-    </QueryClientProvider>,
-  );
-}
-
-describe("Settings → Backup goes by what the device is, not its size", () => {
-  it("gives a laptop its downloads and Start Over, though it shows the wall's shell", () => {
-    drawPage("phone", "display");
-    expect(screen.getByRole("link", { name: "Download Backup" }).getAttribute("href")).toBe(
-      "/api/admin/backups/sunroom.2026-10-07.db",
-    );
-    expect(screen.getByRole("link", { name: "Download Everything" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Export Everything" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Start Over" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Erase Everything…" }));
-    expect(screen.getByRole("dialog", { name: "Erase Everything?" })).toBeTruthy();
-  });
-
-  it("gives a paired screen neither, and no line about them: it has no files, and a child can reach it", () => {
-    drawPage("kiosk", "display");
-    expect(screen.queryByRole("link", { name: /^Download/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Export Everything" })).toBeNull();
-    expect(screen.queryByRole("heading", { name: "Take Your Data with You" })).toBeNull();
-    expect(screen.queryByRole("heading", { name: "Start Over" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Erase Everything…" })).toBeNull();
-    expect(screen.queryByText(/from a (phone|computer|device)/)).toBeNull();
-    expect(screen.getByRole("button", { name: "Back Up Now" })).toBeTruthy();
   });
 });

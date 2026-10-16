@@ -8,15 +8,15 @@ you can always go back.
 
 | Backup | Where it is | What's in it |
 |---|---|---|
-| Nightly copies | `backups/sunroom.YYYY-MM-DD.db` in the `sunroom_data` volume (14 daily and 8 weekly are kept) | The database |
+| Nightly copies | `backups/sunroom.YYYY-MM-DD.db` in the `sunroom_data` volume (as many daily and weekly as Settings → Backup keeps: 14 and 8 unless changed). Settings → Backup lists every copy here, to download or remove | The database |
 | The copy before each upgrade | `backups/pre-migrate/sunroom.<revision>.<time>.db` in the volume | The database |
 | The copy before **Erase Everything** | `backups/pre-erase/sunroom.<time>.db` in the volume. Never tidied away: delete it yourself once you're sure | The database, as it was just before it was erased |
-| **Download Backup** | Settings → Backup on a phone or computer: the newest nightly copy, a few MB | The database |
-| **Download Everything** | Settings → Backup on a phone or computer: `sunroom-YYYY-MM-DD.zip` | The database, every photo, and a `manifest.json` |
+| **Download → Data Only** | Settings → Backup on a phone or computer: `sunroom-YYYY-MM-DD.db`, a checked copy made at that moment, a few MB | The database |
+| **Download → Data & Photos** | Settings → Backup on a phone or computer: `sunroom-YYYY-MM-DD.zip` | The database, every photo, and a `manifest.json` |
 
 The database holds everything the family added: people, calendars and events, lists, tasks,
 meals, countdowns, settings and the household password. Photos are files beside it, so only
-**Download Everything** (or a copy of the whole volume) has them.
+**Data & Photos** (or a copy of the whole volume) has them.
 
 No backup holds the server's secret key (`secret.key` in the volume), on purpose: a lost backup
 can't sign anyone in or unlock a connected account. A restore into the same volume keeps the key.
@@ -26,15 +26,15 @@ server's settings set `APP_SECRET_KEY`, use the same value on the new server and
 working.
 
 **After Erase everything** (Settings → Backup → Start Over) a restore brings the household back:
-restore the `pre-erase` copy, or a zip from Download everything made before it, which has the
+restore the `pre-erase` copy, or a zip from Data & Photos made before it, which has the
 photos too. The `pre-erase` copy has no photos: erasing deletes them for good, except what is in
 the `photos/inbox` folder.
 
-## 1. Download everything, now and then
+## 1. Download Data & Photos, now and then
 
-On a parent's phone or a computer: **More**, then **Settings**, then **Backup**, then **Download
-everything**. (On the kitchen screen, Backup says to do it from a phone.) Every photo is in the
-zip, so it can take a while and be large. Keep it somewhere other than the Sunroom server: a
+On a parent's phone or a computer: **More**, then **Settings**, then **Backup**, then
+**Download…**, then **Data & Photos**. (The kitchen screen has no downloads: use a phone or a
+computer.) Every photo is in the zip, so it can take a while and be large. Keep it somewhere other than the Sunroom server: a
 computer, a USB stick, or cloud storage.
 
 - Keep the `.zip` exactly as it is. `restore` refuses a zip that was unzipped and zipped again.
@@ -45,8 +45,9 @@ the Sunroom version, and how many photos and events it has.
 
 ## 2. Pick the backup
 
-To see the copies in the volume (the ones before upgrades are listed under `pre-migrate`, and
-the one made before Erase everything under `pre-erase`):
+Settings → Backup lists every copy on the server under **Copies on the Server**, newest first,
+each with **Download**. To see them in the volume instead (the ones before upgrades are listed
+under `pre-migrate`, and the one made before Erase everything under `pre-erase`):
 
 ```bash
 docker run --rm -v sunroom_data:/data --entrypoint ls scopexl/sunroom:latest -R /data/backups
@@ -61,7 +62,7 @@ docker run --rm -v sunroom_data:/data --user 10001:10001 \
   scopexl/sunroom:latest inspect-backup /data/backups/sunroom.2026-10-06.db
 ```
 
-A zip from Download everything doesn't need this step: `restore` checks it before it changes
+A zip from Data & Photos doesn't need this step: `restore` checks it before it changes
 anything.
 
 ## 3. Stop Sunroom
@@ -98,14 +99,14 @@ that runs Sunroom, put `sudo` in front of `docker run`.
 1. Install Sunroom as usual ([DEPLOY.md](DEPLOY.md), or the Pi installer in
    [KIOSK.md](KIOSK.md)) and let it start once: that creates the `sunroom_data` volume. There's
    no need to set it up: whatever is there is moved aside.
-2. Stop it (step 3), then restore the zip from Download everything as above.
+2. Stop it (step 3), then restore the zip from Data & Photos as above.
 3. Start it (step 5) and pair the wall screen again (step 6). If the server's address changed,
    run the Pi installer again with the new `--url` ([KIOSK.md](KIOSK.md)).
 
 ### What restore does
 
 `restore` refuses while Sunroom is running, and refuses a damaged backup, a database from a
-newer Sunroom, and a zip with anything in it that Download everything didn't put there. It
+newer Sunroom, and a zip with anything in it that Data & Photos didn't put there. It
 checks all of that before it changes anything. Then it:
 
 1. copies the backup's database in beside the current one and checks it again;
@@ -167,7 +168,7 @@ again (step 5).
 | Sunroom is running | Stop it (step 3), then run restore again |
 | That backup is damaged | Pick another backup |
 | That backup (or zip) is from a newer Sunroom | Run restore with that version's image, for example `scopexl/sunroom:0.6.0`, then start that version |
-| That zip has something in it that Sunroom didn't put there, or has no manifest.json | Use the zip exactly as Download everything made it, not unzipped and zipped again |
+| That zip has something in it that Sunroom didn't put there, or has no manifest.json | Use the zip exactly as Data & Photos made it, not unzipped and zipped again |
 | Restore isn't allowed to read the file | On the server, run `chmod a+r` on the file, then run restore again |
 | /data is not a mounted volume | Add `-v sunroom_data:/data` to the command |
 | There isn't enough free space | Free some space on the server's disk, then run restore again |

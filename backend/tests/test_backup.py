@@ -91,6 +91,45 @@ def test_retention_keeps_14_daily_and_8_weekly(tmp_path: Path) -> None:
     assert (tmp_path / "unrelated.db").exists()
 
 
+def test_retention_follows_the_households_numbers(tmp_path: Path) -> None:
+    """Settings → Backup (ADR 0034): 3 daily and 2 weekly here; 0 weekly keeps only dailies."""
+    today = date(2026, 10, 6)  # a Tuesday
+    for offset in range(40):
+        (tmp_path / backup.nightly_name(today - timedelta(days=offset))).write_text("x")
+    backup.rotate_nightly(tmp_path, today, keep_daily=3, keep_weekly=2)
+    kept = {d for d, _ in backup.nightly_files(tmp_path)}
+    # The newest three, and the Sunday of each of the two weeks before this one.
+    assert kept == {today, date(2026, 10, 5), date(2026, 10, 4), date(2026, 9, 27)}
+    backup.rotate_nightly(tmp_path, today, keep_daily=1, keep_weekly=0)
+    assert {d for d, _ in backup.nightly_files(tmp_path)} == {today}
+
+
+def test_a_copy_is_found_only_by_its_exact_name(tmp_path: Path) -> None:
+    backups, data = tmp_path / "backups", tmp_path / "data"
+    (backups / backup.PRE_ERASE_DIR).mkdir(parents=True)
+    data.mkdir()
+    (backups / "sunroom.2026-10-07.db").write_text("n")
+    (backups / backup.PRE_ERASE_DIR / "sunroom.20261007T090000Z.db").write_text("e")
+    (data / "sunroom.db").write_text("live")
+    (data / "sunroom.pre-restore.20261007T080000Z-2.db").write_text("r")
+    found = backup.locate(backups, data, "sunroom.pre-restore.20261007T080000Z-2.db", NY)
+    assert found is not None and found.kind == backup.KIND_PRE_RESTORE
+    assert found.made_at == datetime(2026, 10, 7, 4, 0, tzinfo=NY)
+    erased = backup.locate(backups, data, "sunroom.20261007T090000Z.db", NY)
+    assert erased is not None and erased.path.parent.name == backup.PRE_ERASE_DIR
+    for name in (
+        "../data/sunroom.db",
+        "sunroom.2026-10-07.db/..",
+        "pre-erase/sunroom.20261007T090000Z.db",
+        "sunroom.db",
+        "data.db",
+        "full.zip",
+        "sunroom.2026-10-08.db",  # the right shape, but there's no such copy
+        "sunroom.2026-10-07.partial.db",
+    ):
+        assert backup.locate(backups, data, name, NY) is None, name
+
+
 def test_service_runs_once_a_day_after_0330(data_dir: Path) -> None:
     clock = FakeClock(datetime(2026, 10, 6, 7, 0, tzinfo=UTC))  # 03:00 in New York
     service = backup.BackupService(

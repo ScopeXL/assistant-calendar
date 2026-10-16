@@ -23,6 +23,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   backup that didn't complete or is a week old, a feature that stopped, a full disk), a Needs
   Attention icon shows at the top of every room on the wall and on a phone's Today; a tap lists
   what's wrong and opens the settings that fix it. The pill above the days is gone.
+- Settings → Backup: Nightly backups can be turned off, and you choose how many daily and weekly
+  copies to keep; every copy on the server is listed, newest first, to download or remove; one
+  Download button offers Data Only (a fresh copy) or Data & Photos.
 
 ### Changed
 
@@ -44,6 +47,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
   to any name. TRUSTED_PROXIES is gone (an old line is ignored, with a note in the log).
   APP_ALLOWED_HOSTS is now an optional lock: set it and Sunroom answers only to those names and
   local ones. About says URL and no longer shows the phone's own address.
+- Back Up Now sits in the Backups heading; Export says what it is for and is named Export.
 
 ### Fixed
 

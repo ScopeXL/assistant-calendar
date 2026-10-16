@@ -4,31 +4,45 @@ import { useShell } from "../../ui/shell";
 
 /** A group of settings: a surface block with rows, under its title. A page with one group
  * leaves the title off, since the page's own says it. `mark` is drawn after the title and
- * hidden from screen readers (the heart beside Support Sunroom, ADR 0034). */
+ * hidden from screen readers (the heart beside Support Sunroom, ADR 0034); `action`, a button
+ * at the title's right (Back Up Now beside Backups). */
 export function Group({
   title,
   children,
   note,
   mark,
+  action,
 }: {
   title?: string | undefined;
   /** The rows; null for a group that is only its note. */
   children: ReactNode;
   note?: string | undefined;
   mark?: ReactNode;
+  action?: ReactNode;
 }) {
   const display = useShell() === "display";
   // On the wall screen the page's own title is the h2 (beside the list of pages); on a phone
   // it's the screen's h1.
   const Heading = display ? "h3" : "h2";
+  const space = display ? "mb-3" : "mb-2";
+  const heading = title ? (
+    <Heading
+      className={`${action ? "" : space} ${display ? "text-d-title" : "text-row"} font-bold`}
+    >
+      {title}
+      {mark ? <span aria-hidden="true">{mark}</span> : null}
+    </Heading>
+  ) : null;
   return (
     <section className={display ? "mb-10" : "mb-8"}>
-      {title ? (
-        <Heading className={display ? "mb-3 text-d-title font-bold" : "mb-2 text-row font-bold"}>
-          {title}
-          {mark ? <span aria-hidden="true">{mark}</span> : null}
-        </Heading>
-      ) : null}
+      {heading && action ? (
+        <div className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 ${space}`}>
+          {heading}
+          {action}
+        </div>
+      ) : (
+        heading
+      )}
       {note ? (
         <p
           className={

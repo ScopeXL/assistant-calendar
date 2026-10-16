@@ -86,6 +86,9 @@ class SettingsOut(BaseModel):
     display_rolling_week: bool  # the Week view: a window around today, not the week (ADR 0033)
     show_tips: bool  # a tip under the board on the wall and laptops
     default_reminder_minutes: int | None  # events with no reminder of their own (ADR 0034)
+    backups_enabled: bool  # a checked copy every night (ADR 0034)
+    backups_keep_daily: int
+    backups_keep_weekly: int
     sleep_from: str | None
     sleep_to: str | None
     sleep_mode: SleepModeName
@@ -126,6 +129,10 @@ class SettingsUpdate(BaseModel):
     show_tips: bool | None = None
     # Minutes before, for events with no reminder of their own; send null for none.
     default_reminder_minutes: Literal[5, 10, 15, 30, 60, 120, 1440] | None = None
+    backups_enabled: bool | None = None
+    # One daily copy at least, so the newest is always kept; the caps keep a Stepper usable.
+    backups_keep_daily: Annotated[int, Field(ge=1, le=30)] | None = None
+    backups_keep_weekly: Annotated[int, Field(ge=0, le=12)] | None = None
     sleep_from: Clock24 | None = None  # send null (with sleep_to) to turn sleep off
     sleep_to: Clock24 | None = None
     sleep_mode: SleepModeName | None = None

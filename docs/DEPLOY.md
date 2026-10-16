@@ -132,12 +132,14 @@ for it.
 ## Backups
 
 - A verified copy is written every night at 03:30 (household time) into `/data/backups/`,
-  keeping 14 daily and 8 weekly copies. **Settings → Backup** shows when the last one ran, and has
-  **Back Up Now**, **Download Backup** (the newest copy) and **Download Everything** (the
-  database and every photo in one zip, which restores anywhere).
-- Photos are files on the volume, not in the database: only Download everything has them. Include
-  the whole `sunroom_data` volume in your host's own backups too, or download everything now and
-  then and keep it off the server.
+  keeping 14 daily and 8 weekly copies unless **Settings → Backup** says otherwise (it can turn
+  the nightly copies off, too). It shows when the last one ran and every copy on the server, to
+  download or remove, and has **Back Up Now** and **Download**: **Data Only** (the database,
+  copied that moment) or **Data & Photos** (the database and every photo in one zip, which
+  restores anywhere).
+- Photos are files on the volume, not in the database: only Data & Photos has them. Include
+  the whole `sunroom_data` volume in your host's own backups too, or download Data & Photos now
+  and then and keep it off the server.
 - To restore, see [RESTORE.md](RESTORE.md).
 
 ## Troubleshooting

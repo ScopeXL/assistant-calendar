@@ -99,6 +99,8 @@ async def update_settings(body: SettingsUpdate, state: StateDep, actor: ParentDe
                 setattr(home, key, value)
         home.updated_at = state.clock.now()
         state.household.zone = service.effective_zone(home, state.settings)
+        # Fewer copies to keep takes effect with the next backup, never at the tap (ADR 0034).
+        state.household.backups = service.backup_policy(home)
         tx.publish("settings.changed")
         return service.settings_out(home, state.settings)
 

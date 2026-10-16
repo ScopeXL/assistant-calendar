@@ -113,6 +113,7 @@ async def load_household(db: Database, settings: Settings) -> tuple[HouseholdCac
         setup_complete=home.onboarded_at is not None,
         password_set=settings.app_password is not None or bool(meta and meta.password_hash),
         members={member.id for member in members},
+        backups=household_service.backup_policy(home),
     )
     auth = AuthState(
         epoch=meta.auth_epoch if meta else 1,
@@ -208,6 +209,7 @@ def create_app(
                 backup_dir=settings.backup_dir,
                 zone_of=lambda: holder["state"].zone(),
                 clock=the_clock,
+                policy_of=lambda: holder["state"].household.backups,
             ),
             http=http,
             photos=photos,

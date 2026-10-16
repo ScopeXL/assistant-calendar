@@ -21,6 +21,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/backups/data.db": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Data
+         * @description Data Only (Settings → Backup → Download, ADR 0034): a checked copy of the database made
+         *     now, not the newest nightly one, so it holds what was added today.
+         */
+        get: operations["download_data_api_admin_backups_data_db_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/backups/full.zip": {
         parameters: {
             query?: never;
@@ -31,7 +52,7 @@ export interface paths {
         /**
          * Download Everything
          * @description Download everything (PLAN §13.7): the database, the photos and a manifest in one zip,
-         *     streamed as it is written.
+         *     streamed as it is written. Settings → Backup calls it Data & Photos.
          */
         get: operations["download_everything_api_admin_backups_full_zip_get"];
         put?: never;
@@ -66,11 +87,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Download Backup */
+        /**
+         * Download Backup
+         * @description One copy on the server, any of the four kinds.
+         */
         get: operations["download_backup_api_admin_backups__name__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Remove Backup
+         * @description Remove one copy (ADR 0034). Never from a paired screen, as Erase everything: it can't be
+         *     undone, it's never urgent, and a parent's grant outlives the parent at the wall.
+         */
+        delete: operations["remove_backup_api_admin_backups__name__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2562,10 +2591,21 @@ export interface components {
             /** Authorize Url */
             authorize_url: string;
         };
-        /** BackupFileOut */
+        /**
+         * BackupFileOut
+         * @description One copy on the server (ADR 0034): a nightly one, the one before an upgrade, the one
+         *     Erase everything kept, or the database a restore moved aside.
+         */
         BackupFileOut: {
             /** Bytes */
             bytes: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "nightly" | "pre-migrate" | "pre-erase" | "pre-restore";
+            /** Made At */
+            made_at: string;
             /** Name */
             name: string;
         };
@@ -2580,10 +2620,18 @@ export interface components {
         };
         /** BackupStatusOut */
         BackupStatusOut: {
+            /** Busy */
+            busy: boolean;
             /** Directory */
             directory: string;
+            /** Enabled */
+            enabled: boolean;
             /** Files */
             files: components["schemas"]["BackupFileOut"][];
+            /** Keep Daily */
+            keep_daily: number;
+            /** Keep Weekly */
+            keep_weekly: number;
             /** Last Error */
             last_error: string | null;
             /** Last Success At */
@@ -4834,6 +4882,12 @@ export interface components {
         };
         /** SettingsOut */
         SettingsOut: {
+            /** Backups Enabled */
+            backups_enabled: boolean;
+            /** Backups Keep Daily */
+            backups_keep_daily: number;
+            /** Backups Keep Weekly */
+            backups_keep_weekly: number;
             /** Daylight Tint */
             daylight_tint: boolean;
             /** Default Reminder Minutes */
@@ -4938,6 +4992,12 @@ export interface components {
         };
         /** SettingsUpdate */
         SettingsUpdate: {
+            /** Backups Enabled */
+            backups_enabled?: boolean | null;
+            /** Backups Keep Daily */
+            backups_keep_daily?: number | null;
+            /** Backups Keep Weekly */
+            backups_keep_weekly?: number | null;
             /** Daylight Tint */
             daylight_tint?: boolean | null;
             /** Default Reminder Minutes */
@@ -5386,6 +5446,31 @@ export interface operations {
             };
         };
     };
+    download_data_api_admin_backups_data_db_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not enough free space for the database copy */
+            507: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     download_everything_api_admin_backups_full_zip_get: {
         parameters: {
             query?: never;
@@ -5452,6 +5537,35 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_backup_api_admin_backups__name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

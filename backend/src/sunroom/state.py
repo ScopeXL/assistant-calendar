@@ -22,7 +22,7 @@ from sunroom.core.config import Settings
 from sunroom.core.http import GuardedHttp
 from sunroom.core.jobs import Jobs
 from sunroom.core.updates import UpdateCheck
-from sunroom.db.backup import BackupService
+from sunroom.db.backup import BackupPolicy, BackupService
 from sunroom.db.engine import Database
 from sunroom.events.hub import EventHub
 from sunroom.household.screenwatch import ScreenWatch
@@ -40,6 +40,7 @@ class HouseholdCache:
     setup_complete: bool = False
     password_set: bool = False
     members: set[str] = field(default_factory=set[str])  # active member ids
+    backups: BackupPolicy = field(default_factory=BackupPolicy)  # Settings → Backup
 
 
 @dataclass

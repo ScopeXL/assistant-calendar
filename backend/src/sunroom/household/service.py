@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sunroom.core.config import Settings
 from sunroom.core.errors import AppError
+from sunroom.db.backup import BackupPolicy
 from sunroom.household.models import (
     PERSON_COLOR_WORDS,
     PERSON_COLORS,
@@ -54,6 +55,15 @@ def valid_zone(name: str | None) -> ZoneInfo | None:
         return None
 
 
+def backup_policy(home: Household) -> BackupPolicy:
+    """Settings → Backup's choices, as the nightly job reads them (ADR 0034)."""
+    return BackupPolicy(
+        enabled=home.backups_enabled,
+        keep_daily=home.backups_keep_daily,
+        keep_weekly=home.backups_keep_weekly,
+    )
+
+
 def effective_zone(home: Household, settings: Settings) -> ZoneInfo:
     """The household's own zone, else the TZ override, else UTC (PLAN §14.2)."""
     return valid_zone(home.timezone) or settings.env_zone or ZoneInfo("UTC")
@@ -85,6 +95,9 @@ def settings_out(home: Household, settings: Settings) -> SettingsOut:
             "display_rolling_week": home.display_rolling_week,
             "show_tips": home.show_tips,
             "default_reminder_minutes": home.default_reminder_minutes,
+            "backups_enabled": home.backups_enabled,
+            "backups_keep_daily": home.backups_keep_daily,
+            "backups_keep_weekly": home.backups_keep_weekly,
             "sleep_from": home.sleep_from,
             "sleep_to": home.sleep_to,
             "sleep_mode": home.sleep_mode,
