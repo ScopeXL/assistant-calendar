@@ -59,19 +59,51 @@ describe("event router", () => {
     // The screensaver's timing lives in its manifest: no waiting for it to go stale.
     expect(refreshed("screensaver")).toEqual([
       ["plugins"],
+      ["problems"],
       ["occurrences"],
       ["screensaver"],
       ["photos"],
     ]);
-    expect(refreshed("chores")).toEqual([["plugins"], ["occurrences"], ["chores"]]);
-    expect(refreshed("meals")).toEqual([["plugins"], ["occurrences"], ["meals"]]);
-    expect(refreshed("lists")).toEqual([["plugins"], ["occurrences"], ["lists"]]);
-    expect(refreshed("countdowns")).toEqual([["plugins"], ["occurrences"], ["countdowns"]]);
-    expect(refreshed("weather")).toEqual([["plugins"], ["occurrences"], ["weather"]]);
-    expect(refreshed("calendar_sync")).toEqual([["plugins"], ["occurrences"], ["calendar-sync"]]);
+    expect(refreshed("chores")).toEqual([["plugins"], ["problems"], ["occurrences"], ["chores"]]);
+    expect(refreshed("meals")).toEqual([["plugins"], ["problems"], ["occurrences"], ["meals"]]);
+    expect(refreshed("lists")).toEqual([["plugins"], ["problems"], ["occurrences"], ["lists"]]);
+    expect(refreshed("countdowns")).toEqual([
+      ["plugins"],
+      ["problems"],
+      ["occurrences"],
+      ["countdowns"],
+    ]);
+    expect(refreshed("weather")).toEqual([["plugins"], ["problems"], ["occurrences"], ["weather"]]);
+    expect(refreshed("calendar_sync")).toEqual([
+      ["plugins"],
+      ["problems"],
+      ["occurrences"],
+      ["calendar-sync"],
+    ]);
     // A plugin this build has never heard of, or no id at all: everything, at once.
-    expect(refreshed("something_new")).toEqual([undefined, ["plugins"], ["occurrences"]]);
-    expect(refreshed(undefined)).toEqual([undefined, ["plugins"], ["occurrences"]]);
+    expect(refreshed("something_new")).toEqual([
+      undefined,
+      ["plugins"],
+      ["problems"],
+      ["occurrences"],
+    ]);
+    expect(refreshed(undefined)).toEqual([undefined, ["plugins"], ["problems"], ["occurrences"]]);
+  });
+
+  it("asks Needs Attention again when something it reports may have changed (ADR 0034)", () => {
+    const spy = vi.spyOn(client, "invalidateQueries");
+    const handle = createEventHandler(client, { onSignedOut: vi.fn() });
+    for (const type of [
+      "sync.changed",
+      "screensaver.changed",
+      "photos.changed",
+      "settings.changed",
+    ]) {
+      spy.mockClear();
+      handle({ type });
+      vi.advanceTimersByTime(250);
+      expect(spy, type).toHaveBeenCalledWith({ queryKey: ["problems"] });
+    }
   });
 
   it("hands commands for the wall screen to the shell", () => {

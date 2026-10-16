@@ -264,6 +264,16 @@ async def test_a_refused_password_asks_to_reconnect(
     assert account["status"] == "needs_reconnect"
     assert account["last_error"] == "The test server said that password isn't right."
     assert account["next_sync_at"] is None
+    # Needs Attention names it, with the page that fixes it (ADR 0034).
+    listed = (await phone.get("/api/problems")).json()["problems"]
+    assert [(p["id"], p["title"], p["page"], p["detail"]) for p in listed] == [
+        (
+            f"sync:{account_id}",
+            "Test server needs its password again.",
+            "calendars",
+            "The test server said that password isn't right.",
+        )
+    ]
     # It isn't tried again until someone reconnects it.
     await engine(plugin).tick()
     assert not engine(plugin).is_running(account_id)
@@ -280,9 +290,16 @@ async def test_failures_back_off_and_show_after_three(
         assert account["status"] == expected
         assert account["last_error"] == "The test server didn't answer."
         assert datetime.fromisoformat(account["next_sync_at"]) > clock.now()
+        listed = (await phone.get("/api/problems")).json()["problems"]
+        # Only once it's an error, after three in a row (ADR 0034): since it last answered.
+        assert [p["title"] for p in listed] == (
+            ["Test server hasn't answered. Showing what we had."] if expected == "error" else []
+        )
+    assert listed[0]["since"] == account["last_success_at"]
     await engine(plugin).sync_account(account_id)
     account = await get_account(phone, account_id)
     assert (account["status"], account["last_error"]) == ("connected", None)
+    assert (await phone.get("/api/problems")).json()["problems"] == []
 
 
 def test_backoff_doubles_up_to_an_hour_and_honours_retry_after() -> None:

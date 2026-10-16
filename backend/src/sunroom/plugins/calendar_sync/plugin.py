@@ -16,6 +16,7 @@ from sunroom.plugins.base import (
     HubEvent,
     PluginBase,
     PluginManifest,
+    Problem,
     SettingsSection,
 )
 from sunroom.plugins.calendar_sync import service
@@ -53,7 +54,6 @@ MANIFEST = PluginManifest(
     export_column_excluded={"sync_accounts": frozenset({"credentials_enc"})},
     contributes=Contributions(
         settings_sections=(SettingsSection("accounts", "Calendars & Accounts"),),
-        banners=("sync_error",),
     ),
     default_enabled=True,
     subscribes=("events.changed",),
@@ -80,6 +80,10 @@ class CalendarSync(PluginBase):
     def register_provider_routes(self, router: APIRouter, ctx: Any, engine: Any) -> None:
         for hook in self.route_hooks:
             hook(router, ctx, engine)
+
+    async def problems(self, ctx: PluginContext) -> list[Problem]:
+        """An account that stopped working (Needs Attention, ADR 0034)."""
+        return await service.problems(ctx)
 
     async def on_enable(self, ctx: PluginContext) -> None:
         self.ctx = ctx

@@ -20,6 +20,7 @@ import { useRailBlocks, useTodayBlocks } from "../usePluginModules";
 import { byDay, isPast, todayParts } from "../calendar/layout";
 import { PhoneRow } from "../calendar/PhoneLists";
 import type { Occurrence } from "../calendar/types";
+import { AttentionPill } from "../problems/AttentionPill";
 
 /**
  * A phone's Today (UX §5): the date and who's using it, Up next large, then the rest of today;
@@ -88,6 +89,7 @@ export function TodayScreen() {
         {railBlocks.map((Block, index) => (
           <Block key={index} place="phone" />
         ))}
+        <AttentionPill />
       </header>
       {onNow.length ? (
         <section aria-labelledby="today-now" className="flex flex-col gap-1">

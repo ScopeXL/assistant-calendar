@@ -15,12 +15,11 @@ import { Arrivals, useArrivals } from "../../lib/arrivals";
 import { displayState, updateDisplay, type BoardView } from "../../lib/displayState";
 import { useMembers, useSettings } from "../../lib/household";
 import { usePageTurn } from "../../lib/motion";
-import { usePluginModules } from "../usePluginModules";
 import { useStore } from "../../lib/store";
 import { useMinute } from "../../lib/time";
 import { useRoomHeader } from "../../shell/roomHeader";
 import { AddPanel } from "./AddPanel";
-import { BoardControls, BoardPills } from "./BoardControls";
+import { BoardControls } from "./BoardControls";
 import { useEventChanges, useOccurrences } from "./data";
 import { DayView } from "./DayView";
 import { arrivalKey } from "./EventChip";
@@ -58,9 +57,6 @@ export function CalendarRoom() {
   const dimPast = settings?.display_dim_past ?? true;
   const changes = useEventChanges();
   const pages = usePageTurn();
-  const pills = usePluginModules().flatMap((module) =>
-    module.boardPill ? [{ id: module.id, Pill: module.boardPill }] : [],
-  );
   const [dragging, setDragging] = useState(false);
   const [draftDay, setDraftDay] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<{ occurrence: Occurrence; toDay: string } | null>(
@@ -224,11 +220,6 @@ export function CalendarRoom() {
       className="@container flex min-h-0 flex-1 flex-col"
     >
       <Arrivals value={arrived}>
-        <BoardPills
-          pills={pills.map(({ id, Pill }) => (
-            <Pill key={id} />
-          ))}
-        />
         <div {...pages.attrs} className="flex min-h-0 flex-1 flex-col">
           {view === "week" ? (
             <WeekView

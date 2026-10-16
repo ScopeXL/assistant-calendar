@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Clock3, List } from "lucide-react";
 
 import type { BoardView, WeekLayout } from "../../lib/displayState";
@@ -85,14 +84,4 @@ export function BoardControls({
       </div>
     </>
   );
-}
-
-/**
- * The plugins' quiet pills above the board's days ("Google hasn't answered since 9:10 AM"),
- * all that is left of the board's own toolbar (ADR 0030). A pill decides for itself whether it
- * has anything to say, so the row takes no room until one does.
- */
-export function BoardPills({ pills }: { pills: ReactNode[] }) {
-  if (!pills.length) return null;
-  return <div className="flex flex-wrap items-center gap-3 px-6 pt-3 empty:hidden">{pills}</div>;
 }

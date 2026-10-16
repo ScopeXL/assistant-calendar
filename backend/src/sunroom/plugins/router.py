@@ -54,7 +54,6 @@ class ContributesOut(BaseModel):
     phone_tabs: list[TabOut]
     settings_sections: list[SectionOut]
     display_overlay: bool
-    banners: list[str]
 
 
 class FieldOut(BaseModel):
@@ -138,7 +137,6 @@ def plugin_out(state: AppState, plugin: Plugin) -> PluginOut:
                     for s in contributes.settings_sections
                 ],
                 "display_overlay": contributes.display_overlay,
-                "banners": list(contributes.banners),
             },
             "requires_parent_to_manage": True,
         }

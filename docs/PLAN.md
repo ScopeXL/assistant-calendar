@@ -232,7 +232,6 @@ class Contributions:
     phone_tabs: tuple[PhoneTab, ...] = ()
     settings_sections: tuple[SettingsSection, ...] = ()
     display_overlay: bool = False                      # the screensaver
-    banners: tuple[str, ...] = ()                      # quiet-banner keys the shell may show ("sync_error")
 
 @dataclass(frozen=True, slots=True)
 class PluginManifest:
@@ -256,7 +255,10 @@ class Plugin(Protocol):
     async def on_event(self, ctx: PluginContext, event: HubEvent) -> None: ...          # optional
     async def validate_settings(self, ctx: PluginContext, values: dict) -> list[str]: ...  # optional
     async def seed_sample(self, ctx: PluginContext, people: dict[str, str]) -> None: ...  # test mode's Sample Family
+    async def problems(self, ctx: PluginContext) -> list[Problem]: ...  # Needs Attention (ADR 0034)
 ```
+
+`Problem(id, title, detail=None, since=None, page=None)`: a stable id per cause ("sync:<account id>"), one sentence in the family's words with no ids or secrets, a parent's quiet second line, when it started, and the Settings page that fixes it. `PluginManager.problems()` asks each enabled, running plugin on the request path (a stopped one is core's to report); a hook that raises is logged and adds nothing. Core's `GET /api/problems` (`problems/`) puts a stopped feature first, then the plugins' own, then a failed or week-old backup and low disk space, and drops `detail` for anyone but a parent.
 
 `PluginBase` gives every hook a no-op default. A plugin keeps its context when it stops (no `ctx = None` in `on_disable`): a job that raises marks it errored while its routes stay up (§11.4), and switched off, the framework's gate answers for them. The test server's `POST _test/seed` calls `seed_sample` on each enabled plugin; it adds its synthetic data only when its tables are empty.
 
@@ -281,7 +283,7 @@ One asyncio task and queue per enabled plugin (the earlier project's pattern, §
 
 ### 6.5 The manifest endpoint and the frontend registry
 
-`GET /api/plugins` returns, per plugin: id, url prefix, version, name, description, enabled, status, error, `settings_spec`, `settings` (secrets masked), `contributes` (display panels, rooms, phone tabs, settings sections, overlay, banners) and `requires_parent_to_manage`. The shell builds the rail, the tab bar, the Today panel and Settings from the intersection of that list and `features/registry.ts`:
+`GET /api/plugins` returns, per plugin: id, url prefix, version, name, description, enabled, status, error, `settings_spec`, `settings` (secrets masked), `contributes` (display panels, rooms, phone tabs, settings sections, overlay) and `requires_parent_to_manage`. (The `banners` a plugin once declared went in 0.12.0: nothing read them, and Needs Attention asks the plugins themselves, ADR 0034.) The shell builds the rail, the tab bar, the Today panel and Settings from the intersection of that list and `features/registry.ts`:
 
 ```ts
 // features/registry.ts
@@ -473,7 +475,7 @@ All under `/api`; the error envelope everywhere; mutations carry `X-Sunroom: 1`.
 | Photos (core store) | `GET photos?kind&source&cursor` A; `POST photos` (multipart, ≤ 15 MB, ≤ 10 files) A; `GET photos/{id}`, `GET photos/{id}/thumb` A; `DELETE photos/{id}`, `POST photos/{id}/hide` P | `photos.changed` |
 | Display | `GET kiosk/layout` A; `PUT kiosk/layout` P; `POST kiosk/command {reload \| wake \| screensaver \| show_event}` P | `settings.changed`, `kiosk.command` |
 | Network allowlist | `GET`, `POST`, `DELETE network-allowlist` P | `settings.changed` |
-| Calendar | `GET calendar/calendars` A; `POST`, `PATCH`, `DELETE` (soft; never the household's last local calendar, 409 `last_calendar`, nor the default, 409 `default_calendar`), `…/restore calendar/calendars` P (local only; 409 `managed_by_sync` otherwise); `POST calendar/calendars/{id}/default` P (any calendar that can be written to, a synced one too; 409 `calendar_read_only`); `GET calendar/occurrences` A; `GET calendar/events/{id}` A; `GET calendar/events/{id}/occurrences/{rid}` A (one occurrence as the editor reads it: its own row when changed on its own, else the series; 404 for a time that isn't one, ADR 0034); `POST calendar/events` A K; `PATCH calendar/events/{id} {scope: all, expected_version}` A K; `PATCH calendar/events/{id}/occurrences/{rid} {scope: this \| following}` A K; `DELETE calendar/events/{id}?scope=all`, `DELETE …/occurrences/{rid}?scope=` A K; `POST calendar/events/{id}/undo` A; `POST calendar/events/{id}/move` A K (drag fast path); `GET calendar/rrule/describe` A | `calendars.changed`, `events.changed {calendar_id, event_ids, calendar_version}` |
+| Calendar | `GET calendar/calendars` A; `POST`, `PATCH`, `DELETE` (soft; never the household's last local calendar, 409 `last_calendar`, nor the default, 409 `default_calendar`), `…/restore calendar/calendars` P (local only; 409 `managed_by_sync` otherwise); `POST calendar/calendars/{id}/default` P (any calendar that can be written to, a synced one too; 409 `calendar_read_only`); `GET calendar/occurrences` A; `GET problems` A (Needs Attention: each problem's sentence, since, page and source; details for parents only; ADR 0034); `GET calendar/events/{id}` A; `GET calendar/events/{id}/occurrences/{rid}` A (one occurrence as the editor reads it: its own row when changed on its own, else the series; 404 for a time that isn't one, ADR 0034); `POST calendar/events` A K; `PATCH calendar/events/{id} {scope: all, expected_version}` A K; `PATCH calendar/events/{id}/occurrences/{rid} {scope: this \| following}` A K; `DELETE calendar/events/{id}?scope=all`, `DELETE …/occurrences/{rid}?scope=` A K; `POST calendar/events/{id}/undo` A; `POST calendar/events/{id}/move` A K (drag fast path); `GET calendar/rrule/describe` A | `calendars.changed`, `events.changed {calendar_id, event_ids, calendar_version}` |
 | Plugins | `GET plugins` A; `POST plugins/{id}/enable`, `…/disable`, `…/restart` P; `GET plugins/{id}/settings` A; `PUT plugins/{id}/settings` P | `plugins.changed` |
 | Test only (`SUNROOM_TEST_MODE=1`, localhost) | `POST _test/reset`, `_test/drop-streams`, `_test/revoke-sessions`, `_test/clock {set \| advance}`, `POST _test/seed {profile: "sample-family"}` (the Sample Family in Sample Town, and each plugin's own data); the sync plugin's scripted account (`calendar-sync/_test/fake`); the weather plugin makes up its forecast and its city search in test mode (any name is "found" in Sample State, so `just dev`, whose `.env` turns test mode on, never looks like a broken search; ADR 0030) | |
 
@@ -749,7 +751,7 @@ Backend: `calendars`, `events`, `event_members`, `event_reminders`, `event_revis
 
 ### M2 Synced calendars → 0.3.0
 
-The `calendar_sync` plugin: models, `ical.py`, `tzmap.py`, providers `ics`, `holidays`, `fake`, `caldav` (discovery, sync-collection and ctag diff, multiget, push with If-Match, `raw_ical` round-trip), `google` (service-account mode: key upload, helper email, `calendarList.insert`, `syncToken`; OAuth mode: Kroger's PKCE flow, enabled on HTTPS or at `localhost`), the engine with chunked upserts, push sweep, backoff and `needs_reconnect`, SSRF guard and the LAN allowlist, `sync.changed` banners, Settings → Calendars & accounts on the phone with the three Google ways and the iCloud steps with drawings, calendar-to-person mapping with "already used by Mia" hints, `docs/SYNC.md`.
+The `calendar_sync` plugin: models, `ical.py`, `tzmap.py`, providers `ics`, `holidays`, `fake`, `caldav` (discovery, sync-collection and ctag diff, multiget, push with If-Match, `raw_ical` round-trip), `google` (service-account mode: key upload, helper email, `calendarList.insert`, `syncToken`; OAuth mode: Kroger's PKCE flow, enabled on HTTPS or at `localhost`), the engine with chunked upserts, push sweep, backoff and `needs_reconnect`, SSRF guard and the LAN allowlist, `sync.changed` (an account that stops working shows in Needs Attention since 0.12.0), Settings → Calendars & accounts on the phone with the three Google ways and the iCloud steps with drawings, calendar-to-person mapping with "already used by Mia" hints, `docs/SYNC.md`.
 
 *Verify:* engine tests against `FakeCalendarProvider` (create, update, delete both ways; the local-newer-with-pending-push rule; 412 retry; `fail_next("auth")` → `needs_reconnect` and the banner); `POST accounts/ics` with a private URL → 422 until allowlisted; `just smoke-caldav` against a Radicale container with the fixtures imported matches the goldens; on the owner's real accounts (never committed): an iCloud calendar syncs both ways within 5 minutes, a Google calendar via the secret address appears, a Google calendar via the helper account accepts an event added on the wall; the measured freshness of the secret address goes in `docs/SYNC.md`.
 

@@ -1281,7 +1281,7 @@ occurrences too." "The Remind row offers 5, 15 and 30 minutes and 2 hours as wel
 
 ### T12 Needs Attention
 
-- [ ] Done (commit: )
+- [x] Done (commit: "problems: Needs Attention, one place for what needs a parent")
 
 **Owner's note.** "Are errors surfaced in the app at all? If a connected Apple account can't
 retrieve a calendar for some time (error communicating with Apple, invalid password, etc.) or any
@@ -1386,7 +1386,27 @@ source that fails, a backup that didn't complete or is a week old, a feature tha
 disk), a Needs Attention icon shows at the top of every room on the wall and on a phone's Today; a
 tap lists what's wrong and opens the settings that fix it. The pill above the days is gone."
 
-**As built.** (fill in)
+**As built.** As planned, with these differences:
+- *"Since"* for an account that hasn't answered is its last success (when it stopped), and for
+  one that needs a new password the refusal's time; the plan had the latest failure first for
+  both, which would have said "since" the most recent retry.
+- *A stopped plugin* isn't asked for its own problems (its hook may be what broke); core reports
+  it, "{name} stopped working.", page Features.
+- *The Settings dot*: the flagged link is named "Calendars & Accounts, needs attention" by an
+  `aria-label` (a hidden span inside the link came out as "Calendars & Accounts , needs
+  attention"). `screenshots.spec.ts`'s Settings loops accept either name, since its failing
+  account stays failing into them; its shot is now `display-attention` (the sheet), not
+  `board-sync-pill`.
+- *The PIN on a paired screen*: "Open …" asks it only on a kiosk without a grant; on a phone
+  the Settings route's own gate applies (`PinDialog` is the wall's; see the follow-ups).
+- Tests: `tests/test_problems.py` (new: nothing on a new household; a week-old backup and a
+  failed one, the detail for a parent and not a PIN-gated wall; low space; a feature's own
+  problems only while it's on, a broken hook adding nothing; a stopped feature; the contract
+  over every registered plugin), `test_engine.py` (a refused password, three unreachables and
+  their "since", and the reconnect clearing it), `test_inbox.py` (a failing source), the
+  router's invalidations, `problems.test.tsx` (new). The e2e case in `sync.spec.ts` passes on
+  `display-1080p`: no icon while all is well, the icon and its name after the refusal, the
+  sheet's sentence, Open Calendars & Accounts, and the marked page.
 
 ### T13 Any reverse proxy, with nothing to set
 

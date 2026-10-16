@@ -10,6 +10,7 @@ from sunroom.plugins.base import (
     PhoneTab,
     PluginBase,
     PluginManifest,
+    Problem,
     SettingsSection,
 )
 from sunroom.plugins.context import PluginContext
@@ -78,6 +79,12 @@ class Screensaver(PluginBase):
         from sunroom.plugins.screensaver.router import build
 
         build(router, self)
+
+    async def problems(self, ctx: PluginContext) -> list[Problem]:
+        """A photo source that fails (Needs Attention, ADR 0034)."""
+        from sunroom.plugins.screensaver import service
+
+        return await service.problems(ctx)
 
     async def on_enable(self, ctx: PluginContext) -> None:
         from sunroom.plugins.screensaver import service

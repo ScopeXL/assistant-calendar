@@ -1487,13 +1487,6 @@
       },
       "ContributesOut": {
         "properties": {
-          "banners": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Banners",
-            "type": "array"
-          },
           "display_overlay": {
             "title": "Display Overlay",
             "type": "boolean"
@@ -1532,8 +1525,7 @@
           "display_rooms",
           "phone_tabs",
           "settings_sections",
-          "display_overlay",
-          "banners"
+          "display_overlay"
         ],
         "title": "ContributesOut",
         "type": "object"
@@ -5984,6 +5976,82 @@
           "stars"
         ],
         "title": "PointsOut",
+        "type": "object"
+      },
+      "ProblemOut": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "detail",
+          "since",
+          "page",
+          "source"
+        ],
+        "title": "ProblemOut",
+        "type": "object"
+      },
+      "ProblemsOut": {
+        "properties": {
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/ProblemOut"
+            },
+            "title": "Problems",
+            "type": "array"
+          }
+        },
+        "required": [
+          "problems"
+        ],
+        "title": "ProblemsOut",
         "type": "object"
       },
       "ReconnectIn": {
@@ -15884,6 +15952,28 @@
         "summary": "Put Settings",
         "tags": [
           "plugins"
+        ]
+      }
+    },
+    "/api/problems": {
+      "get": {
+        "description": "Needs Attention: every problem, each with a sentence and the page that fixes it. Anyone\nsigned in or paired may read the sentences; the quiet details are a parent's.",
+        "operationId": "list_problems_api_problems_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Problems",
+        "tags": [
+          "problems"
         ]
       }
     },

@@ -54,6 +54,7 @@ from sunroom.plugins.manager import PluginManager, PluginRunner
 from sunroom.plugins.registry import REGISTRY
 from sunroom.plugins.router import mount_plugin_routes
 from sunroom.plugins.router import router as plugins_router
+from sunroom.problems.router import router as problems_router
 from sunroom.state import AppState, HouseholdCache
 from sunroom.web.csrf import CSRFGuard
 from sunroom.web.forwarded import ForwardedHeaders
@@ -301,6 +302,7 @@ def create_app(
     app.include_router(photos_router)
     app.include_router(calendar_router)
     app.include_router(plugins_router)
+    app.include_router(problems_router)
     app.include_router(events_router)
     if settings.sunroom_test_mode:
         app.include_router(testing_router)

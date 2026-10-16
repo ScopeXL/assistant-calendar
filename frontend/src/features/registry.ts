@@ -112,8 +112,6 @@ export interface PluginModule {
   saverCorner?: ComponentType;
   /** A button on an event's sheet ("Add a countdown"); `onDone` closes the sheet. */
   eventAction?: ComponentType<{ occurrence: Occurrence; onDone: () => void }>;
-  /** A quiet one-line pill in the board's header (a synced account that stopped answering). */
-  boardPill?: ComponentType;
   /** The body of a first-run step the plugin adds (calendar_sync: Bring in your calendars). */
   onboarding?: ComponentType<{ onDone: () => void }>;
 }

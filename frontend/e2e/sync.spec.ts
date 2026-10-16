@@ -1,8 +1,8 @@
 /**
  * Synced calendars end to end (PLAN §15 M2), against the test server's scripted calendar
  * server: an account's calendar mapped to a person shows on the wall in that person's color; a
- * change made on the wall goes out to the server; a refused password shows the quiet pill and
- * the events stay. Adding an account from any device (ADR 0028): a computer gets the steps in a
+ * change made on the wall goes out to the server; a refused password shows Needs Attention
+ * and the events stay. Adding an account from any device (ADR 0028): a computer gets the steps in a
  * sheet, and Google's way back opens a new account's calendars; the wall types a password on
  * its own keyboard and hands Google's file and page to a phone. An account opens from its row
  * (ADR 0029): Sync, whose a calendar is and its color, Show on the screen, Remove account. An
@@ -195,7 +195,7 @@ test("a title names its people, on top of the calendar's person, in all their co
   await expect(people.getByRole("region", { name: "Sam" })).not.toContainText("swim");
 });
 
-test("a refused password shows a quiet pill, and the events stay", async ({
+test("a refused password shows the attention icon, and the sheet names the account", async ({
   page,
   request,
 }, testInfo) => {
@@ -207,6 +207,9 @@ test("a refused password shows a quiet pill, and the events stay", async ({
   await expect(week.getByRole("button", { name: /^Field trip, / })).toBeVisible({
     timeout: 15_000,
   });
+  // Nothing wrong: no icon at all (ADR 0034).
+  const attention = page.getByRole("banner").getByRole("button", { name: /^Needs attention/ });
+  await expect(attention).toHaveCount(0);
   const failing = await request.put(`/api/calendar-sync/_test/fake/${account}`, {
     headers: CSRF,
     data: { fail_next: ["auth"] },
@@ -214,10 +217,21 @@ test("a refused password shows a quiet pill, and the events stay", async ({
   expect(failing.status()).toBe(200);
   await request.post("/api/_test/clock", { headers: CSRF, data: { advance_minutes: 2 } });
   await syncNow(request, account);
-  await expect(page.getByRole("button", { name: /needs its password again/ })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expect(attention).toBeVisible({ timeout: 15_000 });
+  await expect(attention).toHaveAccessibleName("Needs attention: 1 thing");
+  // The events stay.
   await expect(week.getByRole("button", { name: /^Field trip, / })).toBeVisible();
+  await attention.click();
+  const sheet = page.getByRole("dialog", { name: "Needs Attention" });
+  await expect(sheet).toContainText("Test server needs its password again.");
+  await sheet.getByRole("button", { name: "Open Calendars & Accounts" }).click();
+  await expect(page).toHaveURL(/\/settings\/calendars$/);
+  // The page that fixes it is marked in Settings' list.
+  await expect(
+    page
+      .getByRole("navigation", { name: "Settings" })
+      .getByRole("link", { name: "Calendars & Accounts, needs attention" }),
+  ).toBeVisible();
 });
 
 test("a computer adds an account in a sheet, and Google's way back opens its calendars", async ({

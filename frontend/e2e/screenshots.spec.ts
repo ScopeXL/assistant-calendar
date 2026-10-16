@@ -44,6 +44,8 @@ const PAGES = [
 ];
 
 test.skip(!process.env.SCREENSHOTS, "run with `just screenshots`");
+
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // Playwright's WebKit screenshot code injects an inline <style>, which the CSP blocks and
 // reports. Every other spec keeps the guard on, so real violations are still caught.
 test.use({ cspGuard: false });
@@ -268,7 +270,7 @@ test("the wall screen", async ({ page }) => {
   await shot(page, "view-today");
   await change(page, { display_home_view: "week" });
 
-  // A synced account that stopped answering: the board's quiet pill. More failures are queued
+  // A synced account that stopped answering: Needs Attention's sheet. More failures are queued
   // than the three syncs below use: the plugin's own minute check may use some first.
   const account = await scriptedAccount(page.request);
   await page.request.put(`/api/calendar-sync/_test/fake/${account}`, {
@@ -300,17 +302,24 @@ test("the wall screen", async ({ page }) => {
   }
   await moveClock(page, STOPS[1]?.at ?? "");
   await page.reload();
-  await expect(page.getByRole("button", { name: /hasn't answered/ })).toBeVisible();
-  await shot(page, "board-sync-pill");
+  const attention = page.getByRole("banner").getByRole("button", { name: /^Needs attention/ });
+  await expect(attention).toBeVisible();
+  await attention.click();
+  const needs = page.getByRole("dialog", { name: "Needs Attention" });
+  await expect(needs).toContainText("hasn't answered");
+  await shot(page, "display-attention");
+  await needs.getByRole("button", { name: "Done" }).click();
+  await expect(needs).toBeHidden();
 
   // Settings at 16:10 on Auto, while there's no PIN yet (the screen opens them itself).
   await change(page, { theme: "auto", text_size: "standard" });
   await page.reload();
   await page.getByRole("button", { name: "Settings" }).click();
   for (const { key, title } of PAGES) {
+    // A page Needs Attention points at is marked (ADR 0034): its link says so to a screen reader.
     await page
       .getByRole("navigation", { name: "Settings" })
-      .getByRole("link", { name: title, exact: true })
+      .getByRole("link", { name: new RegExp(`^${escapeRegExp(title)}(, needs attention)?$`) })
       .click();
     await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);
@@ -934,9 +943,10 @@ test("a laptop", async ({ page }) => {
   await change(page, { theme: "auto" });
   await page.getByRole("button", { name: "Settings" }).click();
   for (const { key, title } of PAGES) {
+    // A page Needs Attention points at is marked (ADR 0034): its link says so to a screen reader.
     await page
       .getByRole("navigation", { name: "Settings" })
-      .getByRole("link", { name: title, exact: true })
+      .getByRole("link", { name: new RegExp(`^${escapeRegExp(title)}(, needs attention)?$`) })
       .click();
     await expect(page.getByRole("heading", { name: title, level: 2, exact: true })).toBeVisible();
     await shot(page, `settings-${key}`);

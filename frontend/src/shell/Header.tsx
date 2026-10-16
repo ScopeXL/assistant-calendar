@@ -8,6 +8,7 @@ import { Button } from "../ui/Button";
 import { Digits } from "../ui/Digits";
 import { LiveStatusButton } from "../ui/LiveStatus";
 import { roomHeader } from "./roomHeader";
+import { AttentionButton } from "../features/problems/AttentionButton";
 
 /**
  * Today, at the header's left (UX §3): the date (semi-bold), the time at glance size (weight
@@ -172,6 +173,7 @@ export function Header({
       ) : null}
       <div className="ml-auto flex shrink-0 items-center gap-3">
         {railSide === "left" ? panel : rail}
+        <AttentionButton />
         <LiveStatusButton />
       </div>
     </header>

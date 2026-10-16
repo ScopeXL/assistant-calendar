@@ -2254,6 +2254,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/problems": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Problems
+         * @description Needs Attention: every problem, each with a sentence and the page that fixes it. Anyone
+         *     signed in or paired may read the sentences; the quiet details are a parent's.
+         */
+        get: operations["list_problems_api_problems_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/screensaver/manifest": {
         parameters: {
             query?: never;
@@ -2911,8 +2932,6 @@ export interface components {
         };
         /** ContributesOut */
         ContributesOut: {
-            /** Banners */
-            banners: string[];
             /** Display Overlay */
             display_overlay: boolean;
             /** Display Panels */
@@ -4294,6 +4313,26 @@ export interface components {
         PointsOut: {
             /** Stars */
             stars: components["schemas"]["StarsOut"][];
+        };
+        /** ProblemOut */
+        ProblemOut: {
+            /** Detail */
+            detail: string | null;
+            /** Id */
+            id: string;
+            /** Page */
+            page: string | null;
+            /** Since */
+            since: string | null;
+            /** Source */
+            source: string;
+            /** Title */
+            title: string;
+        };
+        /** ProblemsOut */
+        ProblemsOut: {
+            /** Problems */
+            problems: components["schemas"]["ProblemOut"][];
         };
         /**
          * ReconnectIn
@@ -10023,6 +10062,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_problems_api_problems_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemsOut"];
                 };
             };
         };

@@ -22,6 +22,7 @@ import { RecentlyRemoved } from "./RecentlyRemoved";
 import { SupportPage } from "./SupportPage";
 import { usePluginModulesState } from "../usePluginModules";
 import { SETTINGS_PAGES, type SettingsPageKey } from "./pages";
+import { useProblems } from "../problems/data";
 
 const PAGES: Record<SettingsPageKey, () => ReactNode> = {
   family: () => <FamilyPage />,
@@ -57,9 +58,26 @@ function usePages(): { pages: Page[]; ready: boolean } {
   return { pages: [...core.slice(0, at), ...plugins, ...core.slice(at)], ready };
 }
 
+/** The pages Needs Attention points at (ADR 0034): each gets a small dot in the list. */
+function useFlagged(): ReadonlySet<string> {
+  const { data: problems = [] } = useProblems();
+  return new Set(problems.flatMap((problem) => (problem.page ? [problem.page] : [])));
+}
+
+/** The dot beside a page that needs attention; its link says so in words (`flagName`). */
+function Flag({ on }: { on: boolean }) {
+  if (!on) return null;
+  return <span aria-hidden="true" className="ml-3 size-2.5 shrink-0 rounded-full bg-alert" />;
+}
+
+/** "Calendars & Accounts, needs attention" for a screen reader, on a page with a problem. */
+const flagName = (title: string, on: boolean) =>
+  on ? { "aria-label": `${title}, needs attention` } : {};
+
 /** Settings on a phone: the list of pages (UX §5). */
 export function SettingsIndex() {
   const { pages } = usePages();
+  const flagged = useFlagged();
   return (
     <Screen title="Settings" back="/more">
       <ul className="divide-y divide-line rounded-chip border border-line bg-surface">
@@ -68,9 +86,13 @@ export function SettingsIndex() {
             <Link
               to="/settings/$page"
               params={{ page: page.key }}
+              {...flagName(page.title, flagged.has(page.key))}
               className="press-row flex min-h-14 items-center justify-between px-4 text-row font-semibold"
             >
-              {page.title}
+              <span className="flex min-w-0 items-center">
+                {page.title}
+                <Flag on={flagged.has(page.key)} />
+              </span>
               <ChevronRight aria-hidden="true" className="text-ink-soft" />
             </Link>
           </li>
@@ -98,6 +120,7 @@ export function SettingsPageScreen({ page }: { page: string }) {
 }
 
 function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
+  const flagged = useFlagged();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
@@ -140,10 +163,12 @@ function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
               <Link
                 to="/settings/$page"
                 params={{ page: page.key }}
+                {...flagName(page.title, flagged.has(page.key))}
                 aria-current={page.key === current.key ? "page" : undefined}
                 className="press-row flex min-h-16 items-center rounded-button-d px-4 text-d-body font-semibold whitespace-nowrap text-ink-soft aria-[current=page]:bg-surface aria-[current=page]:text-ink"
               >
                 {page.title}
+                <Flag on={flagged.has(page.key)} />
               </Link>
             </li>
           ))}

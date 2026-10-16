@@ -133,6 +133,11 @@ async def test_a_file_that_isnt_a_photo_is_set_aside(
     assert len(await shown(parent)) == 1
     source = await inbox_source(parent)
     assert (source["items_seen"], source["last_error"]) == (1, ONE_UNREADABLE)
+    # Needs Attention says so, and where it's checked again (ADR 0034).
+    listed = (await parent.get("/api/problems")).json()["problems"]
+    assert [(p["id"], p["title"], p["page"]) for p in listed] == [
+        (f"photos:{source['id']}", ONE_UNREADABLE, "screensaver")
+    ]
     # Two more: the line counts them.
     drop(inbox, "receipt.png", b"\x89PNG and then nothing")
     drop(inbox, "scan.heic", b"not a picture either")

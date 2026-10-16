@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 from sunroom.core.errors import AppError
 from sunroom.core.netguard import OutboundError
+from sunroom.plugins.base import Problem
 from sunroom.plugins.calendar_sync import addresses
 from sunroom.plugins.calendar_sync.engine import SyncEngine
 from sunroom.plugins.calendar_sync.ical import parse_calendar
@@ -55,6 +56,66 @@ def bad(message: str, code: str = "invalid") -> AppError:
 
 def not_found() -> AppError:
     return AppError(404, "not_found", "That account isn't connected any more.")
+
+
+# ---- what needs a parent (Needs Attention, ADR 0034) ---------------------------------------------
+
+
+def account_name(account: SyncAccount) -> str:
+    """What the family calls the account, as the app does (features/sync's sourceName)."""
+    if account.provider == Provider.HOLIDAYS:
+        return "Holidays"
+    if account.provider == Provider.GOOGLE:
+        return "Google"
+    address = account.server_url or ""
+    if "icloud.com" in address:
+        return "Apple"  # iCloud, which the family knows as Apple
+    if "google.com" in address:
+        return "Google"
+    return account.label
+
+
+def problem_sentence(account: SyncAccount) -> str:
+    """One sentence for an account that stopped working; when it started is said apart."""
+    name = account_name(account)
+    if account.status == AccountStatus.NEEDS_RECONNECT:
+        if account.provider == Provider.GOOGLE:
+            return "Google signed Sunroom out."
+        if account.provider == Provider.ICS:
+            return f"{name}'s calendar address stopped working."
+        return f"{name} needs its password again."
+    return f"{name} hasn't answered. Showing what we had."
+
+
+async def problems(ctx: PluginContext) -> list[Problem]:
+    """Each live account that needs a new password or address, or hasn't answered three times
+    in a row (the engine's ERROR_AFTER), with the page that fixes it."""
+    async with ctx.read() as session:
+        accounts = (
+            await session.scalars(
+                select(SyncAccount)
+                .where(
+                    SyncAccount.deleted_at.is_(None),
+                    SyncAccount.status.in_([AccountStatus.NEEDS_RECONNECT, AccountStatus.ERROR]),
+                )
+                .order_by(SyncAccount.created_at)
+            )
+        ).all()
+    return [
+        Problem(
+            id=f"sync:{account.id}",
+            title=problem_sentence(account),
+            detail=account.last_error,
+            # Hasn't answered: since it last did. Refused: since the refusal.
+            since=(
+                account.last_success_at or account.last_error_at
+                if account.status == AccountStatus.ERROR
+                else account.last_error_at or account.last_success_at
+            ),
+            page="calendars",
+        )
+        for account in accounts
+    ]
 
 
 # ---- reading -----------------------------------------------------------------------------------

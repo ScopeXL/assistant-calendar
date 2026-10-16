@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
@@ -76,7 +77,6 @@ class Contributions:
     phone_tabs: tuple[PhoneTab, ...] = ()
     settings_sections: tuple[SettingsSection, ...] = ()
     display_overlay: bool = False  # the screensaver
-    banners: tuple[str, ...] = ()  # quiet-banner keys the shell may show ("sync_error")
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,6 +99,21 @@ class PluginManifest:
     @property
     def url_prefix(self) -> str:
         return self.id.replace("_", "-")
+
+
+@dataclass(frozen=True, slots=True)
+class Problem:
+    """Something that needs a parent, for Needs Attention (ADR 0034): an account that stopped
+    syncing, a photo source that fails. ``id`` is stable per cause ("sync:<account id>");
+    ``title`` one sentence in the family's words, with no ids or secrets; ``detail`` a quiet
+    second line, for parents only; ``since`` when it started; ``page`` the Settings page that
+    fixes it."""
+
+    id: str
+    title: str
+    detail: str | None = None
+    since: datetime | None = None
+    page: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,6 +162,12 @@ class Plugin(Protocol):
         member ids."""
         ...
 
+    async def problems(self, ctx: PluginContext) -> list[Problem]:
+        """What needs a parent right now (Needs Attention, ADR 0034); empty when all is well.
+        Read on request, while the plugin is on, never for one that's off; a failure here is
+        logged and shows nothing."""
+        ...
+
 
 class PluginBase:
     """Optional defaults for the hooks most plugins don't need."""
@@ -173,3 +194,6 @@ class PluginBase:
 
     async def seed_sample(self, ctx: PluginContext, people: dict[str, str]) -> None:
         return None
+
+    async def problems(self, ctx: PluginContext) -> list[Problem]:
+        return []

@@ -16,6 +16,8 @@ export const qk = {
   calendars: (removed = false) => ["calendars", removed] as const,
   occurrences: (from: string, to: string, overlays: readonly string[] = []) =>
     ["occurrences", from, to, overlays] as const,
+  /** Needs Attention (ADR 0034). */
+  problems: () => ["problems"] as const,
   event: (id: string) => ["event", id] as const,
   /** One occurrence's own row, under its event's key so the event's refresh reaches it. */
   eventAt: (id: string, recurrenceId: string) => ["event", id, recurrenceId] as const,

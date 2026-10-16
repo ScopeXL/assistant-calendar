@@ -75,6 +75,8 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         invalidate(qk.allowlist());
         invalidate(["weather"]);
         invalidate(qk.update());
+        // The backup policy (nightly off: an old copy isn't a problem).
+        invalidate(qk.problems());
         break;
       case "devices.changed":
         invalidate(qk.devices());
@@ -82,6 +84,8 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         break;
       case "plugins.changed": {
         invalidate(qk.plugins());
+        // A feature turned off, or one that stopped (Needs Attention, ADR 0034).
+        invalidate(qk.problems());
         // A plugin's settings may change what it adds to the board (dinner on the calendar).
         invalidate(["occurrences"]);
         const own = typeof event.id === "string" ? PLUGIN_KEYS[event.id] : undefined;
@@ -93,6 +97,7 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
       case "photos.changed":
         invalidate(["photos"]);
         invalidate(["screensaver"]);
+        invalidate(qk.problems());
         break;
       case "events.changed":
         invalidate(["occurrences"]);
@@ -107,6 +112,7 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         break;
       case "sync.changed":
         invalidate(["calendar-sync"]);
+        invalidate(qk.problems());
         break;
       case "lists.changed":
         invalidate(["lists"]);
@@ -126,6 +132,7 @@ export function createEventHandler(queryClient: QueryClient, handlers: EventHand
         break;
       case "screensaver.changed":
         invalidate(["screensaver"]);
+        invalidate(qk.problems());
         break;
       case "weather.changed":
         invalidate(["weather"]);

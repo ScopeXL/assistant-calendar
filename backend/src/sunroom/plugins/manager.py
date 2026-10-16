@@ -21,7 +21,7 @@ from sqlalchemy import select
 from sunroom.core.clock import Clock
 from sunroom.core.logging import get_logger
 from sunroom.db.engine import Database
-from sunroom.plugins.base import HubEvent, Plugin, PluginStatus
+from sunroom.plugins.base import HubEvent, Plugin, PluginStatus, Problem
 from sunroom.plugins.context import Job, PluginContext
 from sunroom.plugins.models import PluginState
 from sunroom.plugins.spec import coerce_params, defaults
@@ -338,6 +338,22 @@ class PluginManager:
             live.settings = values
             tx.publish("plugins.changed", {"id": plugin_id, "status": live.status.value})
         return dict(values)
+
+    async def problems(self) -> list[tuple[str, Problem]]:
+        """Each enabled plugin's problems (Needs Attention, ADR 0034), with its id, in registry
+        order. A stopped plugin is core's to report (its hook may be what broke); one whose hook
+        fails is logged and adds nothing."""
+        found: list[tuple[str, Problem]] = []
+        for plugin_id, plugin in self.registry.items():
+            live = self._live[plugin_id]
+            if not live.enabled or live.status is PluginStatus.ERRORED:
+                continue
+            ctx = live.runner.ctx if live.runner else self._idle_context(plugin_id)
+            try:
+                found.extend((plugin_id, problem) for problem in await plugin.problems(ctx))
+            except Exception:  # a plugin's bug never breaks the list
+                log.warning("plugin.problems_failed", plugin=plugin_id, exc_info=True)
+        return found
 
     async def seed_sample(self, people: dict[str, str]) -> None:
         """Test mode's Sample Family: each enabled plugin adds its own synthetic data."""

@@ -19,6 +19,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A chip for several people shows a bar in each of their colors.
 - Settings → Calendars & Accounts → Default reminder: events with no reminder of their own remind
   on paired screens this long before.
+- When something needs a parent (a calendar that stopped syncing, a photo source that fails, a
+  backup that didn't complete or is a week old, a feature that stopped, a full disk), a Needs
+  Attention icon shows at the top of every room on the wall and on a phone's Today; a tap lists
+  what's wrong and opens the settings that fix it. The pill above the days is gone.
 
 ### Changed
 

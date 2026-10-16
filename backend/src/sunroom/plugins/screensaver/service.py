@@ -39,6 +39,7 @@ from sunroom.core.errors import AppError
 from sunroom.core.logging import get_logger
 from sunroom.photos.models import Photo, PhotoKind
 from sunroom.photos.store import PhotoStore
+from sunroom.plugins.base import Problem
 from sunroom.plugins.context import PluginContext
 from sunroom.plugins.screensaver.models import PhotoSource, SourceKind
 from sunroom.plugins.screensaver.schemas import (
@@ -125,6 +126,29 @@ async def manifest(ctx: PluginContext) -> ManifestOut:
 
 
 # ---- sources -----------------------------------------------------------------------------------
+
+
+async def problems(ctx: PluginContext) -> list[Problem]:
+    """A photo source on and failing (Needs Attention, ADR 0034): its last check's own line,
+    with the page where it's checked again."""
+    async with ctx.read() as session:
+        failing = (
+            await session.scalars(
+                select(PhotoSource)
+                .where(PhotoSource.enabled.is_(True), PhotoSource.last_error.is_not(None))
+                .order_by(PhotoSource.created_at)
+            )
+        ).all()
+    return [
+        Problem(
+            id=f"photos:{source.id}",
+            title=source.last_error or "",
+            since=source.last_scan_at,
+            page="screensaver",
+        )
+        for source in failing
+        if source.last_error
+    ]
 
 
 def source_key(source: PhotoSource) -> str:
