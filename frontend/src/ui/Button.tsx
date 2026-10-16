@@ -34,6 +34,56 @@ export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   icon?: boolean;
 }
 
+function buttonClasses(
+  display: boolean,
+  variant: Variant,
+  block: boolean,
+  icon: boolean,
+  className: string | undefined,
+): string {
+  return [
+    "press inline-flex items-center justify-center gap-2 font-semibold",
+    display ? "rounded-button-d text-d-body" : "rounded-button text-body",
+    // Padding is chosen here, never overridden by className: in the built CSS a later utility
+    // for the same property wins, whatever the class order.
+    icon ? (display ? "size-tap shrink-0" : "size-12 shrink-0") : display ? "px-7" : "px-5",
+    "disabled:cursor-not-allowed disabled:opacity-60",
+    (display ? DISPLAY : PHONE)[variant],
+    block ? "w-full" : "",
+    className ?? "",
+  ].join(" ");
+}
+
+/**
+ * A link that looks like a button, for a page on another website (Support Sunroom's Open GitHub):
+ * an `<a>`, so the browser opens it itself. A link can't be disabled, so `disabled` takes its
+ * address away and dims it, and says so to a screen reader.
+ */
+export function ButtonLink({
+  variant = "primary",
+  block = false,
+  disabled = false,
+  className,
+  href,
+  children,
+  ...props
+}: ComponentPropsWithRef<"a"> & { variant?: Variant; block?: boolean; disabled?: boolean }) {
+  const display = useShell() === "display";
+  return (
+    <a
+      {...props}
+      href={disabled ? undefined : href}
+      role={disabled ? "link" : undefined}
+      aria-disabled={disabled || undefined}
+      className={`${buttonClasses(display, variant, block, false, className)} ${
+        disabled ? "cursor-not-allowed opacity-60" : ""
+      }`}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function Button({
   variant = "primary",
   block = false,
@@ -45,17 +95,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const display = useShell() === "display";
-  const classes = [
-    "press inline-flex items-center justify-center gap-2 font-semibold",
-    display ? "rounded-button-d text-d-body" : "rounded-button text-body",
-    // Padding is chosen here, never overridden by className: in the built CSS a later utility
-    // for the same property wins, whatever the class order.
-    icon ? (display ? "size-tap shrink-0" : "size-12 shrink-0") : display ? "px-7" : "px-5",
-    "disabled:cursor-not-allowed disabled:opacity-60",
-    (display ? DISPLAY : PHONE)[variant],
-    block ? "w-full" : "",
-    className ?? "",
-  ].join(" ");
+  const classes = buttonClasses(display, variant, block, icon, className);
   return (
     <button
       type="button"

@@ -19,6 +19,7 @@ import { FamilyPage } from "./FamilyPage";
 import { FeaturesPage } from "./FeaturesPage";
 import { HouseholdPage } from "./HouseholdPage";
 import { RecentlyRemoved } from "./RecentlyRemoved";
+import { SupportPage } from "./SupportPage";
 import { usePluginModulesState } from "../usePluginModules";
 import { SETTINGS_PAGES, type SettingsPageKey } from "./pages";
 
@@ -31,6 +32,7 @@ const PAGES: Record<SettingsPageKey, () => ReactNode> = {
   devices: () => <DevicesPage />,
   removed: () => <RecentlyRemoved />,
   backup: () => <BackupPage />,
+  support: () => <SupportPage />,
   about: () => <AboutPage />,
 };
 

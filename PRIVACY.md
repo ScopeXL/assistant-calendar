@@ -86,4 +86,6 @@ when someone signs in. Tailscale doesn't: it's encrypted from end to end
 ## Contact
 
 Report security issues privately through the repository's GitHub security advisories (private
-vulnerability reporting). Other questions can go in a GitHub issue.
+vulnerability reporting). Other questions can go in a GitHub issue. Settings → Support Sunroom
+→ Send Feedback opens GitHub's new-issue page in your browser with what you typed and Sunroom's
+version filled in; you send it from GitHub, signed in there, and Sunroom's server sends nothing.

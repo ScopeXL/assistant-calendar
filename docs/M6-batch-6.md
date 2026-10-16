@@ -846,7 +846,7 @@ the same cell and are left to T17's screenshots.
 
 ### T9 Support Sunroom
 
-- [ ] Done (commit: )
+- [x] Done (commit: "settings: Support Sunroom, with Send Feedback to GitHub")
 
 **Owner's note.** "Add a new setting section labeled 'Support Sunroom' with a fun emoji. A quick
 about description indicating it's not for profit, but donations are welcome. Areas for crypto
@@ -936,7 +936,24 @@ Settings (phone). ADR 0034 row (the page, the GitHub link and why, the emoji).
 profit), how to support it, and Send Feedback, which opens a GitHub issue with the version filled
 in."
 
-**As built.** (fill in)
+**As built.** As planned, with these differences:
+- *Copy* shows on every device, not only where `navigator.clipboard` exists: `lib/copy`
+  (Add an Account's Copy) falls back to a hidden textarea and works over plain http, so the
+  plan's premise didn't hold. A paired screen has no Copy (nowhere to paste) and no links.
+- *The words box* is a plain `<textarea>` on devices only. The wall's keyboard types into
+  `<input>`s only (`lib/keyboard`), and the screen's link carries the title only anyway.
+- *New small pieces*: `ui/ButtonLink` (a link with the button's look, no address while
+  "disabled"), `ui/ListRow`'s `ListRowAnchor` (the row as a plain link to another site),
+  `Group`'s `mark` (drawn after the title, hidden from screen readers) and a `Group` with
+  `null` children drawing no empty card (the support group before the owner fills it in).
+- *The link's cap* cuts the words by halving (a letter can take one character of the link or
+  nine), with an ellipsis, never the title or the version.
+- Tests: `support.test.ts` (the link's encoding, prefixes, the cap, the install's words) and
+  `SupportPage.test.tsx` (with the constants mocked: Patreon as a link or a code, an address
+  with Copy or without, an empty one hidden, the sheet on a device and on a screen). The plan's
+  `-g Settings` matches only the wall's journey; the phone loop is "a phone, signed in", run on
+  `phone-chromium`, and the wall's journey on `display-1080p` too. Both pass.
+- `support.ts` is still empty: the owner fills in Patreon and the addresses before the release.
 
 ### T10 Whose event it is: the people a title names, and chips in their colors
 

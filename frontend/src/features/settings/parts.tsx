@@ -3,15 +3,19 @@ import type { ReactNode } from "react";
 import { useShell } from "../../ui/shell";
 
 /** A group of settings: a surface block with rows, under its title. A page with one group
- * leaves the title off, since the page's own says it. */
+ * leaves the title off, since the page's own says it. `mark` is drawn after the title and
+ * hidden from screen readers (the heart beside Support Sunroom, ADR 0034). */
 export function Group({
   title,
   children,
   note,
+  mark,
 }: {
   title?: string | undefined;
+  /** The rows; null for a group that is only its note. */
   children: ReactNode;
   note?: string | undefined;
+  mark?: ReactNode;
 }) {
   const display = useShell() === "display";
   // On the wall screen the page's own title is the h2 (beside the list of pages); on a phone
@@ -22,6 +26,7 @@ export function Group({
       {title ? (
         <Heading className={display ? "mb-3 text-d-title font-bold" : "mb-2 text-row font-bold"}>
           {title}
+          {mark ? <span aria-hidden="true">{mark}</span> : null}
         </Heading>
       ) : null}
       {note ? (
@@ -33,13 +38,16 @@ export function Group({
           {note}
         </p>
       ) : null}
-      <div
-        className={`divide-y divide-line rounded-chip border border-line bg-surface ${
-          display ? "px-6" : "px-4"
-        }`}
-      >
-        {children}
-      </div>
+      {/* No rows (Support Sunroom before the owner fills it in): the note alone, no empty card. */}
+      {children === null ? null : (
+        <div
+          className={`divide-y divide-line rounded-chip border border-line bg-surface ${
+            display ? "px-6" : "px-4"
+          }`}
+        >
+          {children}
+        </div>
+      )}
     </section>
   );
 }

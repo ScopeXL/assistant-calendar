@@ -32,6 +32,7 @@ const SETTINGS = [
   "Devices",
   "Recently Removed",
   "Backup",
+  "Support Sunroom",
 ];
 const CSRF = { "X-Sunroom": "1" };
 // Wednesday, October 7, 2026, 10:00 AM in New York: the same week of events on every run.

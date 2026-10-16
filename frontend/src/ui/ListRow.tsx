@@ -118,3 +118,6 @@ function RowAnchor({
 
 /** The same row as a link to another page (`to`, `params`, as the router's own Link). */
 export const ListRowLink = createLink(RowAnchor);
+
+/** The same row as a plain link to another website (`href`; Support Sunroom's Patreon). */
+export const ListRowAnchor = RowAnchor;
