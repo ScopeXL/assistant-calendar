@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import type { CSSProperties } from "react";
 
 import { useArrived } from "../../lib/arrivals";
 import { formatWallRange, formatWallTime, longMonthDay, longWeekday } from "../../lib/dates";
@@ -7,7 +8,7 @@ import { Avatar } from "../../ui/Avatar";
 import { useShell } from "../../ui/shell";
 import { isOn, isPast } from "./layout";
 import { coreOverlayOf, useOverlayOf } from "./overlays";
-import type { Occurrence } from "./types";
+import type { Occurrence, PersonColor } from "./types";
 
 /** "Soccer practice, 4:00 to 5:00 PM, Mia, Thursday October 9" (UX §10). */
 export function occurrenceLabel(occurrence: Occurrence, people: Member[], day?: string): string {
@@ -32,10 +33,15 @@ export function peopleOf(occurrence: Occurrence, members: Member[]): Member[] {
   return members.filter((member) => occurrence.member_ids.includes(member.id));
 }
 
+/** How many people's colors one bar holds; the rest still have their avatars and names. */
+const EDGE_MAX = 4;
+
 /**
  * How an event's chip is painted (UX §4 "Week board"), in either Week layout: one person's light
- * tint and a 6 px bar at the left; a neutral tint for several people or Everyone; filled solid
- * while it's on; no tint and quiet text once it's over today (when the household dims the past).
+ * tint and a 6 px bar at the left; a neutral tint for several people, with the bar in equal
+ * segments of their colors (`edge`, up to four, in household order: ADR 0034), and for
+ * Everyone; filled solid while it's on; no tint and quiet text once it's over today (when the
+ * household dims the past). An event with a color of its own keeps that color.
  */
 export function chipTone(
   occurrence: Occurrence,
@@ -45,7 +51,7 @@ export function chipTone(
   /** A past chip's fill: none on the Agenda (its text shows it); the Hours grid's thin blocks
    * need a faint one to show at all. */
   pastFill = "bg-transparent",
-): { person: string; className: string } {
+): { person: string; className: string; edge: PersonColor[] | null } {
   const one = people.length === 1 ? people[0] : undefined;
   const on = isOn(occurrence, now);
   const past = dimPast && !on && isPast(occurrence, now);
@@ -59,16 +65,52 @@ export function chipTone(
       : color
         ? "bg-p-tint text-ink"
         : "bg-line/60 text-ink";
+  const edge =
+    !color && !on && !past && people.length > 1
+      ? people.slice(0, EDGE_MAX).map((person) => person.color)
+      : null;
   return {
     person: on && !color ? "everyone" : (color ?? "everyone"),
-    className: `${fill} ${color && !past ? "border-l-[6px] border-p pl-3" : "pl-3"}`,
+    className: `${fill} ${color && !past ? "border-l-[6px] border-p pl-3" : edge ? "pl-[18px]" : "pl-3"}`,
+    edge,
   };
 }
 
 /**
+ * Several people's colors as one bar (UX §4, ADR 0034): equal segments of their solids, top to
+ * bottom in household order, where one person's chip has its 6 px edge. The tint stays neutral
+ * (two tints mixed read as mud) and the names are on the chip anyway: color is never the only
+ * signal (UX §10). Placed at the left of a `relative` box unless `className` says otherwise.
+ */
+export function PeopleEdge({
+  colors,
+  className = "w-[6px]",
+}: {
+  colors: readonly PersonColor[];
+  className?: string;
+}) {
+  const shown = colors.slice(0, EDGE_MAX);
+  const style = Object.fromEntries(
+    shown.map((color, index) => [
+      `--seg-${String(index + 1)}`,
+      `light-dark(var(--${color}-l), var(--${color}-d))`,
+    ]),
+  ) as CSSProperties;
+  return (
+    <span
+      aria-hidden="true"
+      data-edge={shown.length}
+      className={`edge edge-${String(shown.length)} ${className}`}
+      style={style}
+    />
+  );
+}
+
+/**
  * An event on the board (UX §4 "Week board"). One person: a light tint of their color and a
- * 6 px bar at the left; several: a neutral tint with up to three avatars; Everyone: neutral. On
- * now: filled solid. Past (today): no tint, quiet text, when the household dims past events.
+ * 6 px bar at the left; several: a neutral tint, the bar in each of their colors and up to three
+ * avatars; Everyone: neutral. On now: filled solid. Past (today): no tint, quiet text, when the
+ * household dims past events.
  */
 export function EventChip({
   occurrence,
@@ -188,6 +230,7 @@ export function EventChip({
           </span>
         </>
       )}
+      {tone.edge ? <PeopleEdge colors={tone.edge} /> : null}
       {occurrence.is_override ? (
         <span
           aria-hidden="true"

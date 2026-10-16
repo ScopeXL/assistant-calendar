@@ -3340,6 +3340,11 @@ export interface components {
              * @default false
              */
             pending: boolean;
+            /**
+             * People From Title
+             * @default false
+             */
+            people_from_title: boolean;
             /** Read Only */
             read_only: boolean;
             /** Recurrence Id */

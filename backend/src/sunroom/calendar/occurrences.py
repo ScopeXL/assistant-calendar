@@ -90,8 +90,9 @@ def _out(
     people = members.get(row.id, [])
     color = row.color
     if calendar.kind == CalendarKind.SYNC:
-        # A synced calendar's events are its person's (UX §5), in its color when it has none.
-        if not people and calendar.owner_member_id:
+        # A synced calendar's events are its person's (UX §5), in its color when it has none:
+        # while the title decides who they're for (ADR 0034). Everyone set by hand stays so.
+        if not people and calendar.owner_member_id and row.people_from_title:
             people = [calendar.owner_member_id]
         if color is None and not calendar.owner_member_id:
             color = calendar.color

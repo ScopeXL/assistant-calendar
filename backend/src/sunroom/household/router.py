@@ -10,6 +10,7 @@ from fastapi import APIRouter, Request
 from sqlalchemy import delete, select
 
 from sunroom.auth.deps import ActorDep, ParentDep
+from sunroom.calendar.service import rematch_people
 from sunroom.core.errors import AppError
 from sunroom.household import service
 from sunroom.household.models import KioskPanel, Member, NetworkAllowEntry
@@ -122,6 +123,8 @@ async def create_member(body: MemberCreate, state: StateDep, actor: ParentDep) -
             now=state.clock.now(),
         )
         tx.publish("members.changed", {"id": member.id})
+        # A new name may be in titles already (ADR 0034).
+        await rematch_people(tx)
         out = service.member_out(member)
     await refresh_members(state)
     return out
@@ -138,12 +141,16 @@ async def update_member(
             others = await service.active_members(tx.session)
             if any(m.name.casefold() == changes["name"].casefold() for m in others):
                 raise AppError(409, "name_taken", "That name is already in use. Pick another.")
+        renamed = bool(changes.get("name")) and changes["name"] != member.name
         for key in ("name", "role", "color"):
             if changes.get(key) is not None:
                 setattr(member, key, changes[key])
         if "birthday" in changes:
             member.birthday = changes["birthday"]
         tx.publish("members.changed", {"id": member.id})
+        if renamed:
+            await tx.session.flush()
+            await rematch_people(tx)
         return service.member_out(member)
 
 
@@ -152,6 +159,8 @@ async def archive_member(member_id: str, state: StateDep, actor: ParentDep) -> M
     async with state.db.write() as tx:
         member = await service.archive_member(tx.session, member_id, state.clock.now())
         tx.publish("members.changed", {"id": member.id})
+        await tx.session.flush()
+        await rematch_people(tx)
         out = service.member_out(member)
     await refresh_members(state)
     return out
@@ -162,6 +171,8 @@ async def restore_member(member_id: str, state: StateDep, actor: ParentDep) -> M
     async with state.db.write() as tx:
         member = await service.restore_member(tx.session, member_id)
         tx.publish("members.changed", {"id": member.id})
+        await tx.session.flush()
+        await rematch_people(tx)
         out = service.member_out(member)
     await refresh_members(state)
     return out

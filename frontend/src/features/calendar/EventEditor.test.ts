@@ -126,6 +126,17 @@ describe("a rule the editor can't read", () => {
   });
 });
 
+describe("who it's for (P1, ADR 0034)", () => {
+  it("sends the people only once Who was chosen, so a title or a synced calendar decides", () => {
+    expect("member_ids" in draftToFields(draft({ memberIds: ["mia"] }))).toBe(false);
+    expect(draftToFields(draft({ memberIds: ["mia"], whoTouched: true })).member_ids).toEqual([
+      "mia",
+    ]);
+    // Everyone, picked by hand, is a choice too.
+    expect(draftToFields(draft({ memberIds: [], whoTouched: true })).member_ids).toEqual([]);
+  });
+});
+
 describe("the person's color (C1, ADR 0034)", () => {
   it("clears a color the event had, at every scope", () => {
     const painted = event({ color: "copper" });

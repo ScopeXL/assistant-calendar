@@ -312,32 +312,69 @@ const MONTH_WORDS = new Set(
     .split(" "),
 );
 
-const folded = (name: string): string => name.trim().toLowerCase().replace(/\s+/g, " ");
+/**
+ * Lowercase without accents, one character for each one given, so positions in what was typed
+ * still line up (the server's `domain/people.fold`): Zoë and Zoe meet.
+ */
+function fold(text: string): string {
+  let out = "";
+  for (const char of text.split(""))
+    out += (char.normalize("NFKD")[0] ?? char).toLowerCase()[0] ?? char;
+  return out;
+}
+
+const folded = (name: string): string => fold(name.trim()).replace(/\s+/g, " ");
 const escaped = (name: string): string =>
   name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+");
 
+/**
+ * What each person can be called (ADR 0034, as `domain/people.py`): their full name, and for a
+ * name of several words its first word, unless that is someone else's whole name or the first
+ * word of another name too; never under two letters. Folded, to whose it is.
+ */
+function callNames(members: readonly QuickAddMember[]): Map<string, string> {
+  const keys = members.map((member) => folded(member.name));
+  const whole = new Set(keys);
+  const firsts = new Map<string, number>();
+  for (const key of keys) {
+    const [first, ...rest] = key.split(" ");
+    if (first && rest.length) firsts.set(first, (firsts.get(first) ?? 0) + 1);
+  }
+  const names = new Map<string, string>();
+  members.forEach((member, index) => {
+    const key = keys[index] ?? "";
+    if (key.replace(/ /g, "").length >= 2 && !names.has(key)) names.set(key, member.id);
+    const [first, ...rest] = key.split(" ");
+    if (first && rest.length && first.length >= 2 && !whole.has(first) && firsts.get(first) === 1)
+      names.set(first, member.id);
+  });
+  return names;
+}
+
 function readPeople(reading: Reading, members: readonly QuickAddMember[]): void {
-  const named = members.filter((member) => folded(member.name));
-  if (!named.length) return;
+  const called = callNames(members);
+  if (!called.size) return;
   // Longest first, so "Ana Sofia" wins over "Ana".
-  const names = [...new Set(named.map((member) => folded(member.name)))]
+  const names = [...called.keys()]
     .sort((a, b) => b.length - a.length)
     .map(escaped)
     .join("|");
   const name = `(?:${names})(?:['’]s)?`;
   const group = words(`((?:with|w/)\\s*)?(${name}(?:(?:${AND})${name})*)`);
   const one = words(`(${names})(['’]s)?`);
-  for (const { start, end, groups } of matches(group, reading.masked)) {
+  // Matched without accents; the positions are the typed text's.
+  const text = fold(reading.masked);
+  for (const { start, end, groups } of matches(group, text)) {
     const said = matches(one, groups[1] ?? "");
     const first = folded(said[0]?.groups[0] ?? "");
     // A month's name beside a number is a date: "May 5", "5 May".
     if (said.length === 1 && MONTH_WORDS.has(first)) {
-      const after = reading.masked.slice(end);
-      const before = reading.masked.slice(0, start);
+      const after = text.slice(end);
+      const before = text.slice(0, start);
       if (/^\s*\d/.test(after) || /\d(?:st|nd|rd|th)?\s+(?:of\s+)?$/i.test(before)) continue;
     }
-    const spoken = new Set(said.map((match) => folded(match.groups[0] ?? "")));
-    const ids = named.filter((member) => spoken.has(folded(member.name))).map(({ id }) => id);
+    const spoken = new Set(said.map((match) => called.get(folded(match.groups[0] ?? ""))));
+    const ids = members.filter((member) => spoken.has(member.id)).map(({ id }) => id);
     const possessive = said.some((match) => Boolean(match.groups[1]));
     if (ids.length) claim(reading, { kind: "who", start, end, ids, possessive });
   }

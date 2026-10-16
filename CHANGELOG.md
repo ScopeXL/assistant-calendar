@@ -13,6 +13,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
   any number from 1 to 100.
 - Settings → Support Sunroom: what Sunroom is (free, open source, not for profit), how to support
   it, and Send Feedback, which opens a GitHub issue with the version filled in.
+- An event whose title names people in the household is theirs: "Mia & Leo's Skate Lesson" shows
+  in Mia's and Leo's columns, on top of its calendar's person, on import and when it's added.
+  Set Who by hand and Sunroom stops guessing for that event.
+- A chip for several people shows a bar in each of their colors.
 
 ### Changed
 
@@ -36,6 +40,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   by itself).
 - Choosing "The person's color" for an event that had its own color now clears it.
 - Picking a person no longer squeezes the ring against their avatar and name on the wall.
+- A one-off change the server sends for a synced event keeps the series' people and reminders;
+  saving a synced event no longer pins its calendar's person to it, and a synced event set to
+  Everyone by hand stays Everyone.
 
 ## [0.11.0] - 2026-10-15
 

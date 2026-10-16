@@ -957,7 +957,7 @@ in."
 
 ### T10 Whose event it is: the people a title names, and chips in their colors
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: the people a title names, and chips in their colors")
 
 **Owner's note.** "When a calendar event is imported from a connected account, or added manually,
 we need to automatically assign who it belongs to if the event has any data indicating such. An
@@ -1119,7 +1119,36 @@ for several people shows a bar in each of their colors." (Fixed) "A one-off chan
 for a synced event keeps the series' people and reminders; saving a synced event no longer pins
 its calendar's person to it."
 
-**As built.** (fill in)
+**As built.** As planned, with these differences:
+- *A first word two people share* (Ana Sofia and Ana Maria) is nobody's, on both sides: the
+  plan's rule would have given "Ana's recital" to whichever came first.
+- *The fallback* (a synced event with no rows shows its calendar's person) now applies only
+  while `people_from_title` is on, so Everyone set by hand on a synced event stays Everyone;
+  before, no rows always meant the owner.
+- *On add*, an explicit `member_ids: []` is a hand choice (Everyone), not "nobody picked": the
+  new editor sends people only when Who was touched, so `[]` means someone chose Everyone. With
+  nobody picked in a synced calendar the flag is on even when no name matched, so the event
+  behaves like an imported one (its person by the fallback; a later rename re-matches).
+- *Where the re-match runs*: `calendar/people.py` (`assign`, `rematch`, a small `Person`
+  dataclass: pyright strict won't match SQLAlchemy's mapped attributes to a protocol) and
+  `calendar.service.rematch_people`, which announces what changed with `bump` (people can't
+  import service without a cycle). A local calendar's owner never takes part, so only a synced
+  calendar's new person re-matches. People's changes and the start re-match every flagged
+  event, in batches, writing only what differs.
+- *R4* (All of Them reaching the one-offs) is built here for people and reminders, in
+  `update_series`'s loop; T11 uses it.
+- *The bar* is `w-[6px]` on chips (the single person's bar is a 6 px border at every text
+  size), and the `.edge` rules sit in tokens.css's components layer, so a `static` or a width
+  utility still wins (the Today panel's pill, the phone's row).
+- Tests: `tests/domain/test_people.py` (16 cases), `tests/sync/test_people.py` (new: names on
+  top of the owner, the fallback, a server rename, a hand choice that outlasts the server and
+  the same people sent again, R5's exception, a new owner, a person added and renamed),
+  `test_api.py` (four cases: add and rename, Everyone by hand, one occurrence's own title, R4,
+  Undo of a snapshot without the key), `test_migrations.py`, `quickAdd.test.ts`,
+  `EventEditor.test.ts` (P1), a new `EventChip.test.tsx`. The e2e case in `sync.spec.ts`
+  scripts the swim for today, since the People view shows today; it passes on `display-1080p`.
+  The whole backend suite ran once here too (1,157 passed), since the start-up re-match runs
+  in every app test.
 
 ### T11 Reminders that come back, and a default reminder
 

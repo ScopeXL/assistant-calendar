@@ -27,6 +27,12 @@ def _row(event: Event) -> dict[str, Any]:
 def _fields(row: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for column in _COLUMNS:
+        if column.key not in row:
+            # A snapshot from before the column existed (0.12.0's people_from_title and
+            # reminders_off): the column's own default, so Undo of an old change still works.
+            default = column.default
+            out[column.key] = default.arg if default is not None and default.is_scalar else None
+            continue
         value = row.get(column.key)
         if value is not None and isinstance(column.type, UTCDateTime):
             value = datetime.fromisoformat(value)

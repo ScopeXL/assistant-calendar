@@ -2864,6 +2864,11 @@
             "title": "Pending",
             "type": "boolean"
           },
+          "people_from_title": {
+            "default": false,
+            "title": "People From Title",
+            "type": "boolean"
+          },
           "read_only": {
             "title": "Read Only",
             "type": "boolean"

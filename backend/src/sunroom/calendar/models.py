@@ -55,7 +55,7 @@ class Calendar(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     name: Mapped[str] = mapped_column(String(80))
-    color: Mapped[str] = mapped_column(String(8))  # one of the eight person colors
+    color: Mapped[str] = mapped_column(String(8))  # one of the twelve person colors
     kind: Mapped[str] = mapped_column(String(8), default=CalendarKind.LOCAL)
     owner_member_id: Mapped[str | None] = mapped_column(ForeignKey("members.id"), default=None)
     read_only: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -121,6 +121,10 @@ class Event(Base):
     raw_ical: Mapped[str | None] = mapped_column(Text, default=None)
     version: Mapped[int] = mapped_column(Integer, default=1)
     created_by_member_id: Mapped[str | None] = mapped_column(ForeignKey("members.id"), default=None)
+    # True while the title decides the people (set on import, or by a title with names on add);
+    # a Who set by hand turns it off; with no rows and True, the read-time owner fallback
+    # applies (ADR 0034).
+    people_from_title: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     deleted_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)

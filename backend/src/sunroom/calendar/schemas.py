@@ -109,6 +109,9 @@ class EventOut(BaseModel):
     repeat_text: str | None  # "Every week on Thu"
     exdates: list[str]
     member_ids: list[str]
+    # The title decides who it's for (ADR 0034): set on import, or by names in a new title; a
+    # Who set by hand turns it off.
+    people_from_title: bool = False
     reminders: list[int]
     color: PersonColor | None
     status: str

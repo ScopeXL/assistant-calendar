@@ -7,7 +7,7 @@ import {
   type MonthGrid,
 } from "../../lib/dates";
 import type { Member } from "../../lib/household";
-import { arrivalKey } from "./EventChip";
+import { arrivalKey, PeopleEdge } from "./EventChip";
 import { byDay, shownFor } from "./layout";
 import { coreOverlayOf, useOverlayOf } from "./overlays";
 import type { Occurrence } from "./types";
@@ -131,14 +131,21 @@ function MonthEntry({ occurrence, members }: { occurrence: Occurrence; members: 
       : null;
   const initial = people.length === 1 ? (people[0]?.name.charAt(0) ?? "") : "";
   const Mark = coreOverlayOf(occurrence)?.icon;
+  // Several people and no color of its own: the 4 px bar in each of their colors (ADR 0034).
+  const several = !occurrence.color && people.length > 1;
   return (
     <span
       aria-hidden="true"
       data-person={color}
       data-arrive={arrive}
       data-overlay={occurrence.overlay ?? undefined}
-      className="flex min-w-0 items-center gap-1.5 rounded-sm border-l-4 border-p bg-p-tint px-1.5 text-d-caption"
+      className={`flex min-w-0 items-center gap-1.5 rounded-sm bg-p-tint pr-1.5 text-d-caption ${
+        several ? "relative overflow-hidden pl-2.5" : "border-l-4 border-p pl-1.5"
+      }`}
     >
+      {several ? (
+        <PeopleEdge colors={people.map((person) => person.color)} className="w-1 rounded-sm" />
+      ) : null}
       {initial ? <span className="font-bold text-p-text">{initial}</span> : null}
       {time ? <span className="font-semibold whitespace-nowrap">{time}</span> : null}
       {Mark ? <Mark className="size-4 shrink-0" strokeWidth={2.25} /> : null}

@@ -12,7 +12,7 @@ import {
 } from "../../lib/dates";
 import type { Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
-import { arrivalKey, occurrenceLabel, peopleOf } from "./EventChip";
+import { arrivalKey, occurrenceLabel, PeopleEdge, peopleOf } from "./EventChip";
 import { coreOverlayOf, useOverlayOf } from "./overlays";
 import { byDay, isPast, shownFor } from "./layout";
 import type { Occurrence } from "./types";
@@ -69,6 +69,12 @@ export function PhoneRow({
       <span className="w-[4.75rem] shrink-0 pt-0.5 text-secondary font-semibold">{time}</span>
       {Mark ? (
         <Mark aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ink-soft" />
+      ) : !occurrence.color && people.length > 1 ? (
+        // Several people: the bar in each of their colors (ADR 0034).
+        <PeopleEdge
+          colors={people.map((person) => person.color)}
+          className="static w-1 shrink-0 self-stretch rounded-full"
+        />
       ) : (
         <span aria-hidden="true" className="w-1 shrink-0 self-stretch rounded-full bg-p" />
       )}

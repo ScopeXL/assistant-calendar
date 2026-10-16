@@ -7,7 +7,7 @@ import { useMembers, type Member } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { Avatar } from "../../ui/Avatar";
 import { useTodayBlocks } from "../usePluginModules";
-import { peopleOf } from "./EventChip";
+import { PeopleEdge, peopleOf } from "./EventChip";
 import { useOccurrences } from "./data";
 import { byDay, todayParts } from "./layout";
 import type { Occurrence } from "./types";
@@ -215,7 +215,15 @@ function Line({
       }}
       className="press-row -mx-3 flex min-h-16 items-start gap-3 rounded-chip-d px-3 py-2 text-left"
     >
-      <span aria-hidden="true" className="mt-1.5 h-[1.25em] w-1.5 shrink-0 rounded-full bg-p" />
+      {/* Several people, and no color of its own: the pill in each of their colors (ADR 0034). */}
+      {!occurrence.color && people.length > 1 ? (
+        <PeopleEdge
+          colors={people.map((person) => person.color)}
+          className="static mt-1.5 h-[1.25em] w-1.5 shrink-0 rounded-full"
+        />
+      ) : (
+        <span aria-hidden="true" className="mt-1.5 h-[1.25em] w-1.5 shrink-0 rounded-full bg-p" />
+      )}
       {glance ? (
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="text-d-body font-semibold">{when}</span>

@@ -4,6 +4,7 @@ Synthetic data only."""
 
 from __future__ import annotations
 
+import json
 from datetime import date, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -14,7 +15,7 @@ from fastapi import FastAPI
 from sqlalchemy import update
 
 from sunroom.calendar import sync_merge
-from sunroom.calendar.models import Calendar, Event
+from sunroom.calendar.models import Calendar, Event, EventRevision
 from sunroom.calendar.schemas import OccurrenceOut
 from tests.support import CSRF, PASSWORD, add_member, set_pin, state_of
 
@@ -612,3 +613,106 @@ async def test_the_export_has_the_calendar(parent: httpx.AsyncClient) -> None:
     assert [e["title"] for e in data["events"]] == ["Soccer practice"]
     assert [c["name"] for c in data["calendars"]] == ["Home"]
     assert "event_revisions" not in data
+
+
+# ---- who an event is for, from its title (ADR 0034) ----------------------------------------------
+
+
+async def test_a_title_with_a_name_is_that_persons_until_who_is_set_by_hand(
+    parent: httpx.AsyncClient,
+) -> None:
+    leo = (await add_member(parent, "Leo", role="kid"))["id"]
+    mia = (await add_member(parent, "Mia", role="kid"))["id"]
+    change = await add(parent, title="Take Leo to soccer", start="2026-10-08T15:00")
+    event = change["event"]
+    assert (event["member_ids"], event["people_from_title"]) == ([leo], True)
+    url = f"/api/calendar/events/{event['id']}"
+    renamed = await parent.patch(url, json={"title": "Take Mia to soccer"}, headers=CSRF)
+    assert renamed.json()["event"]["member_ids"] == [mia]
+    # Everyone, set by hand: the title no longer decides.
+    everyone = await parent.patch(url, json={"member_ids": []}, headers=CSRF)
+    assert (
+        everyone.json()["event"]["member_ids"],
+        everyone.json()["event"]["people_from_title"],
+    ) == (
+        [],
+        False,
+    )
+    again = await parent.patch(url, json={"title": "Take Leo to soccer"}, headers=CSRF)
+    assert again.json()["event"]["member_ids"] == []
+    # A title with nobody in it, and nobody picked: Everyone, and the title doesn't decide.
+    plain = (await add(parent, title="Dentist", start="2026-10-08T09:00"))["event"]
+    assert (plain["member_ids"], plain["people_from_title"]) == ([], False)
+    # Picked by hand on add: that's who, whatever the title says.
+    picked = (await add(parent, title="Leo's lunch", start="2026-10-08T12:00", member_ids=[mia]))[
+        "event"
+    ]
+    assert (picked["member_ids"], picked["people_from_title"]) == ([mia], False)
+
+
+async def test_one_occurrence_with_a_new_title_matches_on_its_own(
+    parent: httpx.AsyncClient,
+) -> None:
+    leo = (await add_member(parent, "Leo", role="kid"))["id"]
+    mia = (await add_member(parent, "Mia", role="kid"))["id"]
+    event = (
+        await add(
+            parent,
+            title="Leo's soccer",
+            start="2026-09-29T16:00",
+            end="2026-09-29T17:00",
+            rrule="FREQ=WEEKLY;BYDAY=TU,TH",
+        )
+    )["event"]
+    assert event["member_ids"] == [leo]
+    one = await parent.patch(
+        f"/api/calendar/events/{event['id']}/occurrences/2026-10-08T16:00:00",
+        json={"scope": "this", "title": "Mia's soccer"},
+        headers=CSRF,
+    )
+    assert one.status_code == 200, one.text
+    found = {o["start_local"]: o for o in await week(parent)}
+    assert found["2026-10-08T16:00:00"]["member_ids"] == [mia]
+    assert found["2026-10-06T16:00:00"]["member_ids"] == [leo]
+
+
+async def test_all_of_them_reaches_the_occurrences_changed_one_by_one(
+    parent: httpx.AsyncClient,
+) -> None:
+    """R4: people and reminders sent for the series go to its changed occurrences too."""
+    sam = (await add_member(parent, "Sam"))["id"]
+    event = await soccer(parent)
+    url = f"/api/calendar/events/{event['id']}"
+    moved = await parent.patch(
+        f"{url}/occurrences/2026-10-08T16:00:00",
+        json={"scope": "this", "start": "2026-10-08T17:00", "end": "2026-10-08T18:00"},
+        headers=CSRF,
+    )
+    assert moved.status_code == 200, moved.text
+    every = await parent.patch(url, json={"member_ids": [sam], "reminders": [5]}, headers=CSRF)
+    assert every.status_code == 200, every.text
+    for occurrence in await week(parent):
+        assert (occurrence["member_ids"], occurrence["reminders"]) == ([sam], [5])
+
+
+async def test_undo_of_a_change_from_before_the_title_decided_still_works(
+    app: FastAPI, parent: httpx.AsyncClient
+) -> None:
+    """A snapshot from 0.11.0 has no people_from_title: the column's default stands in."""
+    event = (await add(parent, title="Dentist", start="2026-10-08T14:30"))["event"]
+    url = f"/api/calendar/events/{event['id']}"
+    renamed = await parent.patch(url, json={"title": "Dentist, again"}, headers=CSRF)
+    revision_id = renamed.json()["revision_id"]
+    async with state_of(app).db.write() as tx:
+        row = await tx.session.get(EventRevision, revision_id)
+        assert row is not None
+        items = json.loads(row.before_json)
+        for item in items:
+            item["master"].pop("people_from_title")
+            for override in item["overrides"]:
+                override.pop("people_from_title", None)
+        row.before_json = json.dumps(items)
+    undone = await parent.post(f"{url}/undo", json={"revision_id": revision_id}, headers=CSRF)
+    assert undone.status_code == 200, undone.text
+    back = (await parent.get(url)).json()
+    assert (back["title"], back["people_from_title"]) == ("Dentist", False)

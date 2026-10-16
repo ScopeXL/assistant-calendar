@@ -58,11 +58,16 @@ async function syncNow(request: APIRequestContext, account: string): Promise<voi
 }
 
 async function mapToMia(request: APIRequestContext, account: string): Promise<void> {
+  await mapTo(request, account, "Mia");
+}
+
+/** Map the account's one calendar, making it the named person's. */
+async function mapTo(request: APIRequestContext, account: string, name: string): Promise<void> {
   const members = (await (await request.get("/api/members")).json()) as {
     id: string;
     name: string;
   }[];
-  const mia = members.find((m) => m.name === "Mia");
+  const owner = members.find((m) => m.name === name);
   let calendars: { id: string }[] = [];
   await expect(async () => {
     const accounts = (await (await request.get("/api/calendar-sync/accounts")).json()) as {
@@ -74,7 +79,7 @@ async function mapToMia(request: APIRequestContext, account: string): Promise<vo
   }).toPass({ timeout: 10_000 });
   const mapped = await request.put(
     `/api/calendar-sync/accounts/${account}/calendars/${calendars[0]?.id ?? ""}`,
-    { headers: CSRF, data: { mapped: true, owner_member_id: mia?.id } },
+    { headers: CSRF, data: { mapped: true, owner_member_id: owner?.id } },
   );
   expect(mapped.status()).toBe(200);
 }
@@ -149,6 +154,45 @@ test("an account's calendar shows on the wall in its person's color, and changes
       false,
     );
   }).toPass({ timeout: 20_000 });
+});
+
+test("a title names its people, on top of the calendar's person, in all their colors", async ({
+  page,
+  request,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "display-1080p", "the wall screen");
+  const created = await request.post("/api/calendar-sync/_test/fake", { headers: CSRF });
+  const { id: account } = (await created.json()) as { id: string };
+  const scripted = await request.put(`/api/calendar-sync/_test/fake/${account}`, {
+    headers: CSRF,
+    data: {
+      calendars: [["school", "School", false]],
+      events: [
+        {
+          calendar: "school",
+          uid: "swim@test",
+          title: "Mia & Leo's swim",
+          start: "2026-10-07T20:00:00Z",
+          end: "2026-10-07T21:00:00Z",
+        },
+      ],
+    },
+  });
+  expect(scripted.status()).toBe(200);
+  await syncNow(request, account);
+  // Ana's calendar: the swim is hers, and Mia's and Leo's, whom its title names (ADR 0034).
+  await mapTo(request, account, "Ana");
+  const week = await board(page);
+  const swim = week.getByRole("button", { name: /^Mia & Leo's swim, .*, Ana, Mia, Leo, / });
+  await expect(swim).toBeVisible({ timeout: 15_000 });
+  // A neutral tint, and the bar in the three people's colors.
+  await expect(swim.locator(".edge-3")).toHaveCount(1);
+  await page.getByRole("button", { name: "People", exact: true }).click();
+  const people = page.getByRole("region", { name: "People" });
+  for (const name of ["Ana", "Mia", "Leo"]) {
+    await expect(people.getByRole("region", { name })).toContainText("Mia & Leo's swim");
+  }
+  await expect(people.getByRole("region", { name: "Sam" })).not.toContainText("swim");
 });
 
 test("a refused password shows a quiet pill, and the events stay", async ({

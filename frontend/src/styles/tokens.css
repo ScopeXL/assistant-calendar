@@ -393,6 +393,35 @@
   input.switch-d:checked::before {
     transform: translateX(1.75rem);
   }
+
+  /* Several people on one chip: the bar in equal segments of their solids, set per chip as
+     --seg-1… (features/calendar/EventChip's PeopleEdge; UX §4, ADR 0034). A utility (static, a
+     width) still wins: these are components. */
+  .edge {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+  }
+  .edge-2 {
+    background: linear-gradient(to bottom, var(--seg-1) 0 50%, var(--seg-2) 50%);
+  }
+  .edge-3 {
+    background: linear-gradient(
+      to bottom,
+      var(--seg-1) 0 33.34%,
+      var(--seg-2) 33.34% 66.67%,
+      var(--seg-3) 66.67%
+    );
+  }
+  .edge-4 {
+    background: linear-gradient(
+      to bottom,
+      var(--seg-1) 0 25%,
+      var(--seg-2) 25% 50%,
+      var(--seg-3) 50% 75%,
+      var(--seg-4) 75%
+    );
+  }
 }
 
 /* The on-screen keyboard's keys (ui/Keyboard, UX §1): 80 × 64 in landscape, 88 × 72 in portrait,

@@ -234,6 +234,40 @@ def test_a_household_from_0_11_0_shows_tips(tmp_path: Path) -> None:
         conn.close()
 
 
+def test_synced_events_with_nobody_on_them_let_their_title_decide(tmp_path: Path) -> None:
+    """0.12.0 (ADR 0034): a synced event with no people was never a hand choice, so its title
+    decides from now on; one with people, and every local event, stays as it was."""
+    db = tmp_path / "sunroom.db"
+    conn = sqlite3.connect(db)
+    conn.executescript((FIXTURE_DBS / "202610151730.sql").read_text())
+    columns = [row[1] for row in conn.execute("PRAGMA table_info(events)")]
+    trip = dict(
+        zip(
+            columns,
+            conn.execute("SELECT * FROM events WHERE source = 'sync'").fetchone(),
+            strict=True,
+        )
+    )
+    picked = {**trip, "id": str(trip["id"])[:-3] + "599", "remote_uid": "picked@test"}
+    conn.execute(
+        f"INSERT INTO events ({', '.join(picked)}) VALUES ({', '.join('?' for _ in picked)})",  # noqa: S608
+        list(picked.values()),
+    )
+    member = conn.execute("SELECT id FROM members LIMIT 1").fetchone()[0]
+    conn.execute("INSERT INTO event_members VALUES (?, ?)", (picked["id"], member))
+    conn.commit()
+    conn.close()
+    assert migrate.upgrade(db) == migrate.head_revision()
+    conn = sqlite3.connect(db)
+    try:
+        flagged = dict(conn.execute("SELECT id, people_from_title FROM events").fetchall())
+    finally:
+        conn.close()
+    assert flagged.pop(trip["id"]) == 1
+    assert flagged.pop(picked["id"]) == 0
+    assert set(flagged.values()) == {0}
+
+
 def test_accounts_named_icloud_become_apple(tmp_path: Path) -> None:
     """0.10.0 (ADR 0032): the family reads "Apple", so a CalDAV account 0.9.0 named "iCloud · …"
     as it connected reads "Apple · …". A name someone chose, and a calendar address, keep theirs."""

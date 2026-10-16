@@ -22,6 +22,7 @@ import {
   PeopleMarks,
   arrivalKey,
   chipTone,
+  PeopleEdge,
   occurrenceLabel,
   peopleOf,
 } from "./EventChip";
@@ -470,11 +471,12 @@ function HoursChip({
     >
       <span
         data-person={tone.person}
-        className={`flex min-w-0 shrink-0 overflow-hidden rounded-chip-d pr-1 ${tone.className} ${
+        className={`relative flex min-w-0 shrink-0 overflow-hidden rounded-chip-d pr-1 ${tone.className} ${
           tier === "lines" ? "flex-col gap-0.5 py-1.5" : "items-center gap-2"
         }`}
         style={{ marginTop: `${String(box.offset)}px`, height: `${String(box.visible)}px` }}
       >
+        {tone.edge ? <PeopleEdge colors={tone.edge} /> : null}
         {tier === "lines" ? (
           <>
             <span className="flex min-w-0 items-center justify-between gap-2">

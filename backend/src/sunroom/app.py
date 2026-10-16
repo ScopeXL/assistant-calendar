@@ -265,6 +265,11 @@ def create_app(
         hub.listeners.append(lambda event_type, _payload: screen.on_event(state, event_type))
         app.state.sunroom = state
         await manager.boot()
+        # Events whose title decides who they're for get their people now, without waiting for
+        # a change (0.12.0 flagged synced events with nobody on them; ADR 0034). Writes only
+        # what changed.
+        async with state.db.write() as tx:
+            await calendar_service.rematch_people(tx)
         state.started = True
         log.info("app.started", version=build_info().version, revision=build_info().revision)
         try:

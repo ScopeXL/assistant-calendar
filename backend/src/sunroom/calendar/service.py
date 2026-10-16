@@ -8,6 +8,7 @@ transaction, bumps the calendar's version (the occurrence cache's key) and publi
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Literal
@@ -17,7 +18,7 @@ from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sunroom.auth.deps import Actor
-from sunroom.calendar import revisions
+from sunroom.calendar import people, revisions
 from sunroom.calendar.models import (
     Calendar,
     CalendarKind,
@@ -299,6 +300,7 @@ async def event_out(session: AsyncSession, event: Event) -> EventOut:
             "repeat_text": repeat_text,
             "exdates": json_list(event.exdates_json),
             "member_ids": await _members_of(session, event.id),
+            "people_from_title": event.people_from_title,
             "reminders": await _reminders_of(session, event.id),
             "color": event.color,
             "status": event.status,
@@ -381,6 +383,26 @@ async def _set_people(
             session.add(EventReminder(event_id=event_id, minutes_before=minutes))
 
 
+async def _sent_people(
+    session: AsyncSession,
+    row: Event,
+    calendar: Calendar,
+    sent: list[str] | None,
+    *,
+    title_changed: bool,
+) -> None:
+    """Who ``row`` is for after a change (ADR 0034). People sent that differ from its rows are
+    a hand choice: written, and the title stops deciding. Nothing sent, a changed title
+    matches again while the title decides. A new title alone never touches a hand choice."""
+    if sent is not None:
+        if set(sent) != set(await _members_of(session, row.id)):
+            row.people_from_title = False
+            await _set_people(session, row.id, sent, None)
+        return
+    if title_changed and row.people_from_title:
+        await people.assign(session, row, calendar, await people.household_people(session))
+
+
 async def _overrides(session: AsyncSession, master_id: str) -> list[Event]:
     return list(
         (
@@ -415,6 +437,14 @@ async def bump(tx: WriteTx, calendar_ids: set[str], event_ids: list[str]) -> Non
             "events.changed",
             {"calendar_id": calendar_id, "event_ids": event_ids, "calendar_version": version},
         )
+
+
+async def rematch_people(tx: WriteTx, calendar_ids: Iterable[str] | None = None) -> None:
+    """Every event the title decides, matched again and announced (ADR 0034): after a person is
+    added, renamed, archived or put back, and once at start."""
+    changed = await people.rematch(tx.session, calendar_ids)
+    for calendar_id, event_ids in changed.items():
+        await bump(tx, {calendar_id}, event_ids[:50])
 
 
 async def _revision(
@@ -533,8 +563,16 @@ async def create_event(tx: WriteTx, body: EventCreate, ctx: Context) -> ChangeOu
     )
     timing, tzid = resolve_timing(None, None, body, ctx.zone_key)
     rrule = checked_rule(body.rrule, timing, tzid) if body.rrule else None
-    members = _check_members(body.member_ids, ctx) or []
+    sent = _check_members(body.member_ids, ctx)
     synced = calendar.kind == CalendarKind.SYNC
+    if sent is not None:
+        # Picked by hand (Everyone included): that's who, and the title doesn't decide.
+        members, from_title = sent, False
+    else:
+        # Nobody picked: the title decides (ADR 0034), as for an imported event, and in a synced
+        # calendar with no names its person shows by the read-time fallback.
+        members = people.wanted_ids(body.title, calendar, await people.household_people(tx.session))
+        from_title = bool(members) or synced
     event = Event(
         calendar_id=calendar.id,
         title=body.title,
@@ -545,6 +583,7 @@ async def create_event(tx: WriteTx, body: EventCreate, ctx: Context) -> ChangeOu
         source=EventSource.SYNC if synced else EventSource.LOCAL,
         remote_uid=new_uid() if synced else None,
         created_by_member_id=ctx.actor.member_id,
+        people_from_title=from_title,
         created_at=ctx.now,
         updated_at=ctx.now,
         window_start_utc=ctx.now,
@@ -617,6 +656,7 @@ async def update_series(
         master.exdates_json = "[]"
         master.rdates_json = "[]"
 
+    old_title = master.title
     _apply_text(master, body, clear_color=body.clear_color)
     if to_calendar is not None:
         master.calendar_id = to_calendar.id
@@ -629,7 +669,22 @@ async def update_series(
     master.rrule = rrule
     master.version += 1
     master.updated_at = ctx.now
-    await _set_people(tx.session, master.id, members, body.reminders)
+    await _sent_people(
+        tx.session,
+        master,
+        to_calendar or calendar,
+        members,
+        title_changed=master.title != old_title,
+    )
+    await _set_people(tx.session, master.id, None, body.reminders)
+    # All of Them reaches the occurrences changed one by one too (R4): what was sent for the
+    # series is theirs as well.
+    for row in overrides:
+        if row.deleted_at is not None:
+            continue
+        if members is not None:
+            row.people_from_title = master.people_from_title
+        await _set_people(tx.session, row.id, members, body.reminders)
     await tx.session.flush()
     await refresh_window(tx.session, master)
     revision_id = await _revision(tx, ctx, master.id, action, before)
@@ -675,6 +730,7 @@ async def update_occurrence(
             raise invalid("One occurrence can't repeat. Change all of them instead.", "rrule")
         timing, _ = resolve_timing(occurrence.timing, master.tzid, body, ctx.zone_key)
         row = next((o for o in overrides if o.recurrence_id == rid), None)
+        old_title = row.title if row is not None else master.title
         if row is None:
             row = _copy(
                 master,
@@ -693,12 +749,14 @@ async def update_occurrence(
             await _set_people(
                 tx.session,
                 row.id,
-                members if members is not None else master_members,
+                master_members,
                 body.reminders if body.reminders is not None else master_reminders,
             )
         else:
-            await _set_people(tx.session, row.id, members, body.reminders)
+            await _set_people(tx.session, row.id, None, body.reminders)
         _apply_text(row, body, clear_color=body.clear_color)
+        # Its own people and title, by the same rules as a series' (ADR 0034).
+        await _sent_people(tx.session, row, calendar, members, title_changed=row.title != old_title)
         set_timing(row, timing, master.tzid)
         row.updated_at = ctx.now
         master.exdates_json = json.dumps([r for r in json_list(master.exdates_json) if r != rid])
@@ -776,8 +834,16 @@ async def update_occurrence(
     await _set_people(
         tx.session,
         sibling.id,
-        members if members is not None else master_members,
+        master_members,
         body.reminders if body.reminders is not None else master_reminders,
+    )
+    sibling_calendar = await tx.session.get(Calendar, sibling.calendar_id) or calendar
+    await _sent_people(
+        tx.session,
+        sibling,
+        sibling_calendar,
+        members,
+        title_changed=sibling.title != master.title,
     )
     await tx.session.flush()
     await refresh_window(tx.session, master)

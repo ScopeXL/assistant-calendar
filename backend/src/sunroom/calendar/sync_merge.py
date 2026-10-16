@@ -23,7 +23,7 @@ from datetime import datetime
 from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sunroom.calendar import revisions
+from sunroom.calendar import people, revisions
 from sunroom.calendar.models import (
     Calendar,
     CalendarKind,
@@ -45,6 +45,7 @@ from sunroom.calendar.synced import (
 )
 from sunroom.calendar.timing import json_list, set_timing, timing_of
 from sunroom.db.engine import WriteTx
+from sunroom.db.types import new_id
 from sunroom.domain.recurrence import RecurrenceError, validate_rrule
 from sunroom.household.models import Household
 
@@ -100,8 +101,10 @@ async def update_calendar(
     source_label: str | None = None,
 ) -> Calendar:
     """Change a synced calendar. Its person and color decide how its events show, so the
-    occurrence cache moves on (the version goes up)."""
+    occurrence cache moves on (the version goes up). A new person moves to the events the
+    title decides (ADR 0034); the others follow by the read-time fallback."""
     calendar = await _synced_calendar(tx.session, calendar_id, include_deleted=True)
+    owner_before = calendar.owner_member_id
     if name is not None:
         calendar.name = name[:80]
     if color is not None:
@@ -119,6 +122,8 @@ async def update_calendar(
     calendar.updated_at = now
     calendar.version += 1
     await tx.session.flush()
+    if calendar.owner_member_id != owner_before:
+        await people.rematch(tx.session, [calendar.id])
     tx.publish("calendars.changed", {"calendar_id": calendar.id})
     return calendar
 
@@ -173,9 +178,11 @@ async def known(session: AsyncSession, calendar_id: str) -> dict[str, str | None
 async def merge_chunk(
     tx: WriteTx, calendar_id: str, chunk: Sequence[SyncedSeries], now: datetime
 ) -> MergeResult:
-    """Merge up to CHUNK series in one transaction."""
+    """Merge up to CHUNK series in one transaction. Who each new event is for comes from its
+    title (calendar/people.py, ADR 0034), on top of the calendar's person."""
     session = tx.session
     calendar = await _synced_calendar(session, calendar_id, include_deleted=True)
+    members = await people.household_people(session)
     uids = [item.uid for item in chunk]
     masters: dict[str, Event] = {}
     for row in (
@@ -207,7 +214,13 @@ async def merge_chunk(
             continue
         existing = masters.get(item.uid)
         outcome, row = await _merge_one(
-            tx, calendar, existing, children.get(existing.id, []) if existing else [], item, now
+            tx,
+            calendar,
+            existing,
+            children.get(existing.id, []) if existing else [],
+            item,
+            now,
+            members,
         )
         counts[outcome] += 1
         if row is not None and outcome in {"created", "updated"}:
@@ -251,6 +264,7 @@ async def _merge_one(
     overrides: list[Event],
     item: SyncedSeries,
     now: datetime,
+    members: Sequence[people.Person],
 ) -> tuple[str, Event | None]:
     session = tx.session
     if existing is None:
@@ -262,7 +276,8 @@ async def _merge_one(
         _rule(master, item)
         session.add(master)
         await session.flush()
-        await _set_overrides(session, master, [], item, now)
+        await people.assign(session, master, calendar, members)
+        await _set_overrides(session, master, [], item, now, calendar, members)
         await refresh_window(session, master)
         return "created", master
 
@@ -287,11 +302,14 @@ async def _merge_one(
     if item.master is None:
         # Only some occurrences changed: the series itself (and any change to it waiting to be
         # pushed) stays as it is.
-        await _apply_partial(session, existing, overrides, item, now)
+        await _apply_partial(session, existing, overrides, item, now, calendar, members)
     else:
         _content(existing, item.master)
+        # A changed title names others; a Who set by hand (the flag off) is never touched.
+        if existing.people_from_title:
+            await people.assign(session, existing, calendar, members)
         _rule(existing, item)
-        await _set_overrides(session, existing, overrides, item, now)
+        await _set_overrides(session, existing, overrides, item, now, calendar, members)
         existing.deleted_at = None
         existing.pending_push = False
         existing.pending_delete = False
@@ -358,7 +376,13 @@ def _remote(master: Event, item: SyncedSeries) -> None:
 
 
 async def _set_overrides(
-    session: AsyncSession, master: Event, current: list[Event], item: SyncedSeries, now: datetime
+    session: AsyncSession,
+    master: Event,
+    current: list[Event],
+    item: SyncedSeries,
+    now: datetime,
+    calendar: Calendar,
+    members: Sequence[people.Person],
 ) -> None:
     """Make the stored overrides exactly the series' changed occurrences."""
     wanted = {o.recurrence_id: o for o in item.overrides if not o.event.cancelled}
@@ -367,11 +391,17 @@ async def _set_overrides(
             await _drop_children(session, [row])
     by_rid = {row.recurrence_id: row for row in current if row.recurrence_id in wanted}
     for rid, override in wanted.items():
-        await _upsert_override(session, master, by_rid.get(rid), override, now)
+        await _upsert_override(session, master, by_rid.get(rid), override, now, calendar, members)
 
 
 async def _apply_partial(
-    session: AsyncSession, master: Event, current: list[Event], item: SyncedSeries, now: datetime
+    session: AsyncSession,
+    master: Event,
+    current: list[Event],
+    item: SyncedSeries,
+    now: datetime,
+    calendar: Calendar,
+    members: Sequence[people.Person],
 ) -> None:
     """A partial update: only these occurrences changed (a Google exception on its own)."""
     exdates = set(json_list(master.exdates_json))
@@ -384,16 +414,27 @@ async def _apply_partial(
                 await _drop_children(session, [row])
             continue
         exdates.discard(override.recurrence_id)
-        await _upsert_override(session, master, row, override, now)
+        await _upsert_override(session, master, row, override, now, calendar, members)
     master.exdates_json = json.dumps(sorted(exdates))
 
 
 async def _upsert_override(
-    session: AsyncSession, master: Event, row: Event | None, override: SyncedOverride, now: datetime
+    session: AsyncSession,
+    master: Event,
+    row: Event | None,
+    override: SyncedOverride,
+    now: datetime,
+    calendar: Calendar,
+    members: Sequence[people.Person],
 ) -> None:
+    """One changed occurrence, as the server sent it. A new one starts with the series' people,
+    reminders and flags (R5: it had none, so a moved occurrence lost its person); then, like
+    one already here, it follows its own title while the title decides (ADR 0034)."""
     event = override.event
+    new = row is None
     if row is None:
         row = Event(
+            id=new_id(),
             calendar_id=master.calendar_id,
             parent_event_id=master.id,
             recurrence_id=override.recurrence_id,
@@ -404,6 +445,7 @@ async def _upsert_override(
             updated_at=now,
             window_start_utc=now,
             window_end_utc=now,
+            people_from_title=master.people_from_title,
         )
         session.add(row)
     timed = not event.timing.all_day
@@ -413,6 +455,22 @@ async def _upsert_override(
     row.deleted_at = None
     row.updated_at = now
     await session.flush()
+    if new:
+        await _copy_people_and_reminders(session, master.id, row.id)
+    if row.people_from_title:
+        await people.assign(session, row, calendar, members)
+
+
+async def _copy_people_and_reminders(session: AsyncSession, source_id: str, target_id: str) -> None:
+    """The series' people and reminders, onto one of its occurrences."""
+    for (member_id,) in await session.execute(
+        select(EventMember.member_id).where(EventMember.event_id == source_id)
+    ):
+        session.add(EventMember(event_id=target_id, member_id=member_id))
+    for (minutes,) in await session.execute(
+        select(EventReminder.minutes_before).where(EventReminder.event_id == source_id)
+    ):
+        session.add(EventReminder(event_id=target_id, minutes_before=minutes))
 
 
 def _with_zone(event: SyncedEvent, tzid: str | None) -> SyncedEvent:

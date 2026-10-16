@@ -40,6 +40,10 @@ export interface Draft {
   start: string; // "HH:MM"
   minutes: number;
   memberIds: string[];
+  /** Who was chosen (the row, or quick add naming people on a new event): only then are the
+   * people sent, so an untouched Who leaves a synced event's person and its title's say alone
+   * (P1, ADR 0034). */
+  whoTouched?: boolean;
   repeat: Repeat | null;
   repeatEnd: RepeatEnd;
   /** A rule the editor's shapes can't hold ("the 15th" on an event that starts on the 9th):
@@ -102,7 +106,7 @@ export function draftToFields(
     : (draft.kept?.rrule ?? null);
   const common = {
     title: draft.title.trim(),
-    member_ids: draft.memberIds,
+    ...(draft.whoTouched ? { member_ids: draft.memberIds } : {}),
     reminders: draft.reminder === null ? [] : [draft.reminder],
     calendar_id: draft.calendarId,
     color: draft.color,
@@ -210,6 +214,7 @@ export function EventEditor({
   const defaultCalendar = writable.find((c) => c.is_default)?.id ?? writable[0]?.id ?? null;
   const [text, setText] = useState(initial?.title ?? "");
   const [manual, setManual] = useState<Partial<Draft>>(initial ?? {});
+  const [whoTouched, setWhoTouched] = useState(false);
   const [more, setMore] = useState(
     Boolean(initial && (initial.location || initial.notes || initial.reminder !== null)),
   );
@@ -246,6 +251,8 @@ export function EventEditor({
     start: manual.start ?? parsed?.start ?? fromHour ?? "09:00",
     minutes: manual.minutes ?? parsed?.durationMinutes ?? 60,
     memberIds: manual.memberIds ?? parsed?.memberIds ?? [],
+    // Names quick add took out of a new event's title must be sent: the title no longer has them.
+    whoTouched: whoTouched || Boolean(!initial && parsed?.memberIds.length),
     repeat: manual.repeat !== undefined ? manual.repeat : (parsed?.repeat ?? null),
     repeatEnd: manual.repeatEnd ?? {},
     kept: manual.kept ?? null,
@@ -303,6 +310,7 @@ export function EventEditor({
             value={draft.memberIds}
             multiple
             onChange={(memberIds) => {
+              setWhoTouched(true);
               set({ memberIds });
             }}
           />

@@ -498,6 +498,27 @@ describe("people", () => {
       memberIds: ["b"],
     });
   });
+
+  it("reads a first name for a longer one, folds accents, and skips one letter (ADR 0034)", () => {
+    // The server reads imported titles by the same rules (domain/people.py).
+    const sofia = { id: "as", name: "Ana Sofia" };
+    expect(
+      parse("Ana's recital", { members: [sofia, { id: "l", name: "Leo" }] }).memberIds,
+    ).toEqual(["as"]);
+    expect(
+      parse("Ana's recital", { members: [{ id: "a", name: "Ana" }, sofia] }).memberIds,
+    ).toEqual(["a"]);
+    // A first word two people share is nobody's.
+    expect(
+      parse("Ana's recital", { members: [sofia, { id: "am", name: "Ana Maria" }] }).memberIds,
+    ).toEqual([]);
+    expect(parse("Zoe swim", { members: [{ id: "z", name: "Zoë" }] })).toMatchObject({
+      title: "swim",
+      memberIds: ["z"],
+    });
+    expect(parse("ZOË swim", { members: [{ id: "z", name: "Zoe" }] }).memberIds).toEqual(["z"]);
+    expect(parse("Plan A", { members: [{ id: "a", name: "A" }] }).memberIds).toEqual([]);
+  });
 });
 
 describe("repeats", () => {
