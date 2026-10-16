@@ -195,7 +195,20 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
       .getAllByRole("radio")
       .map((radio) => (radio as HTMLInputElement).value);
     // Red is Ana's and Pink is Mia's: they come last.
-    expect(colors).toEqual(["olive", "moss", "sea", "sky", "iris", "berry", "clay", "rose"]);
+    expect(colors).toEqual([
+      "olive",
+      "moss",
+      "sea",
+      "sky",
+      "iris",
+      "berry",
+      "copper",
+      "bark",
+      "slate",
+      "lime",
+      "clay",
+      "rose",
+    ]);
     fireEvent.click(within(page).getByRole("radio", { name: "Teal" }));
     fireEvent.click(within(whose).getByRole("button", { name: "Mia" }));
     await waitFor(() => {

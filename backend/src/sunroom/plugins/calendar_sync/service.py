@@ -200,7 +200,21 @@ def source_label(provider: str, url: str | None = None) -> str:
     return "a calendar address"
 
 
-COLOR_ORDER = ("sea", "iris", "olive", "sky", "clay", "moss", "berry", "rose")
+# The pick order for a calendar everyone shares; the four colors added in 0.12.0 come last.
+COLOR_ORDER = (
+    "sea",
+    "iris",
+    "olive",
+    "sky",
+    "clay",
+    "moss",
+    "berry",
+    "rose",
+    "copper",
+    "bark",
+    "slate",
+    "lime",
+)
 
 
 async def pick_color(ctx: PluginContext) -> str:

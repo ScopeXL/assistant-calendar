@@ -114,7 +114,20 @@ function mix(color: string, share: number, over: string): Rgb {
   return fromOklab([0, 1, 2].map((i) => (a[i] ?? 0) * share + (b[i] ?? 0) * (1 - share)) as Rgb);
 }
 
-const PEOPLE = ["clay", "olive", "moss", "sea", "sky", "iris", "berry", "rose"];
+const PEOPLE = [
+  "clay",
+  "olive",
+  "moss",
+  "sea",
+  "sky",
+  "iris",
+  "berry",
+  "rose",
+  "copper",
+  "bark",
+  "slate",
+  "lime",
+];
 
 function solid(person: string, theme: Theme): string {
   return token(`${person}-${theme === "light" ? "l" : "d"}`, "light");
@@ -202,7 +215,7 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
 });
 
 describe("the token file", () => {
-  it("defines the eight person colors in both themes", () => {
+  it("defines the twelve person colors in both themes", () => {
     for (const person of PEOPLE) {
       expect(base[`${person}-l`], person).toBeDefined();
       expect(base[`${person}-d`], person).toBeDefined();

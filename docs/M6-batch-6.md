@@ -677,7 +677,7 @@ too: with Never, the wall stays where it is (the parent PIN still locks after 2 
 
 ### T6 Four more colors
 
-- [ ] Done (commit: )
+- [x] Done (commit: "colors: four more, Orange, Brown, Gray and Lime; the person's color clears")
 
 **Owner's note.** "Add 4 more color choices for calendars/events/etc. A family of 5 with
 individual colors runs out of options for shared calendars quickly."
@@ -734,7 +734,16 @@ if it says eight. ADR 0034 row (changes 0029's "eight").
 **CHANGELOG** (Added). "Four more colors for people and calendars: Orange, Brown, Gray and Lime."
 (Fixed) "Choosing 'The person's color' for an event that had its own color now clears it."
 
-**As built.** (fill in)
+**As built.** As planned: the four hex values passed every contrast check in `tokens.test.ts`
+at the first try, so UX §7 records them unchanged. Two differences:
+- *C1* is fixed in `AddPanel.fieldsFor` (the change path, which knows the event), not in
+  `calendar/data.ts`: it sends `clear_color: true` when the dots say "The person's color" and the
+  event had one, at every scope; `EventEditor.test.ts` has two cases.
+- *The end-to-end case* runs on `desktop`, not `display-1080p`: the pick-order case in
+  `sync.spec.ts` skips itself on every other project. It now expects twelve swatches, the free
+  ones first.
+ADR 0013's status and 0029's picker row are annotated. The by-hand look at the twelve swatches
+in both themes is left to T17's screenshots (`settings-change-a-person`).
 
 ### T7 Stars for several children, and a custom amount
 

@@ -10,7 +10,20 @@ HouseholdName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)
 ]
 Clock24 = Annotated[str, StringConstraints(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")]
-PersonColor = Literal["clay", "olive", "moss", "sea", "sky", "iris", "berry", "rose"]
+PersonColor = Literal[
+    "clay",
+    "olive",
+    "moss",
+    "sea",
+    "sky",
+    "iris",
+    "berry",
+    "rose",
+    "copper",
+    "bark",
+    "slate",
+    "lime",
+]
 RoleName = Literal["parent", "kid"]
 ThemeName = Literal["auto", "light", "dark"]
 TextSizeName = Literal["small", "standard", "large", "xl"]

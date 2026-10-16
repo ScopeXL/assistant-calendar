@@ -585,7 +585,11 @@
               "sky",
               "iris",
               "berry",
-              "rose"
+              "rose",
+              "copper",
+              "bark",
+              "slate",
+              "lime"
             ],
             "title": "Color",
             "type": "string"
@@ -630,7 +634,11 @@
               "sky",
               "iris",
               "berry",
-              "rose"
+              "rose",
+              "copper",
+              "bark",
+              "slate",
+              "lime"
             ],
             "title": "Color",
             "type": "string"
@@ -722,7 +730,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -1576,7 +1588,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -1663,7 +1679,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -1789,7 +1809,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -2549,7 +2573,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -2719,7 +2747,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -3007,7 +3039,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -3723,7 +3759,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -3787,7 +3827,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -4785,7 +4829,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -4998,7 +5046,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -5068,7 +5120,11 @@
               "sky",
               "iris",
               "berry",
-              "rose"
+              "rose",
+              "copper",
+              "bark",
+              "slate",
+              "lime"
             ],
             "title": "Color",
             "type": "string"
@@ -5132,7 +5188,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -5227,7 +5287,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -5259,7 +5323,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -6024,7 +6092,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },
@@ -8729,7 +8801,11 @@
                   "sky",
                   "iris",
                   "berry",
-                  "rose"
+                  "rose",
+                  "copper",
+                  "bark",
+                  "slate",
+                  "lime"
                 ],
                 "type": "string"
               },

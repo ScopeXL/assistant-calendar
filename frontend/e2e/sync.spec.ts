@@ -244,7 +244,7 @@ test("an account opens from its row: Sync, whose and color, Show on the screen, 
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "a computer");
   await signInPhone(page);
-  // A fifth person, so more of the eight colors are somebody's.
+  // A fifth person, so more of the twelve colors are somebody's.
   const added = await page.request.post("/api/members", {
     headers: CSRF,
     data: { name: "Zoe", role: "kid" },
@@ -279,10 +279,23 @@ test("an account opens from its row: Sync, whose and color, Show on the screen, 
   ).toHaveAttribute("aria-pressed", "true");
   const members = (await (await page.request.get("/api/members")).json()) as { color: string }[];
   const taken = new Set(members.map((member) => member.color));
-  const all = ["clay", "olive", "moss", "sea", "sky", "iris", "berry", "rose"];
+  const all = [
+    "clay",
+    "olive",
+    "moss",
+    "sea",
+    "sky",
+    "iris",
+    "berry",
+    "rose",
+    "copper",
+    "bark",
+    "slate",
+    "lime",
+  ];
   expect(taken.size).toBe(5);
   const colors = school.getByRole("group", { name: "Color" }).getByRole("radio");
-  await expect(colors).toHaveCount(8);
+  await expect(colors).toHaveCount(12);
   expect(
     await colors.evaluateAll((radios) => radios.map((radio) => (radio as HTMLInputElement).value)),
   ).toEqual([

@@ -38,6 +38,8 @@ const dayDiff = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse
 /**
  * What a change sends at each scope. "This" can't repeat; "all" keeps the series' first day,
  * moved only as far as the occurrence's day moved, so a changed time doesn't restart the series.
+ * "The person's color" on an event that had its own clears it: the server reads no color as
+ * "leave it" (ADR 0034).
  */
 export function fieldsFor(
   draft: Draft,
@@ -45,8 +47,11 @@ export function fieldsFor(
   event: CalendarEvent,
   occurrence: Occurrence | null,
   weekStartsOn = 0,
-): EventFields & { title: string; clear_rrule?: boolean } {
-  const fields = draftToFields(draft, { align: scope !== "this", weekStartsOn });
+): EventFields & { title: string; clear_rrule?: boolean; clear_color?: boolean } {
+  const fields = {
+    ...draftToFields(draft, { align: scope !== "this", weekStartsOn }),
+    clear_color: draft.color === null && Boolean(event.color),
+  };
   if (scope === "this") {
     const one = { ...fields };
     delete one.rrule;
@@ -66,7 +71,7 @@ export function fieldsFor(
     },
     { weekStartsOn },
   );
-  return { ...moved, clear_rrule: clear };
+  return { ...moved, clear_rrule: clear, clear_color: fields.clear_color };
 }
 
 /**

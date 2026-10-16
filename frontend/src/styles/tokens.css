@@ -41,8 +41,9 @@
   --qr-tile: #ffffff;
   --qr-ink: #1c2430;
 
-  /* The eight person colors (UX §7): solids, light and dark, nudged in M0 so each still reads
-     on the warmest wall tint. A person's tint, edge and text come from [data-person] below. */
+  /* The twelve person colors (UX §7): solids, light and dark, nudged in M0 so each still reads
+     on the warmest wall tint. A person's tint, edge and text come from [data-person] below.
+     Copper, bark, slate and lime came in 0.12.0, at the eight's lightness (ADR 0034). */
   --clay-l: #b84639;
   --clay-d: #c5776a;
   --olive-l: #7a6b00;
@@ -59,6 +60,14 @@
   --berry-d: #af7ba9;
   --rose-l: #b3436e;
   --rose-d: #c1758d;
+  --copper-l: #a54c00;
+  --copper-d: #ca7d44;
+  --bark-l: #7d5b40;
+  --bark-d: #ae8a6d;
+  --slate-l: #50667c;
+  --slate-d: #7b95b0;
+  --lime-l: #637200;
+  --lime-d: #8b9d26;
 
   /* Shell sizes (UX §1): the display's rail and Today panel, the phone's tab bar. In rem, so
      they widen with the display's text size (UX §10). The rail is 192 px at Standard: Lexend's
@@ -150,6 +159,22 @@
 [data-person="rose"] {
   --p-l: var(--rose-l);
   --p-d: var(--rose-d);
+}
+[data-person="copper"] {
+  --p-l: var(--copper-l);
+  --p-d: var(--copper-d);
+}
+[data-person="bark"] {
+  --p-l: var(--bark-l);
+  --p-d: var(--bark-d);
+}
+[data-person="slate"] {
+  --p-l: var(--slate-l);
+  --p-d: var(--slate-d);
+}
+[data-person="lime"] {
+  --p-l: var(--lime-l);
+  --p-d: var(--lime-d);
 }
 /* Everyone, and shared calendars: ink on a line-tinted background. */
 [data-person="everyone"] {

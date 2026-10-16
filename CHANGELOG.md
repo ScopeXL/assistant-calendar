@@ -6,6 +6,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Four more colors for people and calendars: Orange, Brown, Gray and Lime.
+
 ### Changed
 
 - Sunroom says "devices" for the phones, tablets and computers signed in with the household
@@ -26,6 +30,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Settings → Display → Return to the calendar after now counts for Settings too: with Never, the
   wall stays where it is (the parent PIN still locks after 2 minutes, and its pad never comes up
   by itself).
+- Choosing "The person's color" for an event that had its own color now clears it.
 
 ## [0.11.0] - 2026-10-15
 

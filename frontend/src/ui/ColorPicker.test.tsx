@@ -39,12 +39,20 @@ describe("the color picker (UX §4 Settings)", () => {
       "Purple",
       "Plum",
       "Pink",
+      "Orange",
+      "Brown",
+      "Gray",
+      "Lime",
     ]);
     expect(colorOrder(usedBy(FAMILY)).map((color) => color.word)).toEqual([
       "Olive",
       "Teal",
       "Purple",
       "Plum",
+      "Orange",
+      "Brown",
+      "Gray",
+      "Lime",
       "Red",
       "Green",
       "Blue",
@@ -60,6 +68,10 @@ describe("the color picker (UX §4 Settings)", () => {
       "Teal",
       "Purple",
       "Plum",
+      "Orange",
+      "Brown",
+      "Gray",
+      "Lime",
       "Red · Ana's",
       "Green · Leo's",
       "Blue · Sam's",
@@ -80,7 +92,7 @@ describe("the color picker (UX §4 Settings)", () => {
       <ColorPicker name="color" value="rose" initial="M" onChange={vi.fn()} />,
     );
     const swatches = [...container.querySelectorAll("label > span[aria-hidden]")];
-    expect(swatches).toHaveLength(8);
+    expect(swatches).toHaveLength(12);
     expect(swatches.every((swatch) => swatch.textContent === "M")).toBe(true);
   });
 });

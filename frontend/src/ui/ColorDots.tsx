@@ -8,9 +8,10 @@ type PersonColor = components["schemas"]["MemberOut"]["color"];
 
 /**
  * A color for an event or a countdown, as a row of dots (ADR 0030): "no color of its own"
- * first (the person's color shows instead), then the eight, each a tap-sized cell named by its
+ * first (the person's color shows instead), then the twelve, each a tap-sized cell named by its
  * word ("Red") for a screen reader. No words on the row: nine chips with words were three lines
- * of the Add panel. The chosen one is ringed.
+ * of the Add panel. The chosen one is ringed. Thirteen cells wrap onto a second line in the
+ * wall's Add panel; dots aren't chips, so that's allowed (ADR 0034).
  */
 export function ColorDots({
   label = "Color",

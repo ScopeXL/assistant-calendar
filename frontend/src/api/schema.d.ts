@@ -2626,7 +2626,7 @@ export interface components {
              * @default sky
              * @enum {string}
              */
-            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose";
+            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime";
             /** Name */
             name: string;
             /** Owner Member Id */
@@ -2643,7 +2643,7 @@ export interface components {
              * Color
              * @enum {string}
              */
-            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose";
+            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime";
             /** Deleted */
             deleted: boolean;
             /** Id */
@@ -2671,7 +2671,7 @@ export interface components {
         /** CalendarUpdate */
         CalendarUpdate: {
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Name */
             name?: string | null;
             /** Owner Member Id */
@@ -2947,7 +2947,7 @@ export interface components {
         /** CountdownIn */
         CountdownIn: {
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /**
              * Date
              * Format: date
@@ -2975,7 +2975,7 @@ export interface components {
         /** CountdownOut */
         CountdownOut: {
             /** Color */
-            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /**
              * Created At
              * Format: date-time
@@ -3024,7 +3024,7 @@ export interface components {
              */
             clear_time: boolean;
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Date */
             date?: string | null;
             /** Emoji */
@@ -3276,7 +3276,7 @@ export interface components {
             /** Calendar Id */
             calendar_id?: string | null;
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Description */
             description?: string | null;
             /** End */
@@ -3307,7 +3307,7 @@ export interface components {
             /** Calendar Id */
             calendar_id: string;
             /** Color */
-            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /**
              * Created At
              * Format: date-time
@@ -3391,7 +3391,7 @@ export interface components {
              */
             clear_rrule: boolean;
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Description */
             description?: string | null;
             /** End */
@@ -3593,7 +3593,7 @@ export interface components {
         /** HolidaysIn */
         HolidaysIn: {
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Country */
             country: string;
             /** Owner Member Id */
@@ -3609,7 +3609,7 @@ export interface components {
              */
             allow_private: boolean;
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /**
              * Interval Min
              * @default 30
@@ -3939,7 +3939,7 @@ export interface components {
              */
             clear_owner: boolean;
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Mapped */
             mapped?: boolean | null;
             /** Owner Member Id */
@@ -4000,7 +4000,7 @@ export interface components {
             /** Birthday */
             birthday?: string | null;
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Name */
             name: string;
             /**
@@ -4022,7 +4022,7 @@ export interface components {
              * Color
              * @enum {string}
              */
-            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose";
+            color: "clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime";
             /** Color Word */
             color_word: string;
             /** Id */
@@ -4040,7 +4040,7 @@ export interface components {
             /** Birthday */
             birthday?: string | null;
             /** Color */
-            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color?: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Name */
             name?: string | null;
             /** Role */
@@ -4070,11 +4070,11 @@ export interface components {
             /** All Day */
             all_day: boolean;
             /** Calendar Color */
-            calendar_color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            calendar_color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Calendar Id */
             calendar_id: string | null;
             /** Color */
-            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** End Date */
             end_date: string | null;
             /** End Local */
@@ -4319,7 +4319,7 @@ export interface components {
             /** Calendar Id */
             calendar_id: string | null;
             /** Color */
-            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Color Hint */
             color_hint: string | null;
             /** Id */
@@ -5139,7 +5139,7 @@ export interface components {
          */
         UpcomingOut: {
             /** Color */
-            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose") | null;
+            color: ("clay" | "olive" | "moss" | "sea" | "sky" | "iris" | "berry" | "rose" | "copper" | "bark" | "slate" | "lime") | null;
             /** Countdown Id */
             countdown_id: string | null;
             /**

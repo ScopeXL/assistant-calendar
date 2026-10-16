@@ -12,8 +12,22 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sunroom.db.base import Base
 from sunroom.db.types import IsoDate, UTCDateTime, new_id, utcnow
 
-# The eight person colors (UX §7). Users see plain words (Red, Olive, …); see PERSON_COLOR_WORDS.
-PERSON_COLORS = ("clay", "olive", "moss", "sea", "sky", "iris", "berry", "rose")
+# The twelve person colors (UX §7): the first eight, then four appended in 0.12.0 so nobody's
+# color moved (ADR 0034). Users see plain words (Red, Olive, …); see PERSON_COLOR_WORDS.
+PERSON_COLORS = (
+    "clay",
+    "olive",
+    "moss",
+    "sea",
+    "sky",
+    "iris",
+    "berry",
+    "rose",
+    "copper",
+    "bark",
+    "slate",
+    "lime",
+)
 PERSON_COLOR_WORDS = {
     "clay": "Red",
     "olive": "Olive",
@@ -23,6 +37,10 @@ PERSON_COLOR_WORDS = {
     "iris": "Purple",
     "berry": "Plum",
     "rose": "Pink",
+    "copper": "Orange",
+    "bark": "Brown",
+    "slate": "Gray",
+    "lime": "Lime",
 }
 
 

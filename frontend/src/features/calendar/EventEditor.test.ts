@@ -126,6 +126,26 @@ describe("a rule the editor can't read", () => {
   });
 });
 
+describe("the person's color (C1, ADR 0034)", () => {
+  it("clears a color the event had, at every scope", () => {
+    const painted = event({ color: "copper" });
+    const opened = { ...draftFromEvent(painted, null), color: null };
+    for (const scope of ["this", "following", "all"] as const) {
+      expect(fieldsFor(opened, scope, painted, null).clear_color, scope).toBe(true);
+    }
+  });
+
+  it("clears nothing when there was nothing, or a color is still chosen", () => {
+    const plain = event({ color: null });
+    expect(fieldsFor(draftFromEvent(plain, null), "all", plain, null).clear_color).toBe(false);
+    const painted = event({ color: "copper" });
+    const lime = { ...draftFromEvent(painted, null), color: "lime" as const };
+    const fields = fieldsFor(lime, "all", painted, null);
+    expect(fields.clear_color).toBe(false);
+    expect(fields.color).toBe("lime");
+  });
+});
+
 describe("the household's first day of the week", () => {
   const SUN_MON: Repeat = { freq: "weekly", interval: 2, weekdays: [0, 6] };
 

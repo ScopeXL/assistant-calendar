@@ -27,7 +27,7 @@ export function usedBy(
 }
 
 /**
- * Pick one of the eight colors (UX §4 Settings): a grid of named swatches, the ones nobody uses
+ * Pick one of the twelve colors (UX §4 Settings): a grid of named swatches, the ones nobody uses
  * first, then the taken ones, each saying whose it is ("Mia's"), so a new calendar or person
  * lands on a free color without anyone counting. A taken color can still be picked. `initial`
  * draws a letter in each swatch, as a person's circle will look.

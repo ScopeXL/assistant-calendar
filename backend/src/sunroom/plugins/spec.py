@@ -33,7 +33,20 @@ FieldType = Literal[
 ]
 MASK = "***"
 _TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
-COLORS = ("clay", "olive", "moss", "sea", "sky", "iris", "berry", "rose")
+COLORS = (
+    "clay",
+    "olive",
+    "moss",
+    "sea",
+    "sky",
+    "iris",
+    "berry",
+    "rose",
+    "copper",
+    "bark",
+    "slate",
+    "lime",
+)
 
 
 @dataclass(frozen=True, slots=True)
