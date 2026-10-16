@@ -572,7 +572,7 @@ page but has no case named Household), so the quick gate was `just quick` and
 
 ### T5 Return to the calendar after, tips on by default, and where the tips live
 
-- [ ] Done (commit: )
+- [x] Done (commit: "shell: Settings follows Return to the calendar after; tips on by default")
 
 **Owner's note.** "'Return to the calendar after' isn't working properly. I changed it to 'Never'
 and it still brings me back to the calendar after 2 minutes." "Show tips should be enabled by
@@ -657,7 +657,23 @@ own 2-minute return narrowed by ADR 0034". ADR 0034 rows (the return; tips on).
 too: with Never, the wall stays where it is (the parent PIN still locks after 2 minutes)." (Changed)
 "Tips under the board are on for everyone; turn them off in Settings → Display → Show tips."
 
-**As built.** (fill in)
+**As built.** As planned, plus one thing the plan didn't foresee:
+- *The PIN pad on a page left open.* With Never, a Settings page stays open after its grant
+  locks, and a live update (a phone signing in refreshes Devices; a reconnect's `hello`
+  refreshes everything) re-reads a parent's data, which the server refuses: `asParent` would
+  then have raised the PIN pad with nobody at the screen. `lib/parent.askPinOnlyWhen(rule)` lets
+  the display shell say "only within 30 s of a touch" (`lib/idle`); a background refusal fails
+  quietly and the page says so where it shows errors. `parent.test.ts` is new (the pad and the
+  retry; no pad without a recent touch; the rule undone).
+- `shell.spec.ts`: the Compact-rail case now waits five idle minutes to be sent home from
+  Settings (it relied on the old two); a new case on `display-1080p` unlocks Settings, sees the
+  padlock come back after two idle minutes with the page still open, goes home after five, then
+  unlocks again, taps Never on Settings → Display (the owner's own steps, waiting for the
+  PATCH) and stays six minutes with the padlock and no PIN pad; "tips on by default" checks the
+  strip on a fresh wall and its removal when they're turned off. The plan's by-hand check in
+  `just display` wasn't done: the end-to-end case drives the same steps on the page's clock.
+- The migration is hand-written (Alembic's autogenerate can't see a server default change),
+  `202610161454`, with `test_migrations.py`'s new case from the 0.11.0 fixture.
 
 ### T6 Four more colors
 

@@ -633,8 +633,8 @@ test.describe("the wall screen", () => {
     await compact.click();
     await expect(compact).toBeChecked();
     await expect.poll(width).toBe(72);
-    // The setting lasts: two idle minutes send the wall home, still folded.
-    await page.clock.fastForward(121_000);
+    // The setting lasts: the household's five idle minutes send the wall home, still folded.
+    await page.clock.fastForward(301_000);
     await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
     expect(await width()).toBe(72);
     // Anyone can open it back out, and it stays out while the screen sits idle.
@@ -736,6 +736,62 @@ test.describe("the wall screen", () => {
     } finally {
       await request.patch("/api/settings", { headers: CSRF, data: { display_start: "last" } });
     }
+  });
+
+  test("leaves Settings after the household's idle minutes, never with Never, and locks the PIN after two", async ({
+    page,
+    request,
+  }) => {
+    test.skip(test.info().project.name !== "display-1080p", "one wall is enough");
+    await seed(request, { pin: PIN });
+    await pairWall(page);
+    // The idle timers run on the page's clock, so the minutes take no time.
+    await page.clock.install();
+    await page.goto("/display");
+    const board = page.getByRole("region", { name: "This Week" });
+    await expect(board).toBeVisible();
+    const settings = page.getByRole("button", { name: "Settings" });
+    const family = page.getByRole("heading", { name: "Family", level: 2 });
+    const unlock = async () => {
+      await settings.click();
+      const pin = page.getByRole("dialog", { name: "Parent PIN" });
+      for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
+      await expect(pin).toBeHidden();
+      await expect(family).toBeVisible();
+      await expect(settings).toHaveAttribute("data-icon", "gear");
+    };
+    await unlock();
+    // Two idle minutes lock the PIN again; the page stays, since looking never needed it.
+    await page.clock.fastForward(121_000);
+    await expect(settings).toHaveAttribute("data-icon", "lock");
+    await expect(family).toBeVisible();
+    // The household's five minutes (the default) send the wall home, as from any room.
+    await page.clock.fastForward(180_000);
+    await expect(board).toBeVisible();
+    // With Never, picked right here, Settings stays however long it's left (ADR 0034): the
+    // owner's own steps. Only the PIN locks, and nothing raises the pad by itself.
+    await unlock();
+    await page
+      .getByRole("navigation", { name: "Settings" })
+      .getByRole("link", { name: "Display", exact: true })
+      .click();
+    const display = page.getByRole("heading", { name: "Display", level: 2 });
+    await expect(display).toBeVisible();
+    const returns = page.getByRole("group", { name: "Return to the calendar after" });
+    const saved = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/settings") && response.request().method() === "PATCH",
+    );
+    await returns.getByRole("button", { name: "Never" }).click();
+    expect((await saved).ok()).toBe(true);
+    await expect(returns.getByRole("button", { name: "Never" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.clock.fastForward(361_000);
+    await expect(settings).toHaveAttribute("data-icon", "lock");
+    await expect(display).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Parent PIN" })).toHaveCount(0);
   });
 
   test("shows a padlock only while Settings are locked behind the PIN", async ({
@@ -902,7 +958,7 @@ test.describe("the wall screen", () => {
     await expect(page.getByRole("button", { name: "Edit Mia Rose" })).toBeVisible();
   });
 
-  test("shows a tip under the board once the household turns tips on", async ({
+  test("shows tips under the board by default, and turning them off takes the strip away", async ({
     page,
     request,
   }) => {
@@ -916,13 +972,7 @@ test.describe("the wall screen", () => {
     const board = page.getByRole("region", { name: "This Week" });
     await expect(board).toBeVisible();
     const strip = page.locator("[data-tips]");
-    // Off until someone turns it on.
-    await expect(strip).toHaveCount(0);
-    const on = await page.request.patch("/api/settings", {
-      headers: CSRF,
-      data: { show_tips: true },
-    });
-    expect(on.ok()).toBe(true);
+    // On for a new household (ADR 0034).
     await expect(strip).toBeVisible();
     const tip = strip.locator("p");
     const first = (await tip.textContent()) ?? "";
@@ -940,6 +990,13 @@ test.describe("the wall screen", () => {
     expect(
       await grid.evaluate((node) => node.scrollHeight - node.clientHeight),
     ).toBeLessThanOrEqual(0);
+    // Turned off, the strip goes and the board takes the room back.
+    const off = await page.request.patch("/api/settings", {
+      headers: CSRF,
+      data: { show_tips: false },
+    });
+    expect(off.ok()).toBe(true);
+    await expect(strip).toHaveCount(0);
   });
 
   test("takes the Small text size from another device at once, and keeps its tap targets", async ({

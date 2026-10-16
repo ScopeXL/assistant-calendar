@@ -213,6 +213,27 @@ def test_a_household_from_0_10_0_keeps_the_calendar_week(tmp_path: Path) -> None
         conn.close()
 
 
+def test_a_household_from_0_11_0_shows_tips(tmp_path: Path) -> None:
+    """0.12.0 (ADR 0034): tips are on by default, and turned on once for every household that
+    had them off; a column added later still starts on."""
+    db = tmp_path / "sunroom.db"
+    conn = sqlite3.connect(db)
+    conn.executescript((FIXTURE_DBS / "202610151730.sql").read_text())
+    conn.execute("UPDATE household SET show_tips = 0")
+    conn.commit()
+    conn.close()
+    assert migrate.upgrade(db) == migrate.head_revision()
+    conn = sqlite3.connect(db)
+    try:
+        assert conn.execute("SELECT show_tips FROM household").fetchall() == [(1,)]
+        default = next(
+            row[4] for row in conn.execute("PRAGMA table_info(household)") if row[1] == "show_tips"
+        )
+        assert default in ("1", "'1'", "true", "TRUE")
+    finally:
+        conn.close()
+
+
 def test_accounts_named_icloud_become_apple(tmp_path: Path) -> None:
     """0.10.0 (ADR 0032): the family reads "Apple", so a CalDAV account 0.9.0 named "iCloud · …"
     as it connected reads "Apple · …". A name someone chose, and a calendar address, keep theirs."""

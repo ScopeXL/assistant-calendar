@@ -1,7 +1,11 @@
 /**
- * Tips under the board (UX §3, ADR 0028): one thing Sunroom can do, in the family's words, about
- * 90 characters at most so it fits one line. A tip about a plugin shows only while that plugin
- * is on.
+ * Tips under the board (UX §3, ADR 0028, on by default since ADR 0034): one thing Sunroom can
+ * do, in the family's words.
+ *
+ * To add or change one, edit `TIPS` below: an `id` nobody else uses, the `text` (at most 90
+ * characters, a capital letter or a quote first, a period last, no emoji; `tips.test.ts`
+ * checks), and `needs` naming the plugins it's about, so it shows only while they're on.
+ * `pickTip` draws one at random, never the same twice in a row.
  */
 
 export interface Tip {

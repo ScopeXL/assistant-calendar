@@ -1,6 +1,7 @@
 # ADR 0031: Idle brings the board back to now, and what a screen chose for itself stays
 
-- **Status:** Accepted
+- **Status:** Accepted; Settings' own 2-minute return narrowed by ADR 0034 (Settings leaves with
+  Return to the calendar after, and stays with Never; its parent grant still locks after 2)
 - **Date:** 2026-10-14
 
 ## Context

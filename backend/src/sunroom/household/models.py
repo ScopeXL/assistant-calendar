@@ -102,8 +102,9 @@ class Household(Base):
     # Settings → Display → Rolling week: the Week view shows yesterday, today and the five days
     # after instead of the calendar week (ADR 0033).
     display_rolling_week: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Settings → Display → Show tips: a strip under the board on the wall and laptops.
-    show_tips: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Settings → Display → Show tips: a strip under the board on the wall and laptops; on by
+    # default since ADR 0034 (it was off).
+    show_tips: Mapped[bool] = mapped_column(Boolean, default=True)
     sleep_from: Mapped[str | None] = mapped_column(String(5), default=None)  # "HH:MM"
     sleep_to: Mapped[str | None] = mapped_column(String(5), default=None)
     sleep_mode: Mapped[str] = mapped_column(String(12), default=SleepMode.DIM_CLOCK)

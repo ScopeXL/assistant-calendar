@@ -11,7 +11,7 @@ import {
   zonedParts,
 } from "../../lib/dates";
 import { backToNow, idleHolds } from "../../lib/displayState";
-import { useMembers } from "../../lib/household";
+import { useMembers, useSettings } from "../../lib/household";
 import { swallowFollowingClick, whenIdle } from "../../lib/idle";
 import { useMinute } from "../../lib/time";
 import { kioskCommands } from "../../shell/kioskCommands";
@@ -43,7 +43,8 @@ function inOrder(photos: SaverPhoto[], shuffle: boolean): SaverPhoto[] {
  * wall for the set minutes, the household's photos fade in, uncropped on the wall's tint, with
  * the clock, the date and Up next on a band along the bottom. Night wins over it, and so does
  * anything holding the screen (a routine being run). Any tap fades it out to where the wall was,
- * or to this week's board after half an hour; the waking tap presses nothing else.
+ * or to this week's board after half an hour (in the room it was in, with Return to the calendar
+ * after on Never); the waking tap presses nothing else.
  */
 export function Saver({ asleep, home }: { asleep: boolean; home: "/display" | "/" }) {
   const { data: manifest } = useManifest();
@@ -98,6 +99,10 @@ function SaverScreen({
   onGone: () => void;
 }) {
   const navigate = useNavigate();
+  // Return to the calendar after: Never keeps the room the wall was in, even after half an hour
+  // (ADR 0034); the board itself still comes back to now.
+  const { data: household } = useSettings();
+  const returns = (household?.display_return_minutes ?? 5) > 0;
   const { settings } = manifest;
   const [photos] = useState(() => inOrder(manifest.photos, settings.shuffle));
   const [index, setIndex] = useState(0);
@@ -137,7 +142,7 @@ function SaverScreen({
     setLeaving(true);
     if (Date.now() - since >= LONG_AWAY_MS) {
       backToNow();
-      void navigate({ to: home });
+      if (returns) void navigate({ to: home });
     }
     setTimeout(onGone, OUT_MS);
   };

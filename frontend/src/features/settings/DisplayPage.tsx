@@ -176,7 +176,10 @@ export function DisplayPage() {
             update.mutate({ display_show_today_panel });
           }}
         />
-        <Row label="Return to the calendar after" hint="When nobody has touched the screen.">
+        <Row
+          label="Return to the calendar after"
+          hint="How long Lists, Tasks, Settings and the other rooms stay open with nobody touching the screen. The board itself still comes back to today after 2 minutes."
+        >
           <Segmented
             label="Return to the calendar after"
             value={String(settings.display_return_minutes) as "2" | "5" | "10" | "0"}

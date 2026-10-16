@@ -19,6 +19,13 @@ Everything that changes in Sunroom, written in plain English. The format follows
   small print credits Open-Meteo for the weather.
 - Settings → Household says what the location is for, and that only your city goes to
   Open-Meteo.
+- Tips under the board are on for everyone; turn them off in Settings → Display → Show tips.
+
+### Fixed
+
+- Settings → Display → Return to the calendar after now counts for Settings too: with Never, the
+  wall stays where it is (the parent PIN still locks after 2 minutes, and its pad never comes up
+  by itself).
 
 ## [0.11.0] - 2026-10-15
 

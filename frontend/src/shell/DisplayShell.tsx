@@ -30,7 +30,7 @@ import { useLiveUpdates } from "../lib/live";
 import { reloadFresh, useServerUpdate } from "../lib/update";
 import { noteDimmer } from "../lib/dimmer";
 import { dimmedTo, isNight } from "../lib/night";
-import { askForPin } from "../lib/parent";
+import { askForPin, askPinOnlyWhen } from "../lib/parent";
 import { watchPointer } from "../lib/pointer";
 import { useQuietTheme } from "../lib/quietTheme";
 import { fetchSession } from "../lib/session";
@@ -58,6 +58,8 @@ import { Rail } from "./Rail";
 const BACK_TO_NOW_MS = 2 * 60_000;
 const EDITOR_IDLE_MS = 10 * 60_000;
 const SETTINGS_LOCK_MS = 2 * 60_000;
+// The PIN pad rises for a refusal only this soon after a touch (lib/parent).
+const PIN_AFTER_TOUCH_MS = 30_000;
 const WAKE_MS = 2 * 60_000;
 const NIGHTLY_UPDATE_HOUR = 3;
 // The page's veil for each evening dim level (percent of full brightness).
@@ -239,27 +241,30 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
     });
   }, [settings]);
 
-  // Settings lock themselves after 2 minutes idle; other rooms return home after the household's
-  // chosen minutes (0: never).
+  // Settings' parent grant locks after 2 minutes idle (looking never needed it; a change asks
+  // the PIN again). The page itself leaves with the other rooms, below (ADR 0034 narrows 0031).
   useEffect(() => {
     if (room !== "settings") return;
     return whenIdle(SETTINGS_LOCK_MS, () => {
       if (session?.grant_expires_at) lockNow();
-      void navigate({ to: home });
     });
-  }, [room, session?.grant_expires_at, home, navigate, lockNow]);
+  }, [room, session?.grant_expires_at, lockNow]);
+  // So a page left open behind the lock never raises the PIN pad by itself.
+  useEffect(() => askPinOnlyWhen(() => idleFor() < PIN_AFTER_TOUCH_MS), []);
 
-  // Lists, Chores and the other rooms return to the board after the household's minutes idle
-  // (UX §1), unless something holds the screen (a routine being run).
+  // Lists, Tasks, Settings and the other rooms return to the board after the household's minutes
+  // idle (UX §1; 0 is Never, which Settings honours too since ADR 0034), unless something holds
+  // the screen (a routine being run).
   const returnMinutes = settings?.display_return_minutes ?? 5;
+  const leaves = inPluginRoom || room === "settings";
   useEffect(() => {
-    if (!inPluginRoom || returnMinutes <= 0) return;
+    if (!leaves || returnMinutes <= 0) return;
     return whenIdle(returnMinutes * 60_000, () => {
       if (idleHolds.get() > 0) return;
       updateDisplay({ panel: null });
       void navigate({ to: home });
     });
-  }, [inPluginRoom, returnMinutes, home, navigate]);
+  }, [leaves, returnMinutes, home, navigate]);
 
   // A new version waits for the night (3 AM), and for a quiet screen, before it reloads.
   useEffect(() => {
