@@ -12,6 +12,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   password, and "paired screens" for the wall. A paired screen no longer shows what it can't do,
   nor lines saying to do it from a phone; two tips say what signed-in devices can do that a
   screen can't.
+- Setup asks for a household password of 8 characters or more (it was 12), starts the
+  household's name as Home, offers Family as a choice, and lets you pick Light, Dark or Auto
+  before you finish. Its words say "devices" and "paired screens".
 
 ## [0.11.0] - 2026-10-15
 

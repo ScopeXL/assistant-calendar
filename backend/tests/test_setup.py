@@ -47,9 +47,25 @@ async def test_setup_runs_once(client: httpx.AsyncClient, other: httpx.AsyncClie
 
 
 async def test_a_short_password_says_what_to_do(client: httpx.AsyncClient) -> None:
-    response = await run_setup(client, password="short")
+    response = await run_setup(client, password="seven77")
     assert response.status_code == 422
-    assert response.json()["error"]["message"].startswith("Use at least 12 characters")
+    assert response.json()["error"]["message"].startswith("Use at least 8 characters")
+    # Eight is enough (ADR 0034: it was 12).
+    assert (await run_setup(client, password="eight888")).status_code == 201
+
+
+async def test_setup_keeps_the_theme_it_was_given(client: httpx.AsyncClient) -> None:
+    assert (await run_setup(client, theme="dark")).status_code == 201
+    assert (await client.get("/api/settings")).json()["theme"] == "dark"
+
+
+async def test_setup_starts_on_auto(client: httpx.AsyncClient) -> None:
+    assert (await run_setup(client)).status_code == 201
+    assert (await client.get("/api/settings")).json()["theme"] == "auto"
+
+
+async def test_setup_refuses_a_theme_it_doesnt_know(client: httpx.AsyncClient) -> None:
+    assert (await run_setup(client, theme="sepia")).status_code == 422
 
 
 async def test_an_unknown_time_zone_is_refused(client: httpx.AsyncClient) -> None:

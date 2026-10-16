@@ -35,7 +35,7 @@ On a plain home network you can skip the proxy entirely: leave every variable em
    | `APP_ALLOWED_HOSTS` | The name phones will use, e.g. `calendar.example.com` (comma-separated for several; `*.example.com` covers every name under it) |
    | `TRUSTED_PROXIES` | Your reverse proxy's address or Docker network (step 3) |
    | `TZ` | Your time zone, e.g. `America/New_York`. The setup on your phone suggests one too |
-   | `APP_PASSWORD` | Optional. A household password that always wins over the one chosen in setup, 12 characters or more |
+   | `APP_PASSWORD` | Optional. A household password that always wins over the one chosen in setup, 8 characters or more |
    | `APP_SECRET_KEY` | Optional. Without it, Sunroom makes one and keeps it on the volume. If you set it (`openssl rand -base64 48`), keep a copy in a password manager: changing it signs everyone out |
    | `SUNROOM_INSTALL_KIND` | Optional. `portainer` when Portainer manages the stack, so Settings → About says how to update that way (the default, `docker`, means Compose in this folder) |
    | `SUNROOM_UPDATE_CHECK` | Optional. `0` keeps the daily check for new versions off, whatever Settings → About says |

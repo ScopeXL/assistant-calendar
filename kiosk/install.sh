@@ -1081,7 +1081,7 @@ render_env() {
 # then restart Sunroom:  cd /opt/sunroom && sudo docker compose up -d
 #
 # A household password that always wins over the one chosen in the setup wizard
-# (12 or more characters; single quotes keep symbols such as $ as they are):
+# (8 or more characters; single quotes keep symbols such as $ as they are):
 # APP_PASSWORD='a long family passphrase'
 #
 # Your own address for Sunroom, if you reach it through your own HTTPS proxy

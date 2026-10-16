@@ -3,8 +3,9 @@
 Until setup is done, the app's pages send everyone to /setup, and the wall screen shows where to
 set it up instead. ``POST /api/setup`` is public only until it succeeds; after that it answers
 410 forever. In one transaction it stores the household password (scrypt), names the household,
-sets its time zone, marks it onboarded and signs in the phone that ran it, as a parent. The rest
-of the wizard (people, the PIN, pairing the screen) uses the normal signed-in routes.
+sets its time zone and theme, marks it onboarded and signs in the phone that ran it, as a
+parent. The rest of the wizard (people, the PIN, pairing the screen) uses the normal signed-in
+routes.
 
 With APP_PASSWORD set, the wizard skips choosing a password but must be given that password, so
 an unconfigured server reachable by strangers can't be claimed by the first visitor
@@ -33,7 +34,7 @@ from sunroom.core.logging import get_logger
 from sunroom.core.version import build_info
 from sunroom.household import service as household_service
 from sunroom.household.models import AppMeta
-from sunroom.household.schemas import HouseholdName, TimeFormat
+from sunroom.household.schemas import HouseholdName, ThemeName, TimeFormat
 from sunroom.state import StateDep
 
 router = APIRouter(prefix="/api/setup", tags=["setup"])
@@ -54,6 +55,7 @@ class SetupIn(BaseModel):
     timezone: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     week_starts_on: Annotated[int, Field(ge=0, le=6)] = 6
     time_format: TimeFormat = "12h"
+    theme: ThemeName = "auto"  # chosen on the wizard's household step (ADR 0034)
 
 
 @router.get("/status")
@@ -111,6 +113,7 @@ async def run_setup(
         home.timezone = zone.key
         home.week_starts_on = body.week_starts_on
         home.time_format = body.time_format
+        home.theme = body.theme
         home.onboarded_at = now
         home.updated_at = now
         device = await new_device(

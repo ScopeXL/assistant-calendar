@@ -200,6 +200,31 @@ export function rememberedAppearance(): RememberedAppearance | null {
   return fine ? (value as RememberedAppearance) : null;
 }
 
+/**
+ * The setup wizard's Theme row (ADR 0034): the choice on this page at once, before there is a
+ * household to read it from, and remembered for the next page's first paint. The wizard runs in
+ * the phone's shell, so Auto follows the device, as it will after setup; Light and Dark are
+ * themselves. `now`: the device's own clock, the only one known yet.
+ */
+export function previewTheme(
+  choice: ThemeChoice,
+  now = new Date(),
+  root = document.documentElement,
+): void {
+  const shown = applyAppearance(
+    {
+      theme: choice,
+      daylightTint: true,
+      textSize: "standard",
+      reduceMotion: false,
+      display: false,
+    },
+    now.getHours() * 60 + now.getMinutes(),
+    root,
+  );
+  rememberAppearance(shown, { choice, daylightTint: true, sun: null });
+}
+
 /** Let the wall's tint and the theme crossfade from now on (never on first paint). */
 export function allowAppearanceMotion(root = document.documentElement): void {
   requestAnimationFrame(() => {

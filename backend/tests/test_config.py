@@ -24,6 +24,15 @@ def test_nothing_is_required() -> None:
     assert settings.sunroom_install_kind is InstallKind.DOCKER
 
 
+def test_app_password_needs_eight_characters() -> None:
+    """ADR 0034: eight, as setup asks (it was 12)."""
+    assert any(
+        "APP_PASSWORD must be at least 8 characters" in p
+        for p in problems({"APP_PASSWORD": "seven77"})
+    )
+    assert load_settings({"APP_PASSWORD": "eight888"}).app_password is not None
+
+
 def test_lists_split_on_commas() -> None:
     settings = load_settings(
         {
@@ -48,7 +57,7 @@ def test_problems_name_variables_but_never_echo_values() -> None:
     found = problems({"APP_SECRET_KEY": secret, "APP_PASSWORD": "tiny", "TZ": "Mars/Base"})
     text = "\n".join(found)
     assert "APP_SECRET_KEY must be at least 32 characters" in text
-    assert "APP_PASSWORD must be at least 12 characters" in text
+    assert "APP_PASSWORD must be at least 8 characters" in text
     assert "TZ must be an IANA time zone" in text
     assert secret not in text
     assert "tiny" not in text

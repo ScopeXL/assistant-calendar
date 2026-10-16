@@ -8182,6 +8182,16 @@
             "title": "Password",
             "type": "string"
           },
+          "theme": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "light",
+              "dark"
+            ],
+            "title": "Theme",
+            "type": "string"
+          },
           "time_format": {
             "default": "12h",
             "enum": [
@@ -9329,7 +9339,7 @@
     },
     "/api/admin/erase": {
       "post": {
-        "description": "Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a phone or a\ncomputer, with the household password. Never from a wall screen, which a child can reach.\nThe password is checked as at sign-in, wrong tries counting against the same limiter.",
+        "description": "Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a signed-in\ndevice, with the household password. Never from a paired screen, which a child can reach.\nThe password is checked as at sign-in, wrong tries counting against the same limiter.",
         "operationId": "erase_api_admin_erase_post",
         "requestBody": {
           "content": {

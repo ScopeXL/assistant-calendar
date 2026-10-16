@@ -7,6 +7,7 @@ import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { useMembers } from "../../lib/household";
 import { rememberSignedIn } from "../../lib/session";
+import { previewTheme, type ThemeChoice } from "../../lib/theme";
 import { Avatar } from "../../ui/Avatar";
 import { AddPersonRow, type RoleChoice } from "../settings/AddPersonRow";
 import { Button } from "../../ui/Button";
@@ -40,6 +41,9 @@ function phoneTimeFormat(): "12h" | "24h" {
   }
 }
 
+/** The household password's least length (auth/password.py's MIN_PASSWORD_LENGTH; ADR 0034). */
+const MIN_PASSWORD = 8;
+
 function zones(): string[] {
   try {
     return Intl.supportedValuesOf("timeZone");
@@ -52,9 +56,10 @@ function zones(): string[] {
  * First run (UX §6, PLAN §12.1): on whatever device opened Sunroom first, usually a phone. The
  * password and the household are set together in one request that closes setup for good and
  * signs this phone in as a parent; the rest (the city, people, the PIN, calendars) uses the
- * normal routes, and each step can be done later from Settings. Pairing the kitchen screen
- * isn't a step (ADR 0030): the screen shows its code by itself once setup is done, and it's
- * paired from More → Pair a Display, or with the household password on the screen.
+ * normal routes, and each step can be done later from Settings. Pairing a screen isn't a step
+ * (ADR 0030): the screen shows its code by itself once setup is done, and it's paired from More
+ * → Pair a Display, or with the household password on the screen. The household step also
+ * picks the theme, previewed on this page as it's chosen (ADR 0034).
  */
 export function SetupWizard({ step }: { step: SetupStep }) {
   const navigate = useNavigate();
@@ -140,8 +145,8 @@ export function SetupWizard({ step }: { step: SetupStep }) {
             then Devices.
           </p>
           <p>
-            To put Sunroom on a kitchen screen, open More, then Pair a Display, when the screen
-            shows its code. Or type the household password on the screen itself.
+            To put Sunroom on a screen on the wall, open it there: it shows a code. Type that code
+            under More, then Pair a Display, or type the household password on the screen itself.
           </p>
           <Button
             block
@@ -172,7 +177,8 @@ function PasswordStep({
   });
   const [visible, setVisible] = useState(false);
   const fromServer = status?.password_from_env ?? false;
-  const short = !fromServer && password.length > 0 && password.length < 12;
+  const least = fromServer ? 1 : MIN_PASSWORD;
+  const short = !fromServer && password.length > 0 && password.length < MIN_PASSWORD;
   return (
     <SetupFrame
       step="password"
@@ -180,14 +186,14 @@ function PasswordStep({
       lead={
         fromServer
           ? "This server already has one (APP_PASSWORD). Type it to set up the household."
-          : "Everyone at home signs in on their phone with this one password. The kitchen screen never needs it."
+          : "Everyone at home signs in on their devices with this one password. Paired screens don't need it."
       }
     >
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {
           event.preventDefault();
-          if (password.length >= (fromServer ? 1 : 12)) onNext();
+          if (password.length >= least) onNext();
         }}
       >
         <TextField
@@ -196,8 +202,8 @@ function PasswordStep({
           autoComplete="new-password"
           autoCapitalize="none"
           value={password}
-          hint={fromServer ? null : "12 characters or more. A few words together work well."}
-          error={short ? "Use at least 12 characters." : null}
+          hint={fromServer ? null : "8 characters or more. A few words together work well."}
+          error={short ? "Use at least 8 characters." : null}
           onChange={(event) => {
             onPassword(event.target.value);
           }}
@@ -214,7 +220,7 @@ function PasswordStep({
           {visible ? "Hide Password" : "Show Password"}
         </Button>
         <StepActions>
-          <Button type="submit" block disabled={password.length < (fromServer ? 1 : 12)}>
+          <Button type="submit" block disabled={password.length < least}>
             Next
           </Button>
         </StepActions>
@@ -233,10 +239,16 @@ function HouseholdStep({
   onDone: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [name, setName] = useState("Our home");
+  const [name, setName] = useState("Home");
   const [zone, setZone] = useState(phoneZone);
   const [changingZone, setChangingZone] = useState(false);
   const [weekStart, setWeekStart] = useState<"6" | "0">("6");
+  const [theme, setTheme] = useState<ThemeChoice>("auto");
+  // The choice shows on this page at once, as the Display page's does on the wall.
+  const pickTheme = (choice: ThemeChoice) => {
+    setTheme(choice);
+    previewTheme(choice);
+  };
   const setup = useMutation({
     mutationFn: async () =>
       unwrap(
@@ -247,6 +259,7 @@ function HouseholdStep({
             timezone: zone,
             week_starts_on: Number(weekStart),
             time_format: phoneTimeFormat(),
+            theme,
           },
         }),
       ),
@@ -288,7 +301,7 @@ function HouseholdStep({
           }}
         />
         <ChipRow label="Ideas">
-          {["Our home", "Home", "The family"].map((idea) => (
+          {["Home", "Family", "Our home"].map((idea) => (
             <Chip
               key={idea}
               on={name === idea}
@@ -341,6 +354,23 @@ function HouseholdStep({
               { value: "0", label: "Monday" },
             ]}
           />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="text-body font-semibold">Theme</span>
+          <Segmented
+            label="Theme"
+            value={theme}
+            onChange={pickTheme}
+            options={[
+              { value: "light", label: "Light" },
+              { value: "dark", label: "Dark" },
+              { value: "auto", label: "Auto" },
+            ]}
+          />
+          <p className="text-secondary text-ink-soft">
+            Auto is dark from sunset to sunrise once Sunroom knows where home is (the next step),
+            and from 7 PM until then. On a phone, Auto follows the phone.
+          </p>
         </div>
         {setup.isError ? (
           <p role="alert" className="font-semibold text-alert">
@@ -442,7 +472,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
     <SetupFrame
       step="pin"
       title="Set a Parent PIN?"
-      lead="It keeps children out of Settings on the kitchen screen. Adding events and checking off tasks never ask for it."
+      lead="It keeps children out of Settings on paired screens. Adding events and checking off tasks never ask for it."
     >
       <form
         className="flex flex-col gap-4"

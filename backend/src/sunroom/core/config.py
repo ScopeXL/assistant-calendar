@@ -91,8 +91,8 @@ class Settings(BaseSettings):
     def _check_password(cls, value: SecretStr | None) -> SecretStr | None:
         if value is None or not value.get_secret_value():
             return None
-        if len(value.get_secret_value()) < 12:
-            raise ValueError("must be at least 12 characters (use a passphrase)")
+        if len(value.get_secret_value()) < 8:  # auth/password.py's MIN_PASSWORD_LENGTH
+            raise ValueError("must be at least 8 characters (a few words together work well)")
         return value
 
     @field_validator("tz", mode="before")

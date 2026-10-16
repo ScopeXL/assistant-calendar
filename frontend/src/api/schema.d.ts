@@ -104,8 +104,8 @@ export interface paths {
         put?: never;
         /**
          * Erase
-         * @description Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a phone or a
-         *     computer, with the household password. Never from a wall screen, which a child can reach.
+         * @description Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a signed-in
+         *     device, with the household password. Never from a paired screen, which a child can reach.
          *     The password is checked as at sign-in, wrong tries counting against the same limiter.
          */
         post: operations["erase_api_admin_erase_post"];
@@ -4948,6 +4948,12 @@ export interface components {
             household_name: string;
             /** Password */
             password: string;
+            /**
+             * Theme
+             * @default auto
+             * @enum {string}
+             */
+            theme: "auto" | "light" | "dark";
             /**
              * Time Format
              * @default 12h

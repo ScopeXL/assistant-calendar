@@ -6,6 +6,7 @@ import {
   applyAppearance,
   CROSSFADE_MS,
   daypart,
+  previewTheme,
   rememberAppearance,
   rememberedAppearance,
   resolveTheme,
@@ -121,6 +122,17 @@ describe("the appearance a browser remembers (ADR 0032)", () => {
       daylightTint: true,
       sun: OCTOBER,
     });
+  });
+
+  it("previews the setup wizard's choice at once, and keeps it for the next page (ADR 0034)", () => {
+    const root = document.createElement("html");
+    previewTheme("dark", new Date(2026, 9, 7, 15), root);
+    expect(root.dataset.theme).toBe("dark");
+    expect(rememberedAppearance()).toMatchObject({ theme: "dark", choice: "dark", sun: null });
+    // Auto in the phone's shell is the device's own: no data-theme at all.
+    previewTheme("auto", new Date(2026, 9, 7, 15), root);
+    expect(root.dataset.theme).toBeUndefined();
+    expect(rememberedAppearance()).toMatchObject({ theme: null, choice: "auto" });
   });
 
   it("ignores a memory it can't read", () => {

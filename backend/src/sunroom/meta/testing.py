@@ -108,7 +108,7 @@ async def move_clock(body: ClockIn, state: StateDep) -> None:
 
 class SeedIn(BaseModel):
     profile: Literal["sample-family"] = "sample-family"
-    password: Annotated[str, Field(min_length=12, max_length=256)] = E2E_PASSWORD
+    password: Annotated[str, Field(min_length=8, max_length=256)] = E2E_PASSWORD
     pin: Annotated[str, Field(pattern=r"^\d{4,6}$")] | None = None
     timezone: str = "America/New_York"
     events: bool = True  # a week of sample events around today; False for an empty board

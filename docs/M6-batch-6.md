@@ -370,7 +370,7 @@ do that a screen can't."
 
 ### T2 Setup: 8 characters, Home, Family, the theme, and any screen
 
-- [ ] Done (commit: )
+- [x] Done (commit: "setup: 8 characters, Home and Family, the theme, and any screen")
 
 **Owner's note.** "Household password step: 'The kitchen screen never needs it.' should not define
 a paired screen; say 'Paired screens don't require it.' The requirement should be 8 characters or
@@ -466,7 +466,20 @@ home; the field starts as Home; the Theme row and its line), step 7 (the new wor
 12), starts the household's name as Home, offers Family as a choice, and lets you pick Light, Dark
 or Auto before you finish. Its words say 'devices' and 'paired screens'."
 
-**As built.** (fill in)
+**As built.** As planned, with three differences:
+- *The preview* is a new `lib/theme.previewTheme(choice)`: the Display page's Theme row only
+  saves, and the shell applies the household's theme, but the wizard has no household yet, so it
+  puts the appearance on the page itself (`applyAppearance` with the phone's shell, so Auto is
+  the device's own) and remembers it, so a reload mid-wizard paints it first. `theme.test.ts`
+  has a case.
+- *The end-to-end run* is on `display-1080p`, not `phone-chromium`: the wizard's walk in
+  `first-run.spec.ts` drives its own phone context and skips itself on every other project. It
+  now checks that the name starts as Home, that Auto is chosen, that Light shows on the page at
+  once (`data-theme`), that the server kept it (`GET /api/settings`), and the new You're Set
+  words ("under More, then Pair a Display").
+- `test_setup.py` gained three cases (the theme kept, Auto by default, an unknown theme
+  refused) and `test_config.py` one (`APP_PASSWORD` of 7 refused, 8 taken). `.env.example`,
+  `docs/DEPLOY.md` and the kiosk installer's `.env` template said 12 too.
 
 ### T3 About: URL, Updates, the latest version, and the author
 

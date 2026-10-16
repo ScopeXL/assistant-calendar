@@ -32,8 +32,16 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await expect(phonePage.getByRole("list", { name: "Setup steps" })).toBeHidden();
   await phonePage.getByLabel("Household password").fill(PASSWORD);
   await phonePage.getByRole("button", { name: "Next" }).click();
+  // The name starts as Home (ADR 0034); the theme shows on the page as soon as it's picked.
+  await expect(phonePage.getByLabel("Household name")).toHaveValue("Home");
   await phonePage.getByLabel("Household name").fill("Sample Family");
   await phonePage.getByRole("button", { name: "Monday" }).click();
+  await expect(phonePage.getByRole("button", { name: "Auto" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await phonePage.getByRole("button", { name: "Light" }).click();
+  await expect(phonePage.locator("html")).toHaveAttribute("data-theme", "light");
   await phonePage.getByRole("button", { name: "Next" }).click();
 
   // Where's home? The field searches as it's typed into, from two letters; there is no Search
@@ -73,7 +81,11 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await expect(progress).toHaveAttribute("aria-valuenow", "6");
   await phonePage.getByRole("button", { name: "Skip for Now" }).click();
   await expect(phonePage.getByRole("heading", { name: "You’re set" })).toBeVisible();
-  await expect(phonePage.getByText(/open More, then Pair a Display/)).toBeVisible();
+  await expect(phonePage.getByText(/under More, then Pair a Display/)).toBeVisible();
+  const settings = (await (await phonePage.request.get("/api/settings")).json()) as {
+    theme: string;
+  };
+  expect(settings.theme).toBe("light");
   await phonePage.getByRole("button", { name: "Open Sunroom" }).click();
   await expect(phonePage.getByRole("heading", { name: "Up next" })).toBeVisible();
 
