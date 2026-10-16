@@ -227,7 +227,10 @@ test("stars: a parent takes a custom amount from two children at once (ADR 0034)
       stars: { member_id: string; balance: number }[];
     };
     return Object.fromEntries(
-      points.stars.map((s) => [members.find((m) => m.id === s.member_id)?.name, s.balance]),
+      points.stars.map((s): [string, number] => [
+        members.find((m) => m.id === s.member_id)?.name ?? s.member_id,
+        s.balance,
+      ]),
     );
   };
   const before = await balances();
