@@ -125,6 +125,9 @@ class Event(Base):
     # a Who set by hand turns it off; with no rows and True, the read-time owner fallback
     # applies (ADR 0034).
     people_from_title: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Explicitly no reminder, whatever the household's Default reminder (ADR 0034). With no
+    # reminder rows and this off, the default applies (the wall resolves it).
+    reminders_off: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     deleted_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), default=None)
@@ -142,7 +145,7 @@ class EventMember(Base):
 
 
 class EventReminder(Base):
-    """A toast on the kitchen screen this many minutes before the start."""
+    """A toast on paired screens this many minutes before the start."""
 
     __tablename__ = "event_reminders"
 

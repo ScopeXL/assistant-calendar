@@ -446,6 +446,7 @@ async def _upsert_override(
             window_start_utc=now,
             window_end_utc=now,
             people_from_title=master.people_from_title,
+            reminders_off=master.reminders_off,
         )
         session.add(row)
     timed = not event.timing.all_day

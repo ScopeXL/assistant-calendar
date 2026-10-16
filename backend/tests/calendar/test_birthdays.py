@@ -73,6 +73,7 @@ async def test_a_birthday_is_an_all_day_chip_in_the_persons_color(
             "status": "confirmed",
             "overlay": "birthdays",
             "reminders": [],
+            "reminders_off": False,
             "version": 0,
         }
     ]

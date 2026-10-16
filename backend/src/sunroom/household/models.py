@@ -136,6 +136,9 @@ class Household(Base):
     default_calendar_id: Mapped[str | None] = mapped_column(
         ForeignKey("calendars.id"), default=None
     )
+    # Settings → Calendars & Accounts → Default reminder: minutes before, for events with no
+    # reminder of their own (None: none). Resolved by the wall, not stored on events (ADR 0034).
+    default_reminder_minutes: Mapped[int | None] = mapped_column(Integer, default=None)
     parent_pin_hash: Mapped[str | None] = mapped_column(String(160), default=None)
     # How many digits, so the PIN pad accepts as soon as they're typed (UX §4).
     pin_length: Mapped[int | None] = mapped_column(Integer, default=None)

@@ -1,12 +1,15 @@
 /**
- * Reminders on the kitchen screen (UX §4 "More…": none, 10 min, 1 hour, 1 day before): a toast
- * when one is due, once per occurrence and reminder. A screen that was off or asleep at that
- * minute still shows it for the next few minutes, and never after the event has begun. All-day
- * events remind at 8:00 AM, on the day or the days before.
+ * Reminders on paired screens (UX §4 "More…"): a toast when one is due, once per occurrence and
+ * reminder. A screen that was off or asleep at that minute still shows it for the next few
+ * minutes, and never after the event has begun. All-day events remind at 8:00 AM, on the day or
+ * the days before. An event with no reminder of its own takes the household's Default reminder,
+ * resolved here rather than on the server, so a changed default never leaves the cached week
+ * stale (ADR 0034).
  */
 import { useEffect, useRef } from "react";
 
 import { addDays, formatWallTime, wallNow, zonedParts } from "../../lib/dates";
+import { useSettings } from "../../lib/household";
 import { useMinute } from "../../lib/time";
 import { showToast } from "../../lib/toast";
 import { useOccurrences } from "./data";
@@ -32,15 +35,40 @@ export interface Due {
 /** The parts of an occurrence a reminder reads. */
 export type Remindable = Pick<
   Occurrence,
-  "key" | "title" | "status" | "all_day" | "start_local" | "start_date" | "reminders"
+  | "key"
+  | "title"
+  | "status"
+  | "all_day"
+  | "start_local"
+  | "start_date"
+  | "reminders"
+  | "reminders_off"
+  | "read_only"
 >;
 
+/**
+ * When an occurrence reminds (ADR 0034): at its own reminders; never when it says none; else
+ * the household's Default reminder, except on a calendar that only shows events (holidays, a
+ * calendar address, birthdays and the other overlays).
+ */
+export function effectiveReminders(
+  occurrence: Remindable,
+  defaultMinutes: number | null,
+): number[] {
+  if (occurrence.reminders.length) return occurrence.reminders;
+  if (occurrence.reminders_off || occurrence.read_only || defaultMinutes === null) return [];
+  return [defaultMinutes];
+}
+
 /** Each reminder of these occurrences, when it's due and what it says. */
-export function remindersOf(occurrences: readonly Remindable[]): Due[] {
+export function remindersOf(
+  occurrences: readonly Remindable[],
+  defaultMinutes: number | null = null,
+): Due[] {
   const due: Due[] = [];
   for (const occurrence of occurrences) {
     if (occurrence.status === "cancelled") continue;
-    for (const minutes of occurrence.reminders) {
+    for (const minutes of effectiveReminders(occurrence, defaultMinutes)) {
       const key = `${occurrence.key}@${String(minutes)}`;
       if (occurrence.all_day) {
         if (!occurrence.start_date) continue;
@@ -72,6 +100,7 @@ export function dueNow(
   occurrences: readonly Remindable[],
   now: string,
   shown: ReadonlySet<string>,
+  defaultMinutes: number | null = null,
 ): Due[] {
   const starts = new Map(
     occurrences.map((o) => [
@@ -80,7 +109,7 @@ export function dueNow(
     ]),
   );
   const graceStart = minus(now, GRACE_MINUTES);
-  return remindersOf(occurrences).filter(
+  return remindersOf(occurrences, defaultMinutes).filter(
     (reminder) =>
       !shown.has(reminder.key) &&
       reminder.at <= now &&
@@ -94,13 +123,14 @@ export function useReminders(): void {
   const minute = useMinute();
   const today = zonedParts(minute).day;
   const { data } = useOccurrences(today, addDays(today, 2));
+  const defaultMinutes = useSettings().data?.default_reminder_minutes ?? null;
   const shown = useRef(new Set<string>());
   const now = wallNow(minute);
   useEffect(() => {
     if (!data) return;
-    for (const reminder of dueNow(data.occurrences, now, shown.current)) {
+    for (const reminder of dueNow(data.occurrences, now, shown.current, defaultMinutes)) {
       shown.current.add(reminder.key);
       showToast(reminder.message);
     }
-  }, [data, now]);
+  }, [data, now, defaultMinutes]);
 }

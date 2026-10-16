@@ -1152,7 +1152,7 @@ its calendar's person to it."
 
 ### T11 Reminders that come back, and a default reminder
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: reminders that come back, and a Default reminder")
 
 **Owner's note.** "Reminders are either not saving to an event, or not showing up after saving
 with one and re-opening the event. Can there be a 'Default Reminder' setting in the app, where all
@@ -1255,7 +1255,29 @@ back when an event is reopened: the row knows 30 minutes and any other value, a 
 occurrence shows on that occurrence, two reminders stay two, and 'All of Them' reaches the changed
 occurrences too." "The Remind row offers 5, 15 and 30 minutes and 2 hours as well."
 
-**As built.** (fill in)
+**As built.** As planned, with these differences:
+- *R4 and R5* were built in T10 (the same loops carry people and reminders); T11 adds the
+  `reminders_off` flag to them.
+- *With no Default reminder in the household*, an event that holds none reads "None" on the
+  row (there is no "Default" to show), and picking None stores it as explicitly none, so a
+  default set later doesn't reach it. `reminderValue` and `reminderPick` in
+  `reminderWords.ts` hold the three states; `reminderChoices` adds a held value the presets
+  don't have (45 minutes, two reminders) as one more choice in its own words.
+- *The sheet* shows a changed occurrence's own notes through the new route (its place was
+  already the occurrence's); the editor waits for that row, and opens on the series' words if
+  it won't load, never blank. "Just This One" clearing a color reads that occurrence's own.
+- *The settings row* sits in one group with Default calendar (`DefaultCalendar` now draws its
+  row only), with `SavedMark` after each.
+- Tests: `test_household.py` (the default set, kept, cleared with null, 7 refused),
+  `test_api.py` (two reminders on the event and the occurrence, none, own, both refused, back
+  to the default; the new route: an override's own words and reminders, an unchanged one the
+  series', a time that isn't one 404), `test_migrations.py`, `test_birthdays.py` (the new
+  field), `reminders.test.ts` (the default, none, read-only, due at its minute),
+  `reminderWords.test.ts` (new), `EventEditor.test.ts` (nothing sent untouched, the three
+  states, `draftFromEvent` reading the override). The two e2e cases in `calendar.spec.ts` pass
+  on `display-1080p`; the Vet's case pairs the wall first and moves the clock to 8:50 after the
+  seed (the seed at 10 AM puts the Vet on the same Wednesday, so moving the clock first wasn't
+  needed).
 
 ### T12 Needs Attention
 

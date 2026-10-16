@@ -863,7 +863,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Occurrence
+         * @description One occurrence's own words, people and reminders when it was changed on its own (R2).
+         */
+        get: operations["get_occurrence_api_calendar_events__event_id__occurrences__recurrence_id__get"];
         put?: never;
         post?: never;
         /** Delete Occurrence */
@@ -3289,6 +3293,8 @@ export interface components {
             member_ids?: string[] | null;
             /** Reminders */
             reminders?: number[] | null;
+            /** Reminders Off */
+            reminders_off?: boolean | null;
             /** Rrule */
             rrule?: string | null;
             /** Start */
@@ -3351,6 +3357,11 @@ export interface components {
             recurrence_id: string | null;
             /** Reminders */
             reminders: number[];
+            /**
+             * Reminders Off
+             * @default false
+             */
+            reminders_off: boolean;
             /** Repeat Text */
             repeat_text: string | null;
             /** Rrule */
@@ -3411,6 +3422,8 @@ export interface components {
             member_ids?: string[] | null;
             /** Reminders */
             reminders?: number[] | null;
+            /** Reminders Off */
+            reminders_off?: boolean | null;
             /** Rrule */
             rrule?: string | null;
             /**
@@ -4111,6 +4124,11 @@ export interface components {
             recurrence_id: string | null;
             /** Reminders */
             reminders: number[];
+            /**
+             * Reminders Off
+             * @default false
+             */
+            reminders_off: boolean;
             /** Source */
             source: string;
             /** Start Date */
@@ -4784,6 +4802,8 @@ export interface components {
         SettingsOut: {
             /** Daylight Tint */
             daylight_tint: boolean;
+            /** Default Reminder Minutes */
+            default_reminder_minutes: number | null;
             /** Dim From */
             dim_from: string | null;
             /** Dim Level */
@@ -4886,6 +4906,8 @@ export interface components {
         SettingsUpdate: {
             /** Daylight Tint */
             daylight_tint?: boolean | null;
+            /** Default Reminder Minutes */
+            default_reminder_minutes?: (5 | 10 | 15 | 30 | 60 | 120 | 1440) | null;
             /** Dim From */
             dim_from?: string | null;
             /** Dim Level */
@@ -6865,6 +6887,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_occurrence_api_calendar_events__event_id__occurrences__recurrence_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                recurrence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
                 };
             };
             /** @description Validation Error */

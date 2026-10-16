@@ -258,3 +258,19 @@ async def test_only_parents_manage_people(
     assert (await other.get("/api/members")).status_code == 200
     refused = await other.post("/api/members", json={"name": "Guest"}, headers=CSRF)
     assert refused.status_code == 403
+
+
+async def test_a_parent_sets_the_default_reminder_and_clears_it(parent: httpx.AsyncClient) -> None:
+    """ADR 0034: events with no reminder of their own remind this long before; none by default."""
+    assert (await parent.get("/api/settings")).json()["default_reminder_minutes"] is None
+    ten = await parent.patch("/api/settings", json={"default_reminder_minutes": 10}, headers=CSRF)
+    assert ten.json()["default_reminder_minutes"] == 10
+    # Another setting leaves it; an explicit null clears it.
+    tips = await parent.patch("/api/settings", json={"show_tips": False}, headers=CSRF)
+    assert tips.json()["default_reminder_minutes"] == 10
+    cleared = await parent.patch(
+        "/api/settings", json={"default_reminder_minutes": None}, headers=CSRF
+    )
+    assert cleared.json()["default_reminder_minutes"] is None
+    odd = await parent.patch("/api/settings", json={"default_reminder_minutes": 7}, headers=CSRF)
+    assert odd.status_code == 422

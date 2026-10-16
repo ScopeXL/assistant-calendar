@@ -716,3 +716,59 @@ async def test_undo_of_a_change_from_before_the_title_decided_still_works(
     assert undone.status_code == 200, undone.text
     back = (await parent.get(url)).json()
     assert (back["title"], back["people_from_title"]) == ("Dentist", False)
+
+
+# ---- reminders: their own, none, or the household's default (ADR 0034) ------------------------
+
+
+async def test_an_event_keeps_its_reminders_none_or_the_default(parent: httpx.AsyncClient) -> None:
+    two = (await add(parent, title="Dentist", start="2026-10-08T14:30", reminders=[60, 10]))[
+        "event"
+    ]
+    assert (two["reminders"], two["reminders_off"]) == ([10, 60], False)
+    shown = next(o for o in await week(parent) if o["title"] == "Dentist")
+    assert (shown["reminders"], shown["reminders_off"]) == ([10, 60], False)
+    url = f"/api/calendar/events/{two['id']}"
+    none = await parent.patch(url, json={"reminders": [], "reminders_off": True}, headers=CSRF)
+    assert (none.json()["event"]["reminders"], none.json()["event"]["reminders_off"]) == ([], True)
+    own = await parent.patch(url, json={"reminders": [15]}, headers=CSRF)
+    assert (own.json()["event"]["reminders"], own.json()["event"]["reminders_off"]) == ([15], False)
+    both = await parent.patch(url, json={"reminders": [15], "reminders_off": True}, headers=CSRF)
+    assert both.status_code == 422
+    assert both.json()["error"]["message"] == "Pick reminders, or none, not both."
+    back = await parent.patch(url, json={"reminders": [], "reminders_off": False}, headers=CSRF)
+    assert (back.json()["event"]["reminders"], back.json()["event"]["reminders_off"]) == ([], False)
+    plain = (await add(parent, title="Vet", start="2026-10-08T09:00"))["event"]
+    assert (plain["reminders"], plain["reminders_off"]) == ([], False)
+
+
+async def test_one_occurrence_reads_back_its_own_words_and_reminders(
+    parent: httpx.AsyncClient,
+) -> None:
+    """R2: a change to just this one is stored on its own row, and the editor reads it there."""
+    event = await soccer(parent, reminders=[30], location="Field 3")
+    rid = "2026-10-08T16:00:00"
+    changed = await parent.patch(
+        f"/api/calendar/events/{event['id']}/occurrences/{rid}",
+        json={"scope": "this", "title": "Soccer final", "location": "Field 1", "reminders": [15]},
+        headers=CSRF,
+    )
+    assert changed.status_code == 200, changed.text
+    one = await parent.get(f"/api/calendar/events/{event['id']}/occurrences/{rid}")
+    assert one.status_code == 200, one.text
+    body = one.json()
+    assert (body["title"], body["location"], body["reminders"], body["is_override"]) == (
+        "Soccer final",
+        "Field 1",
+        [15],
+        True,
+    )
+    series = (await parent.get(f"/api/calendar/events/{event['id']}")).json()
+    assert (series["title"], series["reminders"]) == ("Soccer practice", [30])
+    # An occurrence nobody changed reads as the series; a time that isn't one is refused.
+    plain = await parent.get(f"/api/calendar/events/{event['id']}/occurrences/2026-10-06T16:00:00")
+    assert plain.json()["title"] == "Soccer practice"
+    nowhere = await parent.get(
+        f"/api/calendar/events/{event['id']}/occurrences/2026-10-07T16:00:00"
+    )
+    assert nowhere.status_code == 404

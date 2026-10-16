@@ -84,6 +84,7 @@ def settings_out(home: Household, settings: Settings) -> SettingsOut:
             "display_week_layout": home.display_week_layout,
             "display_rolling_week": home.display_rolling_week,
             "show_tips": home.show_tips,
+            "default_reminder_minutes": home.default_reminder_minutes,
             "sleep_from": home.sleep_from,
             "sleep_to": home.sleep_to,
             "sleep_mode": home.sleep_mode,

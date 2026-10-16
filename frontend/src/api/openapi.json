@@ -2670,6 +2670,17 @@
             ],
             "title": "Reminders"
           },
+          "reminders_off": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminders Off"
+          },
           "rrule": {
             "anyOf": [
               {
@@ -2890,6 +2901,11 @@
             },
             "title": "Reminders",
             "type": "array"
+          },
+          "reminders_off": {
+            "default": false,
+            "title": "Reminders Off",
+            "type": "boolean"
           },
           "repeat_text": {
             "anyOf": [
@@ -3151,6 +3167,17 @@
               }
             ],
             "title": "Reminders"
+          },
+          "reminders_off": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminders Off"
           },
           "rrule": {
             "anyOf": [
@@ -5455,6 +5482,11 @@
             "title": "Reminders",
             "type": "array"
           },
+          "reminders_off": {
+            "default": false,
+            "title": "Reminders Off",
+            "type": "boolean"
+          },
           "source": {
             "title": "Source",
             "type": "string"
@@ -7567,6 +7599,17 @@
             "title": "Daylight Tint",
             "type": "boolean"
           },
+          "default_reminder_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Reminder Minutes"
+          },
           "dim_from": {
             "anyOf": [
               {
@@ -7821,6 +7864,7 @@
           "display_week_layout",
           "display_rolling_week",
           "show_tips",
+          "default_reminder_minutes",
           "sleep_from",
           "sleep_to",
           "sleep_mode",
@@ -7851,6 +7895,26 @@
               }
             ],
             "title": "Daylight Tint"
+          },
+          "default_reminder_minutes": {
+            "anyOf": [
+              {
+                "enum": [
+                  5,
+                  10,
+                  15,
+                  30,
+                  60,
+                  120,
+                  1440
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Reminder Minutes"
           },
           "dim_from": {
             "anyOf": [
@@ -11362,6 +11426,56 @@
           }
         },
         "summary": "Delete Occurrence",
+        "tags": [
+          "calendar"
+        ]
+      },
+      "get": {
+        "description": "One occurrence's own words, people and reminders when it was changed on its own (R2).",
+        "operationId": "get_occurrence_api_calendar_events__event_id__occurrences__recurrence_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "title": "Event Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "recurrence_id",
+            "required": true,
+            "schema": {
+              "title": "Recurrence Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Occurrence",
         "tags": [
           "calendar"
         ]

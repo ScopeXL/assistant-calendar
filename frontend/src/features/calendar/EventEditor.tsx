@@ -19,17 +19,11 @@ import { ChoiceRow } from "../../ui/ValueRow";
 import { WhoPicker } from "../../ui/WhoPicker";
 import { calendarChoiceLabel, takesEvents, useCalendars } from "./data";
 import { parseQuickAdd, type QuickAddDraft } from "./quickAdd";
+import { reminderChoices, reminderPick, reminderValue } from "./reminderWords";
 import { RepeatField } from "./RepeatField";
 import { repeatToRRule, rruleToRepeat, type Repeat, type RepeatEnd } from "./repeat";
 import type { CalendarEvent, EventFields, Occurrence, PersonColor } from "./types";
 import { useBoardDay } from "./useBoardDay";
-
-const REMINDERS: { value: number | null; label: string }[] = [
-  { value: null, label: "None" },
-  { value: 10, label: "10 min before" },
-  { value: 60, label: "1 hour before" },
-  { value: 1440, label: "1 day before" },
-];
 
 export interface Draft {
   title: string;
@@ -53,7 +47,13 @@ export interface Draft {
   color: PersonColor | null;
   location: string;
   notes: string;
-  reminder: number | null;
+  /** Its own reminders, minutes before; none with `remindersOff` false is the household's
+   * Default reminder (ADR 0034). */
+  reminders: number[];
+  remindersOff: boolean;
+  /** The Remind row was picked: only then are reminders sent, so an untouched row keeps what
+   * the event holds. */
+  remindChanged?: boolean;
 }
 
 export interface KeptRule {
@@ -107,7 +107,9 @@ export function draftToFields(
   const common = {
     title: draft.title.trim(),
     ...(draft.whoTouched ? { member_ids: draft.memberIds } : {}),
-    reminders: draft.reminder === null ? [] : [draft.reminder],
+    ...(draft.remindChanged
+      ? { reminders: draft.reminders, reminders_off: draft.remindersOff }
+      : {}),
     calendar_id: draft.calendarId,
     color: draft.color,
     location: draft.location.trim(),
@@ -130,12 +132,18 @@ export function draftToFields(
   };
 }
 
-/** A draft for an existing event, at the occurrence it was opened from. */
+/**
+ * A draft for an existing event, at the occurrence it was opened from. `at` is that occurrence's
+ * own row when it was changed on its own (R2, ADR 0034): its title, place, notes, color and
+ * reminders are read there; the series' timing and repeat from `event`.
+ */
 export function draftFromEvent(
   event: CalendarEvent,
   occurrence: Occurrence | null,
   weekStartsOn = 0,
+  at: CalendarEvent | null = null,
 ): Draft {
+  const own = at?.is_override ? at : event;
   const startLocal = occurrence?.start_local ?? event.start ?? null;
   const endLocal = occurrence?.end_local ?? event.end ?? null;
   const day = occurrence?.start_date ?? startLocal?.slice(0, 10) ?? event.start_date ?? "";
@@ -149,7 +157,7 @@ export function draftFromEvent(
     );
   }
   return {
-    title: event.title,
+    title: own.title,
     day,
     allDay: event.all_day,
     lastDay: event.all_day && endDate ? addDays(endDate, -1) : null,
@@ -161,10 +169,11 @@ export function draftFromEvent(
     kept:
       event.rrule && !parsed ? { rrule: event.rrule, text: event.repeat_text ?? "As it is" } : null,
     calendarId: event.calendar_id,
-    color: event.color ?? null,
-    location: event.location,
-    notes: event.description,
-    reminder: event.reminders[0] ?? null,
+    color: own.color ?? null,
+    location: own.location,
+    notes: own.description,
+    reminders: own.reminders,
+    remindersOff: own.reminders_off,
   };
 }
 
@@ -215,8 +224,12 @@ export function EventEditor({
   const [text, setText] = useState(initial?.title ?? "");
   const [manual, setManual] = useState<Partial<Draft>>(initial ?? {});
   const [whoTouched, setWhoTouched] = useState(false);
+  const defaultReminder = settings?.default_reminder_minutes ?? null;
   const [more, setMore] = useState(
-    Boolean(initial && (initial.location || initial.notes || initial.reminder !== null)),
+    Boolean(
+      initial &&
+      (initial.location || initial.notes || initial.reminders.length || initial.remindersOff),
+    ),
   );
   const [span, setSpan] = useState(Boolean(initial?.lastDay && initial.lastDay !== initial.day));
 
@@ -260,7 +273,9 @@ export function EventEditor({
     color: manual.color !== undefined ? manual.color : null,
     location: manual.location ?? "",
     notes: manual.notes ?? "",
-    reminder: manual.reminder !== undefined ? manual.reminder : null,
+    reminders: manual.reminders ?? [],
+    remindersOff: manual.remindersOff ?? false,
+    remindChanged: manual.remindChanged ?? false,
   };
   useEffect(() => {
     onDay?.(draft.day);
@@ -442,10 +457,12 @@ export function EventEditor({
             <ChoiceRow
               label="Remind"
               hint="A reminder shows on paired screens."
-              choices={REMINDERS}
-              value={draft.reminder}
-              onChange={(reminder) => {
-                set({ reminder });
+              choices={reminderChoices(defaultReminder, draft.reminders)}
+              value={reminderValue(draft.reminders, draft.remindersOff, defaultReminder)}
+              onChange={(value) => {
+                // A pick replaces the set (R3): two reminders stay two until one is picked.
+                const { reminders, off } = reminderPick(value);
+                set({ reminders, remindersOff: off, remindChanged: true });
               }}
             />
           </>

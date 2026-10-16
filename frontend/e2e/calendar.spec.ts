@@ -459,3 +459,35 @@ test("a rolling week keeps today in the same column, and still pages by seven da
   await expect(days.first()).toHaveAttribute("data-day", "2026-10-08");
   await expect(days.nth(1)).toHaveAttribute("aria-current", "date");
 });
+
+test("remind: the household's Default reminder brings the Vet up 10 minutes before (ADR 0034)", async ({
+  page,
+}) => {
+  await pairWall(page);
+  // The seed's Vet is today at 9:00 with no reminder of its own; it's 8:50.
+  const early = await page.request.post("/api/_test/clock", {
+    headers: CSRF,
+    data: { set: "2026-10-07T12:50:00Z" },
+  });
+  expect(early.status()).toBe(204);
+  const set = await page.request.patch("/api/settings", {
+    headers: CSRF,
+    data: { default_reminder_minutes: 10 },
+  });
+  expect(set.ok()).toBe(true);
+  await page.goto("/display");
+  await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+  await expect(toast(page, "Vet starts in 10 min")).toBeVisible({ timeout: 15_000 });
+});
+
+test("remind: an event opens with the reminder it holds, 30 min before (R1)", async ({ page }) => {
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  await board.getByRole("button", { name: /^Soccer practice, .*Thursday October 8/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Soccer practice" });
+  await sheet.getByRole("button", { name: "Change" }).click();
+  const editor = page.getByRole("dialog", { name: "Change" });
+  // More… is open already: the event has a reminder, and it reads as one.
+  await expect(editor.getByRole("button", { name: "Remind: 30 min before" })).toBeVisible();
+});

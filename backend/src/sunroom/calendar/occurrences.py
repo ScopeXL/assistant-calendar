@@ -121,6 +121,7 @@ def _out(
         status=row.status,
         overlay=None,
         reminders=reminders.get(row.id, []),
+        reminders_off=row.reminders_off,
         version=master.version,
     )
 

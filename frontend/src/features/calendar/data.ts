@@ -78,6 +78,24 @@ export function useEvent(eventId: string | null) {
   });
 }
 
+/**
+ * One occurrence as the editor and the sheet should read it (R2, ADR 0034): its own row when it
+ * was changed on its own (its title, place, notes, reminders), else the series. Only asked for
+ * an occurrence that is changed (`enabled`).
+ */
+export function useEventAt(eventId: string | null, recurrenceId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: qk.eventAt(eventId ?? "", recurrenceId ?? ""),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/api/calendar/events/{event_id}/occurrences/{recurrence_id}", {
+          params: { path: { event_id: eventId ?? "", recurrence_id: recurrenceId ?? "" } },
+        }),
+      ),
+    enabled: enabled && eventId !== null && recurrenceId !== null,
+  });
+}
+
 export function useRemovedEvents() {
   return useQuery({
     queryKey: qk.removedEvents(),

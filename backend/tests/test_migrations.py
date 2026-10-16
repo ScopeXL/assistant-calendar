@@ -268,6 +268,24 @@ def test_synced_events_with_nobody_on_them_let_their_title_decide(tmp_path: Path
     assert set(flagged.values()) == {0}
 
 
+def test_a_household_from_0_11_0_has_no_default_reminder(tmp_path: Path) -> None:
+    """0.12.0 (ADR 0034): the Default reminder starts as none, and no event is set to none,
+    so every event keeps reminding exactly as it did."""
+    db = tmp_path / "sunroom.db"
+    conn = sqlite3.connect(db)
+    conn.executescript((FIXTURE_DBS / "202610151730.sql").read_text())
+    conn.close()
+    assert migrate.upgrade(db) == migrate.head_revision()
+    conn = sqlite3.connect(db)
+    try:
+        assert conn.execute("SELECT default_reminder_minutes FROM household").fetchall() == [
+            (None,)
+        ]
+        assert {row[0] for row in conn.execute("SELECT reminders_off FROM events")} == {0}
+    finally:
+        conn.close()
+
+
 def test_accounts_named_icloud_become_apple(tmp_path: Path) -> None:
     """0.10.0 (ADR 0032): the family reads "Apple", so a CalDAV account 0.9.0 named "iCloud · …"
     as it connected reads "Apple · …". A name someone chose, and a calendar address, keep theirs."""

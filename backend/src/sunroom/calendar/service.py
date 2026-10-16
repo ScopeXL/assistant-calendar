@@ -302,6 +302,7 @@ async def event_out(session: AsyncSession, event: Event) -> EventOut:
             "member_ids": await _members_of(session, event.id),
             "people_from_title": event.people_from_title,
             "reminders": await _reminders_of(session, event.id),
+            "reminders_off": event.reminders_off,
             "color": event.color,
             "status": event.status,
             "source": event.source,
@@ -363,24 +364,39 @@ async def _writable_calendar(session: AsyncSession, calendar_id: str) -> Calenda
 
 
 async def _set_people(
-    session: AsyncSession, event_id: str, member_ids: list[str] | None, reminders: list[int] | None
+    session: AsyncSession,
+    row: Event,
+    member_ids: list[str] | None,
+    reminders: list[int] | None,
+    reminders_off: bool | None = None,
 ) -> None:
+    """Who it's for and its reminders, each only when sent. Reminders have three states
+    (ADR 0034): its own rows; explicitly none (``reminders_off``); or neither, the household's
+    Default reminder, which the wall resolves. Rows sent turn the flag off; the flag sent on
+    takes the rows away."""
+    if reminders_off and reminders:
+        raise invalid("Pick reminders, or none, not both.", "reminders")
+    event_id = row.id
     if member_ids is not None:
-        for row in (
+        for old in (
             await session.scalars(select(EventMember).where(EventMember.event_id == event_id))
         ).all():
-            await session.delete(row)
+            await session.delete(old)
         await session.flush()
         for member_id in member_ids:
             session.add(EventMember(event_id=event_id, member_id=member_id))
-    if reminders is not None:
-        for row in (
+    if reminders is not None or reminders_off:
+        for old in (
             await session.scalars(select(EventReminder).where(EventReminder.event_id == event_id))
         ).all():
-            await session.delete(row)
+            await session.delete(old)
         await session.flush()
-        for minutes in sorted(set(reminders)):
+        for minutes in sorted(set(reminders or [])):
             session.add(EventReminder(event_id=event_id, minutes_before=minutes))
+    if reminders:
+        row.reminders_off = False
+    elif reminders_off is not None:
+        row.reminders_off = reminders_off
 
 
 async def _sent_people(
@@ -397,7 +413,7 @@ async def _sent_people(
     if sent is not None:
         if set(sent) != set(await _members_of(session, row.id)):
             row.people_from_title = False
-            await _set_people(session, row.id, sent, None)
+            await _set_people(session, row, sent, None)
         return
     if title_changed and row.people_from_title:
         await people.assign(session, row, calendar, await people.household_people(session))
@@ -592,7 +608,7 @@ async def create_event(tx: WriteTx, body: EventCreate, ctx: Context) -> ChangeOu
     set_timing(event, timing, tzid)
     tx.session.add(event)
     await tx.session.flush()
-    await _set_people(tx.session, event.id, members, body.reminders or [])
+    await _set_people(tx.session, event, members, body.reminders or [], body.reminders_off)
     await refresh_window(tx.session, event)
     revision_id = await _revision(tx, ctx, event.id, RevisionAction.CREATE, "[]", [event.id])
     await bump(tx, {calendar.id}, [event.id])
@@ -676,7 +692,7 @@ async def update_series(
         members,
         title_changed=master.title != old_title,
     )
-    await _set_people(tx.session, master.id, None, body.reminders)
+    await _set_people(tx.session, master, None, body.reminders, body.reminders_off)
     # All of Them reaches the occurrences changed one by one too (R4): what was sent for the
     # series is theirs as well.
     for row in overrides:
@@ -684,7 +700,7 @@ async def update_series(
             continue
         if members is not None:
             row.people_from_title = master.people_from_title
-        await _set_people(tx.session, row.id, members, body.reminders)
+        await _set_people(tx.session, row, members, body.reminders, body.reminders_off)
     await tx.session.flush()
     await refresh_window(tx.session, master)
     revision_id = await _revision(tx, ctx, master.id, action, before)
@@ -748,12 +764,13 @@ async def update_occurrence(
             await tx.session.flush()
             await _set_people(
                 tx.session,
-                row.id,
+                row,
                 master_members,
                 body.reminders if body.reminders is not None else master_reminders,
+                body.reminders_off,
             )
         else:
-            await _set_people(tx.session, row.id, None, body.reminders)
+            await _set_people(tx.session, row, None, body.reminders, body.reminders_off)
         _apply_text(row, body, clear_color=body.clear_color)
         # Its own people and title, by the same rules as a series' (ADR 0034).
         await _sent_people(tx.session, row, calendar, members, title_changed=row.title != old_title)
@@ -833,9 +850,10 @@ async def update_occurrence(
     await tx.session.flush()
     await _set_people(
         tx.session,
-        sibling.id,
+        sibling,
         master_members,
         body.reminders if body.reminders is not None else master_reminders,
+        body.reminders_off,
     )
     sibling_calendar = await tx.session.get(Calendar, sibling.calendar_id) or calendar
     await _sent_people(
@@ -855,6 +873,18 @@ async def update_occurrence(
         revision_id=revision_id,
         dropped_overrides=dropped,
     )
+
+
+async def event_at(session: AsyncSession, master: Event, rid: str) -> EventOut:
+    """One occurrence as the editor should read it (R2, ADR 0034): the row changed on its own
+    when there is one, with its own title, place, notes, people and reminders; else the
+    series. 404 for a time that isn't one of the event's occurrences."""
+    overrides = await _overrides(session, master.id)
+    row = next((o for o in overrides if o.recurrence_id == rid), None)
+    if row is not None:
+        return await event_out(session, row)
+    _occurrence_at(master, overrides, rid)
+    return await event_out(session, master)
 
 
 def _original_timing(master: Event, rid: str) -> Timing:

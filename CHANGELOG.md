@@ -17,6 +17,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   in Mia's and Leo's columns, on top of its calendar's person, on import and when it's added.
   Set Who by hand and Sunroom stops guessing for that event.
 - A chip for several people shows a bar in each of their colors.
+- Settings → Calendars & Accounts → Default reminder: events with no reminder of their own remind
+  on paired screens this long before.
 
 ### Changed
 
@@ -32,6 +34,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Settings → Household says what the location is for, and that only your city goes to
   Open-Meteo.
 - Tips under the board are on for everyone; turn them off in Settings → Display → Show tips.
+- The Remind row offers 5, 15 and 30 minutes and 2 hours as well.
 
 ### Fixed
 
@@ -43,6 +46,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A one-off change the server sends for a synced event keeps the series' people and reminders;
   saving a synced event no longer pins its calendar's person to it, and a synced event set to
   Everyone by hand stays Everyone.
+- A reminder now comes back when an event is reopened: the row knows 30 minutes and any other
+  value, a change to one occurrence shows on that occurrence, two reminders stay two, and "All
+  of Them" reaches the changed occurrences too.
 
 ## [0.11.0] - 2026-10-15
 

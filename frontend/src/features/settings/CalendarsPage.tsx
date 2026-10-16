@@ -2,7 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { api, errorMessage, notSaved, unwrap } from "../../api/client";
-import { useMembers } from "../../lib/household";
+import type { components } from "../../api/schema";
+import { useMembers, useSettings, useUpdateSettings } from "../../lib/household";
 import { asParent } from "../../lib/parent";
 import { useSavedFlash } from "../../lib/savedFlash";
 import { showToast } from "../../lib/toast";
@@ -19,6 +20,7 @@ import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
 import { ChoiceRow } from "../../ui/ValueRow";
 import { calendarChoiceLabel, takesEvents, useCalendars } from "../calendar/data";
+import { minutesLabel, REMIND_PRESETS } from "../calendar/reminderWords";
 import { usePluginModules } from "../usePluginModules";
 import type { CalendarInfo, PersonColor } from "../calendar/types";
 import { Group, Text } from "./parts";
@@ -66,7 +68,10 @@ export function CalendarsPage() {
   });
   return (
     <>
-      <DefaultCalendar calendars={everyCalendar} />
+      <Group>
+        <DefaultCalendar calendars={everyCalendar} />
+        <DefaultReminder />
+      </Group>
       <Group title="Calendars">
         {calendars.map((calendar) => {
           const owner = members.find((m) => m.id === calendar.owner_member_id) ?? null;
@@ -192,25 +197,63 @@ function DefaultCalendar({ calendars }: { calendars: CalendarInfo[] }) {
   // The one just picked shows while it saves.
   const shown = make.isPending ? make.variables.id : (current?.id ?? "");
   return (
-    <Group>
-      <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
-        <ChoiceRow
-          strong
-          label="Default calendar"
-          hint="New events go here. You can pick another when you add one."
-          choices={choices.map((calendar) => ({
-            value: calendar.id,
-            label: calendarChoiceLabel(calendar),
-          }))}
-          value={shown}
-          onChange={(id) => {
-            const picked = choices.find((calendar) => calendar.id === id);
-            if (picked && picked.id !== current?.id) make.mutate(picked);
-          }}
-        />
-        <SavedMark show={saved.saved} />
-      </div>
-    </Group>
+    <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
+      <ChoiceRow
+        strong
+        label="Default calendar"
+        hint="New events go here. You can pick another when you add one."
+        choices={choices.map((calendar) => ({
+          value: calendar.id,
+          label: calendarChoiceLabel(calendar),
+        }))}
+        value={shown}
+        onChange={(id) => {
+          const picked = choices.find((calendar) => calendar.id === id);
+          if (picked && picked.id !== current?.id) make.mutate(picked);
+        }}
+      />
+      <SavedMark show={saved.saved} />
+    </div>
+  );
+}
+
+type DefaultMinutes = NonNullable<
+  components["schemas"]["SettingsUpdate"]["default_reminder_minutes"]
+> | null;
+
+/**
+ * How long before an event with no reminder of its own reminds on paired screens (ADR 0034):
+ * None, or one of the Remind row's presets. Calendars that only show events never do; an event
+ * set to None never does. Saves as it changes.
+ */
+function DefaultReminder() {
+  const display = useShell() === "display";
+  const { data: settings } = useSettings();
+  const update = useUpdateSettings();
+  const saved = useSavedFlash();
+  if (!settings) return null;
+  const minutes = settings.default_reminder_minutes;
+  return (
+    <div className={`flex flex-col gap-1 ${display ? "py-5" : "py-4"}`}>
+      <ChoiceRow
+        strong
+        label="Default reminder"
+        hint="Events with no reminder of their own remind on paired screens this long before. Calendars that only show events (holidays, a calendar address) don't."
+        choices={[
+          { value: "none", label: "None" },
+          ...REMIND_PRESETS.map((preset) => ({
+            value: String(preset),
+            label: minutesLabel(preset),
+          })),
+        ]}
+        value={minutes === null ? "none" : String(minutes)}
+        onChange={(value) => {
+          const picked = (value === "none" ? null : Number(value)) as DefaultMinutes;
+          update.mutate({ default_reminder_minutes: picked }, { onSuccess: saved.flash });
+        }}
+      />
+      <SavedMark show={saved.saved} />
+    </div>
   );
 }
 

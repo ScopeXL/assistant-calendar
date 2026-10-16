@@ -23,7 +23,8 @@ function draft(change: Partial<Draft>): Draft {
     color: null,
     location: "",
     notes: "",
-    reminder: null,
+    reminders: [],
+    remindersOff: false,
     ...change,
   };
 }
@@ -78,7 +79,9 @@ function event(change: Partial<CalendarEvent>): CalendarEvent {
     repeat_text: null,
     member_ids: [],
     reminders: [],
+    reminders_off: false,
     color: null,
+    is_override: false,
     ...change,
   } as CalendarEvent;
 }
@@ -134,6 +137,46 @@ describe("who it's for (P1, ADR 0034)", () => {
     ]);
     // Everyone, picked by hand, is a choice too.
     expect(draftToFields(draft({ memberIds: [], whoTouched: true })).member_ids).toEqual([]);
+  });
+});
+
+describe("reminders (R1–R3, ADR 0034)", () => {
+  it("sends reminders only once the row was picked, in the event's three states", () => {
+    expect("reminders" in draftToFields(draft({ reminders: [30] }))).toBe(false);
+    const none = draftToFields(draft({ remindersOff: true, remindChanged: true }));
+    expect([none.reminders, none.reminders_off]).toEqual([[], true]);
+    const hour = draftToFields(draft({ reminders: [60], remindChanged: true }));
+    expect([hour.reminders, hour.reminders_off]).toEqual([[60], false]);
+    const two = draftToFields(draft({ reminders: [10, 60], remindChanged: true }));
+    expect(two.reminders).toEqual([10, 60]);
+    const usual = draftToFields(draft({ reminders: [], remindChanged: true }));
+    expect([usual.reminders, usual.reminders_off]).toEqual([[], false]);
+  });
+
+  it("opens one changed occurrence on its own words and reminders, the series' timing", () => {
+    const series = event({
+      title: "Soccer practice",
+      location: "Field 3",
+      reminders: [30],
+      rrule: "FREQ=WEEKLY;BYDAY=TU,TH",
+    });
+    const final = event({
+      title: "Soccer final",
+      location: "Field 1",
+      description: "Bring the cup.",
+      reminders: [15],
+      is_override: true,
+    });
+    const opened = draftFromEvent(series, null, 0, final);
+    expect([opened.title, opened.location, opened.notes, opened.reminders]).toEqual([
+      "Soccer final",
+      "Field 1",
+      "Bring the cup.",
+      [15],
+    ]);
+    expect(opened.repeat).not.toBeNull();
+    // Not changed on its own: the series' words.
+    expect(draftFromEvent(series, null, 0, series).title).toBe("Soccer practice");
   });
 });
 

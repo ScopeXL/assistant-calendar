@@ -17,6 +17,8 @@ export const qk = {
   occurrences: (from: string, to: string, overlays: readonly string[] = []) =>
     ["occurrences", from, to, overlays] as const,
   event: (id: string) => ["event", id] as const,
+  /** One occurrence's own row, under its event's key so the event's refresh reaches it. */
+  eventAt: (id: string, recurrenceId: string) => ["event", id, recurrenceId] as const,
   removedEvents: () => ["events-removed"] as const,
   eventSearch: (query: string) => ["event-search", query] as const,
   syncAccounts: () => ["calendar-sync", "accounts"] as const,

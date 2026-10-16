@@ -8,7 +8,7 @@ import { useSettings } from "../../lib/household";
 import { Segmented } from "../../ui/Segmented";
 import { SidePanel } from "../../ui/SidePanel";
 import { useAddTypes } from "../usePluginModules";
-import { useEvent, useEventChanges } from "./data";
+import { useEvent, useEventAt, useEventChanges } from "./data";
 import { EventEditor, draftFromEvent, draftToFields, type Draft } from "./EventEditor";
 import { ScopeChooser } from "./ScopeChooser";
 import type { CalendarEvent, EventFields, Occurrence, Scope } from "./types";
@@ -105,6 +105,10 @@ export function AddPanel({
   const editing = panel?.kind === "edit" ? panel : null;
   const { data: event } = useEvent(editing?.eventId ?? null);
   const occurrence = useOccurrenceOf(editing?.eventId ?? null, editing?.recurrenceId ?? null);
+  // One occurrence changed on its own: the editor reads its own row (R2, ADR 0034).
+  const changedAlone = Boolean(occurrence?.is_override);
+  const ownRow = useEventAt(editing?.eventId ?? null, editing?.recurrenceId ?? null, changedAlone);
+  const at = ownRow.data;
   const changes = useEventChanges();
   const [asking, setAsking] = useState<Draft | null>(null);
   const repeats = Boolean(event?.rrule);
@@ -115,13 +119,22 @@ export function AddPanel({
       {
         target: { eventId: editing.eventId, recurrenceId: editing.recurrenceId },
         scope,
-        fields: fieldsFor(draft, scope, event, occurrence, weekStartsOn),
+        fields: fieldsFor(
+          draft,
+          scope,
+          // "Just this one" clears the color that one has, not the series'.
+          scope === "this" && at?.is_override ? { ...event, color: at.color } : event,
+          occurrence,
+          weekStartsOn,
+        ),
       },
       { onSuccess: onClose },
     );
   };
   const title = editing ? "Change" : "Add";
-  const ready = !editing || event !== undefined;
+  // An occurrence's own row that won't load leaves the editor on the series' words, never blank.
+  const ready =
+    !editing || (event !== undefined && (!changedAlone || at !== undefined || ownRow.isError));
   return (
     <>
       <SidePanel open={panel !== null} title={title} onClose={onClose} scrollKey={chosen}>
@@ -151,7 +164,9 @@ export function AddPanel({
         ) : panel && ready ? (
           <EventEditor
             key={editing ? `${editing.eventId}|${editing.recurrenceId ?? ""}` : "new"}
-            initial={editing && event ? draftFromEvent(event, occurrence, weekStartsOn) : null}
+            initial={
+              editing && event ? draftFromEvent(event, occurrence, weekStartsOn, at ?? null) : null
+            }
             editing={editing !== null}
             today={today}
             defaultDay={panel.kind === "add" ? (panel.day ?? today) : today}

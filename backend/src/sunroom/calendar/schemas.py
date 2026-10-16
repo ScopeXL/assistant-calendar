@@ -64,6 +64,9 @@ class EventFields(BaseModel):
     rrule: Annotated[str, StringConstraints(max_length=500)] | None = None
     member_ids: list[str] | None = None
     reminders: list[Reminder] | None = None
+    # True: explicitly no reminder, whatever the household's default (ADR 0034). With no
+    # reminders and false, the Default reminder applies.
+    reminders_off: bool | None = None
     color: PersonColor | None = None
 
 
@@ -113,6 +116,7 @@ class EventOut(BaseModel):
     # Who set by hand turns it off.
     people_from_title: bool = False
     reminders: list[int]
+    reminders_off: bool = False  # explicitly none; no rows and false: the household's default
     color: PersonColor | None
     status: str
     source: str
@@ -162,6 +166,7 @@ class OccurrenceOut(BaseModel):
     status: str
     overlay: str | None
     reminders: list[int]
+    reminders_off: bool = False  # explicitly none: the wall's Default reminder doesn't apply
     version: int  # the series' version, for an update's expected_version
 
 

@@ -85,6 +85,7 @@ class SettingsOut(BaseModel):
     display_week_layout: WeekLayoutName  # how the Week board draws a day (ADR 0028)
     display_rolling_week: bool  # the Week view: a window around today, not the week (ADR 0033)
     show_tips: bool  # a tip under the board on the wall and laptops
+    default_reminder_minutes: int | None  # events with no reminder of their own (ADR 0034)
     sleep_from: str | None
     sleep_to: str | None
     sleep_mode: SleepModeName
@@ -123,6 +124,8 @@ class SettingsUpdate(BaseModel):
     display_week_layout: WeekLayoutName | None = None
     display_rolling_week: bool | None = None
     show_tips: bool | None = None
+    # Minutes before, for events with no reminder of their own; send null for none.
+    default_reminder_minutes: Literal[5, 10, 15, 30, 60, 120, 1440] | None = None
     sleep_from: Clock24 | None = None  # send null (with sleep_to) to turn sleep off
     sleep_to: Clock24 | None = None
     sleep_mode: SleepModeName | None = None

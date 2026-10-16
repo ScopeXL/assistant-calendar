@@ -14,7 +14,7 @@ import { DayField } from "../../ui/DayField";
 import { SidePanel } from "../../ui/SidePanel";
 import { useShell } from "../../ui/shell";
 import { useEventActions } from "../usePluginModules";
-import { useCalendars, useEvent, useEventChanges } from "./data";
+import { useCalendars, useEvent, useEventAt, useEventChanges } from "./data";
 import { coreOverlayOf } from "./overlays";
 import { ScopeChooser } from "./ScopeChooser";
 import type { CalendarInfo, Occurrence, Scope } from "./types";
@@ -87,6 +87,13 @@ export function EventSheet({
   const display = useShell() === "display";
   const occurrence = useCachedOccurrence(panel?.key ?? null);
   const { data: event } = useEvent(panel?.eventId ?? null);
+  // A time changed on its own keeps its own notes (R2, ADR 0034); its place is the occurrence's.
+  const { data: at } = useEventAt(
+    panel?.eventId ?? null,
+    occurrence?.recurrence_id ?? null,
+    Boolean(occurrence?.is_override),
+  );
+  const notes = (occurrence?.is_override ? at?.description : undefined) ?? event?.description;
   const { data: members = [] } = useMembers();
   const { data: calendars = [] } = useCalendars();
   const { data: settings } = useSettings();
@@ -213,9 +220,7 @@ export function EventSheet({
           ) : null}
           {calendar && !readOnly ? <p className={soft}>{source ?? calendar.name}</p> : null}
           {pending ? <p className={`${soft} font-semibold`}>Not synced yet</p> : null}
-          {event?.description ? (
-            <p className={`${text} whitespace-pre-wrap`}>{event.description}</p>
-          ) : null}
+          {notes ? <p className={`${text} whitespace-pre-wrap`}>{notes}</p> : null}
           {moving ? (
             <MovePicker
               weekStartsOn={settings?.week_starts_on ?? 6}

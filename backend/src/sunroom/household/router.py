@@ -92,6 +92,7 @@ async def update_settings(body: SettingsUpdate, state: StateDep, actor: ParentDe
                 "sleep_from",
                 "sleep_to",
                 "dim_from",
+                "default_reminder_minutes",
             }:
                 setattr(home, key, value)
             elif value is not None:

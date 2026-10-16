@@ -169,6 +169,15 @@ async def get_event(event_id: str, state: StateDep, actor: ActorDep) -> EventOut
         return await service.event_out(db, await service.get_master(db, event_id))
 
 
+@router.get("/events/{event_id}/occurrences/{recurrence_id}")
+async def get_occurrence(
+    event_id: str, recurrence_id: str, state: StateDep, actor: ActorDep
+) -> EventOut:
+    """One occurrence's own words, people and reminders when it was changed on its own (R2)."""
+    async with state.db.read() as db:
+        return await service.event_at(db, await service.get_master(db, event_id), recurrence_id)
+
+
 @router.post("/events", status_code=201)
 async def post_event(body: EventCreate, state: StateDep, actor: ActorDep) -> ChangeOut:
     async with state.db.write() as tx:
