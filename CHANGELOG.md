@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-16
+
 ### Added
 
 - Four more colors for people and calendars: Orange, Brown, Gray and Lime.
@@ -71,6 +73,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   cache was cleared. Offline, the screen still opens from its saved copy.
 - A paired screen that reloads while Sunroom is down waits for it and comes back as itself.
   Before, it could ask to be paired again once Sunroom was back.
+- Behind the scenes: `sunroom restore` and Restore from a File share their checks; new tests
+  cover the proxies, the copies on the server, restarting after a restore and the people a title
+  names; and the next update's upgrade tests start from this version's database.
 
 ## [0.11.0] - 2026-10-15
 
@@ -560,5 +565,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.10.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.9.1...v0.10.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.11.0...HEAD
 [0.11.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.10.0...v0.11.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.11.0...v0.12.0
