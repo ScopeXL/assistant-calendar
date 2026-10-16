@@ -805,7 +805,7 @@ two balances; none, 21 and an archived child refused with nothing written); the 
 
 ### T8 Room around a chosen person
 
-- [ ] Done (commit: )
+- [x] Done (commit: "ui: room around a chosen person in the Who picker on the wall")
 
 **Owner's note.** "Anywhere a person is selected, it gives them a border which is good, but there
 isn't enough padding on the top/bottom so it feels scrunched. Expand the padding to match the
@@ -837,7 +837,12 @@ with 8 px of room above the avatar and under the name on the wall (ADR 0034)". A
 **CHANGELOG** (Fixed). "Picking a person no longer squeezes the ring against their avatar and
 name on the wall."
 
-**As built.** (fill in)
+**As built.** As planned (`WhoPicker.test.tsx` checks `py-2` on the wall and `py-1` on a phone).
+The plan's end-to-end fallbacks didn't exist (no a11y case named "tap", no calendar case named
+"Who"), so the run was the two that do measure it on `display-1080p`: `chores.spec.ts`'s
+five-people Who row (still one line) and the a11y journey "the wall screen, from first light to
+Settings" (tap targets and gaps). Both pass. "Who did it?" (`wrap`) and the Stars picker get
+the same cell and are left to T17's screenshots.
 
 ### T9 Support Sunroom
 

@@ -129,4 +129,22 @@ describe("the Who picker (ADR 0029)", () => {
     expect(row.className).toContain("flex-wrap");
     expect(screen.getByRole("button", { name: "Ana" }).style.flex).toBe("");
   });
+
+  it("gives a chosen person's ring 8 px above and below on the wall, 4 on a phone (ADR 0034)", () => {
+    const { unmount } = render(
+      <ShellContext.Provider value="display">
+        <WhoPicker label="Who" members={FAMILY} value={["mia"]} onChange={vi.fn()} />
+      </ShellContext.Provider>,
+    );
+    expect(screen.getByRole("button", { name: "Mia" }).className).toContain("py-2");
+    unmount();
+    render(
+      <ShellContext.Provider value="phone">
+        <WhoPicker label="Who" members={FAMILY} value={["mia"]} onChange={vi.fn()} />
+      </ShellContext.Provider>,
+    );
+    const mia = screen.getByRole("button", { name: "Mia" });
+    expect(mia.className).toContain("py-1");
+    expect(mia.className).not.toContain("py-2");
+  });
 });

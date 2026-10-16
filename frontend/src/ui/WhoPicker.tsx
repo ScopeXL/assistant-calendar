@@ -69,8 +69,11 @@ export function WhoPicker({
   const size = sizes.find((candidate) => candidate.cell * scale === fit.cell) ?? sizes[0];
   const [scrollRef, overflow] = useOverflow<HTMLDivElement>(count, fit.scroll);
 
-  const option =
-    "press select-fill flex min-w-0 flex-col items-center gap-1 rounded-button px-0.5 py-1 aria-pressed:bg-p-tint aria-pressed:ring-[3px] aria-pressed:ring-ink aria-pressed:ring-inset";
+  // The ring has room all round: on the wall 8 px above the avatar and under the name, as at its
+  // sides (ADR 0034); a phone's smaller cells already have 4 px every way.
+  const option = `press select-fill flex min-w-0 flex-col items-center gap-1 rounded-button px-0.5 ${
+    display ? "py-2" : "py-1"
+  } aria-pressed:bg-p-tint aria-pressed:ring-[3px] aria-pressed:ring-ink aria-pressed:ring-inset`;
   // Wrapping, a cell is as wide as it was before the row became one line; in the row, the cells
   // share the width from the fitted size up (or keep it exactly, when the row scrolls).
   const cell = wrap ? (display ? "min-w-24" : "min-w-16") : "";

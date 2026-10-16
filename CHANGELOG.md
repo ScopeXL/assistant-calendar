@@ -33,6 +33,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
   wall stays where it is (the parent PIN still locks after 2 minutes, and its pad never comes up
   by itself).
 - Choosing "The person's color" for an event that had its own color now clears it.
+- Picking a person no longer squeezes the ring against their avatar and name on the wall.
 
 ## [0.11.0] - 2026-10-15
 
