@@ -54,6 +54,8 @@ size limit.
 - The Hours grid's scrollbar flickered once a minute on the kitchen screen: Chromium's overlay
   bar shows on every scroll, and a resting grid sets `scrollTop` each minute to follow now. That
   scroller is `scrollbar-width: none`.
+- `motion` still fades under Reduce Motion, and an endless CSS animation at 0.01 ms flickers:
+  leave `exit` out (`useMotionReduced`), and give the loop `animation: none`.
 
 ## Time and live updates
 
@@ -109,3 +111,7 @@ size limit.
 - A header measured on Sep 30 had no high and low beside the weather: the test moved the
   server's clock back after seeding, and the forecast cached at the seed started at the real
   today. Move the clock before `seed()` when a test needs that day's forecast.
+- An exiting `AnimatePresence` child stayed tappable, and cleared a shared ref as it left:
+  `ui/Leaves` makes it inert (`useIsPresent`); such a ref is set, never nulled.
+- A role locator's `toHaveCount(0)` passed before a chip had faded: leaving, it's `aria-hidden`
+  at once. Poll for what the test means.

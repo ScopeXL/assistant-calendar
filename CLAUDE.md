@@ -158,18 +158,21 @@ kiosk/           install.sh, the launcher, sunroom-screen (sleep and brightness)
 
 Two tiers (PLAN §14.7). Read test output only when it fails.
 
-**Each unit of work (the quick gate):**
+**Each unit of work (the quick gate), and nothing more:**
 1. `just quick` is green.
 2. The unit tests it touched pass (`just test-fe …`, `just test-py …`).
-3. Its end-to-end spec passes on one project (`just e2e e2e/<spec> --project=<name>`).
+3. Its end-to-end spec passes on one project (`just e2e e2e/<spec> --project=<name>`): the one
+   spec the task names, never the suite.
 4. Docs are updated: PLAN or UX, plus a new ADR if a decision changed.
 5. `CHANGELOG.md` has a plain-English line under `[Unreleased]`.
 6. `just scan` is clean (the hook runs it), and the work is committed.
 
-**The end of a batch, and before any release (the full gate):** `just check`, the whole
-`just e2e`, and `just screenshots` reviewed against [UX §10](docs/UX.md) (1920×1080, 1080×1920
-and 390×844, light and dark; only the screens the batch touched), then `just scan`. A failure
-is traced by running the failing spec at each task's commit. `just preflight` runs it all again.
+**Never between tasks:** the whole `just e2e`, `just check` or `just screenshots`. They run once,
+at the end of a batch and before any release (the full gate): `just check`, the whole `just e2e`,
+and `just screenshots` reviewed against [UX §10](docs/UX.md) (1920×1080, 1080×1920 and 390×844,
+light and dark; only the screens the batch touched), then `just scan`. Fix what fails there; a
+failure is traced by running the failing spec at each task's commit. `just preflight` runs it all
+again.
 
 ## Deploy (summary; the skill holds the full runbook)
 
@@ -213,9 +216,3 @@ part your task touches, and move lines there when this file nears its limit.
   list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
 - The test server keeps plugin settings between tests (`/api/_test/reset` leaves
   `plugin_state`): a test that changes one puts it back in `finally`.
-- An exiting `AnimatePresence` child stayed tappable, and cleared a shared ref as it left:
-  `ui/Leaves` makes it inert (`useIsPresent`); such a ref is set, never nulled.
-- A role locator's `toHaveCount(0)` passed before a chip had faded: leaving, it's `aria-hidden`
-  at once. Poll for what the test means.
-- `motion` still fades under Reduce Motion, and an endless CSS animation at 0.01 ms flickers:
-  leave `exit` out (`useMotionReduced`), and give the loop `animation: none`.
