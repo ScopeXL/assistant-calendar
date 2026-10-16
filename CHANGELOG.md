@@ -58,6 +58,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A reminder now comes back when an event is reopened: the row knows 30 minutes and any other
   value, a change to one occurrence shows on that occurrence, two reminders stay two, and "All
   of Them" reaches the changed occurrences too.
+- After an update, refreshing a paired screen or a phone that installed Sunroom shows the new
+  version at once. Before, the old page stayed until the screen's 3 AM reload or the browser's
+  cache was cleared. Offline, the screen still opens from its saved copy.
+- A paired screen that reloads while Sunroom is down waits for it and comes back as itself.
+  Before, it could ask to be paired again once Sunroom was back.
 
 ## [0.11.0] - 2026-10-15
 

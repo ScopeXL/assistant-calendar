@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { api, errorMessage, unwrap } from "../../api/client";
+import { api, ApiError, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { isLoopbackAddress } from "../../lib/address";
 import { zonedParts } from "../../lib/dates";
@@ -43,7 +43,14 @@ export function DisplayEntry() {
     queryFn: async () => unwrap(await api.GET("/api/setup/status")),
     refetchInterval: (query) => (query.state.data?.setup_complete ? false : 5000),
   });
-  const { data: session, isPending } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
+  // Until the server answers, however long that takes: a paired screen reloaded while it's down
+  // gave up after two tries, then showed Pair This Screen once it was back (ADR 0034).
+  const { data: session, isPending } = useQuery({
+    queryKey: qk.session(),
+    queryFn: fetchSession,
+    retry: (_count, error) =>
+      !(error instanceof ApiError && error.status >= 400 && error.status < 500),
+  });
   const [justPaired, setJustPaired] = useState(false);
 
   if (!status || isPending) return <Frame>{null}</Frame>;

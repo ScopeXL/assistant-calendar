@@ -169,14 +169,21 @@ test("a wall screen typed in with the password, and a toast that leaves under th
   await screen.getByRole("button", { name: "Done" }).click();
   await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
 
-  // From here on the page is the service worker's cached index.html, whose CSP header and
-  // nonce were stamped together when it was cached (ADR 0007).
+  // From here on the service worker answers the page, and asks the server for it (ADR 0034):
+  // two reloads give two nonces, each in its own CSP header. The copy it saved at install would
+  // give the same one twice.
   await screen.waitForFunction(() => navigator.serviceWorker.controller !== null);
-  await screen.reload();
-  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
-  expect(await screen.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
-  const nonce = await screen.locator('meta[name="csp-nonce"]').getAttribute("content");
-  expect(nonce).toMatch(/^[\w+/=-]{16,}$/);
+  const nonces: string[] = [];
+  for (let round = 0; round < 2; round++) {
+    const response = await screen.reload();
+    expect(response?.fromServiceWorker()).toBe(true);
+    await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
+    const nonce = (await screen.locator('meta[name="csp-nonce"]').getAttribute("content")) ?? "";
+    expect(nonce).toMatch(/^[\w+/=-]{16,}$/);
+    expect((await response?.allHeaders())?.["content-security-policy"]).toContain(nonce);
+    nonces.push(nonce);
+  }
+  expect(nonces[1]).not.toBe(nonces[0]);
 
   // Settings → Family → remove Mia, then Undo: the toast rises and leaves with `motion`, whose
   // style block carries the page's nonce, while the CSP guard watches (ADR 0007).
@@ -192,6 +199,61 @@ test("a wall screen typed in with the password, and a toast that leaves under th
   await toast.getByRole("button", { name: "Undo" }).click();
   await expect(toast).toHaveCount(0);
   await expect(screen.getByRole("button", { name: "Edit Mia" })).toBeVisible();
+  await context.close();
+});
+
+test("offline, a wall screen still opens from the copy its service worker saved", async ({
+  request,
+  browser,
+  watch,
+}, testInfo) => {
+  // Chromium's setOffline reaches a service worker's own fetches; WebKit's doesn't.
+  test.skip(testInfo.project.name !== ONLY, WHY);
+  await seed(request, { pin: PIN });
+  const { page: screen, context } = await wall(browser, watch);
+  await pairWall(screen);
+  await screen.goto("/display");
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
+  await screen.waitForFunction(() => navigator.serviceWorker.controller !== null);
+
+  await context.setOffline(true);
+  const offline = await screen.reload();
+  expect(offline?.fromServiceWorker()).toBe(true);
+  expect(offline?.ok()).toBe(true);
+  // The saved page and its files: the wall's frame, waiting for the server (DisplayEntry).
+  await expect(screen.locator('main[data-shell="display"]')).toBeVisible();
+  expect(await screen.locator('meta[name="csp-nonce"]').getAttribute("content")).toMatch(
+    /^[\w+/=-]{16,}$/,
+  );
+
+  await context.setOffline(false);
+  await screen.reload();
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
+
+  // A reverse proxy's 502 while the container restarts counts as no answer too. The route
+  // answers the worker's own fetch (Chromium), so count that it did.
+  let gateway = 0;
+  await context.route("**/display", (route) => {
+    gateway += 1;
+    return route.fulfill({ status: 502, body: "Bad Gateway" });
+  });
+  const proxied = await screen.reload();
+  expect(gateway).toBeGreaterThan(0);
+  expect(proxied?.fromServiceWorker()).toBe(true);
+  expect(proxied?.ok()).toBe(true);
+  await expect(screen.locator('main[data-shell="display"]')).toBeVisible();
+  await expect(screen.getByText("Bad Gateway")).toHaveCount(0);
+  await context.unrouteAll();
+
+  // The server down with the network up: the screen waits for it and comes back as itself, by
+  // itself. Giving up showed Pair This Screen, though it was still paired.
+  await context.route("**/api/**", (route) => route.abort("connectionrefused"));
+  await screen.reload();
+  await expect(screen.locator('main[data-shell="display"]')).toBeVisible();
+  await screen.waitForTimeout(5000); // past the two quick retries every other request gets
+  await context.unrouteAll();
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible({ timeout: 30_000 });
+  await expect(screen.getByRole("heading", { name: "Pair This Screen" })).toHaveCount(0);
   await context.close();
 });
 

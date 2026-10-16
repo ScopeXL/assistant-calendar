@@ -36,6 +36,32 @@ describe("the update prompt", () => {
   });
 });
 
+describe("looking for a new version (ADR 0034)", () => {
+  it("looks hourly and when the page comes back, and stops when the shell unmounts", async () => {
+    vi.useFakeTimers();
+    const update = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: { getRegistration: () => Promise.resolve({ update }) },
+    });
+    try {
+      const view = render(<UpdatePrompt />);
+      await act(() => vi.advanceTimersByTimeAsync(60 * 60 * 1000));
+      expect(update).toHaveBeenCalledTimes(1);
+      document.dispatchEvent(new Event("visibilitychange"));
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(update).toHaveBeenCalledTimes(2);
+      // The wall remounts its shell on every room change: no timer is left behind.
+      view.unmount();
+      await act(() => vi.advanceTimersByTimeAsync(3 * 60 * 60 * 1000));
+      expect(update).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+      Reflect.deleteProperty(navigator, "serviceWorker");
+    }
+  });
+});
+
 describe("the connection pill (UX §8)", () => {
   it("says nothing while the server answers", () => {
     render(<OfflinePill />);

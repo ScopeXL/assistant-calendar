@@ -207,9 +207,9 @@ part your task touches, and move lines there when this file nears its limit.
 - An a11y check failed only in the evening: the unpaired wall flips from the browser's clock to
   the server's 10 AM, and headless Chromium draws no frame until asked, so 0.01 ms transitions
   held old colors. `settled()` asks for frames; set the server's clock when a test needs "Up next".
-- `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answers
-  navigations (and `location.reload()`) from its precached `index.html`. Test routes on a page
-  never loaded before; `lib/update.reloadFresh()` drops the worker and its caches first.
+- `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answered
+  navigations from its precached `index.html`. Since ADR 0034 it asks the server first (the copy
+  answers only offline), but still test routes on a page never loaded before.
 - A `createLink` component lost its styles: the router passes its own `className`. Merge it
   after the spread (`shell/HeaderLinks`, `ui/ListRow`).
 - A plugin's setting reached the wall minutes late: `plugins.changed` refreshed only the plugin

@@ -1544,7 +1544,7 @@ family would find it set up and reset it with the CLI).
 
 ### T14 A refresh shows the new version
 
-- [ ] Done (commit: )
+- [x] Done (commit: "web: a refresh asks the server for the page; the wall waits out a server outage")
 
 **Owner's note.** "Ensure refreshing the page doesn't download cached assets after an update.
 I've had to clear the cache to see new versions."
@@ -1653,7 +1653,25 @@ a proxy that caches `index.html` against `no-cache`).
 Sunroom shows the new version at once. Before, the old page stayed until the screen's 3 AM reload
 or the browser's cache was cleared. Offline, the screen still opens from its saved copy."
 
-**As built.** (fill in)
+**As built.** As planned, with three changes. (1) The fallback is a two-line plugin,
+`handlerDidError: () => matchPrecache("/index.html")`, which is what `PrecacheFallbackPlugin`
+does: that class's typing fails `exactOptionalPropertyTypes`. (2) Beyond the plan, a plugin turns
+a 5xx into no answer, so a proxy's 502 while the container restarts opens the saved page instead
+of a dead end on the wall; the e2e checks it with a route on the worker's own fetch, counting that
+it was hit. (3) The first-run case reloads twice and expects two different nonces, each in its
+own CSP header: one reload's nonce would differ from the first page's even from the precache (the
+install fetch is its own request), so only the second proves a fresh render. The new offline
+case asserts the wall's frame (`main[data-shell="display"]`: `DisplayEntry` shows it while the
+setup status is unknown, and has no offline pill). `useAppUpdate()` catches a failed update
+check; `StatusLayer.test.tsx` gains the hourly-and-unmount case. The by-hand check ran scripted
+(Playwright, a kept profile, a server on 4175 with its own data folder, VERSION set to 0.11.1 for
+the rebuild and put back): the refresh loaded the new build's script at once, the new worker
+waited, and offline the old copy opened (at `/`, after the router's few seconds of waiting for the
+session request; unchanged). That check also found an older bug, fixed here: a paired screen
+reloaded while the server was down (the network up) gave its session request two tries, then
+showed Pair This Screen once the server came back. `DisplayEntry`'s session query now retries
+until the server answers anything but a 4xx, and the offline case reproduces it (it failed
+before the fix).
 
 ### T15 Backup: the policy, the copies, one Download, Export
 

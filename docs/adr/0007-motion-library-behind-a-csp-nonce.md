@@ -25,7 +25,7 @@
 ## Consequences
 
 - `index.html` is no longer a static file. The server stamps every copy it sends, `/index.html` requested by name included, and still serves it `no-cache` (PLAN §5.1).
-- The service worker comes from Dinner Bell, whose navigation fallback answers with the `index.html` it cached at install. If Sunroom keeps that fallback, the nonce on a device with the service worker is per install rather than per request, and the cached copy must still pair a matching meta tag and header.
+- The service worker comes from Dinner Bell, whose navigation fallback answers with the `index.html` it cached at install. If Sunroom keeps that fallback, the nonce on a device with the service worker is per install rather than per request, and the cached copy must still pair a matching meta tag and header. (Changed by [0034](0034-m6-batch-6-the-owners-sixth-notes.md): the worker asks the server for the page, so the nonce is per request whenever the server answers; the cached copy, per install, only when it doesn't.)
 - The design-rules test bans raw hex and runtime style injection, and fails any `motion` use outside `MotionConfig` (PLAN §14.6).
 - `reducedMotion="user"` follows only the operating system. The display's own "Reduce motion" setting must switch `motion` to always reduce as well as turning off the CSS transitions (UX §7).
 - Animations stay on transforms and opacity, so the week board holds up on a Pi 4 (PLAN §17, risk 4). The burst library, `canvas-confetti` or a small one written here, is chosen in M3 by bundle size.

@@ -136,6 +136,8 @@ One Docker image runs one process, `sunroom serve`: uvicorn with exactly one wor
 | `/assets/*` | Hashed build files, `max-age=31536000, immutable`; a missing asset is a 404, never `index.html` |
 | Any other GET | `index.html` with `no-cache` (the SPA fallback); `/sw.js` and `/manifest.webmanifest` also `no-cache` |
 
+The service worker asks the server for every page (3 s at most) and answers with the copy it saved at install only when the server can't (no answer, or a proxy's 5xx), so a refresh after an update shows the new version at once and the app still opens offline. It precaches the build's files and has no route for `/api` or `/photos` (ADR 0034).
+
 - SQLite at `/data/sunroom.db` (WAL); backups in `/data/backups/`; photos in `/data/photos/{originals,thumbs,inbox}`.
 - Default port 8080. The container binds `0.0.0.0` because the kiosk browser and phones are other devices on the LAN. Forwarded headers are believed from the home network only (private, loopback, link-local and Tailscale peers), so a reverse proxy needs no setting (ADR 0034).
 - Deployments supported: the container on any amd64 or arm64 host with a Raspberry Pi (or an old tablet) as the display only; or everything on one Pi 4 (4 GB) or Pi 5. **The owner's own setup is the first:** the container runs on the owner's existing Docker host, from a `docker-compose.yml` in a folder of its own started with `docker compose up -d` (Portainer there only shows logs and stops or starts containers), behind the owner's HTTPS reverse proxy, and a Pi drives a landscape touchscreen in the kitchen (Q3). A week view with 500 occurrences must respond in under 100 ms on a Pi 4 (§7.3), so the all-on-one-Pi path stays honest.

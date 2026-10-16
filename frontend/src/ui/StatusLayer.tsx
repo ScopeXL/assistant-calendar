@@ -46,23 +46,23 @@ export function useAppUpdate(): { ready: boolean; apply: () => void } {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW({
-    onRegisteredSW(_url, registration) {
-      if (!registration) return;
-      setInterval(() => {
-        void registration.update();
-      }, UPDATE_CHECK_MS);
-    },
-  });
+  } = useRegisterSW();
 
+  // Hourly, and whenever the page comes back into view, while it's visible. One timer per mount,
+  // cleared with it: the wall remounts its shell on every room change (ADR 0034).
   useEffect(() => {
     const check = () => {
       if (document.visibilityState === "visible" && "serviceWorker" in navigator) {
-        void navigator.serviceWorker.getRegistration().then((r) => r?.update());
+        navigator.serviceWorker
+          .getRegistration()
+          .then((registration) => registration?.update())
+          .catch(() => undefined); // offline, or the server restarting: the next check tries again
       }
     };
+    const timer = setInterval(check, UPDATE_CHECK_MS);
     document.addEventListener("visibilitychange", check);
     return () => {
+      clearInterval(timer);
       document.removeEventListener("visibilitychange", check);
     };
   }, []);
