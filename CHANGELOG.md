@@ -17,6 +17,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   before you finish. Its words say "devices" and "paired screens".
 - About says URL, Updates, "Check for updates daily" and "This is the latest version", and its
   small print credits Open-Meteo for the weather.
+- Settings → Household says what the location is for, and that only your city goes to
+  Open-Meteo.
 
 ## [0.11.0] - 2026-10-15
 

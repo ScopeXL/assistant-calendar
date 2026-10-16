@@ -541,7 +541,7 @@ PRIVACY.md and DEPLOY.md named the switch too.
 
 ### T4 Household → Location: what it's for, and what leaves
 
-- [ ] Done (commit: )
+- [x] Done (commit: "weather: the Location note says what it is for and what leaves")
 
 **Owner's note.** "In the Location section change the description to something like 'Used for
 weather and sunrise/sunset data. Selected city is sent to Open-Meteo.' Polish the text."
@@ -566,7 +566,9 @@ that name exists (the phone Settings loop at `:228-333`), else none.
 **CHANGELOG** (Changed). "Settings → Household says what the location is for, and that only your
 city goes to Open-Meteo."
 
-**As built.** (fill in)
+**As built.** As planned. No end-to-end case reads the note (the phone a11y loop opens the
+page but has no case named Household), so the quick gate was `just quick` and
+`just test-fe src/features/weather`.
 
 ### T5 Return to the calendar after, tips on by default, and where the tips live
 

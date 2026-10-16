@@ -160,7 +160,7 @@ export function LocationSettings() {
   return (
     <Group
       title="Location"
-      note="For the weather and the sunset. The city you search for and where it is go to Open-Meteo; nothing else does."
+      note="Used for the weather, and for sunrise and sunset. Only your city goes to Open-Meteo, when you search for it and for the forecast; nothing else leaves."
     >
       <div className={`flex flex-col gap-4 ${display ? "py-5" : "py-4"}`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
