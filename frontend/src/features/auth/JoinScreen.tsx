@@ -64,7 +64,7 @@ export function JoinScreen() {
         ? "Signing In…"
         : installFirst
           ? "Sign in here in Safari instead"
-          : "Sign In on This Phone"}
+          : "Sign In on This Device"}
     </Button>
   );
 
@@ -80,7 +80,7 @@ export function JoinScreen() {
           </p>
           <Code code={code} />
           <p className="mb-6 text-secondary text-ink-soft">
-            The code works once, for 10 minutes. The other phone shows it too.
+            The code works once, for 10 minutes. The other device shows it too.
           </p>
           <div className="flex flex-col gap-2">
             <Button
@@ -98,7 +98,7 @@ export function JoinScreen() {
         <>
           <h1 className="mb-3 text-title font-bold">Sign in with a Code</h1>
           <p className="text-body text-ink-soft">
-            Another phone made this code to add this one to Sunroom:
+            Another device made this code to add this one to Sunroom:
           </p>
           <Code code={code} />
           {signInHere}

@@ -63,22 +63,23 @@ function useText(): { body: string; secondary: string } {
     : { body: "text-body", secondary: "text-secondary" };
 }
 
-/** Where a phone adds an account: this server's Calendars & Accounts, with this sheet open. */
-function phoneAddress(): string {
+/** This server's Calendars & Accounts on a signed-in device; `add`: with this sheet open. */
+function deviceAddress(add = true): string {
+  const path = add ? "/settings/calendars?add=1" : "/settings/calendars";
   try {
-    return `${window.location.origin}/settings/calendars?add=1`;
+    return `${window.location.origin}${path}`;
   } catch {
-    return "/settings/calendars?add=1";
+    return path;
   }
 }
 
 /**
- * Add an account (UX §6) on a phone, a computer or the wall screen (ADR 0028): Google (three
+ * Add an account (UX §6) on any signed-in device or a paired screen (ADR 0028): Google (three
  * ways), Apple, a calendar server, any calendar address, or holidays. Each flow ends on the
- * account's calendars, with a switch and a person each, then Done. On the wall screen passwords
- * are masked fields on its own keyboard, behind the PIN; the two Google ways that need a phone
+ * account's calendars, with a switch and a person each, then Done. On a paired screen passwords
+ * are masked fields on its own keyboard, behind the PIN; the two Google ways that need a device
  * (a key file, Google's own page) show a code to scan instead, and so does "Or add it from a
- * phone" under the choices. Back from Google's sign-in, it opens on the new account's calendars.
+ * device" under the choices. Back from Google's sign-in, it opens on the new account's calendars.
  */
 export function AddAccountSheet({
   open,
@@ -133,7 +134,12 @@ export function AddAccountSheet({
             ]}
             onPick={setStep}
           />
-          {kiosk ? <PhoneShortcut /> : null}
+          {kiosk ? (
+            <DeviceShortcut
+              lead="Or add it from a device"
+              line="Scan this with a parent's phone."
+            />
+          ) : null}
         </div>
       ) : step === "google" ? (
         <Choices
@@ -147,13 +153,13 @@ export function AddAccountSheet({
               step: "google-helper",
               label: "Share with a Sunroom helper",
               line: "About 10 minutes, once. Lets you add and change events from Sunroom.",
-              phone: kiosk,
+              device: kiosk,
             },
             {
               step: "google-signin",
               label: "Sign in with Google",
               line: "Needs Sunroom at an https:// address on the internet and your own Google app keys, which it asks for here.",
-              phone: kiosk,
+              device: kiosk,
             },
           ]}
           onPick={setStep}
@@ -170,13 +176,13 @@ export function AddAccountSheet({
         <ServerFlow kiosk={kiosk} onConnected={picked} />
       ) : step === "google-helper" ? (
         kiosk ? (
-          <FromPhone why="It needs a key file from Google, and this screen can't open files." />
+          <FromDevice why="It needs a key file from Google, and this screen can't open files." />
         ) : (
           <HelperFlow onFound={picked} />
         )
       ) : step === "google-signin" ? (
         kiosk ? (
-          <FromPhone why="Google's sign-in page doesn't work on this screen." />
+          <FromDevice why="Google's sign-in page doesn't work on this screen." />
         ) : (
           <SignInFlow />
         )
@@ -191,8 +197,8 @@ function Choices({
   options,
   onPick,
 }: {
-  /** `phone`: on the wall screen, a way that needs a phone, marked "From a phone". */
-  options: { step: Step; label: string; line: string; phone?: boolean }[];
+  /** `device`: on a paired screen, a way that needs a signed-in device, marked "From a device". */
+  options: { step: Step; label: string; line: string; device?: boolean }[];
   onPick: (step: Step) => void;
 }) {
   const text = useText();
@@ -209,10 +215,10 @@ function Choices({
           >
             <span className={`${text.body} font-semibold`}>{option.label}</span>
             <span className={`${text.secondary} text-ink-soft`}>{option.line}</span>
-            {option.phone ? (
+            {option.device ? (
               <span className={`${text.secondary} mt-1 flex items-center gap-2 font-semibold`}>
                 <Smartphone aria-hidden="true" className="size-6" />
-                From a phone
+                From a device
               </span>
             ) : null}
           </button>
@@ -222,35 +228,52 @@ function Choices({
   );
 }
 
-/** On the wall screen, under the choices: the same steps on a phone, one scan away. */
-function PhoneShortcut() {
+/**
+ * On a paired screen, what only a signed-in device can do, one scan away (ADR 0028, 0034): a
+ * code that opens Calendars & Accounts there, beside what to do. Under Add an Account's choices
+ * (with the sheet open); and in an account's sheet, where Google's own sign-in page is the one
+ * thing a screen can't open (`add` false).
+ */
+export function DeviceShortcut({
+  lead,
+  line,
+  add = true,
+}: {
+  lead: string;
+  line?: string;
+  add?: boolean;
+}) {
   const text = useText();
   return (
     <div className="flex items-center gap-5 rounded-panel border border-line bg-wall p-4">
       <QrCode
-        value={phoneAddress()}
-        label="A code that opens Add an Account on a phone"
+        value={deviceAddress(add)}
+        label={
+          add
+            ? "A code that opens Add an Account on a device"
+            : "A code that opens Calendars & Accounts on a device"
+        }
         className="size-32 shrink-0"
       />
       <div className="flex flex-col gap-1">
-        <p className={`${text.body} font-semibold`}>Or add it from a phone</p>
-        <p className={`${text.secondary} text-ink-soft`}>Scan this with a parent's phone.</p>
+        <p className={`${text.body} font-semibold`}>{lead}</p>
+        {line ? <p className={`${text.secondary} text-ink-soft`}>{line}</p> : null}
       </div>
     </div>
   );
 }
 
-/** A way the wall screen can't do itself (ADR 0028): a code that opens it on a phone. */
-function FromPhone({ why }: { why: string }) {
+/** A way a paired screen can't do itself (ADR 0028): a code that opens it on a device. */
+function FromDevice({ why }: { why: string }) {
   const text = useText();
   return (
     <div className="flex flex-col items-center gap-5 text-center">
-      <p className={`${text.body} font-semibold`}>Do this from a phone</p>
+      <p className={`${text.body} font-semibold`}>Do this from a device</p>
       <p className={text.body}>{why}</p>
-      <QrCode value={phoneAddress()} label="A code that opens Add an Account on a phone" />
+      <QrCode value={deviceAddress()} label="A code that opens Add an Account on a device" />
       <p className={`${text.secondary} text-ink-soft`}>
-        Scan this with a parent's phone, or open Settings → Calendars & Accounts on a phone or
-        computer.
+        Scan this with a parent's phone, or open Settings → Calendars & Accounts on a signed-in
+        device.
       </p>
     </div>
   );
@@ -516,8 +539,8 @@ function HolidaysFlow({ onDone }: { onDone: () => void }) {
 
 /**
  * Apple (iCloud's CalDAV, with an app-specific password) or another CalDAV server (its address
- * and login). On the wall screen, the steps at Apple happen on a phone or computer, and the
- * password is typed here.
+ * and login). On a paired screen, the steps at Apple happen on another device, and the password
+ * is typed here.
  */
 function ServerFlow({
   apple = false,
@@ -559,8 +582,8 @@ function ServerFlow({
             <li>
               {kiosk ? (
                 <>
-                  On a phone or computer, open{" "}
-                  <span className="font-semibold">appleid.apple.com</span> and sign in.
+                  On another device, open <span className="font-semibold">appleid.apple.com</span>{" "}
+                  and sign in.
                 </>
               ) : (
                 <>

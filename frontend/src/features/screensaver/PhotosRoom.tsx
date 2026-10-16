@@ -37,11 +37,11 @@ export function PhotosRoom() {
   const [open, setOpen] = useState<number | null>(null);
   const shown = manifest?.photos.length ?? 0;
   const address = `${window.location.origin}/photos`;
-  // The kitchen screen adds no photos itself: a phone does, from this code.
-  const fromAPhone = (
+  // A paired screen adds no photos itself (it has no files): a device does, from this code.
+  const fromADevice = (
     <div className="flex items-center gap-6 rounded-panel border border-line bg-surface p-5 text-left">
-      <QrCode value={address} label="A code that opens Photos on a phone" className="size-32" />
-      <p className="text-d-body">Add photos from a phone: open Sunroom, then More, then Photos.</p>
+      <QrCode value={address} label="A code that opens Photos on a device" className="size-32" />
+      <p className="text-d-body">Add photos from a device: open Sunroom there, then Photos.</p>
     </div>
   );
   return (
@@ -80,13 +80,13 @@ export function PhotosRoom() {
           <EmptyState
             icon={Images}
             line="No photos yet"
-            note="Photos added from a phone or a computer show here and on the screensaver."
-            // The kitchen screen has no file picker: its QR code stands where the button would.
-            action={kiosk ? fromAPhone : <AddPhotosButton />}
+            note="Photos added from any device show here and on the screensaver."
+            // A paired screen has no file picker: its QR code stands where the button would.
+            action={kiosk ? fromADevice : <AddPhotosButton />}
           />
         ) : (
           <>
-            {kiosk ? <div className="mb-6">{fromAPhone}</div> : null}
+            {kiosk ? <div className="mb-6">{fromADevice}</div> : null}
             {/* How many the screensaver shows, over the grid: the header has no second line. */}
             {library.isSuccess ? (
               <p className="mb-3 text-d-secondary font-semibold text-ink-soft">

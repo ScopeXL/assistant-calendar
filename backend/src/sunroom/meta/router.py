@@ -260,11 +260,13 @@ class EraseOut(BaseModel):
 
 @router.post("/admin/erase")
 async def erase(body: EraseIn, request: Request, state: StateDep, actor: ParentDep) -> EraseOut:
-    """Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a phone or a
-    computer, with the household password. Never from a wall screen, which a child can reach.
+    """Erase everything and start over (meta/erase.py, ADR 0029): a parent, on a signed-in
+    device, with the household password. Never from a paired screen, which a child can reach.
     The password is checked as at sign-in, wrong tries counting against the same limiter."""
     if actor.is_kiosk:
-        raise AppError(403, "not_on_a_screen", "Erase everything from a phone or computer.")
+        raise AppError(
+            403, "not_on_a_screen", "Erase everything from a signed-in device, not a paired screen."
+        )
     ip = client_ip(request)
     check_rate(state.login_limiter, ip)
     async with state.db.read() as db:

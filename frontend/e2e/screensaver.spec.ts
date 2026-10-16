@@ -3,7 +3,7 @@
  * "Screensaver in and out"): after the idle minutes the photos fade in over the wall, uncropped,
  * with the clock band; a tap goes back to exactly where the wall was and presses nothing; a
  * parent's phone starts it; a phone adds a photo and removes it with Undo; a computer adds one
- * from the Photos room, where the wall shows a code for a phone instead. The browser's clock is
+ * from the Photos room, where the wall shows a code for a device instead. The browser's clock is
  * Playwright's, so ten idle minutes take no time. Synthetic photos only (the seed draws them).
  */
 import type { Locator, Page } from "@playwright/test";
@@ -78,7 +78,7 @@ test("a parent's phone starts the screensaver on the wall", async ({ page, brows
   await signInPhone(ana, "Ana");
   await ana.goto("/photos");
   await ana.getByRole("button", { name: "Start Screensaver" }).click();
-  await expect(toast(ana, "Started the screensaver on the kitchen screen")).toBeVisible();
+  await expect(toast(ana, "Started the screensaver")).toBeVisible();
   await expect(saver(page)).toBeVisible();
   await context.close();
 });
@@ -108,21 +108,22 @@ test("a phone adds a photo, and removes it with Undo", async ({ browser, watch }
   await context.close();
 });
 
-test("a computer adds photos itself, where the wall shows a code for a phone", async ({
+test("a computer adds photos itself, where the wall shows a code for a device", async ({
   page,
 }, testInfo) => {
-  const code = page.getByRole("img", { name: "A code that opens Photos on a phone" });
+  const code = page.getByRole("img", { name: "A code that opens Photos on a device" });
   const mia = page.getByRole("dialog", { name: "Edit Mia" });
   if (testInfo.project.name === "display-1080p") {
     await pairWall(page);
     await page.goto("/photos");
     await expect(code).toBeVisible();
     await expect(page.getByLabel("Add Photos")).toHaveCount(0);
-    // A person's photo comes from a phone too.
+    // A person's photo comes from a device too, and the screen says nothing about it (ADR 0034).
     await page.goto("/settings/family");
     await page.getByRole("button", { name: "Edit Mia" }).click();
-    await expect(mia).toContainText("Add a photo from a phone");
+    await expect(mia.getByRole("button", { name: "Save Changes" })).toBeVisible();
     await expect(mia.getByLabel("Add a Photo", { exact: true })).toHaveCount(0);
+    await expect(mia).not.toContainText(/photo from/i);
     return;
   }
   await signInPhone(page, "Ana");

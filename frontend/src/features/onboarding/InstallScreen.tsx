@@ -78,8 +78,8 @@ export function InstallScreen() {
           </Steps>
           <p className="mt-4 text-secondary text-ink-soft">
             On iPhone, the home-screen app keeps its own sign-in. Sign in there once more: with the
-            household password, or with a code from a phone that’s already signed in (More, then
-            Settings, then Add a phone).
+            household password, or with a code from a device that’s already signed in (Settings,
+            then Devices, then Add a Device; on a phone, Settings is under More).
           </p>
         </>
       ) : isAndroid() ? (

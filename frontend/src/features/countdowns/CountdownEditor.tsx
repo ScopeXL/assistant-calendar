@@ -168,8 +168,8 @@ export function CountdownEditor({
         <div className="flex flex-col divide-y divide-line">
           <Switch label="Every year" checked={yearly} onChange={setYearly} />
           <Switch
-            label="Show it on the kitchen screen"
-            hint="Off for a surprise: it shows on phones only."
+            label="Show it on paired screens"
+            hint="Off for a surprise: only signed-in devices show it."
             checked={onWall}
             onChange={setOnWall}
           />

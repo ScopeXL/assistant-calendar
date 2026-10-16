@@ -213,9 +213,7 @@ function Band({ onPhoto }: { onPhoto: boolean }) {
           ))}
         </p>
         {!onPhoto ? (
-          <p className={`text-d-body ${soft}`}>
-            Add photos from a phone or a computer to see them here.
-          </p>
+          <p className={`text-d-body ${soft}`}>Add photos from a device to see them here.</p>
         ) : null}
       </div>
       {next ? (

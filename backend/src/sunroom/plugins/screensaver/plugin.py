@@ -23,7 +23,7 @@ MANIFEST = PluginManifest(
     id="screensaver",
     version="1.0.0",
     name="Photos & Screensaver",
-    description="The family's photos on the kitchen screen while nobody's using it.",
+    description="The family's photos on paired screens while nobody's using them.",
     settings_spec=(
         ParamField(
             "start_after",

@@ -140,13 +140,14 @@ describe("Settings → Backup goes by what the device is, not its size", () => {
     expect(screen.getByRole("dialog", { name: "Erase Everything?" })).toBeTruthy();
   });
 
-  it("gives the kitchen screen neither: it has no files, and a child can reach it", () => {
+  it("gives a paired screen neither, and no line about them: it has no files, and a child can reach it", () => {
     drawPage("kiosk", "display");
     expect(screen.queryByRole("link", { name: /^Download/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Export Everything" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Take Your Data with You" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Start Over" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Erase Everything…" })).toBeNull();
-    expect(screen.getByText(/^Download a backup from a phone or computer/)).toBeTruthy();
+    expect(screen.queryByText(/from a (phone|computer|device)/)).toBeNull();
     expect(screen.getByRole("button", { name: "Back Up Now" })).toBeTruthy();
   });
 });

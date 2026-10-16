@@ -64,7 +64,7 @@ export const TIPS: readonly Tip[] = [
   },
   {
     id: "photos",
-    text: "Photos: add them from a phone or a computer, several at once.",
+    text: "Photos: add them from any signed-in device, several at once.",
     needs: ["screensaver"],
   },
   {
@@ -79,11 +79,19 @@ export const TIPS: readonly Tip[] = [
   },
   {
     id: "backup",
-    text: "On a phone or computer, Settings → Backup → Download Everything saves a copy of it all.",
+    text: "On a signed-in device, Settings → Backup → Download saves a copy of it all.",
   },
   {
     id: "install",
     text: "On a phone, add Sunroom to the Home Screen from More → Install the App.",
+  },
+  {
+    id: "devices-do-more",
+    text: "Signed-in devices can do more: downloads, adding photos, restores and Google's sign-in.",
+  },
+  {
+    id: "devices-settings",
+    text: "Change a setting on any signed-in device and every screen follows at once.",
   },
   {
     id: "accounts",

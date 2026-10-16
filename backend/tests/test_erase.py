@@ -123,7 +123,7 @@ async def test_a_wall_screen_cant_erase(
         assert refused.status_code == 403, refused.text
         assert refused.json()["error"] == {
             "code": "not_on_a_screen",
-            "message": "Erase everything from a phone or computer.",
+            "message": "Erase everything from a signed-in device, not a paired screen.",
         }
     after = row_counts(data_dir)
     assert {table: after[table] for table in before if table != "devices"} == {

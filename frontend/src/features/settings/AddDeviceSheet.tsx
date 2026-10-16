@@ -47,8 +47,8 @@ function CodeView({ code, onNew }: { code: JoinCode; onNew: () => void }) {
   return (
     <div className="flex flex-col items-center gap-4 text-center">
       <p className="text-body">
-        On the new phone or tablet, open the camera and point it at this code. On a computer, open
-        the address under it.
+        On the new device, open the camera and point it at this code. On a computer, open the
+        address under it.
       </p>
       <QrCode value={code.url} label="QR code that signs in another device" />
       <p className="text-secondary break-all text-ink-soft select-all">{code.url}</p>

@@ -156,7 +156,8 @@ export function DevicesPage() {
         {screens.length === 0 ? (
           <div className="py-4">
             <Text soft>
-              No screen paired yet. Open Sunroom on the kitchen screen and type its code here.
+              No screen paired yet. Open Sunroom on the screen you want to pair and type its code
+              here.
             </Text>
           </div>
         ) : (
@@ -176,7 +177,7 @@ export function DevicesPage() {
         ) : null}
       </Group>
       <Group
-        title="Phones & Computers"
+        title="Signed-in Devices"
         note={session?.has_pin ? undefined : "Set a parent PIN in Family to mark a child’s device."}
       >
         {phones.map(row)}

@@ -193,7 +193,7 @@ test("a computer adds an account in a sheet, and Google's way back opens its cal
     /^Another calendar/,
     /^A calendar server/,
   ]);
-  await expect(sheet.getByText("Or add it from a phone")).toHaveCount(0);
+  await expect(sheet.getByText("Or add it from a device")).toHaveCount(0);
   await sheet.getByRole("button", { name: /^Google/ }).click();
   const google = page.getByRole("dialog", { name: "Google" });
   await expect(google.getByText("From a phone")).toHaveCount(0);
@@ -395,7 +395,7 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
   const add = page.getByRole("button", { name: "Add an Account" });
   await add.click();
   const sheet = page.getByRole("dialog", { name: "Add an Account" });
-  await expect(sheet.getByText("Or add it from a phone")).toBeVisible();
+  await expect(sheet.getByText("Or add it from a device")).toBeVisible();
   await expect(
     sheet.getByRole("img", { name: "A code that opens Add an Account on a phone" }),
   ).toBeVisible();
@@ -434,7 +434,7 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
   );
   await google.getByRole("button", { name: /^Sign in with Google/ }).click();
   const signIn = page.getByRole("dialog", { name: "Sign in with Google" });
-  await expect(signIn).toContainText("Do this from a phone");
+  await expect(signIn).toContainText("Do this from a device");
   await expect(
     signIn.getByRole("img", { name: "A code that opens Add an Account on a phone" }),
   ).toBeVisible();

@@ -58,8 +58,8 @@ The app uses these words consistently in the UI, code and docs.
 |---|---|---|
 | Household / family | `household` (single row) | One installation serves one household |
 | Person | `Member` (`members`) | Someone in the household: name, color, avatar, role (parent or child; a child's role is stored as `kid`), optional birthday. "Everyone" is a built-in pseudo-person for shared things |
-| The display, the kitchen screen | `Device` with `kind = kiosk` | A paired wall screen. Shows the kiosk layout, never expires, has no settings access without the parent PIN |
-| Phone | `Device` with `kind = phone` (also laptops) | A device signed in with the household password |
+| The display, a paired screen (its default name: "Kitchen screen") | `Device` with `kind = kiosk` | A paired wall screen. Shows the kiosk layout, never expires, has no settings access without the parent PIN; it shows nothing it can't do and never says to do it elsewhere (UX §2 "Devices and screens", ADR 0034) |
+| Device (a phone, tablet or computer) | `Device` with `kind = phone` (also laptops) | A device signed in with the household password |
 | Calendar | `Calendar` (`calendars`) | A named, colored source of events: local (lives only in Sunroom) or synced from an account |
 | Account | `Account` (`accounts`, plugin `sync`) | A connection to Google, iCloud or another CalDAV server, or an ICS subscription, holding credentials and one or more calendars |
 | Event | `Event` (`events`) | A master event: one-off or recurring (RRULE). Synced events carry their remote ids |

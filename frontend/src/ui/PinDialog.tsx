@@ -158,8 +158,7 @@ function PinPad({ reason }: { reason: string | null }) {
         Cancel
       </Button>
       <p className="max-w-sm text-center text-d-caption text-ink-soft">
-        Forgot it? Change it from a parent’s phone: More, then Settings, then Family, then Parent
-        PIN.
+        Forgot it? A parent can change it on a signed-in device under Settings → Family.
       </p>
     </div>
   );

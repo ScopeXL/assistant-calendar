@@ -69,7 +69,7 @@ export function AboutPage() {
             ) : null}
             <Row
               label="Recently reached at"
-              hint="Any of these works from a phone on the same network."
+              hint="Any of these works from a device on your home network."
             >
               <Text>{diagnostics.recent_addresses.join(", ")}</Text>
             </Row>

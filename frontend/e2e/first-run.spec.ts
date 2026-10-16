@@ -199,6 +199,9 @@ test("Erase everything starts Sunroom over: from a computer, never from the wall
   await expect(screen.getByRole("button", { name: "Back Up Now" })).toBeVisible();
   await expect(screen.getByRole("heading", { name: "Start Over" })).toHaveCount(0);
   await expect(screen.getByRole("button", { name: /^Erase everything/ })).toHaveCount(0);
+  // Nor a line saying to do any of it elsewhere (ADR 0034).
+  await expect(screen.getByRole("heading", { name: "Take Your Data with You" })).toHaveCount(0);
+  await expect(screen.getByText(/from a (phone|computer|device)/i)).toHaveCount(0);
   await screen.goto("/display");
   await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
 

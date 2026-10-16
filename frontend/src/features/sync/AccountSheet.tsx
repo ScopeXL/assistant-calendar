@@ -15,6 +15,7 @@ import { Sheet } from "../../ui/Sheet";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { TextField } from "../../ui/TextField";
+import { DeviceShortcut } from "./AddAccount";
 import { sourceName, statusLine, useSyncChanges, type Account, type RemoteCalendar } from "./data";
 import { GoogleKeys } from "./GoogleKeys";
 
@@ -226,9 +227,7 @@ function AccountPage({
             file.
           </p>
         ) : kiosk ? (
-          <p className={text.body}>
-            Sign in again from a phone: More, then Settings, then Calendars & Accounts.
-          </p>
+          <DeviceShortcut lead="Sign in again from a device:" add={false} />
         ) : (
           <div className="flex">
             <Button
@@ -529,7 +528,7 @@ function ReconnectPage({
           ? `${kiosk ? "Type" : "Paste"} the calendar's new address.`
           : sourceName(account) === "Apple"
             ? kiosk
-              ? "On a phone or computer, make a new app-specific password at appleid.apple.com, then type it here."
+              ? "Make a new app-specific password at appleid.apple.com on another device, then type it here."
               : "Make a new app-specific password at appleid.apple.com and paste it here."
             : "Type the account's password again."}
       </p>

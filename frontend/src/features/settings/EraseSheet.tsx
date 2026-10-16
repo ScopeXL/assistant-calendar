@@ -54,7 +54,7 @@ export function EraseSheet({
           <p className={`${body} font-semibold`}>Keep a copy first?</p>
           <p className={body}>
             This removes every person, calendar, event, list, task, meal, countdown, photo and
-            setting, and signs out every phone and screen. A copy of today's database stays on the
+            setting, and signs out every device and screen. A copy of today's database stays on the
             server in backups/pre-erase, but photos are deleted for good.
           </p>
           <div className="flex flex-wrap gap-3">

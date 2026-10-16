@@ -232,7 +232,7 @@ with no way back from another site) the sheet shows a QR code of that same link 
 
 ### T1 Devices, and nothing a screen can't do
 
-- [ ] Done (commit: )
+- [x] Done (commit: "settings: devices and paired screens, and nothing a screen can't do")
 
 **Owner's note.** "Remove all the 'Only from a phone or computer.' texts. If they can see the
 setting it means they are on a device that supports the feature. Audit the app and make sure the
@@ -346,7 +346,27 @@ with the household password, and 'paired screens' for the wall. A paired screen 
 what it can't do, nor lines saying to do it from a phone; two tips say what signed-in devices can
 do that a screen can't."
 
-**As built.** (fill in)
+**As built.** As planned, with these differences:
+- *ADR 0034 starts here*, not in T2: this task already has a row.
+- *Backup on a screen*: with its line gone, the Take Your Data with You group had nothing left on
+  a screen, so it isn't drawn there (T15's layout for a screen, early).
+- *A person's sheet on a screen* keeps its photo row when there is a photo, to remove it (a
+  screen can do that, and the owner asked that screens not be cut off); with no photo the row
+  isn't drawn. Neither says where to add one.
+- *The shared QR block*: Add an Account's code-and-line block became `DeviceShortcut`, exported
+  from `AddAccount.tsx`, and the account sheet shows it ("Sign in again from a device:", a code
+  of Calendars & Accounts). Its words are a `lead` prop: the design-rules test reads any
+  `title="…"` literal as a heading, and these are sentences.
+- *The tip* `devices-do-more` as planned was 96 characters, over the list's 90, and "than this
+  screen" is wrong on a laptop (laptops show tips too). It reads "Signed-in devices can do more:
+  downloads, adding photos, restores and Google's sign-in." (87).
+- *Words the list missed*, changed in the same spirit: the join screen ("Sign In on This
+  Device", "The other device shows it too.", "Another device made this code…"), the erase
+  sheet ("signs out every device and screen"), and the countdown switch's hint ("Off for a
+  surprise: only signed-in devices show it.").
+- `first-run.spec.ts`'s Erase case now also checks that the wall's Backup page has no export
+  group and no "from a …" line; it passes on `desktop`, and the photo cases of
+  `screensaver.spec.ts` pass on `display-1080p`.
 
 ### T2 Setup: 8 characters, Home, Family, the theme, and any screen
 

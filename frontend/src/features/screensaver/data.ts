@@ -151,7 +151,7 @@ export function usePhotoChanges() {
         unwrap(await api.POST("/api/kiosk/command", { body: { command: "screensaver" } }));
       }),
     onSuccess: () => {
-      showToast("Started the screensaver on the kitchen screen");
+      showToast("Started the screensaver");
     },
   });
 

@@ -170,8 +170,8 @@ function ParentPin() {
       title="Parent PIN"
       note={
         hasPin
-          ? "Settings, approvals and changing events on the kitchen screen ask for it."
-          : "Set a parent PIN so children can't open Settings on the kitchen screen."
+          ? "Settings, approvals and changing events on paired screens ask for it."
+          : "Set a parent PIN so children can't open Settings on paired screens."
       }
     >
       {editing ? (
@@ -248,7 +248,7 @@ function ParentPin() {
       )}
       <Switch
         label="Child-safe editing"
-        hint="Changing or removing events on the kitchen screen asks for the PIN. Adding and checking off never do."
+        hint="Changing or removing events on paired screens asks for the PIN. Adding and checking off never do."
         checked={settings?.kid_safe_editing ?? true}
         onChange={(value) => {
           updateSettings.mutate({ kid_safe_editing: value });

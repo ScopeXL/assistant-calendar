@@ -44,7 +44,7 @@ function PhoneLists() {
         <EmptyState
           icon={ListChecks}
           line="No lists yet"
-          note="Groceries, to-dos, packing: everyone sees them on the wall and on their phones."
+          note="Groceries, to-dos, packing: everyone sees them on paired screens and on their own devices."
         />
       ) : (
         <ul className="divide-y divide-line rounded-chip border border-line bg-surface">

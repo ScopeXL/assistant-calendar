@@ -390,7 +390,7 @@ test("the wall screen", async ({ page }) => {
   const addAccount = page.getByRole("button", { name: "Add an Account" });
   const adding = page.getByRole("dialog");
   await addAccount.click();
-  await expect(adding.getByText("Or add it from a phone")).toBeVisible();
+  await expect(adding.getByText("Or add it from a device")).toBeVisible();
   await shot(page, "settings-add-account");
   await adding.getByRole("button", { name: /^Apple/ }).click();
   await adding.getByLabel("App-specific password").click();
@@ -403,7 +403,7 @@ test("the wall screen", async ({ page }) => {
   await adding.getByRole("button", { name: /^Google/ }).click();
   await shot(page, "settings-add-google");
   await adding.getByRole("button", { name: /^Share with a Sunroom helper/ }).click();
-  await expect(adding).toContainText("Do this from a phone");
+  await expect(adding).toContainText("Do this from a device");
   await shot(page, "settings-add-google-phone");
   await adding.getByRole("button", { name: "Close" }).click();
   await expect(adding).toBeHidden();

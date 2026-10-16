@@ -433,7 +433,7 @@ export function EventEditor({
             />
             <ChoiceRow
               label="Remind"
-              hint="A reminder shows on the kitchen screen."
+              hint="A reminder shows on paired screens."
               choices={REMINDERS}
               value={draft.reminder}
               onChange={(reminder) => {

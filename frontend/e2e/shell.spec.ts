@@ -1130,10 +1130,10 @@ test.describe("a laptop", () => {
     await screen.getByRole("button", { name: "Hallway" }).click();
     await screen.getByRole("button", { name: "Done" }).click();
     await expect(page.getByText("Hallway screen")).toBeVisible();
-    // Devices (ADR 0032): Paired Screens on top, then Phones & Computers, where this laptop has a
+    // Devices (ADR 0032): Paired Screens on top, then Signed-in Devices, where this laptop has a
     // computer's icon and signs out of "This Computer"; it was listed as a phone.
     const groups = page.getByRole("heading", { level: 3 });
-    await expect(groups).toHaveText(["Paired Screens", "Phones & Computers"]);
+    await expect(groups).toHaveText(["Paired Screens", "Signed-in Devices"]);
     await expect(page.locator('[data-form="screen"]')).toHaveCount(1);
     await expect(page.locator('[data-form="computer"]')).toHaveCount(1);
     await expect(page.locator('[data-form="phone"]')).toHaveCount(0);

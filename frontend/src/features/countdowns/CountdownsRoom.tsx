@@ -128,7 +128,7 @@ function Details({ item, onClose }: { item: Upcoming | null; onClose: () => void
           ) : null}
           {countdown?.repeat_yearly ? <p className={`${text} text-ink-soft`}>Every year</p> : null}
           {countdown && !countdown.show_on_display ? (
-            <p className={`${text} text-ink-soft`}>Not on the kitchen screen: phones only.</p>
+            <p className={`${text} text-ink-soft`}>Hidden from paired screens.</p>
           ) : null}
         </div>
       ) : null}

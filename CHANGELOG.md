@@ -6,6 +6,13 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Sunroom says "devices" for the phones, tablets and computers signed in with the household
+  password, and "paired screens" for the wall. A paired screen no longer shows what it can't do,
+  nor lines saying to do it from a phone; two tips say what signed-in devices can do that a
+  screen can't.
+
 ## [0.11.0] - 2026-10-15
 
 ### Added

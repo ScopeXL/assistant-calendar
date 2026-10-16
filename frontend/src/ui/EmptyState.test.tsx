@@ -15,7 +15,7 @@ describe("an empty room (UX §8, ADR 0032)", () => {
         <EmptyState
           icon={ListChecks}
           line="No lists yet"
-          note="Groceries, to-dos, packing: everyone sees them on the wall and on their phones."
+          note="Groceries, to-dos, packing: everyone sees them on paired screens and on their own devices."
           action={<Button>New List</Button>}
         />
       </ShellContext.Provider>,

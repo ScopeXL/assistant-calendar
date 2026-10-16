@@ -73,7 +73,7 @@ export function CalendarsPage() {
           const notes = [
             calendar.is_default ? "Default calendar" : null,
             owner ? `${owner.name}'s` : "Everyone's",
-            calendar.visible_on_display ? null : "Hidden on the wall screen",
+            calendar.visible_on_display ? null : "Hidden on paired screens",
           ]
             .filter(Boolean)
             .join(" · ");
@@ -353,7 +353,7 @@ function CalendarForm({ calendar, onDone }: { calendar: CalendarInfo | null; onD
           ))}
         </ChipRow>
       </div>
-      <Switch label="Show on the wall screen" checked={shown} onChange={setShown} />
+      <Switch label="Show on paired screens" checked={shown} onChange={setShown} />
       {error ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(error)}

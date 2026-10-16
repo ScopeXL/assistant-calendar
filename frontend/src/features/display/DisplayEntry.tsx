@@ -236,7 +236,8 @@ function PairThisScreen({ onPaired }: { onPaired: () => void }) {
             <QrCode value={pairing.pair_url} label="A code that opens Pair a Display on a phone" />
             <div className="flex max-w-xl flex-col gap-3">
               <p className="text-d-body">
-                On your phone, open Sunroom, then More, then Pair a Display, and type this code.
+                On a signed-in device, open Pair a Display (under More on a phone, Settings →
+                Devices on a computer) and type this code.
               </p>
               <p className="text-d-secondary text-ink-soft">The code changes every 10 minutes.</p>
             </div>

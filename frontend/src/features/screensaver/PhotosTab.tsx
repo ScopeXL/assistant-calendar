@@ -49,7 +49,7 @@ export function PhotosTab() {
         <EmptyState
           icon={Images}
           line="No photos yet"
-          note="Photos added from a phone or a computer show here and on the screensaver."
+          note="Photos added from any device show here and on the screensaver."
         />
       ) : (
         <ul aria-label="Photos" className="grid grid-cols-3 gap-2">

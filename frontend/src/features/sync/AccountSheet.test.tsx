@@ -238,10 +238,13 @@ describe("an account's sheet (UX §4 Calendars & Accounts)", () => {
     expect(screen.getByRole("button", { name: "Sign In Again" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Connect Again" })).toBeNull();
     cleanup();
-    // Its page can't open on the kitchen screen.
+    // Its page can't open on a paired screen: a code opens Calendars & Accounts on a device.
     draw(account(google as Partial<Account>), { kiosk: true });
     expect(screen.queryByRole("button", { name: "Sign In Again" })).toBeNull();
-    expect(screen.getByText(/^Sign in again from a phone/)).toBeTruthy();
+    expect(screen.getByText("Sign in again from a device:")).toBeTruthy();
+    expect(
+      screen.getByRole("img", { name: "A code that opens Calendars & Accounts on a device" }),
+    ).toBeTruthy();
     cleanup();
     // A helper's key is a file: the account is added again.
     draw(account({ ...google, helper_email: "helper@example.com" } as Partial<Account>));

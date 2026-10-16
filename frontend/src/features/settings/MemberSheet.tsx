@@ -34,7 +34,8 @@ export function MemberSheet({ member, onClose }: { member: Member | null; onClos
 
 function MemberForm({ member, onClose }: { member: Member; onClose: () => void }) {
   const display = useShell() === "display";
-  // A photo comes from a phone or a computer; the kitchen screen has no files (ADR 0028).
+  // A photo comes from a signed-in device; a paired screen has no files, so it shows the photo row
+  // only to remove a photo (ADR 0028, 0034).
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
   const kiosk = session?.device_kind === "kiosk";
   const queryClient = useQueryClient();
@@ -183,43 +184,41 @@ function MemberForm({ member, onClose }: { member: Member; onClose: () => void }
           setBirthday(event.target.value);
         }}
       />
-      <div className="flex items-center gap-4">
-        <Avatar member={{ name: member.name, color, avatar_url: member.avatar_url }} size="lg" />
-        {kiosk ? (
-          <p className="text-d-secondary text-ink-soft">
-            Add a photo from a phone: More, then Settings, then Family.
-          </p>
-        ) : (
-          <label
-            className={`press inline-flex cursor-pointer items-center border-2 border-line bg-surface font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink ${
-              display
-                ? "min-h-tap rounded-button-d px-7 text-d-body"
-                : "min-h-11 rounded-button px-4 text-body"
-            }`}
-          >
-            {member.avatar_url ? "Change Photo" : "Add a Photo"}
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) photo.mutate(file);
+      {kiosk && !member.avatar_url ? null : (
+        <div className="flex items-center gap-4">
+          <Avatar member={{ name: member.name, color, avatar_url: member.avatar_url }} size="lg" />
+          {kiosk ? null : (
+            <label
+              className={`press inline-flex cursor-pointer items-center border-2 border-line bg-surface font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-ink ${
+                display
+                  ? "min-h-tap rounded-button-d px-7 text-d-body"
+                  : "min-h-11 rounded-button px-4 text-body"
+              }`}
+            >
+              {member.avatar_url ? "Change Photo" : "Add a Photo"}
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) photo.mutate(file);
+                }}
+              />
+            </label>
+          )}
+          {member.avatar_url ? (
+            <Button
+              variant="quiet"
+              onClick={() => {
+                removePhoto.mutate();
               }}
-            />
-          </label>
-        )}
-        {member.avatar_url ? (
-          <Button
-            variant="quiet"
-            onClick={() => {
-              removePhoto.mutate();
-            }}
-          >
-            Remove Photo
-          </Button>
-        ) : null}
-      </div>
+            >
+              Remove Photo
+            </Button>
+          ) : null}
+        </div>
+      )}
       {error ? (
         <p role="alert" className="font-semibold text-alert">
           {errorMessage(error)}

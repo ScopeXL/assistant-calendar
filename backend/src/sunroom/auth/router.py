@@ -174,7 +174,7 @@ async def choose_member(
 ) -> SessionOut:
     """Who's using this phone? A wall screen is everyone's: it picks a person per action."""
     if actor.is_kiosk:
-        raise AppError(409, "kiosk_has_no_member", "The wall screen is for everyone.")
+        raise AppError(409, "kiosk_has_no_member", "A paired screen is for everyone.")
     async with state.db.write() as tx:
         if body.member_id is not None:
             member = await tx.session.get(Member, body.member_id)
@@ -250,7 +250,7 @@ async def update_device(
             device.label = body.label
         if body.is_kid_device is not None:
             if device.kind == DeviceKind.KIOSK:
-                raise AppError(409, "kiosk_not_kid", "The wall screen is for everyone.")
+                raise AppError(409, "kiosk_not_kid", "A paired screen is for everyone.")
             if body.is_kid_device and not state.auth.has_pin:
                 raise AppError(
                     409,
