@@ -1084,8 +1084,8 @@ render_env() {
 # (8 or more characters; single quotes keep symbols such as $ as they are):
 # APP_PASSWORD='a long family passphrase'
 #
-# Your own address for Sunroom, if you reach it through your own HTTPS proxy
-# (comma-separated; *.example.com works too):
+# Optional lock: answer only to these names and local ones (comma-separated; *.example.com
+# works too). Not needed for a proxy or Tailscale; worth it for a public name:
 # APP_ALLOWED_HOSTS=calendar.example.com
 EOF
 }

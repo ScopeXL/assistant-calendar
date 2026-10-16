@@ -32,8 +32,7 @@ On a plain home network you can skip the proxy entirely: leave every variable em
 
    | Variable | Value |
    |---|---|
-   | `APP_ALLOWED_HOSTS` | The name phones will use, e.g. `calendar.example.com` (comma-separated for several; `*.example.com` covers every name under it) |
-   | `TRUSTED_PROXIES` | Your reverse proxy's address or Docker network (step 3) |
+   | `APP_ALLOWED_HOSTS` | Optional. A lock: with it set, Sunroom answers only to these names (e.g. `calendar.example.com`; comma-separated for several; `*.example.com` covers every name under it) and local ones. Left empty it answers to any name, which is all most homes need ([REMOTE-ACCESS.md](REMOTE-ACCESS.md) says when the lock is worth it) |
    | `TZ` | Your time zone, e.g. `America/New_York`. The setup on your phone suggests one too |
    | `APP_PASSWORD` | Optional. A household password that always wins over the one chosen in setup, 8 characters or more |
    | `APP_SECRET_KEY` | Optional. Without it, Sunroom makes one and keeps it on the volume. If you set it (`openssl rand -base64 48`), keep a copy in a password manager: changing it signs everyone out |
@@ -72,23 +71,20 @@ On a plain home network you can skip the proxy entirely: leave every variable em
   | Caddy | `reverse_proxy` already streams events. If you use `encode`, exclude the stream: `@notsse not path /api/events` then `encode @notsse zstd gzip` |
   | Cloudflare (proxied DNS or Tunnel) | Add a Cache Rule that bypasses `/api/*` |
 
-## 3. Set TRUSTED_PROXIES
+## 3. Check the proxy's headers
 
-Sunroom believes forwarded headers (https, the real client address, the public name) only from
-addresses you list. Until the proxy is listed, Sunroom refuses changes made through it, with the
-message "Sunroom is behind an https address but doesn't trust the proxy yet".
+There is nothing to set for the proxy (ADR 0034). Sunroom believes forwarded headers (https,
+the real client address, the public name) from any address on the home network (the private
+ranges, loopback, link-local and Tailscale's), which is where a proxy in Docker on the same
+host, or on another machine at home, connects from; it never believes them from the internet.
 
-- **The proxy runs in Docker on the same host:** use its Docker network, e.g. `172.18.0.0/16`.
-  `docker network inspect <network> --format '{{(index .IPAM.Config 0).Subnet}}'` prints it.
-  If another app behind the same proxy already has a `TRUSTED_PROXIES`, it's the same value.
-- **The proxy runs on another machine:** use that machine's address.
-- **Not sure:** open your Sunroom address on a phone and go through the setup until it stops
-  with "doesn't trust the proxy yet". Sunroom's log (`docker compose logs sunroom`, or the
-  container's **Logs** in Portainer) then has a line `csrf.proxy_not_trusted` with
-  `proxy=<address>`. Use that address.
+What the proxy must do is say the browser is on https: `X-Forwarded-Proto: https`. Every common
+proxy does it by default; a hand-written nginx needs `proxy_set_header X-Forwarded-Proto
+$scheme;`. When it doesn't, Sunroom refuses changes made through it, with "Sunroom is reached
+over https, but the proxy didn't say so", and its log (`docker compose logs sunroom`, or the
+container's **Logs** in Portainer) has a line `csrf.https_not_forwarded` with `proxy=<address>`.
 
-Then run `docker compose up -d` again to apply it. Never use `*` or `0.0.0.0/0`: Sunroom refuses
-to start with them.
+An older compose file's `TRUSTED_PROXIES` line can stay: it's ignored, and the log says so.
 
 ## 4. First visit
 
@@ -98,8 +94,8 @@ and time zone, the people who live here, a parent PIN. Then:
 - **iPhone:** Share → **Add to Home Screen**, and open Sunroom from there.
 - **Android:** Chrome's menu → **Install app**.
 
-**More → Settings → About** shows the version, "Live updates: connected", and under "Sunroom
-sees it as", your phone's own address (not the proxy's) once `TRUSTED_PROXIES` is right.
+**More → Settings → About** shows the version, "Live updates: connected", and the URL this
+phone used.
 
 ## 5. The kitchen screen
 
@@ -146,8 +142,9 @@ for it.
 
 ## Troubleshooting
 
-**"Sunroom doesn't answer to the address …" (421).** The name in the browser isn't a local one
-and isn't in `APP_ALLOWED_HOSTS`. Add it in `docker-compose.yml` and run `docker compose up -d`.
+**"Sunroom doesn't answer to the address …" (421).** Only with `APP_ALLOWED_HOSTS` set: the name
+in the browser isn't a local one and isn't in the list. Add it in `docker-compose.yml` and run
+`docker compose up -d`, or empty the setting to answer to any name.
 
 **A host folder instead of the volume.** Sunroom never runs as root: it runs as uid 10001, so a
 folder you mount at `/data` must be writable by the user it runs as. The simplest is to run it as

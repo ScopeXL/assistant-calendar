@@ -53,12 +53,10 @@ class LiveUpdatesInfo(BaseModel):
 
 
 class ClientInfo(BaseModel):
-    resolved_ip: str | None
+    """How this device reaches Sunroom: About's URL (ADR 0034)."""
+
     scheme: str
     host: str
-    x_forwarded_for: str | None
-    x_forwarded_proto: str | None
-    trusted_proxies_configured: bool
 
 
 class BackupFileOut(BaseModel):
@@ -139,14 +137,7 @@ async def diagnostics(request: Request, state: StateDep, actor: ParentDep) -> Di
         install_kind=state.settings.sunroom_install_kind.value,
         timezone=state.zone().key,
         live_updates=LiveUpdatesInfo(connections=state.hub.connection_count, epoch=state.hub.epoch),
-        client=ClientInfo(
-            resolved_ip=request.client.host if request.client else None,
-            scheme=request.url.scheme,
-            host=headers.get("host", ""),
-            x_forwarded_for=headers.get("x-forwarded-for"),
-            x_forwarded_proto=headers.get("x-forwarded-proto"),
-            trusted_proxies_configured=bool(state.settings.trusted_proxies),
-        ),
+        client=ClientInfo(scheme=request.url.scheme, host=headers.get("host", "")),
         recent_addresses=[host for host in reversed(state.recent_hosts) if _phone_can_use(host)],
         backups=BackupStatusOut.model_validate(state.backups.status()),
         plugins=[

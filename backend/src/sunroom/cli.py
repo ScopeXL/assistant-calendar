@@ -79,8 +79,9 @@ def cmd_serve(args: argparse.Namespace) -> None:
         create_app(settings, secret=secret),
         host=args.host,
         port=settings.port,
-        # Forwarded headers are applied by the app itself, only from TRUSTED_PROXIES
-        # (web/forwarded.py), so the Host rule sees the original Host too.
+        # Forwarded headers are applied by the app itself, from private addresses only
+        # (web/forwarded.py): uvicorn's own handling would trust 127.0.0.1 alone and miss a
+        # proxy in Docker, and the Host rule needs to see the original Host too.
         proxy_headers=False,
         access_log=False,
         server_header=False,

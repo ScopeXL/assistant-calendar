@@ -1,6 +1,6 @@
 # ADR 0017: A Host rule instead of `APP_BASE_URL`; the cookie name follows the scheme
 
-- **Status:** Accepted
+- **Status:** Accepted; the default Host rule and the proxy list changed by [0034](0034-m6-batch-6-the-owners-sixth-notes.md) (any Host unless `APP_ALLOWED_HOSTS` is set; no `TRUSTED_PROXIES`, forwarded headers believed from the home network)
 - **Date:** 2026-10-07
 
 ## Context

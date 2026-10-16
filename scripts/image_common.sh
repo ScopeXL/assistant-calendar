@@ -48,9 +48,12 @@ probe() {
   [ "$(curl -so /dev/null -w '%{http_code}' "$base/assets/missing-123.js")" = 404 ] \
     || fail "a missing asset wasn't 404"
   curl -fsS -D - -o /dev/null "$base/" | grep -qi 'content-security-policy' || fail "no CSP header"
-  # The Host rule (ADR 0017) and the CSRF header.
-  [ "$(curl -so /dev/null -w '%{http_code}' -H 'Host: evil.example' "$base/api/health")" = 421 ] \
-    || fail "an unknown Host wasn't refused with 421"
+  # Any Host by default (ADR 0034), a proxy on the home network believed (here the peer is
+  # Docker's gateway, so a forwarded https gets HSTS), and the CSRF header.
+  [ "$(curl -so /dev/null -w '%{http_code}' -H 'Host: evil.example' "$base/api/health")" = 200 ] \
+    || fail "an unknown Host wasn't answered by default"
+  curl -fsS -D - -o /dev/null -H 'X-Forwarded-Proto: https' "$base/api/health" \
+    | grep -qi 'strict-transport-security' || fail "a proxy's https from home wasn't believed"
   [ "$(curl -so /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' \
       -d '{}' "$base/api/auth/login")" = 403 ] || fail "a change without X-Sunroom wasn't refused"
 }

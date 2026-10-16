@@ -34,14 +34,8 @@ def test_app_password_needs_eight_characters() -> None:
 
 
 def test_lists_split_on_commas() -> None:
-    settings = load_settings(
-        {
-            "APP_ALLOWED_HOSTS": "Calendar.Example.com, *.example.org",
-            "TRUSTED_PROXIES": "172.18.0.0/16, 10.0.0.2",
-        }
-    )
+    settings = load_settings({"APP_ALLOWED_HOSTS": "Calendar.Example.com, *.example.org"})
     assert settings.app_allowed_hosts == ("calendar.example.com", "*.example.org")
-    assert settings.trusted_proxies == ("172.18.0.0/16", "10.0.0.2")
 
 
 def test_empty_values_from_a_stack_mean_unset() -> None:
@@ -74,9 +68,16 @@ def test_allowed_hosts_are_names_only(hosts: str) -> None:
     assert any(p.startswith("APP_ALLOWED_HOSTS") for p in problems({"APP_ALLOWED_HOSTS": hosts}))
 
 
-@pytest.mark.parametrize("proxies", ["*", "0.0.0.0/0", "::/0", "not-an-ip"])
-def test_trusted_proxies_must_be_specific(proxies: str) -> None:
-    assert any(p.startswith("TRUSTED_PROXIES") for p in problems({"TRUSTED_PROXIES": proxies}))
+def test_a_leftover_trusted_proxies_is_ignored_with_a_note() -> None:
+    """ADR 0034: a proxy on the home network is believed by itself, so an old compose file's
+    TRUSTED_PROXIES line still starts, and the log says it's no longer needed."""
+    env = {"TRUSTED_PROXIES": "10.0.0.1"}
+    settings = load_settings(env)
+    assert not hasattr(settings, "trusted_proxies")
+    assert settings.warnings(env) == [
+        "TRUSTED_PROXIES is no longer needed and is ignored: Sunroom believes a reverse proxy "
+        "on the home network by itself (docs/REMOTE-ACCESS.md)"
+    ]
 
 
 @pytest.mark.parametrize("url", ["sunroom.local", "ftp://x.test", "http://x.test/path"])

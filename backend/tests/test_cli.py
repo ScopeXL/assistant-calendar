@@ -25,6 +25,14 @@ def test_no_configuration_at_all_is_fine() -> None:
     assert "Configuration OK." in result.stdout
 
 
+def test_a_leftover_trusted_proxies_line_is_only_a_warning() -> None:
+    """ADR 0034: an old compose file still starts; the line is noted as no longer needed."""
+    result = run(["check-config"], {"TRUSTED_PROXIES": "172.18.0.0/16"})
+    assert result.returncode == 0, result.stderr
+    assert "warning: TRUSTED_PROXIES is no longer needed and is ignored" in result.stdout
+    assert "Configuration OK." in result.stdout
+
+
 def test_bad_configuration_exits_78_and_names_only() -> None:
     secret = "short-and-secret"
     result = run(["check-config"], {"APP_SECRET_KEY": secret, "TZ": "Mars/Base"})

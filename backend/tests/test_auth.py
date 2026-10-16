@@ -13,6 +13,7 @@ from sunroom.auth.deps import Actor, current_actor
 from sunroom.auth.password import device_form, device_label, hash_password, verify_password
 from sunroom.core.clock import FakeClock
 from tests.support import (
+    BASE_URL,
     CSRF,
     PASSWORD,
     PIN,
@@ -43,7 +44,8 @@ async def test_login_sets_a_400_day_http_only_cookie(
 
 
 async def test_https_uses_a_secure_host_cookie(data_dir: Path) -> None:
-    app = create_app(make_settings(data_dir, trusted_proxies="127.0.0.1"))
+    """A proxy on the home network (the test transport's 127.0.0.1) is believed (ADR 0034)."""
+    app = create_app(make_settings(data_dir))
     async with app.router.lifespan_context(app):
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(
@@ -106,13 +108,27 @@ async def test_mutations_need_the_csrf_header_and_a_matching_origin(
     assert ok.status_code == 201
 
 
-async def test_an_untrusted_https_proxy_gets_a_useful_message(parent: httpx.AsyncClient) -> None:
-    response = await parent.post(
+async def test_https_the_proxy_didnt_mention_gets_a_useful_message(
+    app: FastAPI, parent: httpx.AsyncClient
+) -> None:
+    """The browser is on https but the request says http: a proxy at home that sent no
+    X-Forwarded-Proto, or one out on the internet whose headers aren't believed (ADR 0034)."""
+    at_home = await parent.post(
         "/api/members",
         json={"name": "Mia"},
         headers=CSRF | {"origin": "https://localhost:8080"},
     )
-    assert response.json()["error"]["code"] == "proxy_not_trusted"
+    transport = httpx.ASGITransport(app=app, client=("203.0.113.9", 4000))
+    async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as outside:
+        far = await outside.post(
+            "/api/members",
+            json={"name": "Mia"},
+            headers=CSRF | {"origin": "https://localhost:8080", "x-forwarded-proto": "https"},
+        )
+    for response in (at_home, far):
+        error = response.json()["error"]
+        assert error["code"] == "https_not_forwarded"
+        assert "X-Forwarded-Proto" in error["message"]
 
 
 async def test_choosing_who_is_using_this_phone(parent: httpx.AsyncClient) -> None:

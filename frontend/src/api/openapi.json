@@ -1278,60 +1278,20 @@
         "type": "object"
       },
       "ClientInfo": {
+        "description": "How this device reaches Sunroom: About's URL (ADR 0034).",
         "properties": {
           "host": {
             "title": "Host",
             "type": "string"
           },
-          "resolved_ip": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Resolved Ip"
-          },
           "scheme": {
             "title": "Scheme",
             "type": "string"
-          },
-          "trusted_proxies_configured": {
-            "title": "Trusted Proxies Configured",
-            "type": "boolean"
-          },
-          "x_forwarded_for": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "X Forwarded For"
-          },
-          "x_forwarded_proto": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "X Forwarded Proto"
           }
         },
         "required": [
-          "resolved_ip",
           "scheme",
-          "host",
-          "x_forwarded_for",
-          "x_forwarded_proto",
-          "trusted_proxies_configured"
+          "host"
         ],
         "title": "ClientInfo",
         "type": "object"

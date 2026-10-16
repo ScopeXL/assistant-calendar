@@ -48,25 +48,9 @@ export function AboutPage() {
         </Row>
         {diagnostics ? (
           <>
-            <Row
-              label="URL"
-              hint={
-                diagnostics.client.scheme === "http" &&
-                diagnostics.client.x_forwarded_proto === "https"
-                  ? "Your proxy says https, but Sunroom doesn't trust it yet: set TRUSTED_PROXIES."
-                  : undefined
-              }
-            >
+            <Row label="URL">
               <Text>{`${diagnostics.client.scheme}://${diagnostics.client.host}`}</Text>
             </Row>
-            {diagnostics.client.resolved_ip ? (
-              <Row
-                label="Sunroom sees it as"
-                hint="Behind a reverse proxy, this is the phone's own address once TRUSTED_PROXIES is right."
-              >
-                <Text>{diagnostics.client.resolved_ip}</Text>
-              </Row>
-            ) : null}
             <Row
               label="Recently reached at"
               hint="Any of these works from a device on your home network."

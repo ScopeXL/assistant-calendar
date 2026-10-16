@@ -1,17 +1,21 @@
-"""The Host rule (PLAN §13.4, ADR 0017), instead of a configured base URL.
+"""The Host rule (PLAN §13.4, ADR 0017 and 0034), instead of a configured base URL.
 
-A kitchen app is reached as ``sunroom.local``, an IP, ``localhost`` on the Pi and maybe an HTTPS
-name, all at once, so no single address can be configured. Every request's Host must instead be
-one a household would use:
+By default Sunroom answers to any Host, so ``http://<the server>:8080`` works the moment the
+container starts, through any proxy, with nothing to set (ADR 0034).
+
+APP_ALLOWED_HOSTS is an optional lock. Set, every request's Host must be one a household would
+use, as before 0.12.0:
 
 * ``localhost`` (and ``*.localhost``), or any IP literal;
 * this container's own host name, or any single-label name (``sunroom``, ``nas``);
 * a name ending in ``.local``, ``.lan``, ``.home``, ``.home.arpa``, ``.internal`` or ``.ts.net``;
 * a name in APP_ALLOWED_HOSTS (exact, or ``*.example.com`` for any name under it).
 
-Anything else gets 421 with the fix spelled out. This is what stops DNS rebinding: a web page on
-``evil.example`` that resolves its name to the server's LAN address still sends
-``Host: evil.example``, which is refused, even before setup has a password.
+Anything else then gets 421 with the fix spelled out. The lock is what stops DNS rebinding: a
+web page on ``evil.example`` that resolves its name to the server's address still sends
+``Host: evil.example``, which is refused, even before setup has a password. Without it, ADR 0034
+accepts that such a page could read Sunroom's public pages and leave a name in About's
+"Recently reached at"; a household that puts Sunroom on the internet sets the lock.
 """
 
 from __future__ import annotations
@@ -56,8 +60,12 @@ class HostRule:
         self.suffixes = tuple(name[1:] for name in allowed if name.startswith("*."))
         own = container_hostname if container_hostname is not None else socket.gethostname()
         self.own = own.lower().rstrip(".")
+        # Only with APP_ALLOWED_HOSTS set: otherwise any name is answered (ADR 0034).
+        self.strict = bool(allowed)
 
     def allows(self, name: str) -> bool:
+        if not self.strict:
+            return True
         if not name:
             return False
         if name == "localhost" or is_ip_literal(name) or name == self.own:
@@ -90,7 +98,7 @@ class HostGuard:
         header = Headers(scope=scope).get("host", "")
         name = host_name(header)
         if self.rule.allows(name):
-            if self.note is not None and scope.get("path") != "/api/health":
+            if self.note is not None and header.strip() and scope.get("path") != "/api/health":
                 self.note(header.strip().lower())
             await self.app(scope, receive, send)
             return

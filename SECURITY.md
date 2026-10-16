@@ -18,8 +18,10 @@ a Pi).
   sign-in and PIN attempts are rate-limited.
 - Signed, HttpOnly, SameSite session cookies per device, which can be signed out from Settings.
   A parent PIN guards Settings and changes on the shared kitchen screen.
-- Sunroom answers only to the addresses it recognises (local names and addresses, plus those in
-  `APP_ALLOWED_HOSTS`), and trusts forwarded headers only from `TRUSTED_PROXIES`.
+- Sunroom believes a reverse proxy's forwarded headers only when the connection comes from the
+  home network (loopback, private, link-local and Tailscale addresses), never from the internet.
+  `APP_ALLOWED_HOSTS` can lock it to the names you choose, so a web page that points its own
+  name at your home address is refused.
 - A strict Content Security Policy with a per-page nonce, a CSRF header check and an Origin check
   on every change.
 - Outside addresses are resolved and checked before every connection, so a setting can't reach

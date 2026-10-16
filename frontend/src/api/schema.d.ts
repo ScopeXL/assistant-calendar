@@ -2859,20 +2859,15 @@ export interface components {
             /** Ids */
             ids: string[];
         };
-        /** ClientInfo */
+        /**
+         * ClientInfo
+         * @description How this device reaches Sunroom: About's URL (ADR 0034).
+         */
         ClientInfo: {
             /** Host */
             host: string;
-            /** Resolved Ip */
-            resolved_ip: string | null;
             /** Scheme */
             scheme: string;
-            /** Trusted Proxies Configured */
-            trusted_proxies_configured: boolean;
-            /** X Forwarded For */
-            x_forwarded_for: string | null;
-            /** X Forwarded Proto */
-            x_forwarded_proto: string | null;
         };
         /** ColumnOut */
         ColumnOut: {

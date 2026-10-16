@@ -12,8 +12,8 @@ PORT=18080
 JAR="$(mktemp)"
 
 cleanup() {
-  docker rm -f "$NAME" "$NAME-root" "$NAME-novol" >/dev/null 2>&1 || true
-  docker volume rm "$NAME" "$NAME-root" >/dev/null 2>&1 || true
+  docker rm -f "$NAME" "$NAME-root" "$NAME-novol" "$NAME-locked" >/dev/null 2>&1 || true
+  docker volume rm "$NAME" "$NAME-root" "$NAME-locked" >/dev/null 2>&1 || true
   rm -f "$JAR"
 }
 trap cleanup EXIT
@@ -42,6 +42,18 @@ copies="$(docker exec "$NAME" sh -c 'ls /data/backups/pre-migrate 2>/dev/null | 
 [ "$copies" = 0 ] || fail "a restart took a new pre-migration backup"
 [ "$(curl -fsS -b "$JAR" "http://127.0.0.1:$PORT/api/auth/session" | jq -r .device_kind)" = phone ] \
   || fail "the session didn't survive a restart"
+
+# The optional lock (ADR 0034): with APP_ALLOWED_HOSTS set, only local names and those listed.
+docker volume create "$NAME-locked" >/dev/null
+run_app "$NAME-locked" -p "127.0.0.1:$((PORT + 1)):8080" -v "$NAME-locked:/data" \
+  -e APP_ALLOWED_HOSTS=calendar.example.com
+wait_healthy "$NAME-locked" 90
+locked="http://127.0.0.1:$((PORT + 1))/api/version"
+[ "$(curl -so /dev/null -w '%{http_code}' -H 'Host: evil.example' "$locked")" = 421 ] \
+  || fail "with the lock set, an unknown Host wasn't refused with 421"
+[ "$(curl -so /dev/null -w '%{http_code}' -H 'Host: calendar.example.com' "$locked")" = 200 ] \
+  || fail "with the lock set, a listed Host wasn't answered"
+docker rm -f "$NAME-locked" >/dev/null
 
 # Negative cases: a root-owned volume and no volume at all must both refuse to start (exit 73).
 docker volume create "$NAME-root" >/dev/null

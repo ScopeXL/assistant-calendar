@@ -22,7 +22,7 @@ SECRET = "test-secret-key-" + "0" * 32
 CSRF = {"x-sunroom": "1"}
 BASE_URL = "http://localhost:8080"
 ENV_PREFIXES = ("APP_", "SUNROOM_", "DATA_DIR")
-ENV_NAMES = {"TRUSTED_PROXIES", "TZ", "PORT", "LOG_LEVEL"}
+ENV_NAMES = {"TZ", "PORT", "LOG_LEVEL"}
 PIN = "2468"
 
 

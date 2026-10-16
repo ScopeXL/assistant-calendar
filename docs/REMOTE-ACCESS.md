@@ -44,36 +44,36 @@ address, sign in there once and add the new address to the home screen (and remo
 - If your router has its own VPN and phones use it away from home, they can reach the server's
   numbered address through it (`.local` names usually don't work over a VPN).
 
-## The two settings
+## The one setting (optional)
 
-Every way below needs `TRUSTED_PROXIES`, and all but Tailscale need `APP_ALLOWED_HOSTS`. Sunroom
-reads both from its environment: change them, then restart Sunroom.
+None of the ways below needs a setting for the proxy (ADR 0034). Sunroom believes a proxy's
+forwarded headers ("this came in over https", which phone it came from, the name it was asked
+for) whenever the connection comes from the home network: loopback, the private ranges, link-local
+addresses and Tailscale's `100.64.0.0/10`. That's where every proxy in this page connects from,
+whether it runs on the same computer outside Docker, in Docker beside Sunroom, or on another
+machine at home. A connection from the internet is never believed. A `TRUSTED_PROXIES` line from
+an earlier version is ignored; the log says so.
 
-- **`APP_ALLOWED_HOSTS`**: the name in your https address, for example `calendar.example.com`
-  (several are separated by commas; `*.example.com` covers every name under it). Not needed for
-  Tailscale's `.ts.net` names: Sunroom accepts those by itself, as it does `.local`, `.lan`,
-  `.home`, `.home.arpa` and `.internal` names and numbered addresses.
-- **`TRUSTED_PROXIES`**: the address the proxy's connections come from, as Sunroom sees them.
-  Only connections from these addresses may tell Sunroom "this came in over https" and which
-  phone it came from. Several are separated by commas; a range like `172.18.0.0/16` works.
-  Never `*` or `0.0.0.0/0`: Sunroom refuses to start with them.
+And by default Sunroom answers to any name, so `http://<server>:8080` works the moment it starts.
 
-Where to put them:
+- **`APP_ALLOWED_HOSTS`** is an optional lock. With it set, Sunroom answers only to local names
+  (`.local`, `.lan`, `.home`, `.home.arpa`, `.internal`, Tailscale's `.ts.net`, numbered
+  addresses) and the names you list, for example `calendar.example.com` (several separated by
+  commas; `*.example.com` covers every name under it); anything else gets "Sunroom doesn't answer
+  to the address …". **When it's worth it:** when Sunroom is on the internet under a public name
+  (Caddy, Cloudflare). The lock stops DNS rebinding: a web page that points its own name at your
+  home address, so the browser treats it as the same site. Without the lock such a page could read
+  Sunroom's public pages (its version, whether it's set up) and leave a name in About's "Recently
+  reached at"; it can't sign in or change anything. To turn it on without a public name, list
+  the name you use, for example `sunroom.local`.
+
+Where to put it:
 
 | How you run Sunroom | Where | Then |
 |---|---|---|
-| All on the Pi, from the installer | Add a line such as `TRUSTED_PROXIES=172.18.0.1` to `/opt/sunroom/.env` (`sudo nano /opt/sunroom/.env`) | `cd /opt/sunroom && sudo docker compose up -d` |
+| All on the Pi, from the installer | Add a line such as `APP_ALLOWED_HOSTS=calendar.example.com` to `/opt/sunroom/.env` (`sudo nano /opt/sunroom/.env`) | `cd /opt/sunroom && sudo docker compose up -d` |
 | Docker Compose ([DEPLOY.md](DEPLOY.md)) | In `docker-compose.yml`, or a `.env` file beside it | `docker compose up -d` in that folder |
 | Portainer, Unraid, CasaOS, Synology | The container's environment variables | Redeploy or restart the container |
-
-What `TRUSTED_PROXIES` should be:
-
-| Where the proxy runs | `TRUSTED_PROXIES` |
-|---|---|
-| On the computer that runs Sunroom, outside Docker (Tailscale, Caddy installed as a package, Cloudflare's `cloudflared` as a service) | The gateway of Sunroom's Docker network, which this prints, for example `172.18.0.1`: `sudo docker inspect sunroom --format '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}'` (use your container's name if it isn't `sunroom`). Not `127.0.0.1`: Docker passes the proxy's connections on to Sunroom from the gateway |
-| In Docker, on the same computer | That Docker network's range, for example `172.18.0.0/16` ([DEPLOY.md](DEPLOY.md), step 3) |
-| On another computer | That computer's address, for example `192.168.1.30` |
-| Not sure | Open the https address and try to sign in. It stops with "Sunroom is behind an https address but doesn't trust the proxy yet", and Sunroom's log then has a line `csrf.proxy_not_trusted` that names the proxy's address: use that address. The log is `sudo docker logs sunroom` on the Pi, or `docker compose logs sunroom` in Sunroom's folder |
 
 ## Tailscale (recommended)
 
@@ -107,17 +107,17 @@ free Personal plan covers a family (up to six people when this was written).
    If you changed the left number of Sunroom's `ports:` line, use that number. It prints the
    https address, and it keeps serving after a restart. `sudo tailscale serve status` shows it
    again; `sudo tailscale serve reset` turns it off. Tailscale streams live updates by itself.
-5. **Trust it:** set `TRUSTED_PROXIES` to the Docker gateway (see *The two settings*) and
-   restart Sunroom. `APP_ALLOWED_HOSTS` isn't needed.
-6. **On each phone:** install the Tailscale app (App Store or Google Play), sign in to your
+   Nothing to set in Sunroom: it believes Tailscale's connections, and answers to the `.ts.net`
+   name.
+5. **On each phone:** install the Tailscale app (App Store or Google Play), sign in to your
    tailnet, and leave it connected. Invite the rest of the family from the **Users** page of the
    admin console. Then open the https address, sign in with the household password, and add it
    to the home screen.
-7. **Check it** (see *Check that it worked*).
+6. **Check it** (see *Check that it worked*).
 
 The kitchen screen can stay on its home-network address; nothing changes for it.
 
-**Sign in with Google over Tailscale.** Once step 5 is done, Google's sign-in works at the
+**Sign in with Google over Tailscale.** Once step 4 is done, Google's sign-in works at the
 `.ts.net` address. The redirect address to add to your Google app is
 `https://<machine name>.<tailnet name>.ts.net/api/calendar-sync/google/callback`; Sunroom shows
 the exact one in its Sign in with Google steps (Settings → Calendars & accounts → Add an
@@ -135,7 +135,8 @@ other app:
   Every common proxy does all three by default.
 - Live updates stream from `/api/events`: they must not be buffered or compressed, and HTTP/2
   should be on. [DEPLOY.md](DEPLOY.md), step 2, has the setting for each proxy.
-- Set `APP_ALLOWED_HOSTS` to your name and `TRUSTED_PROXIES` to the proxy's address.
+- Nothing to set for the proxy. If the name is on the internet, set `APP_ALLOWED_HOSTS` to it
+  (see *The one setting*).
 - If the name can be reached from the internet, so can Sunroom's sign-in page. Finish the setup
   before you open it up, and choose a long household password. Sunroom locks an address out for
   a while after 5 wrong passwords in 15 minutes.
@@ -167,13 +168,13 @@ own name, such as `calendar.example.com`, from any browser. You need:
    Let's Encrypt, or ZeroSSL if that fails), renews it, and sends `http://` visits to `https://`.
    It streams live updates without any extra setting. Its log is
    `journalctl -u caddy --no-pager | less +G`.
-4. **Tell Sunroom:** `APP_ALLOWED_HOSTS=calendar.example.com`, and `TRUSTED_PROXIES` set to the
-   Docker gateway; restart Sunroom.
+4. **Lock Sunroom to the name** (recommended, the name is public): `APP_ALLOWED_HOSTS=
+   calendar.example.com`; restart Sunroom.
 5. **Check it** (see *Check that it worked*).
 
 Anyone on the internet can now reach Sunroom's sign-in page, so finish the setup first and use a
-long household password. If Caddy runs in Docker instead, put it on a network with Sunroom, use
-`reverse_proxy sunroom:8080`, and set `TRUSTED_PROXIES` to that network's range.
+long household password. If Caddy runs in Docker instead, put it on a network with Sunroom and use
+`reverse_proxy sunroom:8080`; nothing else changes.
 
 Caddy can also make an https address for the home network alone, without a domain
 (`tls internal`), but then every phone has to be set up to trust Caddy's own certificate
@@ -201,8 +202,8 @@ ones.
 2. **Route your name to Sunroom:** open the tunnel, then **Routes → Add route → Published
    application**. Enter a subdomain (`calendar`), choose your domain, set the service URL to
    `http://localhost:8080`, and add the route.
-3. **Tell Sunroom:** `APP_ALLOWED_HOSTS=calendar.example.com`, and `TRUSTED_PROXIES` set to the
-   Docker gateway (when `cloudflared` runs as a service on the server); restart Sunroom.
+3. **Lock Sunroom to the name** (recommended, the name is public): `APP_ALLOWED_HOSTS=
+   calendar.example.com`; restart Sunroom.
 4. **Leave Rocket Loader off** for this name: Cloudflare's own documentation says it needs a looser
    security policy than Sunroom allows.
 5. **Check it** (see *Check that it worked*).
@@ -217,27 +218,27 @@ On a phone, open the new https address, sign in, and go to **More → Settings �
 **Connection**:
 
 - **Live updates** says "connected".
-- **This device uses** shows your `https://` address. If it shows `http://` with "Your proxy says
-  https, but Sunroom doesn't trust it yet: set TRUSTED_PROXIES.", fix `TRUSTED_PROXIES`.
-- **Sunroom sees it as** shows your phone's own address: one starting with `100.` over
-  Tailscale, your phone's internet address through Caddy or Cloudflare. If it shows the proxy's
-  own address instead (such as the Docker gateway), check `TRUSTED_PROXIES`, and that the proxy
-  sets `X-Forwarded-For`.
+- **URL** shows your `https://` address. If it shows `http://`, the proxy isn't sending
+  `X-Forwarded-Proto: https` (see *When something isn't right*).
 
 `<your address>/api/version` should also show Sunroom's version.
 
 ## When something isn't right
 
-- **"Sunroom doesn't answer to the address …"**: the name isn't in `APP_ALLOWED_HOSTS`. Add it and
-  restart Sunroom.
-- **"Sunroom is behind an https address but doesn't trust the proxy yet"**: set `TRUSTED_PROXIES`
-  (see *The two settings*) and restart Sunroom.
+- **"Sunroom doesn't answer to the address …"** (only with `APP_ALLOWED_HOSTS` set): the name
+  isn't in the list. Add it and restart Sunroom.
+- **"Sunroom is reached over https, but the proxy didn't say so"**: the proxy isn't sending
+  `X-Forwarded-Proto: https`, or it connects from the internet rather than the home network.
+  Every common proxy sends it by default; a hand-written nginx needs
+  `proxy_set_header X-Forwarded-Proto $scheme;`. Sunroom's log has a line
+  `csrf.https_not_forwarded` naming the proxy's address.
 - **"This request was blocked for safety" on every change**: the proxy is changing the `Host`
   header on its way through. Make it pass `Host` unchanged.
 - **Live updates stay on "connecting" or "checking every 30 seconds"**: the proxy is holding the
   live-update stream back. See [DEPLOY.md](DEPLOY.md), step 2.
 - **Sunroom stops at startup with exit code 78** after a change: one of the settings has a typo.
-  The log names it. `TRUSTED_PROXIES` takes addresses or ranges separated by commas, and
-  `APP_ALLOWED_HOSTS` takes names only (no `https://`, no port).
+  The log names it. `APP_ALLOWED_HOSTS` takes names only (no `https://`, no port).
+- **A `TRUSTED_PROXIES` line from an earlier version** is ignored; the log says so. It can stay
+  or go.
 - **A phone was signed out after moving to the new address**: each address is its own sign-in.
   Sign in once more there.

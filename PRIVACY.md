@@ -25,8 +25,9 @@ photo files.
   removed (the date taken is read first).
 - Signed-in phones and paired screens: a short label, whose phone it is, and when it was last
   used. Phones' IP addresses are not stored or logged: the server keeps them in memory only for a
-  few minutes, to slow down password guessing. (Behind a reverse proxy that isn't trusted yet,
-  the proxy's address is logged once, to help set `TRUSTED_PROXIES`.)
+  few minutes, to slow down password guessing. (Behind a reverse proxy that doesn't say the
+  browser is on https, the proxy's address is logged once, to help fix it.) About shows the
+  address this device used (its URL), not the phone's own.
 - The household password and the parent PIN, only as one-way hashes.
 - "Add a phone" and pairing codes, as one-way hashes, usable once, for a few minutes.
 - The passwords, keys and sign-ins of calendars you connect, encrypted with the server's secret

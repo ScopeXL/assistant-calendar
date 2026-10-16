@@ -6,12 +6,14 @@ from __future__ import annotations
 import re
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
 
 from sunroom.app import create_app
 from sunroom.core.clock import FakeClock
+from sunroom.web.forwarded import ForwardedHeaders
 from sunroom.web.headers import DEFAULT_CSP
 from sunroom.web.hosts import HostRule, host_name
 from tests.support import BASE_URL, make_settings, run_setup
@@ -152,20 +154,41 @@ def test_other_names_dont(host: str) -> None:
     assert not rule.allows(host_name(host))
 
 
-async def test_a_foreign_host_gets_421_with_the_fix(client: httpx.AsyncClient) -> None:
-    api = await client.get("/api/version", headers={"host": "evil.example"})
-    assert api.status_code == 421
-    assert api.json()["error"]["code"] == "unknown_host"
-    assert "APP_ALLOWED_HOSTS" in api.json()["error"]["message"]
-    page = await client.get("/", headers={"host": "evil.example"})
-    assert page.status_code == 421
-    assert page.headers["content-type"].startswith("text/plain")
-    setup = await client.post(
-        "/api/setup",
-        json={"password": "x" * 20, "household_name": "x", "timezone": "UTC"},
-        headers={"host": "evil.example", "x-sunroom": "1"},
-    )
-    assert setup.status_code == 421  # DNS rebinding can't claim an unconfigured server
+async def test_a_foreign_host_gets_421_with_the_fix_once_the_lock_is_set(data_dir: Path) -> None:
+    """APP_ALLOWED_HOSTS set: the strict Host rule, as before 0.12.0 (ADR 0034)."""
+    locked = create_app(make_settings(data_dir, app_allowed_hosts="calendar.example.com"))
+    async with locked.router.lifespan_context(locked):
+        transport = httpx.ASGITransport(app=locked)
+        async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as client:
+            api = await client.get("/api/version", headers={"host": "evil.example"})
+            assert api.status_code == 421
+            assert api.json()["error"]["code"] == "unknown_host"
+            assert "APP_ALLOWED_HOSTS" in api.json()["error"]["message"]
+            page = await client.get("/", headers={"host": "evil.example"})
+            assert page.status_code == 421
+            assert page.headers["content-type"].startswith("text/plain")
+            setup = await client.post(
+                "/api/setup",
+                json={"password": "x" * 20, "household_name": "x", "timezone": "UTC"},
+                headers={"host": "evil.example", "x-sunroom": "1"},
+            )
+            assert setup.status_code == 421  # DNS rebinding can't claim an unconfigured server
+            allowed = await client.get("/api/version", headers={"host": "calendar.example.com"})
+            assert allowed.status_code == 200
+
+
+def test_any_name_passes_without_a_list() -> None:
+    rule = HostRule((), container_hostname="abc123")
+    for name in ("evil.example", "calendar.example.com", "sunroom.local", "192.168.1.20", ""):
+        assert rule.allows(name), name
+
+
+async def test_any_host_is_answered_by_default(parent: httpx.AsyncClient) -> None:
+    """ADR 0034: http://<the server>:8080 works with nothing set, through any proxy."""
+    found = await parent.get("/api/version", headers={"host": "evil.example"})
+    assert found.status_code == 200
+    diagnostics = (await parent.get("/api/admin/diagnostics")).json()
+    assert "evil.example" in diagnostics["recent_addresses"]
 
 
 async def test_addresses_this_server_was_reached_at_are_remembered(
@@ -181,46 +204,75 @@ async def test_addresses_this_server_was_reached_at_are_remembered(
 # ---- forwarded headers (PLAN §13.4) --------------------------------------------------------
 
 
-async def test_forwarded_headers_count_only_from_trusted_proxies(data_dir: Path) -> None:
-    trusted = create_app(make_settings(data_dir, trusted_proxies="127.0.0.0/8"))
-    async with trusted.router.lifespan_context(trusted):
-        transport = httpx.ASGITransport(app=trusted, client=("127.0.0.1", 4000))
-        async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as client:
-            await run_setup(client)
-            response = await client.get(
-                "/api/admin/diagnostics",
-                headers={
-                    "x-forwarded-proto": "https",
-                    "x-forwarded-for": "198.51.100.7, 127.0.0.1",
-                    "x-forwarded-host": "calendar.example.com",
-                },
-            )
-            # The forwarded Host is what the Host rule checks, and it isn't allowed here.
-            assert response.status_code == 421
-    untrusted = create_app(make_settings(data_dir))
-    async with untrusted.router.lifespan_context(untrusted):
-        transport = httpx.ASGITransport(app=untrusted, client=("127.0.0.1", 4000))
-        async with httpx.AsyncClient(transport=transport, base_url=BASE_URL) as client:
-            await client.post(
-                "/api/auth/login",
-                json={"password": "test-household-passphrase"},
-                headers={"x-sunroom": "1"},
-            )
-            response = await client.get(
-                "/api/admin/diagnostics",
-                headers={"x-forwarded-proto": "https", "x-forwarded-for": "198.51.100.7"},
-            )
-            body = response.json()
-            assert body["client"]["scheme"] == "http"
-            assert body["client"]["resolved_ip"] == "127.0.0.1"
+async def _through(
+    peer: str, headers: list[tuple[bytes, bytes]], kind: str = "http"
+) -> dict[str, Any]:
+    """What an app behind ForwardedHeaders sees for one connection."""
+    seen: dict[str, Any] = {}
+
+    async def app(scope: Any, receive: Any, send: Any) -> None:
+        seen["scheme"] = scope["scheme"]
+        seen["client"] = scope["client"][0]
+        seen["host"] = dict(scope["headers"]).get(b"host", b"").decode()
+
+    async def receive() -> dict[str, Any]:
+        return {"type": "http.request"}
+
+    async def send(_message: Any) -> None:
+        return None
+
+    scope = {
+        "type": kind,
+        "scheme": "http" if kind == "http" else "ws",
+        "client": (peer, 4000),
+        "headers": [(b"host", b"sunroom:8080"), *headers],
+    }
+    await ForwardedHeaders(app)(scope, receive, send)
+    return seen
 
 
-async def test_a_trusted_proxy_sets_scheme_client_and_host(data_dir: Path) -> None:
-    app = create_app(
-        make_settings(
-            data_dir, trusted_proxies="127.0.0.0/8", app_allowed_hosts="calendar.example.com"
-        )
-    )
+PROXY = [
+    (b"x-forwarded-proto", b"https"),
+    (b"x-forwarded-for", b"198.51.100.7"),
+    (b"x-forwarded-host", b"calendar.example.com"),
+]
+
+
+@pytest.mark.parametrize(
+    "peer", ["127.0.0.1", "192.168.1.20", "172.18.0.1", "100.64.0.5", "fe80::1", "::ffff:10.0.0.9"]
+)
+async def test_a_proxy_on_the_home_network_is_believed(peer: str) -> None:
+    """ADR 0034: no proxy setting; loopback, private, link-local and Tailscale peers."""
+    assert await _through(peer, PROXY) == {
+        "scheme": "https",
+        "client": "198.51.100.7",
+        "host": "calendar.example.com",
+    }
+
+
+async def test_a_connection_from_the_internet_is_never_believed() -> None:
+    assert await _through("203.0.113.9", PROXY) == {
+        "scheme": "http",
+        "client": "203.0.113.9",
+        "host": "sunroom:8080",
+    }
+
+
+async def test_the_browser_is_the_right_most_hop_outside_home() -> None:
+    hops = [(b"x-forwarded-for", b"198.51.100.7, 10.0.0.2")]
+    assert (await _through("172.18.0.1", hops))["client"] == "198.51.100.7"
+    # Every hop at home (a phone on Tailscale through a proxy): the left-most.
+    tailnet = [(b"x-forwarded-for", b"100.101.102.103")]
+    assert (await _through("172.18.0.1", tailnet))["client"] == "100.101.102.103"
+    # Not an address: the connection's own stays.
+    garbage = [(b"x-forwarded-for", b"not-an-address")]
+    assert (await _through("172.18.0.1", garbage))["client"] == "172.18.0.1"
+    # A websocket through the proxy is wss.
+    assert (await _through("127.0.0.1", PROXY, kind="websocket"))["scheme"] == "wss"
+
+
+async def test_a_proxy_at_home_sets_scheme_and_host(data_dir: Path) -> None:
+    app = create_app(make_settings(data_dir, app_allowed_hosts="calendar.example.com"))
     async with app.router.lifespan_context(app):
         transport = httpx.ASGITransport(app=app, client=("127.0.0.1", 4000))
         async with httpx.AsyncClient(
@@ -238,6 +290,23 @@ async def test_a_trusted_proxy_sets_scheme_client_and_host(data_dir: Path) -> No
             # httpx won't send a Secure cookie over the test transport's plain HTTP: by hand.
             client.cookies.clear()
             body = (await client.get("/api/admin/diagnostics", headers={"cookie": cookie})).json()
-    assert body["client"]["scheme"] == "https"
-    assert body["client"]["resolved_ip"] == "198.51.100.7"
-    assert body["client"]["host"] == "calendar.example.com"
+    assert body["client"] == {"scheme": "https", "host": "calendar.example.com"}
+
+
+async def test_the_same_headers_from_the_internet_change_nothing(data_dir: Path) -> None:
+    app = create_app(make_settings(data_dir))
+    async with app.router.lifespan_context(app):
+        transport = httpx.ASGITransport(app=app, client=("203.0.113.9", 4000))
+        async with httpx.AsyncClient(
+            transport=transport,
+            base_url="http://sunroom:8080",
+            headers={
+                "x-forwarded-proto": "https",
+                "x-forwarded-for": "198.51.100.7",
+                "x-forwarded-host": "calendar.example.com",
+            },
+        ) as client:
+            setup = await run_setup(client)
+            assert setup.headers["set-cookie"].startswith("sunroom=")
+            body = (await client.get("/api/admin/diagnostics")).json()
+    assert body["client"] == {"scheme": "http", "host": "sunroom:8080"}

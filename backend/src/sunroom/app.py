@@ -321,5 +321,5 @@ def create_app(
     app.add_middleware(HostGuard, rule=HostRule(settings.app_allowed_hosts), note=note_host)
     app.add_middleware(SecurityHeaders, now_ms=lambda: int(the_clock.now().timestamp() * 1000))
     app.add_middleware(RequestLog)
-    app.add_middleware(ForwardedHeaders, trusted_proxies=settings.trusted_proxies)
+    app.add_middleware(ForwardedHeaders)
     return app

@@ -39,6 +39,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
   Open-Meteo.
 - Tips under the board are on for everyone; turn them off in Settings → Display → Show tips.
 - The Remind row offers 5, 15 and 30 minutes and 2 hours as well.
+- Sunroom works behind any reverse proxy (Tailscale, Caddy, Cloudflare, your own) with nothing to
+  set: it believes a proxy on the home network about https and the phone's address, and answers
+  to any name. TRUSTED_PROXIES is gone (an old line is ignored, with a note in the log).
+  APP_ALLOWED_HOSTS is now an optional lock: set it and Sunroom answers only to those names and
+  local ones. About says URL and no longer shows the phone's own address.
 
 ### Fixed
 

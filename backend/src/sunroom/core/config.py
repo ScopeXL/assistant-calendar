@@ -7,7 +7,6 @@ so a misconfigured secret can't end up in a log. The CLI prints the report and e
 
 from __future__ import annotations
 
-import ipaddress
 import os
 import re
 from enum import StrEnum
@@ -54,9 +53,9 @@ class Settings(BaseSettings):
     app_secret_key: SecretStr | None = None
     # Optional: overrides the password chosen in the setup wizard, at every boot (ADR 0006).
     app_password: SecretStr | None = None
-    # Public reverse-proxy names, on top of the LAN names the Host rule allows (ADR 0017).
+    # Optional lock (ADR 0034): set, the Host rule accepts only LAN-style names plus these;
+    # unset, any Host is answered.
     app_allowed_hosts: Annotated[tuple[str, ...], NoDecode] = ()
-    trusted_proxies: Annotated[tuple[str, ...], NoDecode] = ()
     tz: str | None = None
     port: int = Field(default=8080, ge=1024, le=65535)
     log_level: str = "INFO"
@@ -111,7 +110,7 @@ class Settings(BaseSettings):
             raise ValueError("must be an IANA time zone such as America/New_York") from exc
         return value
 
-    @field_validator("app_allowed_hosts", "trusted_proxies", mode="before")
+    @field_validator("app_allowed_hosts", mode="before")
     @classmethod
     def _split_list(cls, value: Any) -> Any:
         if isinstance(value, str):
@@ -130,20 +129,6 @@ class Settings(BaseSettings):
                 raise ValueError("must list host names like calendar.example.com or *.example.com")
             cleaned.append(name)
         return tuple(cleaned)
-
-    @field_validator("trusted_proxies")
-    @classmethod
-    def _check_proxies(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        for entry in value:
-            if entry == "*":
-                raise ValueError("must list specific IPs or CIDRs, not *")
-            try:
-                network = ipaddress.ip_network(entry, strict=False)
-            except ValueError as exc:
-                raise ValueError("must be a comma-separated list of IPs or CIDRs") from exc
-            if network.prefixlen == 0:
-                raise ValueError("must not trust every address (0.0.0.0/0 or ::/0)")
-        return value
 
     @field_validator("sunroom_advertised_url")
     @classmethod
@@ -223,6 +208,12 @@ class Settings(BaseSettings):
         found: list[str] = []
         for name in sorted(env):
             upper = name.upper()
+            if upper == "TRUSTED_PROXIES":
+                found.append(
+                    "TRUSTED_PROXIES is no longer needed and is ignored: Sunroom believes a "
+                    "reverse proxy on the home network by itself (docs/REMOTE-ACCESS.md)"
+                )
+                continue
             if upper.startswith(("APP_", "SUNROOM_")) and upper not in known:
                 if upper == "SUNROOM_BUILD_INFO":
                     continue  # read by core/version, set in the image

@@ -14,7 +14,7 @@
 
 - **Orientation: landscape first, portrait supported.** Screens are designed at 1920×1080 first. Portrait (1080×1920) has its own layout (UX §3), its own e2e project and screenshots, and a pass on a real panel in M5 if one is available. Settings → Display can force either orientation; Auto follows the viewport.
 - **The owner's deployment is path b:**
-  - the container runs on the owner's Portainer host, behind the owner's HTTPS reverse proxy, with `APP_ALLOWED_HOSTS` set to a public proxy name and the proxy listed in `TRUSTED_PROXIES`; Dinner Bell's `docs/DEPLOY.md` steps apply unchanged;
+  - the container runs on the owner's Portainer host, behind the owner's HTTPS reverse proxy, with `APP_ALLOWED_HOSTS` set to a public proxy name and the proxy listed in `TRUSTED_PROXIES` (since 0.12.0 the proxy needs no setting and that line is ignored, ADR 0034); Dinner Bell's `docs/DEPLOY.md` steps apply unchanged;
   - the Pi is the display only, installed with `kiosk/install.sh --display-only --url https://<public name>`, and drives a landscape touchscreen in the kitchen.
 - **The all-on-one-Pi path stays first-class for other households.** The README shows paths a and b side by side after one question: "Do you already run Docker somewhere at home?" Path a is verified on a spare card when one is available, in M5 at the latest.
 

@@ -62,10 +62,10 @@ everything in the `sunroom_data` volume.
   8080, and a volume (or folder) for `/data`. If you map a folder, it must be writable by the
   container's user (`--user 99:100` on Unraid's appdata).
 
-Open `http://<server>:8080` on your phone and set up the household (step 3 above). If you reach
-it through your own HTTPS proxy, set `APP_ALLOWED_HOSTS` and `TRUSTED_PROXIES` first
-([docs/DEPLOY.md](docs/DEPLOY.md)). To use Sunroom away from home, see
-[docs/REMOTE-ACCESS.md](docs/REMOTE-ACCESS.md).
+Open `http://<server>:8080` on your phone and set up the household (step 3 above): there is
+nothing to configure first. Your own HTTPS proxy, Tailscale or Cloudflare work with nothing to
+set; [docs/REMOTE-ACCESS.md](docs/REMOTE-ACCESS.md) shows each way, and when to lock Sunroom to a
+name with `APP_ALLOWED_HOSTS`.
 
 Then set up the Pi with the same installer, as the screen only:
 

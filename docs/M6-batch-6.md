@@ -1410,7 +1410,7 @@ tap lists what's wrong and opens the settings that fix it. The pill above the da
 
 ### T13 Any reverse proxy, with nothing to set
 
-- [ ] Done (commit: )
+- [x] Done (commit: "web: any reverse proxy with nothing to set; APP_ALLOWED_HOSTS an optional lock")
 
 **Owner's note.** "Remove TRUSTED_PROXIES from the app. The goal is to be easy for anyone to set
 up and use. They shouldn't have to set up a proxy address allowlist. And APP_ALLOWED_HOSTS should
@@ -1522,7 +1522,25 @@ address, and answers to any name. TRUSTED_PROXIES is gone (an old line is ignore
 the log). APP_ALLOWED_HOSTS is now an optional lock: set it and Sunroom answers only to those
 names and local ones. About says URL and no longer shows the phone's own address."
 
-**As built.** (fill in)
+**As built.** As planned. `web/forwarded.py` has no options: `HOME_NETWORKS` (the nine ranges),
+`from_home_network()` (unwraps `ipv4_mapped`), and `_client_of()`, which takes the right-most
+`X-Forwarded-For` hop outside home, else the left-most, and leaves the connection's own client
+when any hop isn't an address; a websocket scope gets `wss`/`ws`. `HostRule.strict =
+bool(allowed)`; `HostGuard` notes a name for About only when the Host is not empty. The config
+warning, the CSRF code and message (`https_not_forwarded`, logged once with the peer), `ClientInfo`
+down to `scheme` and `host`, and About's URL row without its hint, all as written. Tests: the
+middleware is tested directly over a recording ASGI app (six home peers apply all three headers,
+a public one none, the XFF cases, garbage, websocket); `test_web.py` keeps every strict 421
+assertion on an app built with `app_allowed_hosts`, and gains the any-Host cases; `test_auth.py`
+checks `https_not_forwarded` for a home peer without the header and a public peer with it.
+`image_common.sh` expects 200 for `Host: evil.example` and HSTS for a forwarded https;
+`smoke_image.sh` adds a `-locked` container on the next port with
+`APP_ALLOWED_HOSTS=calendar.example.com` (421 and 200), cleaned up with the first. Docs as listed,
+plus PLAN §12.5's Tailscale and Caddy sentences (the plan's `:633`), which still told the reader to
+set the proxy list; ADR 0017's body stays as history under its new Status line. The ADR row adds
+one residual the plan didn't list: without the lock, a rebound page could also finish setup on a
+server nobody has set up yet (the window between starting the container and the wizard; the
+family would find it set up and reset it with the CLI).
 
 ### T14 A refresh shows the new version
 

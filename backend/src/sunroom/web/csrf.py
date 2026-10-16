@@ -57,20 +57,22 @@ class CSRFGuard:
             if origin == expected:
                 return None
             if scope["scheme"] == "http" and origin == f"https://{host}":
-                # The browser is on https, but no trusted proxy said so (PLAN §13.4). The
-                # proxy's own address, logged once, is what TRUSTED_PROXIES needs (DEPLOY.md).
+                # The browser is on https, but the proxy didn't say so: it sent no
+                # X-Forwarded-Proto, or it isn't on the home network, where Sunroom believes one
+                # (web/forwarded.py, ADR 0034). The proxy's address is logged once.
                 if not self._warned:
                     self._warned = True
                     client = scope.get("client")
                     log.warning(
-                        "csrf.proxy_not_trusted",
+                        "csrf.https_not_forwarded",
                         proxy=client[0] if client else None,
-                        fix="set TRUSTED_PROXIES to this proxy's address or network",
+                        fix="send X-Forwarded-Proto: https from the home network",
                     )
                 return _refuse(
-                    "proxy_not_trusted",
-                    "Sunroom is behind an https address but doesn't trust the proxy yet. Set "
-                    "TRUSTED_PROXIES to the proxy's address and restart (docs/DEPLOY.md).",
+                    "https_not_forwarded",
+                    "Sunroom is reached over https, but the proxy didn't say so. Make it send "
+                    "X-Forwarded-Proto: https from the home network (docs/REMOTE-ACCESS.md), "
+                    "then try again.",
                 )
             return blocked
         fetch_site = headers.get("sec-fetch-site")
