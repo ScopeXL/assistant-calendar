@@ -16,8 +16,8 @@ recurrence engine, ADR 0023); synced calendars (ADR 0024, docs/SYNC.md); lists a
 (ADR 0025); meals, countdowns, photos and weather (ADR 0026); the wall, polished (ADR 0027).
 M6 batch 1 (the owner's notes: docs/M6.md, ADR 0028) is built in 0.7.0, batch 2
 (docs/M6-batch-2.md, ADR 0029) in 0.8.0, batch 3 (docs/M6-batch-3.md, ADR 0030) in 0.9.0,
-batch 4 (docs/M6-batch-4.md, ADR 0032) in 0.10.0, and batch 5 (docs/M6-batch-5.md, ADR 0033)
-for 0.11.0; more M6 comes from use.
+batch 4 (docs/M6-batch-4.md, ADR 0032) in 0.10.0, batch 5 (docs/M6-batch-5.md, ADR 0033) in
+0.11.0, and batch 6 (docs/M6-batch-6.md, ADR 0034) for 0.12.0; more M6 comes from use.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -108,10 +108,13 @@ backend/src/sunroom/
   boot.py        startup: settings → data dir + lock → secret key → backup → migrate → verify → serve
   app.py         create_app(): routers, middleware (forwarded → log → headers → Host rule → CSRF), SPA
   core/          config (env, all optional), secret key, crypto, clock, logging, netguard + http (SSRF)
-  db/            engines + write lock, types, migrate, backup, export lists, instance lock
+  db/            engines + write lock, types, migrate, backup, restore (CLI and app), export lists,
+                 instance lock
   web/ events/   Host rule, CSRF, CSP nonce + headers, SPA and photos / SSE hub (/api/events)
   auth/          password, sessions, devices, join codes, kiosk pairing, PIN and parent grants
-  household/ photos/ meta/   settings and members / the photo store / health, setup, backups
+  household/ photos/ meta/   settings and members / the photo store / health, setup, backups,
+                 restore from a file
+  problems/      Needs Attention: what needs a parent, from the core and each plugin
   plugins/       manifest + context + manager + registry (explicit dict) + generic routes
   domain/        PURE logic
 frontend/src/
@@ -210,8 +213,6 @@ part your task touches, and move lines there when this file nears its limit.
 - `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answered
   navigations from its precached `index.html`. Since ADR 0034 it asks the server first (the copy
   answers only offline), but still test routes on a page never loaded before.
-- A `createLink` component lost its styles: the router passes its own `className`. Merge it
-  after the spread (`shell/HeaderLinks`, `ui/ListRow`).
 - A plugin's setting reached the wall minutes late: `plugins.changed` refreshed only the plugin
   list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
 - The test server keeps plugin settings between tests (`/api/_test/reset` leaves

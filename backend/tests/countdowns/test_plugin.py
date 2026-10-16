@@ -99,6 +99,7 @@ async def test_the_calendar_shows_countdowns_but_leaves_birthdays_to_the_core(
         "status": "confirmed",
         "overlay": "countdowns",
         "reminders": [],
+        "reminders_off": False,
         "version": 0,
     }
     # Unasked, the calendar is events only.

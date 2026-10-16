@@ -50,7 +50,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
   set: it believes a proxy on the home network about https and the phone's address, and answers
   to any name. TRUSTED_PROXIES is gone (an old line is ignored, with a note in the log).
   APP_ALLOWED_HOSTS is now an optional lock: set it and Sunroom answers only to those names and
-  local ones. About says URL and no longer shows the phone's own address.
+  local ones. About no longer shows the phone's own address.
 - Back Up Now sits in the Backups heading; Export says what it is for and is named Export.
 
 ### Fixed

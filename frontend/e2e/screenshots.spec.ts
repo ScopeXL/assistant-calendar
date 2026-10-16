@@ -365,7 +365,7 @@ test("the wall screen", async ({ page }) => {
   // An account's sheet (its server stopped answering above), and its calendar's page.
   await page
     .getByRole("navigation", { name: "Settings" })
-    .getByRole("link", { name: "Calendars & Accounts", exact: true })
+    .getByRole("link", { name: /^Calendars & Accounts(, needs attention)?$/ })
     .click();
   await page.getByRole("button", { name: "Edit Test server" }).click();
   await expect(page.getByRole("dialog", { name: "Edit Test server" })).toBeVisible();
@@ -393,7 +393,7 @@ test("the wall screen", async ({ page }) => {
   // keyboard, and Google's two ways that need a phone.
   await page
     .getByRole("navigation", { name: "Settings" })
-    .getByRole("link", { name: "Calendars & Accounts", exact: true })
+    .getByRole("link", { name: /^Calendars & Accounts(, needs attention)?$/ })
     .click();
   const addAccount = page.getByRole("button", { name: "Add an Account" });
   const adding = page.getByRole("dialog");

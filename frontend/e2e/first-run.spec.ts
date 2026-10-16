@@ -230,8 +230,9 @@ test("offline, a wall screen still opens from the copy its service worker saved"
   await screen.reload();
   await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
 
-  // A reverse proxy's 502 while the container restarts counts as no answer too. The route
-  // answers the worker's own fetch (Chromium), so count that it did.
+  // A reverse proxy's 502 while the container restarts counts as no answer too: the saved page
+  // opens, and here (only the page itself refused) the board comes up. The route answers the
+  // worker's own fetch (Chromium), so count that it did.
   let gateway = 0;
   await context.route("**/display", (route) => {
     gateway += 1;
@@ -241,7 +242,7 @@ test("offline, a wall screen still opens from the copy its service worker saved"
   expect(gateway).toBeGreaterThan(0);
   expect(proxied?.fromServiceWorker()).toBe(true);
   expect(proxied?.ok()).toBe(true);
-  await expect(screen.locator('main[data-shell="display"]')).toBeVisible();
+  await expect(screen.getByRole("region", { name: "This Week" })).toBeVisible();
   await expect(screen.getByText("Bad Gateway")).toHaveCount(0);
   await context.unrouteAll();
 

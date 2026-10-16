@@ -2024,7 +2024,7 @@ e2e case, which restarts the test server in place.
 
 ### T17 Wrap up the batch
 
-- [ ] Done (commit: )
+- [x] Done (commit: "docs: M6 batch 6 wrapped up")
 
 1. **The full gate.** `just check`; the whole `just e2e`; `just screenshots`. Fix what fails;
    a failure is traced by running the failing spec at each task's commit. Review, against UX §10
@@ -2066,7 +2066,27 @@ e2e case, which restarts the test server in place.
    Sunroom, the Remind row, setup on a fresh volume (the theme); `support.ts` still to fill; the
    owner deploys. Mention that the deploy's `smoke-image` now probes both Host modes.
 
-**As built.** (fill in)
+**As built.** The full gate, and what it found. `just check` failed first on two backend tests
+(countdowns, meals) whose expected occurrence lacked T11's `reminders_off` (traced to `056472c`:
+T11's quick gate ran only the tests it touched); then green (1,211 backend and 696 frontend
+tests, API types, the migration checks, release metadata). The whole `just e2e` failed 4 of 123:
+three expectations T1's words left behind (`sync.spec`'s "From a phone" and its QR label "on a
+phone", `lists.spec`'s empty-room line, `shell.spec`'s "On the new phone or tablet"; one of the
+first was a negative check that had become vacuous and now looks for "From a device"), and a
+race in T14's own offline case (with only the page refused, the board replaces the waiting
+frame, so the 502 step now expects the board). Run again whole: 123 passed. `just screenshots`
+timed out on the wall: T12 names a page that needs attention "…, needs attention", and that
+test's account had stopped answering, so its two Calendars & Accounts links take the flag, as
+the spec's loops already did. Reviewed against 0.11.0's own set, kept as
+`.screenshots/before-0.12.0/` (`before-0.11.0` is older): the boards with the tips strip and no
+attention icon, the two-color bar on Movie night, Needs Attention, the wall's Backup page with
+its two groups, the laptop's and phones' Backup, the twelve swatches, setup's theme row, Support
+Sunroom, the Default reminder, Today with no pill. The screenshot spec captures only the top of
+Backup, so the lower groups and both sheets were checked in full-page shots from a scratch
+server (not kept). Docs: ADR 0034's consequences for T13 to T16 and its README row; PLAN §15;
+UX §8 (the restart, no copies yet); CLAUDE.md's status and map, with one gotcha moved to
+GOTCHAS.md (14.8 KB); GOTCHAS.md's new sections; the CHANGELOG as one list; more follow-ups
+below. `just scan` clean.
 
 ## Follow-ups noticed but not in this batch
 
@@ -2076,9 +2096,9 @@ e2e case, which restarts the test server in place.
   new build (T14); a `GET_VERSION` message from the worker would let the pill compare versions.
 - `lib/events.ts:164-170`: by the EventSource spec, `lastEventId` carries forward onto frames
   without an `id:` (pings, `session.expired`), which the client may read as a gap and reconnect;
-  the unit tests' fake sends an empty id, so they can't catch it. Worth a look with the
-  `server.restarting` frame (T16 gives it no id either; it is handled before the gap check if the
-  handler order is right: check).
+  the unit tests' fake sends an empty id, so they can't catch it. (Checked in T16: the
+  `server.restarting` frame goes through the hub, so it has an `id:` in sequence and isn't
+  affected.)
 - `PinDialog` is mounted only in the display shell; on a child's phone an `asParent` call waits
   for a dialog that never appears (seen while reading `SettingsScreens`).
 - A backup failure shows in Needs Attention within five minutes (the poll), not at once; a
@@ -2087,6 +2107,17 @@ e2e case, which restarts the test server in place.
   them, which is enough.
 - The owner's "any audits in the future": `people_from_title` on `EventOut` says whether Sunroom
   guessed; an "assigned by title" line in the event sheet would make it visible.
+- Found while building: the restore's refusals keep the CLI's words, which name "Download
+  everything" (the button is Data & Photos now), and the Erase sheet's link still says Download
+  Everything. One rename across `full_backup`, `db/restore`, `tests/test_restore.py` and
+  RESTORE.md's table would settle it.
+- Without `APP_ALLOWED_HOSTS`, a page rebound from the home network could finish setup on a
+  server nobody has set up yet (accepted in ADR 0034); `POST /api/setup` could keep the strict
+  Host rule even without the lock.
+- A wall reloaded while the server is down shows its empty frame, with no offline pill, until the
+  server answers (the pill lives in the shells); and a phone with no network at all waits a few
+  seconds on a blank page before the saved app opens (the router waits for the session request
+  to give up, since TanStack's online manager starts online).
 - Still open from batch 5: the header's worst-case row with a three-digit temperature; night icons
   in the forecast's hours; "Tonight" after 6 PM; sunrise and sunset never shown; the phone's
   weather block; a per-screen Rolling week; and batch 4's and 3's lists.

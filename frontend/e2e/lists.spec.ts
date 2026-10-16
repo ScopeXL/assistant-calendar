@@ -101,7 +101,9 @@ test("an empty Lists room says what goes there, with one big New List", async ({
   // An icon, a short line, a note and one big button, centred in the room (ADR 0032).
   const empty = page.locator("[data-empty]");
   await expect(empty).toContainText("No lists yet");
-  await expect(empty).toContainText("everyone sees them on the wall and on their phones");
+  await expect(empty).toContainText(
+    "everyone sees them on paired screens and on their own devices",
+  );
   const make = empty.getByRole("button", { name: "New List" });
   const button = await make.boundingBox();
   const room = await page.getByRole("region", { name: "Lists" }).boundingBox();

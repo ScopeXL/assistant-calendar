@@ -254,7 +254,7 @@ test("a computer adds an account in a sheet, and Google's way back opens its cal
   await expect(sheet.getByText("Or add it from a device")).toHaveCount(0);
   await sheet.getByRole("button", { name: /^Google/ }).click();
   const google = page.getByRole("dialog", { name: "Google" });
-  await expect(google.getByText("From a phone")).toHaveCount(0);
+  await expect(google.getByText("From a device")).toHaveCount(0);
   await google.getByRole("button", { name: /^Share with a Sunroom helper/ }).click();
   const helper = page.getByRole("dialog", { name: "Google: Share with a Helper" });
   await expect(helper.getByLabel("Upload the Key File")).toBeVisible();
@@ -468,7 +468,7 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
   const sheet = page.getByRole("dialog", { name: "Add an Account" });
   await expect(sheet.getByText("Or add it from a device")).toBeVisible();
   await expect(
-    sheet.getByRole("img", { name: "A code that opens Add an Account on a phone" }),
+    sheet.getByRole("img", { name: "A code that opens Add an Account on a device" }),
   ).toBeVisible();
 
   // Apple: the password is a masked field, typed on the screen's own keyboard.
@@ -495,19 +495,19 @@ test("the wall adds an account itself, and hands Google's file and page to a pho
   await sheet.getByRole("button", { name: /^Google/ }).click();
   const google = page.getByRole("dialog", { name: "Google" });
   await expect(google.getByRole("button", { name: /^Paste the secret address/ })).not.toContainText(
-    "From a phone",
+    "From a device",
   );
   await expect(google.getByRole("button", { name: /^Share with a Sunroom helper/ })).toContainText(
-    "From a phone",
+    "From a device",
   );
   await expect(google.getByRole("button", { name: /^Sign in with Google/ })).toContainText(
-    "From a phone",
+    "From a device",
   );
   await google.getByRole("button", { name: /^Sign in with Google/ }).click();
   const signIn = page.getByRole("dialog", { name: "Sign in with Google" });
   await expect(signIn).toContainText("Do this from a device");
   await expect(
-    signIn.getByRole("img", { name: "A code that opens Add an Account on a phone" }),
+    signIn.getByRole("img", { name: "A code that opens Add an Account on a device" }),
   ).toBeVisible();
   await expect(signIn.getByRole("button", { name: "Sign in with Google" })).toHaveCount(0);
   // A tap on the backdrop still closes it (a press that started there).

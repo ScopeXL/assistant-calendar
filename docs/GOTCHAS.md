@@ -26,6 +26,49 @@ size limit.
 - A sliver of the form showed under a pinned button: `ui/PanelActions` has a cover strip
   (`after:`) below itself.
 
+## Components and their tests
+
+- A `createLink` component lost its styles: the router passes its own `className`. Merge it
+  after the spread (`shell/HeaderLinks`, `ui/ListRow`).
+- The design rules failed on a component's `title="…"` that wasn't a heading: every `title=`
+  literal on a component counts as a title, in Title Case. Name such a prop otherwise (`lead`).
+- A test couldn't find a switch by its label: `ui/Switch`'s `<label>` wraps the hint too, so the
+  name is both. Match the start: `{ name: /^Nightly backups/ }`.
+- Two buttons named Close in one sheet: `ui/Sheet` has its own ✕, named Close. Take the last one
+  (`getAllByRole(…).at(-1)`; Playwright's `.last()`).
+- `react-hooks/set-state-in-effect` refused resetting a sheet when its input changed: reset during
+  render instead (`const [shown, setShown] = useState(file); if (file !== shown) …`), as
+  `EraseSheet` and `RestoreSheet` do.
+
+## Backup, restore and the service worker
+
+- A restart's reload threw "e is not a function": `.then(refresh)` handed the waiter's `true`
+  to `reloadFresh` as its optional `reload`. Call through a closure (`.then(() => refresh())`)
+  when the function has optional parameters; a test's `vi.fn()` takes anything, so check
+  `toHaveBeenCalledWith()`.
+- Workbox's `PrecacheFallbackPlugin` failed `exactOptionalPropertyTypes` (its `handlerDidError`
+  is `T | undefined`): `{ handlerDidError: () => matchPrecache("/index.html") }` is the same call.
+- A refresh behind a proxy could show the proxy's 502 while the container restarts: `NetworkOnly`
+  returns any answer. `sw.ts` turns a 5xx into no answer, so the saved page opens.
+- A paired wall reloaded while the server was down came back as Pair This Screen: its session
+  request gave up after two tries. `DisplayEntry` retries it until the server answers anything
+  but a 4xx.
+- A backup e2e listed other tests' copies: `/api/_test/reset` left `backups/` alone. Since
+  0.12.0 it clears every copy and what the service remembers.
+- `DELETE /api/admin/backups/{name}` with an encoded slash in the name got 405, not 404: the
+  decoded path matches only the page's GET fallback. Nothing is removed; the test takes either.
+
+## Backend and its tests
+
+- ruff's ASYNC240 flags a `Path` method in any async function, tests included: `await
+  asyncio.to_thread(path.unlink, missing_ok=True)`.
+- Patching `module.shutil.disk_usage` patches `shutil` itself for the whole test: patch
+  `shutil.disk_usage` and know that's what it is.
+- A Protocol over SQLAlchemy `Mapped[...]` fields didn't satisfy pyright: pass a small dataclass
+  (`calendar.people.Person`).
+- `boot.reexec` runs `sys.orig_argv[1:]` again with `sys.executable`: for the console script
+  that's `[python, …/bin/sunroom, serve, …]`, for `-m` it's `[python, -m, sunroom, serve]`.
+
 ## Layout and CSS
 
 - A backdrop under the header's menus covered only the header: the header is a size container
@@ -67,6 +110,12 @@ size limit.
   `handleSignedOut` invalidates it.
 
 ## End-to-end tests
+
+- Playwright's `context.route` answers a service worker's own fetches in Chromium (count the hits
+  to be sure), so a test can hand the worker a proxy's 502; `setOffline` reaches the worker in
+  Chromium, not WebKit.
+- "No file links on the wall" can't be `getByRole("link")`: Settings there has its own nineteen
+  (the rail, the pages). Look for `a[href^="/api/"]`.
 
 - The wall's keyboard didn't rise in an a11y run: an `Escape` earlier in the test counted as a
   physical keyboard, which keeps the on-screen one down for 5 s. Close things with a tap.

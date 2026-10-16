@@ -127,6 +127,7 @@ async def test_dinner_shows_on_the_calendar_when_the_family_asks(
         "status": "confirmed",
         "overlay": "meals",
         "reminders": [],
+        "reminders_off": False,
         "version": 0,
     }
     # Only asked for: the board without the overlay has none of them.

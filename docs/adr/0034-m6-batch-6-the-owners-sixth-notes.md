@@ -74,3 +74,28 @@
   `problems/` (schemas, service, router). New frontend: `features/problems/` (the data hook,
   `AttentionButton`, `AttentionSheet`, `AttentionPill`); `SyncPill` and the registry's
   `boardPill` went.
+- No schema change for proxies. `TRUSTED_PROXIES` left the settings (a leftover line is
+  ignored, with a warning); `web/forwarded.HOME_NETWORKS` decides whom to believe; the CSRF code
+  `proxy_not_trusted` is `https_not_forwarded`; `ClientInfo` keeps `scheme` and `host` only.
+  `smoke-image` runs a second, locked container (`APP_ALLOWED_HOSTS`) to probe both Host modes.
+- No schema change for the service worker. `workbox-strategies` is a direct dependency;
+  `StatusLayer.useAppUpdate` checks hourly in one effect it cleans up; the wall's `DisplayEntry`
+  retries its session request until the server answers anything but a 4xx.
+- Migration `202610161644_household_backup_policy`: `household.backups_enabled` (server default
+  true), `backups_keep_daily` (14) and `backups_keep_weekly` (8); tested from the 0.11.0
+  fixture, and the release's own fixture, `tests/fixtures/db/202610161644.sql` (`_v0_12_0`), is
+  built. New in the API: the three in the settings; `BackupStatusOut` gains `enabled`,
+  `keep_daily`, `keep_weekly`, `busy`, and `files` with `kind` and `made_at`; `DELETE
+  /api/admin/backups/{name}`; `GET /api/admin/backups/data.db`. New backend: `db/backup`'s
+  `BackupPolicy`, `Copy`, `list_copies`, `locate`, `BackupService.policy_of` and `remove`; the
+  test server's reset clears every copy. New frontend: `DownloadSheet`, `backupWords.ts`,
+  `Group`'s `action`.
+- No schema change for restore; the data folder gains `restore/`. New in the API: `GET`, `POST`
+  and `DELETE /api/admin/restore`, `POST /api/admin/restore/apply`, and the `server.restarting`
+  frame (published through the hub, so it carries an `id:` in sequence). New backend:
+  `db/restore.py` (which `sunroom restore` uses too), `meta/restore.py`, `boot.reexec`,
+  `devserver.reload`, `create_app(restart=)`, `AppState.restart` and `restore_lock`,
+  `full_backup.ArchiveError.code`. New frontend: `lib/restart.ts` (mounted in both shells),
+  `lib/restoreUpload.ts`, `RestoreSheet`, `ui/Button.FileButton`.
+- Four migrations in all, forward-only: tips on, people from the title, the default reminder
+  with reminders off, the backup policy.

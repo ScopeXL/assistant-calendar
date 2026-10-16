@@ -1202,7 +1202,7 @@ test.describe("a laptop", () => {
     await expect(page.getByRole("button", { name: "Sign Out of This Computer" })).toBeVisible();
     await page.getByRole("button", { name: "Add a Device" }).click();
     const adding = page.getByRole("dialog", { name: "Add a Device" });
-    await expect(adding.getByText(/^On the new phone or tablet/)).toContainText(
+    await expect(adding.getByText(/^On the new device/)).toContainText(
       "On a computer, open the address under it.",
     );
     await expect(adding.getByText(/\/join#/)).toBeVisible();
