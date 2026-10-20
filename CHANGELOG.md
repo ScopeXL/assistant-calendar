@@ -25,7 +25,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A Windows computer or a Mac can be a kitchen screen too: one line installs Sunroom Screen for
   the person signed in, with no administrator, and it starts at sign-in.
 - Behind the scenes: Sunroom Screen's tests run on Linux, macOS and Windows, and each release on
-  GitHub carries it and the installer, with checksums.
+  GitHub carries it, the installers and the Sunroom OS image, with checksums.
 
 ### Changed
 

@@ -81,3 +81,14 @@
   (`contents: write`, SHA-pinned actions; a pre-release tag makes a draft pre-release, for the
   owner's one test), the deploy skill's GitHub Release step and its report line, RELEASING.md.
   Dependabot now covers `kiosk/agent`.
+- Batch 2: `kiosk/install.ps1` (Windows; PSScriptAnalyzer and its dry runs in CI's Windows job)
+  and `install.sh`'s macOS path with `kiosk/files/launchd/app.sunroom.kiosk.plist`;
+  `platform/windows.py` (`winreg` behind a `Registry` protocol, `netsh` for the Network row) and
+  `platform/macos.py`; the screen helper's macOS mode; `apply.py`, the update's apply step on its
+  own (standard library; copied out and run by the base Python on Windows); the `sunroom-kioskw`
+  gui-script and its log file; `sunroom-kiosk config --url` and `policy --remove`; the platform
+  interface's `write_policy(kind, …)` and `remove_policy`; the root helper's `run-sunroom` and a
+  streaming runner for its progress; `kiosk/os/` (pi-gen's settings, `stage-sunroom`, the splash,
+  `build.sh`, `imager.py`) and `just kiosk-image`; `.github/workflows/sunroom-os.yml`;
+  `docs/SUNROOM-OS.md`. `just bump` writes `install.ps1`'s version too. The download of the
+  kiosk folder no longer needs GNU tar.

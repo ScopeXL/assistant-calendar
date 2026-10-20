@@ -66,6 +66,7 @@ lint: kiosk-lint
 kiosk-lint:
     {{shellcheck}} -x kiosk/install.sh kiosk/uninstall.sh kiosk/update.sh kiosk/os/build.sh kiosk/os/stage-sunroom/prerun.sh kiosk/os/stage-sunroom/*/*.sh
     {{py}} -m py_compile kiosk/labwc-rule.py kiosk/files/sunroom-kiosk-root kiosk/os/imager.py
+    @if command -v pwsh >/dev/null 2>&1; then pwsh -NoProfile -Command 'if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) { "PSScriptAnalyzer is not installed here; CI runs it on Windows."; exit 0 }; $found = Invoke-ScriptAnalyzer -Path kiosk/install.ps1 -Severity Warning,Error -ExcludeRule PSAvoidUsingWriteHost; $found | Format-Table -AutoSize RuleName,Line,Message; if ($found) { exit 1 }'; else echo "install.ps1: no pwsh here; CI runs PSScriptAnalyzer on Windows."; fi
     cd kiosk/agent && uv run --quiet ruff check . && uv run --quiet ruff format --check . && uv run --quiet pyright
 
 # Sunroom Screen's pages in development: the pretend agent on 7800 (finding `just dev`'s Sunroom on
