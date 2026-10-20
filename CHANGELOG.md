@@ -18,6 +18,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A Pi that runs Sunroom announces it on the home network, so screens find it at once.
 - The installer can make another Linux computer a kitchen screen, and `--dry-run` shows what it
   would do without changing anything.
+- A Windows computer can be a kitchen screen too: one PowerShell line installs Sunroom Screen for
+  the person signed in, with no administrator, and it starts at sign-in.
 - Behind the scenes: Sunroom Screen's tests run on Linux, macOS and Windows, and each release on
   GitHub carries it and the installer, with checksums.
 

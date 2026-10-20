@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Release helpers used by the deploy skill (docs/PLAN.md §14.5, docs/RELEASING.md).
 
-  release.py bump patch|minor|major   VERSION, KIOSK_VERSION, Sunroom Screen's version (its
-                                      pyproject.toml and uv.lock), CHANGELOG section + links,
-                                      released.lock
+  release.py bump patch|minor|major   VERSION, the installers' versions (install.sh,
+                                      install.ps1), Sunroom Screen's version (its pyproject.toml
+                                      and uv.lock), CHANGELOG section + links, released.lock
   release.py tag [--trailer TEXT]     commit the release files, tag vX.Y.Z, push atomically
   release.py github                   the tag's GitHub Release, its CHANGELOG section as the
                                       notes (the release-assets workflow uploads its files)
@@ -34,6 +34,9 @@ STAMP = REPO / ".git" / "sunroom-preflight"
 # The Pi installer is fetched from main, so it carries the released version (check_release_meta).
 KIOSK_INSTALLER = REPO / "kiosk" / "install.sh"
 KIOSK_VERSION = re.compile(r'^KIOSK_VERSION="[^"]*"', re.MULTILINE)
+# The Windows installer is fetched from main too.
+KIOSK_INSTALLER_WINDOWS = REPO / "kiosk" / "install.ps1"
+KIOSK_VERSION_WINDOWS = re.compile(r'^(\s*)\$KioskVersion = "[^"]*"', re.MULTILINE)
 # Sunroom Screen's wheel is named for its version, and its updates compare versions, so it
 # carries VERSION too: in its pyproject.toml and in its own entry of uv.lock (`uv sync --locked`).
 AGENT_PYPROJECT = REPO / "kiosk" / "agent" / "pyproject.toml"
@@ -45,6 +48,7 @@ RELEASE_FILES = {
     "CHANGELOG.md",
     "backend/src/sunroom/migrations/released.lock",
     "kiosk/install.sh",
+    "kiosk/install.ps1",
     "kiosk/agent/pyproject.toml",
     "kiosk/agent/uv.lock",
 }
@@ -111,6 +115,14 @@ def bump(level: str) -> None:
     if not KIOSK_VERSION.search(installer):
         fail("kiosk/install.sh has no KIOSK_VERSION line")
     KIOSK_INSTALLER.write_text(KIOSK_VERSION.sub(f'KIOSK_VERSION="{new}"', installer, count=1))
+    windows = KIOSK_INSTALLER_WINDOWS.read_text()
+    if not KIOSK_VERSION_WINDOWS.search(windows):
+        fail("kiosk/install.ps1 has no $KioskVersion line")
+    KIOSK_INSTALLER_WINDOWS.write_text(
+        KIOSK_VERSION_WINDOWS.sub(
+            lambda found: f'{found.group(1)}$KioskVersion = "{new}"', windows, count=1
+        )
+    )
     for path, pattern in ((AGENT_PYPROJECT, AGENT_VERSION), (AGENT_LOCK, AGENT_LOCK_VERSION)):
         text = path.read_text()
         if not pattern.search(text):

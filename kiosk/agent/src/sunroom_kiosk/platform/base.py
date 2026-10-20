@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from sunroom_kiosk.policy import BrowserKind
 from sunroom_kiosk.schemas import ScreenCapability, ScreenNetworkKind, ScreenPlatform, ScreenSession
 
 COMMAND_TIMEOUT_S = 20.0
@@ -203,9 +204,15 @@ class Platform:
 
     # ------------------------------------------------------------------ privileged files
 
-    async def write_policy(self, path: Path, document: dict[str, Any]) -> bool:
-        """Write the browser's policy file (policy.py). False when this machine doesn't let the
-        agent write it (it then relies on the launch flags)."""
+    async def write_policy(self, kind: BrowserKind, document: dict[str, Any]) -> bool:
+        """Write the browser's policy (policy.py) where that browser reads it: a file on Linux,
+        its preferences on macOS, the registry on Windows. False when this machine doesn't let
+        the agent write it (the installer wrote it, or the browser asks once, on the screen)."""
+        return False
+
+    async def remove_policy(self, kind: BrowserKind) -> bool:
+        """Take Sunroom Screen's policy out of that browser's again (the uninstaller asks).
+        False when it isn't the agent's to take out here (on Linux the uninstaller does it)."""
         return False
 
     async def update_system(self) -> bool:

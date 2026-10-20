@@ -6,8 +6,7 @@ runs. Synthetic data only."""
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -15,6 +14,7 @@ import pytest
 from sunroom_kiosk.platform.base import CommandResult, PlatformError
 from sunroom_kiosk.platform.linux import LinuxPlatform, split_terse, wifi_from
 from sunroom_kiosk.platform.pi import ROOT_HELPER, PiPlatform, is_pi
+from tests.support import Shell, ok
 
 WIFI_LIST = "\n".join(
     [
@@ -26,33 +26,6 @@ WIFI_LIST = "\n".join(
         " :Sample\\:Colon:10:--",
     ]
 )
-
-
-@dataclass
-class Shell:
-    """Answers command lines by their start; records each with what went to its stdin."""
-
-    answers: dict[str, CommandResult] = field(default_factory=dict[str, CommandResult])
-    calls: list[tuple[list[str], str | None]] = field(
-        default_factory=list[tuple[list[str], str | None]]
-    )
-
-    async def __call__(
-        self, argv: Sequence[str], *, limit: float = 20.0, stdin: str | None = None
-    ) -> CommandResult:
-        line = " ".join(argv)
-        self.calls.append((list(argv), stdin))
-        for start, result in self.answers.items():
-            if line.startswith(start):
-                return result
-        return CommandResult(0, "")
-
-    def lines(self) -> list[str]:
-        return [" ".join(argv) for argv, _ in self.calls]
-
-
-def ok(output: str = "") -> CommandResult:
-    return CommandResult(0, output)
 
 
 def tools(*names: str) -> Callable[[str], str | None]:
@@ -259,14 +232,14 @@ async def test_a_turn_that_fails_says_so(tmp_path: Path) -> None:
 async def test_the_policy_and_updates_go_through_the_root_helper(tmp_path: Path) -> None:
     shell = Shell()
     platform = pi(shell, pi_root(tmp_path))
-    policy = Path("/etc/chromium/policies/managed/sunroom-kiosk.json")
-    assert await platform.write_policy(policy, {"BrowserSignin": 0})
+    assert await platform.write_policy("chromium", {"BrowserSignin": 0})
     argv, stdin = shell.calls[0]
-    assert argv == ["sudo", "-n", ROOT_HELPER, "write-policy", str(policy)]
+    policy = "/etc/chromium/policies/managed/sunroom-kiosk.json"
+    assert argv == ["sudo", "-n", ROOT_HELPER, "write-policy", policy]
     assert json.loads(stdin or "") == {"BrowserSignin": 0}
     assert await platform.update_system()
     assert shell.calls[-1][0] == ["sudo", "-n", ROOT_HELPER, "apt-upgrade"]
     # A Pi set up before 0.13.0 has no helper: nothing is tried.
     bare = Shell()
-    assert not await pi(bare, pi_root(tmp_path / "old", helper=False)).write_policy(policy, {})
+    assert not await pi(bare, pi_root(tmp_path / "old", helper=False)).write_policy("chromium", {})
     assert bare.calls == []

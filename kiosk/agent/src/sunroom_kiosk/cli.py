@@ -12,10 +12,17 @@
                                   on stdin (the installer's two questions, as sunroom-screen's)
     sunroom-kiosk status          what the running agent says about this screen
     sunroom-kiosk update          whether a newer Sunroom Screen is out
-    sunroom-kiosk policy [--url URL]
+    sunroom-kiosk policy [--url URL] | --remove
                                   the browser's managed policy for a screen showing URL, as JSON
-                                  (the installer writes it on a computer with no root helper)
+                                  (the installer writes it on a computer with no root helper); or
+                                  take Sunroom Screen's policy out again (Windows, macOS)
+    sunroom-kiosk config [--url URL]
+                                  the screen's settings: where they are and the Sunroom it shows,
+                                  or show the Sunroom at URL from now on (the installers' --url)
     sunroom-kiosk --version
+
+Started with no console (Windows' ``sunroom-kioskw``, from the Startup folder), it writes what it
+says to ``sunroom-kiosk.log`` beside its settings.
 
 The service runs ``sunroom-kiosk run``; on a Pi that's the user unit sunroom-kiosk.service.
 """
@@ -26,6 +33,7 @@ import argparse
 import asyncio
 import json
 import logging
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -91,7 +99,13 @@ def _parser() -> argparse.ArgumentParser:
     status.add_argument("--port", type=int, default=DEFAULT_PORT)
 
     policy = commands.add_parser("policy", help="the browser's policy for a Sunroom, as JSON")
-    policy.add_argument("--url", default=None)
+    which = policy.add_mutually_exclusive_group()
+    which.add_argument("--url", default=None)
+    which.add_argument("--remove", action="store_true", help="take Sunroom Screen's policy out")
+
+    settings = commands.add_parser("config", help="the screen's settings, or its Sunroom's address")
+    settings.add_argument("--url", default=None, help="the address you open on a phone")
+    settings.add_argument("--config", type=Path, default=None, help="the settings file")
 
     update = commands.add_parser("update", help="ask GitHub for a newer version (or apply one)")
     update.add_argument("--apply", type=Path, default=None, help=argparse.SUPPRESS)
@@ -100,8 +114,31 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+LOG_KEEP_BYTES = 1_000_000
+
+
+def _windowless_log() -> None:
+    """With no console (pythonw: Windows' sunroom-kioskw), say everything into a file instead,
+    started over once it passes a megabyte (the previous one kept as .1)."""
+    if sys.stderr is not None:
+        return
+    folder = settings_file.config_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / "sunroom-kiosk.log"
+    try:
+        if path.stat().st_size > LOG_KEEP_BYTES:
+            path.replace(path.with_suffix(".log.1"))
+    except OSError:
+        pass
+    sink = path.open("a", encoding="utf-8", buffering=1)
+    sys.stdout = sink
+    sys.stderr = sink
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     import uvicorn
+
+    _windowless_log()
 
     from sunroom_kiosk.app import STATIC, create_app
     from sunroom_kiosk.browser import NoBrowser, Supervisor, find_browser, flags
@@ -224,7 +261,9 @@ def cmd_update(args: argparse.Namespace) -> int:
 
     wheel = cast(Path | None, args.apply)
     if wheel is not None:
-        return updater.apply(wheel, cast(Path | None, args.previous), cast(int, args.port))
+        from sunroom_kiosk.apply import apply
+
+        return apply(wheel, cast(Path | None, args.previous), cast(int, args.port))
     status = asyncio.run(updater.Updater().check_now())
     if status.state == "available":
         print(f"Sunroom Screen {status.latest} is ready (this is {status.installed}).")
@@ -251,8 +290,46 @@ def cmd_policy(args: argparse.Namespace) -> int:
     from sunroom_kiosk import policy
     from sunroom_kiosk.discovery import origin_of
 
+    if cast(bool, args.remove):
+        from sunroom_kiosk.platform import detect
+
+        platform = detect()
+        removed = [kind for kind in policy.LINUX_DIRS if asyncio.run(platform.remove_policy(kind))]
+        if not removed:
+            print(
+                "The browser's policy here is the uninstaller's to take out (kiosk/uninstall.sh)."
+            )
+        return 0
     url = cast(str | None, args.url)
     sys.stdout.write(policy.linux_json(policy.document(origin_of(url) if url else None)))
+    return 0
+
+
+ADDRESS = re.compile(r"https?://[a-z0-9.-]+(:[0-9]{1,5})?")
+
+
+def clean_address(text: str) -> str | None:
+    """An address as the installers take it: ``http(s)://host[:port]``, without ``/display`` or a
+    trailing slash; None when it isn't one."""
+    url = text.strip().rstrip("/").lower().removesuffix("/display").rstrip("/")
+    return url if ADDRESS.fullmatch(url) else None
+
+
+def cmd_config(args: argparse.Namespace) -> int:
+    path = cast(Path | None, args.config) or settings_file.config_file()
+    current = settings_file.load(path)
+    typed = cast(str | None, args.url)
+    if typed is None:
+        print(f"Settings: {path}")
+        print(f"Sunroom: {current.url or 'none yet (the screen finds it, or asks for it)'}")
+        return 0
+    url = clean_address(typed)
+    if url is None:
+        print(f'"{typed}" doesn\'t look like the address of Sunroom.', file=sys.stderr)
+        return 2
+    if url != current.url:
+        settings_file.save(path, current.with_sunroom(url, None, "typed"))
+    print(f"This screen will show Sunroom from {url}.")
     return 0
 
 
@@ -269,5 +346,6 @@ def main(argv: list[str] | None = None) -> int:
         "status": cmd_status,
         "update": cmd_update,
         "policy": cmd_policy,
+        "config": cmd_config,
     }
     return handlers[cast(str, args.command)](args)

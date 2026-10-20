@@ -4,9 +4,13 @@ talk to (httpx.MockTransport, by base address), and the addresses they use. Synt
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
+
+from sunroom_kiosk.platform.base import CommandResult
 
 PORT = 7800
 AGENT = f"http://127.0.0.1:{PORT}"
@@ -65,3 +69,30 @@ class FakeSunrooms:
 
     def client(self, connect: float = 0.3) -> httpx.AsyncClient:
         return httpx.AsyncClient(transport=httpx.MockTransport(self))
+
+
+@dataclass
+class Shell:
+    """Answers command lines by their start; records each with what went to its stdin."""
+
+    answers: dict[str, CommandResult] = field(default_factory=dict[str, CommandResult])
+    calls: list[tuple[list[str], str | None]] = field(
+        default_factory=list[tuple[list[str], str | None]]
+    )
+
+    async def __call__(
+        self, argv: Sequence[str], *, limit: float = 20.0, stdin: str | None = None
+    ) -> CommandResult:
+        line = " ".join(argv)
+        self.calls.append((list(argv), stdin))
+        for start, result in self.answers.items():
+            if line.startswith(start):
+                return result
+        return CommandResult(0, "")
+
+    def lines(self) -> list[str]:
+        return [" ".join(argv) for argv, _ in self.calls]
+
+
+def ok(output: str = "") -> CommandResult:
+    return CommandResult(0, output)

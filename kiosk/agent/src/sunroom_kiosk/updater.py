@@ -6,11 +6,13 @@
   this screen's public address (the setup page says so).
 * **Install:** the wheel is downloaded, its sha256 checked against ``SHA256SUMS`` (a mismatch
   stops everything), and kept beside the one running, under ``~/.local/share/sunroom-kiosk/
-  wheels``. Then a separate process (``sunroom-kiosk update --apply``, under ``systemd-run`` on
-  Linux so it outlives the agent) installs it with ``uv tool install --reinstall``, restarts the
-  agent's service, and waits 60 s for the new version to answer on 127.0.0.1; if it doesn't, it
-  puts the previous wheel back, restarts again, and leaves a note the agent shows ("The update
-  didn't start; the previous version is back.").
+  wheels``. Then a separate process, the apply step (apply.py: ``sunroom-kiosk update --apply``,
+  under ``systemd-run`` on Linux so it outlives the agent; on Windows a copy of apply.py run by
+  the Python the agent's environment came from, since Windows locks a running program's files),
+  installs it with ``uv tool install --reinstall``, starts the agent again, and waits 60 s for
+  the new version to answer on 127.0.0.1; if it doesn't, it puts the previous wheel back, starts
+  that, and leaves a note the agent shows ("The update didn't start; the previous version is
+  back.").
 * **Nightly:** at the start of the household's sleep hours (from Sunroom's
   ``/api/display/state``; 03:30 without them) the check runs, and with Updates on Install
   overnight an update installs. On Sunroom OS the system's own security updates come from
@@ -31,7 +33,6 @@ import shutil
 import subprocess
 import sys
 import time
-import urllib.request
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime, timedelta
@@ -40,7 +41,9 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, cast
 
 import httpx
 
+from sunroom_kiosk import apply as apply_step
 from sunroom_kiosk import logs
+from sunroom_kiosk.apply import Paths
 from sunroom_kiosk.version import version
 
 if TYPE_CHECKING:
@@ -51,9 +54,7 @@ log = logs.get("updater")
 REPO = "ScopeXL/assistant-calendar"
 TAGS_URL = f"https://api.github.com/repos/{REPO}/tags?per_page=100"
 DOWNLOAD = f"https://github.com/{REPO}/releases/download"
-SERVICE = "sunroom-kiosk.service"
 APPLY_UNIT = "sunroom-kiosk-update"
-STARTS_WITHIN_S = 60.0
 NIGHTLY_DEFAULT = (3, 30)
 REBOOT_REQUIRED = Path("/run/reboot-required")
 _VERSION = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
@@ -135,23 +136,6 @@ def sha256_of(path: Path) -> str:
     return digest.hexdigest()
 
 
-@dataclass(frozen=True)
-class Paths:
-    wheels: Path  # the running wheel and the one before it
-    state: Path  # what the last check said, and a failed update's note
-
-    @classmethod
-    def default(cls) -> Paths:
-        if sys.platform == "win32":
-            base = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "sunroom-kiosk"
-            return cls(wheels=base / "wheels", state=base / "update.json")
-        home = Path.home()
-        return cls(
-            wheels=home / ".local" / "share" / "sunroom-kiosk" / "wheels",
-            state=home / ".local" / "state" / "sunroom-kiosk" / "update.json",
-        )
-
-
 def next_nightly(now: datetime, sleep_from: str | None) -> datetime:
     """The next start of the sleep hours (HH:MM), or 03:30, after ``now`` (local time)."""
     hour, minute = NIGHTLY_DEFAULT
@@ -165,6 +149,14 @@ def next_nightly(now: datetime, sleep_from: str | None) -> datetime:
 
 
 type Spawn = Callable[[list[str]], Awaitable[bool]]
+
+
+def base_python() -> str:
+    """The Python this environment was made from (uv's own copy), without a console window
+    where there's one (Windows' pythonw.exe)."""
+    base = Path(getattr(sys, "_base_executable", sys.executable))
+    windowless = base.with_name("pythonw.exe")
+    return str(windowless if windowless.exists() else base)
 
 
 async def spawn_apply(argv: list[str]) -> bool:
@@ -208,6 +200,7 @@ class Updater:
         current: str | None = None,
         spawn: Spawn = spawn_apply,
         port: int = 7800,
+        system: str = sys.platform,
     ) -> None:
         self.http = http or (
             lambda: httpx.AsyncClient(
@@ -220,6 +213,7 @@ class Updater:
         self.installed = current or version()
         self.spawn = spawn
         self.port = port
+        self.system = system
         self.current = self._remembered()
         self._busy = asyncio.Lock()
 
@@ -341,18 +335,8 @@ class Updater:
             return
         await say(60, "Installing…")
         previous = self.paths.wheels / wheel_name(self.installed)
-        argv = [
-            sys.executable,
-            "-m",
-            "sunroom_kiosk",
-            "update",
-            "--apply",
-            str(wheel),
-            "--port",
-            str(self.port),
-        ]
-        if await asyncio.to_thread(previous.exists):
-            argv += ["--previous", str(previous)]
+        kept = previous if await asyncio.to_thread(previous.exists) else None
+        argv = await asyncio.to_thread(self.apply_command, wheel, kept)
         log.info("Installing Sunroom Screen %s; it starts again in a moment.", release)
         if not await self.spawn(argv):
             self.current = replace(
@@ -360,6 +344,20 @@ class Updater:
             )
             agent.publish_state()
             await say(100, "Stopped")
+
+    def apply_command(self, wheel: Path, previous: Path | None) -> list[str]:
+        """How the apply step starts: this package's own command, or on Windows a copy of
+        apply.py, run by the Python this environment was made from (its own files are locked
+        while the agent runs)."""
+        tail = ["--apply", str(wheel), "--port", str(self.port)]
+        if previous is not None:
+            tail += ["--previous", str(previous)]
+        if self.system != "win32":
+            return [sys.executable, "-m", "sunroom_kiosk", "update", *tail]
+        script = self.paths.state.parent / "apply.py"
+        script.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(apply_step.__file__, script)
+        return [base_python(), str(script), *tail]
 
     async def download(self, release: str) -> Path:
         """The release's wheel, checked against its SHA256SUMS; kept beside the running one."""
@@ -427,93 +425,6 @@ class Updater:
 
 class UpdateError(Exception):
     """Why an update stopped, in plain words."""
-
-
-# ---------------------------------------------------------------------- the apply step
-
-
-def _uv() -> str:
-    found = shutil.which("uv")
-    if found:
-        return found
-    local = Path.home() / ".local" / "bin" / ("uv.exe" if sys.platform == "win32" else "uv")
-    return str(local)
-
-
-def _run(argv: list[str]) -> bool:
-    done = subprocess.run(argv, capture_output=True, text=True, check=False)  # noqa: S603
-    if done.returncode != 0:
-        print(f"{' '.join(argv[:3])} didn't work: {(done.stderr or done.stdout).strip()[:300]}")
-    return done.returncode == 0
-
-
-def _restart_service() -> bool:
-    if sys.platform.startswith("linux"):
-        return _run(["systemctl", "--user", "restart", SERVICE])
-    if sys.platform == "darwin":
-        return _run(["launchctl", "kickstart", "-k", f"gui/{os.getuid()}/app.sunroom.kiosk"])
-    return False  # Windows: batch 2 (T14) starts it again itself
-
-
-def _answers_as(port: int, release: str, within_s: float) -> bool:
-    """Whether the agent on ``port`` answers within ``within_s`` seconds, as ``release``."""
-    deadline = time.monotonic() + within_s
-    url = f"http://127.0.0.1:{port}/api/screen"
-    while time.monotonic() < deadline:
-        try:
-            with urllib.request.urlopen(url, timeout=3) as response:
-                if json.loads(response.read()).get("version") == release:
-                    return True
-        except OSError, ValueError:
-            pass
-        time.sleep(2)
-    return False
-
-
-def apply(
-    wheel: Path,
-    previous: Path | None,
-    port: int,
-    *,
-    install: Callable[[Path], bool] | None = None,
-    restart: Callable[[], bool] = _restart_service,
-    answers: Callable[[int, str, float], bool] = _answers_as,
-    paths: Paths | None = None,
-) -> int:
-    """Install ``wheel``, restart, and keep it only if it answers; else put ``previous`` back.
-    Standard library only from here on: the package's files are being replaced under it."""
-    the_paths = paths or Paths.default()
-    release = wheel.name.split("-")[1]
-
-    def uv_install(path: Path) -> bool:
-        return _run([_uv(), "tool", "install", "--reinstall", "--python", "3.14", str(path)])
-
-    put = install or uv_install
-    if not put(wheel) or not restart() or not answers(port, release, STARTS_WITHIN_S):
-        print(f"Sunroom Screen {release} didn't start; putting the previous version back.")
-        if previous is not None and previous.exists():
-            put(previous)
-            restart()
-        _note_failure(the_paths, release)
-        return 1
-    for old in the_paths.wheels.glob("sunroom_kiosk-*.whl"):
-        if old not in (wheel, previous):
-            old.unlink(missing_ok=True)
-    print(f"Sunroom Screen {release} is running.")
-    return 0
-
-
-def _note_failure(paths: Paths, release: str) -> None:
-    saved: dict[str, Any] = {}
-    try:
-        read = json.loads(paths.state.read_text(encoding="utf-8"))
-        if isinstance(read, dict):
-            saved = cast(dict[str, Any], read)
-    except OSError, ValueError:
-        pass
-    saved = {**saved, "failed": release, "latest": release}
-    paths.state.parent.mkdir(parents=True, exist_ok=True)
-    paths.state.write_text(json.dumps(saved, sort_keys=True), encoding="utf-8")
 
 
 # ---------------------------------------------------------------------- stand-ins

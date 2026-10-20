@@ -64,6 +64,23 @@ jobs:
           if [ "$RUNNER_OS" = macOS ]; then shell=/bin/bash; fi
           "$shell" kiosk/install.sh --dry-run
           "$shell" kiosk/install.sh --dry-run --display-only --url https://calendar.example.com
+      # The Windows installer (docs/M7.md T14): PSScriptAnalyzer, then its plan under Windows
+      # PowerShell 5.1, which is what `irm … | iex` runs. Write-Host is an installer's own voice.
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        working-directory: .
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable -Name PSScriptAnalyzer)) {
+            Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force
+          }
+          $found = Invoke-ScriptAnalyzer -Path kiosk/install.ps1 -Severity Warning, Error -ExcludeRule PSAvoidUsingWriteHost
+          $found | Format-Table -AutoSize RuleName, Line, Message | Out-String -Width 200 | Write-Host
+          if ($found) { exit 1 }
+          powershell -NoProfile -ExecutionPolicy Bypass -File kiosk/install.ps1 -DryRun
+          if ($LASTEXITCODE) { exit 1 }
+          powershell -NoProfile -ExecutionPolicy Bypass -File kiosk/install.ps1 -DryRun -Url https://calendar.example.com
+          if ($LASTEXITCODE) { exit 1 }
 
   frontend:
     runs-on: ubuntu-24.04

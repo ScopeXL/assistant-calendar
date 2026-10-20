@@ -9,7 +9,6 @@ Names are synthetic, like every fixture (CLAUDE.md, hard rule 1).
 from __future__ import annotations
 
 from dataclasses import replace
-from pathlib import Path
 from typing import Any, Literal
 
 from sunroom_kiosk.platform.base import (
@@ -19,6 +18,7 @@ from sunroom_kiosk.platform.base import (
     Progress,
     WifiNetwork,
 )
+from sunroom_kiosk.policy import BrowserKind
 from sunroom_kiosk.schemas import ScreenCapability, ScreenPlatform, ScreenSession
 
 type FakeKind = Literal["pi", "desktop"]
@@ -42,7 +42,7 @@ class FakePlatform(Platform):
         self.networks = _networks()
         self.wired = False
         self.rotation = 0
-        self.policies: dict[str, dict[str, Any]] = {}
+        self.policies: dict[BrowserKind, dict[str, Any]] = {}
 
     def reset(self, kind: FakeKind = "pi") -> None:
         """As it started: the test server's reset calls this before each test."""
@@ -137,8 +137,12 @@ class FakePlatform(Platform):
         self.calls.append(f"rotate {rotation}")
         self.rotation = rotation
 
-    async def write_policy(self, path: Path, document: dict[str, Any]) -> bool:
-        self.policies[str(path)] = document
+    async def write_policy(self, kind: BrowserKind, document: dict[str, Any]) -> bool:
+        self.policies[kind] = document
+        return True
+
+    async def remove_policy(self, kind: BrowserKind) -> bool:
+        self.policies.pop(kind, None)
         return True
 
     async def update_sunroom(self) -> bool:

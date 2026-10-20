@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """VERSION is the only version (PLAN §14.5, after Dinner Bell's ADR 0019); everything else stays
-0.0.0, except the two that must carry it: the Pi installer, fetched from main, and Sunroom
-Screen's package, whose wheel is named for it and whose updates compare it (docs/M7.md T11).
+0.0.0, except what must carry it: the installers (install.sh and install.ps1), fetched from
+main, and Sunroom Screen's package, whose wheel is named for it and whose updates compare it
+(docs/M7.md T11, T14).
 `release.py bump` writes all of them.
 """
 
@@ -32,6 +33,10 @@ if package.get("version") != "0.0.0":
 kiosk = re.search(r'^KIOSK_VERSION="([^"]*)"', (REPO / "kiosk" / "install.sh").read_text(), re.M)
 if not kiosk or kiosk.group(1) != version:
     problems.append(f"kiosk/install.sh KIOSK_VERSION must equal VERSION ({version}); `just bump` sets both")
+
+windows = re.search(r'^\s*\$KioskVersion = "([^"]*)"', (REPO / "kiosk" / "install.ps1").read_text(), re.M)
+if not windows or windows.group(1) != version:
+    problems.append(f"kiosk/install.ps1 $KioskVersion must equal VERSION ({version}); `just bump` sets it")
 
 # Sunroom Screen: its pyproject.toml, and its own entry in uv.lock (or `uv sync --locked` fails).
 agent = tomllib.loads((REPO / "kiosk" / "agent" / "pyproject.toml").read_text())

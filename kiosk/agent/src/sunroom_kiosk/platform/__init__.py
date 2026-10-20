@@ -19,5 +19,9 @@ def detect(fake: FakeKind | None = None, root: Path = Path("/")) -> Platform:
         from sunroom_kiosk.platform.pi import PiPlatform, is_pi
 
         return PiPlatform(root=root, version=version()) if is_pi(root) else LinuxPlatform(root=root)
-    # macOS and Windows get their own adapters in batch 2 (docs/M7.md T14, T15).
+    if sys.platform == "win32":
+        from sunroom_kiosk.platform.windows import WindowsPlatform
+
+        return WindowsPlatform()
+    # macOS gets its own adapter in batch 2 (docs/M7.md T15).
     return Platform(root=root)

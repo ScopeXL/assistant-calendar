@@ -21,7 +21,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
-from sunroom_kiosk import logs
+from sunroom_kiosk import logs, policy
 from sunroom_kiosk.platform.base import PlatformError, Runner, run_command, user_id
 from sunroom_kiosk.platform.linux import LinuxPlatform
 from sunroom_kiosk.schemas import ScreenCapability, ScreenPlatform
@@ -171,9 +171,11 @@ class PiPlatform(LinuxPlatform):
             log.info("The root helper's %s didn't work: %s", args[0], result.first_line())
         return result.ok
 
-    async def write_policy(self, path: Path, document: dict[str, Any]) -> bool:
+    async def write_policy(self, kind: policy.BrowserKind, document: dict[str, Any]) -> bool:
         return await self._as_root(
-            "write-policy", str(path), stdin=json.dumps(document, sort_keys=True)
+            "write-policy",
+            policy.linux_path(kind).as_posix(),
+            stdin=json.dumps(document, sort_keys=True),
         )
 
     async def update_system(self) -> bool:

@@ -18,6 +18,11 @@ dependencies = [
 [project.scripts]
 sunroom-kiosk = "sunroom_kiosk.cli:main"
 
+# The same command with no console window, for Windows' Startup folder (install.ps1); elsewhere
+# it's just a second name.
+[project.gui-scripts]
+sunroom-kioskw = "sunroom_kiosk.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=9.1",

@@ -7,8 +7,8 @@ does the rest. This page explains the pieces, and how to release without Claude.
 
 - A version bump in `VERSION`: patch by default, minor when the household can see something new,
   major only when the owner asks. Each milestone is a minor release.
-- The same version in the Pi installer (`KIOSK_VERSION` in `kiosk/install.sh`), which is fetched
-  from main, and in Sunroom Screen (`kiosk/agent/pyproject.toml` and its entry in
+- The same version in the installers (`KIOSK_VERSION` in `kiosk/install.sh`, `$KioskVersion` in
+  `kiosk/install.ps1`), which are fetched from main, and in Sunroom Screen (`kiosk/agent/pyproject.toml` and its entry in
   `kiosk/agent/uv.lock`), whose wheel is named for it.
 - A plain-English `CHANGELOG.md` section.
 - An annotated git tag `vX.Y.Z` that is never moved.
@@ -27,7 +27,7 @@ does the rest. This page explains the pieces, and how to release without Claude.
 |---|---|---|
 | Gate | `just preflight` | Not on main, uncommitted changes, behind origin, a dry-run push to GitHub fails, the newest migration has no fixture database, any check/e2e/scan failure, smoke-test failure, Docker not ready |
 | Version | `just bump <level>` | `[Unreleased]` is empty |
-| Tag | `just release-tag ["Co-Authored-By: …"]` | Anything besides `VERSION`, `CHANGELOG.md`, `released.lock`, `kiosk/install.sh` and Sunroom Screen's `pyproject.toml` and `uv.lock` changed since preflight. If only the push fails, run it again: it resumes |
+| Tag | `just release-tag ["Co-Authored-By: …"]` | Anything besides `VERSION`, `CHANGELOG.md`, `released.lock`, the installers (`kiosk/install.sh`, `kiosk/install.ps1`) and Sunroom Screen's `pyproject.toml` and `uv.lock` changed since preflight. If only the push fails, run it again: it resumes |
 | GitHub Release | `just github-release` | The tag isn't on GitHub, or `gh` isn't signed in. It makes the Release (or publishes the draft the workflow made) and prints its URL; run it again any time |
 | Smoke | `just smoke-image vX.Y.Z` | The image from the tag doesn't start healthy on an empty volume with no settings, fails a probe or setup through the API, or starts on a bad volume |
 | Push | `just image` | The version already exists on Docker Hub |

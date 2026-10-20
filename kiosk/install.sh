@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sunroom installer: Sunroom and its kitchen screen on a Raspberry Pi (Raspberry Pi OS 64-bit,
 # Bookworm or Trixie), or the kitchen screen alone on another Linux computer. See docs/PLAN.md
-# §13 and docs/KIOSK.md. (macOS comes in 0.14.0; Windows has install.ps1.)
+# §13 and docs/KIOSK.md. (macOS comes in 0.14.0; Windows has its own, install.ps1.)
 #
 # On a Pi, three ways to use it:
 #   a. Sunroom and the kitchen screen, both on this Pi          (no option)
@@ -40,6 +40,7 @@ KIOSK_VERSION="0.12.0" # Sunroom's VERSION (`just bump` sets it), written into e
 SUNROOM_REPO="ScopeXL/assistant-calendar"
 SUNROOM_IMAGE="scopexl/sunroom"
 UV_VERSION="0.12.23" # the uv installer it fetches when uv is missing (astral.sh/uv/<version>)
+WINDOWS_COMMAND="powershell -ExecutionPolicy Bypass -c \"irm https://raw.githubusercontent.com/$SUNROOM_REPO/main/kiosk/install.ps1 | iex\""
 
 SCRIPT_PATH="${BASH_SOURCE[0]:-}" # empty when the script is piped into bash
 
@@ -2052,9 +2053,8 @@ dry_run() {
 		say "Sunroom Screen for a Mac comes in Sunroom 0.14.0, so a real run stops here."
 		;;
 	windows)
-		say "This computer: Windows."
-		say "Sunroom Screen for Windows comes with its own installer, install.ps1, in Sunroom 0.14.0,"
-		say "so a real run stops here."
+		say "This computer: Windows. A real run stops here: Windows has its own installer, in PowerShell:"
+		say "  $WINDOWS_COMMAND"
 		;;
 	*) say "This computer runs $(uname -s), which this installer doesn't know, so a real run stops here." ;;
 	esac
@@ -2253,7 +2253,8 @@ main() {
 			"Until then, put the kitchen screen on a Raspberry Pi or a Linux computer (docs/KIOSK.md)."
 		;;
 	windows)
-		die "This installer is for a Raspberry Pi and Linux; Windows gets its own (install.ps1) in Sunroom 0.14.0."
+		die "This installer is for a Raspberry Pi and Linux. Windows has its own; in PowerShell, run:" \
+			"  $WINDOWS_COMMAND"
 		;;
 	*)
 		die "This installer works on a Raspberry Pi or another Linux computer; this one runs $(uname -s)."

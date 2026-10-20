@@ -16,7 +16,8 @@ import httpx
 import pytest
 
 from sunroom_kiosk import updater
-from sunroom_kiosk.updater import DIDNT_START, Paths, Updater, apply, newest, sums_from
+from sunroom_kiosk.apply import Paths, apply
+from sunroom_kiosk.updater import DIDNT_START, Updater, newest, sums_from
 
 WHEEL = b"sample wheel bytes"
 
@@ -127,6 +128,7 @@ def test_apply_keeps_a_version_that_answers(paths: Paths) -> None:
         previous,
         7800,
         install=lambda path: installed.append(path.name) or True,
+        stop=lambda: True,
         restart=lambda: True,
         answers=lambda port, version, within: version == "0.13.0",
         paths=paths,
@@ -147,6 +149,7 @@ def test_apply_puts_the_previous_version_back_when_the_new_one_doesnt_start(
         previous,
         7800,
         install=lambda path: installed.append(path.name) or True,
+        stop=lambda: True,
         restart=lambda: restarts.append(True) or True,
         answers=lambda port, version, within: False,
         paths=paths,
@@ -200,3 +203,52 @@ def test_the_nightly_check_runs_when_the_sleep_hours_start() -> None:
     assert updater.next_nightly(evening, "22:30") == datetime(2026, 10, 20, 22, 30, tzinfo=zone)
     assert updater.next_nightly(evening, None) == datetime(2026, 10, 21, 3, 30, tzinfo=zone)
     assert updater.next_nightly(evening, "25:00") == datetime(2026, 10, 21, 3, 30, tzinfo=zone)
+
+
+def test_on_windows_the_apply_step_runs_outside_the_agents_own_files(paths: Paths) -> None:
+    """Windows locks a running program's files: the apply step is a copy of apply.py, run by the
+    Python the agent's environment was made from, which asks the agent to quit first."""
+    from sunroom_kiosk import apply as apply_step
+
+    wheel, previous = wheels(paths, "0.13.0", "0.12.0")
+    check = Updater(http=GitHub([]).client, paths=paths, current="0.12.0", system="win32")
+    argv = check.apply_command(wheel, previous)
+    script = paths.state.parent / "apply.py"
+    assert argv[1:] == [
+        str(script),
+        "--apply",
+        str(wheel),
+        "--port",
+        "7800",
+        "--previous",
+        str(previous),
+    ]
+    assert script.read_text(encoding="utf-8") == Path(apply_step.__file__).read_text(
+        encoding="utf-8"
+    )
+    elsewhere = Updater(http=GitHub([]).client, paths=paths, current="0.12.0", system="linux")
+    assert elsewhere.apply_command(wheel, None)[1:5] == ["-m", "sunroom_kiosk", "update", "--apply"]
+
+
+def test_the_apply_step_stops_the_agent_before_each_install(paths: Paths) -> None:
+    previous, new = wheels(paths, "0.12.0", "0.13.0")
+    steps: list[str] = []
+    code = apply(
+        new,
+        previous,
+        7800,
+        install=lambda path: steps.append(f"install {path.name}") or True,
+        stop=lambda: steps.append("stop") or True,
+        restart=lambda: steps.append("start") or True,
+        answers=lambda port, version, within: False,
+        paths=paths,
+    )
+    assert code == 1
+    assert steps == [
+        "stop",
+        f"install {new.name}",
+        "start",
+        "stop",
+        f"install {previous.name}",
+        "start",
+    ]

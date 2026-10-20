@@ -140,7 +140,31 @@ to let Sunroom reach Sunroom Screen). Run on the desktop itself, it offers to st
 once. The computer's own settings turn and dim its screen; This Screen has **Quit Sunroom
 Screen**, which closes it until the next sign-in.
 
-macOS and Windows come in Sunroom 0.14.0.
+## Windows
+
+On Windows 10 or 11, sign in as the person the screen runs for, and in PowerShell run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.ps1 | iex"
+```
+
+It needs no administrator and installs no service. It installs uv and Sunroom Screen (the same
+release and checks as above) for this user, puts **Sunroom Screen** in the Startup folder (it
+starts at sign-in with no console window), and starts it: Microsoft Edge full screen, or Google
+Chrome when there's no Edge. Sunroom Screen writes the browser's policy for this user itself
+(`HKEY_CURRENT_USER\Software\Policies\…`), so Sunroom reaches it without a prompt.
+
+Its settings, browser profile (the pairing) and log are in `%LOCALAPPDATA%\sunroom-kiosk`. Windows
+joins Wi-Fi, turns the picture and sets the brightness itself, so This Screen has **Open Network
+Settings** instead of Wi-Fi, no Rotation, and the page dims itself in the evening. **Quit Sunroom
+Screen** closes it until the next sign-in. Updates work as on a Pi.
+
+With options, save the file first and run it:
+`powershell -ExecutionPolicy Bypass -File install.ps1 [-Url https://calendar.example.com]
+[-DryRun] [-AgentWheel FILE]`. `-Uninstall` takes it off again, asking before it deletes the
+pairing; uv stays.
+
+macOS comes in Sunroom 0.14.0.
 
 ## Sleep and dimming
 

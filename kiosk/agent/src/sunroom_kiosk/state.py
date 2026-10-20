@@ -470,7 +470,7 @@ class Agent:
         kind = self.browser_info.kind if self.browser_info is not None else "chromium"
         document = policy.document(origin_of(self.config.url) if self.config.url else None)
         try:
-            written = await self.platform.write_policy(policy.linux_path(kind), document)
+            written = await self.platform.write_policy(kind, document)
         except PlatformError as error:
             log.info("Couldn't write the browser's policy: %s", error)
             return
