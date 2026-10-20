@@ -8,7 +8,7 @@ const KEY = "sunroom.dimmer";
 
 export type Dimmer = "screen" | "page";
 
-function remembered(): Dimmer {
+export function rememberedDimmer(): Dimmer {
   try {
     return window.localStorage.getItem(KEY) === "screen" ? "screen" : "page";
   } catch {
@@ -27,5 +27,5 @@ export function noteDimmer(search: string): Dimmer {
     }
     return asked;
   }
-  return remembered();
+  return rememberedDimmer();
 }

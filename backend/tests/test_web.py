@@ -72,6 +72,31 @@ async def test_every_page_load_gets_a_fresh_style_nonce(spa_client: httpx.AsyncC
     assert len(set(nonces)) == len(nonces)
 
 
+async def test_a_wall_run_by_sunroom_screen_may_reach_its_agent(
+    spa_client: httpx.AsyncClient,
+) -> None:
+    """ADR 0035: only a /display document that names the agent's port widens connect-src."""
+    widened = await spa_client.get("/display?dimmer=screen&screen=7800")
+    policy = widened.headers["content-security-policy"]
+    assert "connect-src 'self' http://127.0.0.1:7800;" in policy
+    assert "style-src 'self' 'nonce-" in policy  # the rest as ever
+    for plain in (
+        "/display",
+        "/",
+        "/display?screen=80",
+        "/display?screen=abc",
+        "/display?screen=7800&screen=7801",
+        "/display?screen=70000",
+        "/?screen=7800",
+        "/settings/family?screen=7800",
+        "/display/extra?screen=7800",
+    ):
+        response = await spa_client.get(plain)
+        assert "connect-src 'self';" in response.headers["content-security-policy"], plain
+    api = await spa_client.get("/api/version?screen=7800")
+    assert api.headers["content-security-policy"] == DEFAULT_CSP
+
+
 async def test_unknown_api_paths_are_json_404s(spa_client: httpx.AsyncClient) -> None:
     response = await spa_client.get("/api/nope")
     assert response.status_code == 404

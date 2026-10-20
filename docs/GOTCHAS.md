@@ -102,6 +102,13 @@ size limit.
 - `motion` still fades under Reduce Motion, and an endless CSS animation at 0.01 ms flickers:
   leave `exit` out (`useMotionReduced`), and give the loop `animation: none`.
 
+## Sunroom Screen (the agent beside a wall's browser)
+
+- The wall's calls to the agent were blocked by CSP: `connect-src` is widened only for a
+  `/display` document that names the port, so the launcher passes `?screen=` on every load,
+  nothing remembers it, and a fresh reload goes back to the launcher's address (the rooms
+  change the URL and drop the parameter).
+
 ## Time and live updates
 
 - The wall clock ignored the server's time until the next minute: the minute store didn't hear

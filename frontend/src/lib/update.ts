@@ -9,7 +9,9 @@
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
+import { rememberedDimmer } from "./dimmer";
 import { editorOpen, idleHolds } from "./displayState";
+import { screenReloadUrl } from "./screenAgent";
 import { createStore, useStore } from "./store";
 import { showToast } from "./toast";
 
@@ -44,12 +46,18 @@ function rememberReload(version: string): void {
 }
 
 function reloadPage(): void {
-  window.location.reload();
+  // A wall run by Sunroom Screen goes back to its launcher's address, which brings back the
+  // agent's port and the policy that lets the page reach it (lib/screenAgent); the wall then
+  // returns to the room it was in by itself (ADR 0030).
+  const launcher = screenReloadUrl(rememberedDimmer());
+  if (launcher) window.location.replace(launcher);
+  else window.location.reload();
 }
 
 /**
  * Reload with nothing old in the way: every service worker unregistered and its caches deleted,
- * so the page and its files come from the server. The address (the wall's ?dimmer=…) stays.
+ * so the page and its files come from the server. The address (the wall's ?dimmer=…) stays, or
+ * on a wall run by Sunroom Screen, its launcher's address.
  */
 export async function reloadFresh(reload: () => void = reloadPage): Promise<void> {
   try {

@@ -38,4 +38,11 @@ export const qk = {
   choresRemoved: () => ["chores", "removed"] as const,
   rewards: () => ["chores", "rewards"] as const,
   routines: (day: string) => ["chores", "routines", day] as const,
+  /** This wall's own Sunroom Screen agent (ADR 0035): never the server's. */
+  screen: {
+    state: () => ["screen", "state"] as const,
+    wifi: () => ["screen", "wifi"] as const,
+    sunrooms: () => ["screen", "sunrooms"] as const,
+    about: () => ["screen", "about"] as const,
+  },
 };

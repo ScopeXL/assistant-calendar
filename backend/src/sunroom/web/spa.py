@@ -9,6 +9,9 @@
   response's ``style-src``, so the app can hand it to the animation library and nothing else
   can add styles. A service worker's cached copy keeps its own matching header and meta, so it
   stays consistent offline.
+* a wall screen run by Sunroom Screen opens ``/display?screen=<port>``: that one document's
+  ``connect-src`` also allows ``http://127.0.0.1:<port>``, so Settings → This Screen can call the
+  agent (ADR 0035). Any other path or port (1024 to 65535 only) gets the plain policy.
 """
 
 from __future__ import annotations
@@ -16,8 +19,9 @@ from __future__ import annotations
 import mimetypes
 import secrets
 from pathlib import Path
+from urllib.parse import parse_qs
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
@@ -48,11 +52,22 @@ def new_nonce() -> str:
     return secrets.token_urlsafe(18)
 
 
-def render_index(template: str) -> HTMLResponse:
+def screen_port(path: str, query: str) -> int | None:
+    """The port of this screen's own agent, for a ``/display`` document that names it once."""
+    if path != "display":
+        return None
+    values = parse_qs(query).get("screen", [])
+    if len(values) != 1 or not values[0].isdigit():
+        return None
+    port = int(values[0])
+    return port if 1024 <= port <= 65535 else None
+
+
+def render_index(template: str, agent_port: int | None = None) -> HTMLResponse:
     nonce = new_nonce()
     return HTMLResponse(
         template.replace(NONCE_PLACEHOLDER, nonce),
-        headers={**NO_CACHE, "Content-Security-Policy": csp(nonce)},
+        headers={**NO_CACHE, "Content-Security-Policy": csp(nonce, agent_port)},
     )
 
 
@@ -79,11 +94,11 @@ def mount_spa(app: FastAPI, static_dir: Path | None) -> None:
         app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")
 
     @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
-    async def spa(path: str) -> Response:  # pyright: ignore[reportUnusedFunction]
+    async def spa(path: str, request: Request) -> Response:  # pyright: ignore[reportUnusedFunction]
         if _reserved(path):
             raise _not_found()
         if path and path != "index.html":
             candidate = (root / path).resolve()
             if candidate.is_file() and candidate.is_relative_to(root):
                 return FileResponse(candidate, headers=NO_CACHE)
-        return render_index(template)
+        return render_index(template, screen_port(path, request.url.query))

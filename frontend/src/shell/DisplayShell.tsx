@@ -29,6 +29,7 @@ import { MotionProvider } from "../lib/motion";
 import { useLiveUpdates } from "../lib/live";
 import { useServerRestart } from "../lib/restart";
 import { reloadFresh, useServerUpdate } from "../lib/update";
+import { useScreenAgentEvents } from "../lib/screenAgent";
 import { noteDimmer } from "../lib/dimmer";
 import { dimmedTo, isNight } from "../lib/night";
 import { askForPin, askPinOnlyWhen } from "../lib/parent";
@@ -109,6 +110,7 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
   const update = useAppUpdate();
   useKeepAwake(kiosk);
   useLiveUpdates();
+  useScreenAgentEvents();
   useServerUpdate();
   useServerRestart();
   useDatePreferences();

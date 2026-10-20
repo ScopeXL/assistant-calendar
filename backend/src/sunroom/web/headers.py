@@ -18,15 +18,20 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 _CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self'{nonce}; "
-    "img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; "
+    "img-src 'self' data: blob:; font-src 'self'; connect-src 'self'{agent}; manifest-src 'self'; "
     "worker-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; "
     "object-src 'none'"
 )
 PERMISSIONS = "camera=(self), screen-wake-lock=(self), microphone=(), geolocation=()"
 
 
-def csp(nonce: str | None = None) -> str:
-    return _CSP.format(nonce=f" 'nonce-{nonce}'" if nonce else "")
+def csp(nonce: str | None = None, agent_port: int | None = None) -> str:
+    """The policy; ``agent_port`` also lets the page reach this screen's own Sunroom Screen agent
+    on ``http://127.0.0.1:<port>`` (a ``/display`` document that names it, web/spa.py)."""
+    return _CSP.format(
+        nonce=f" 'nonce-{nonce}'" if nonce else "",
+        agent=f" http://127.0.0.1:{agent_port}" if agent_port else "",
+    )
 
 
 DEFAULT_CSP = csp()
