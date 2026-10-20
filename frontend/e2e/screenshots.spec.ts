@@ -931,6 +931,46 @@ test("the screen's own pages (Sunroom Screen, ADR 0035)", async ({ page }, testI
   }
 });
 
+test("Settings → This Screen on a wall run by Sunroom Screen (ADR 0035)", async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
+  test.setTimeout(240_000);
+  const agent = "http://127.0.0.1:4174";
+  const screenChange = { "X-Sunroom-Screen": "1" };
+  await moveClock(page, STOPS[1]?.at ?? "");
+  // No parent PIN, as the wall's other shots: a paired wall may then change the theme itself.
+  await seed(page.request);
+  const reset = await page.request.post(`${agent}/api/screen/_test/reset`, {
+    headers: screenChange,
+  });
+  expect(reset.status()).toBe(204);
+  // The pretend screen shows this test server, so it answers the wall page's calls (CORS).
+  const shows = await page.request.post(`${agent}/api/screen/_test/fake`, {
+    headers: screenChange,
+    data: { sunroom: new URL(testInfo.project.use.baseURL ?? "").origin },
+  });
+  expect(shows.status()).toBe(204);
+  const paired = await page.request.post("/api/auth/kiosk/pair-with-password", {
+    headers: CSRF,
+    data: { password: PASSWORD, label: "Kitchen screen" },
+  });
+  expect(paired.status()).toBe(200);
+  for (const theme of ["light", "dark"] as const) {
+    await change(page, { theme });
+    await page.goto("/display?dimmer=page&screen=4174");
+    await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+    await page.getByRole("button", { name: "Settings" }).click();
+    await page
+      .getByRole("navigation", { name: "Settings" })
+      .getByRole("link", { name: "This Screen", exact: true })
+      .click();
+    await expect(page.getByRole("heading", { name: "This Screen", level: 2 })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Restart" })).toBeVisible();
+    await shot(page, `settings-this-screen-${theme}`);
+  }
+});
+
 test("a phone's lists and chores", async ({ page, isMobile }) => {
   test.skip(!isMobile, "phones");
   test.setTimeout(240_000);

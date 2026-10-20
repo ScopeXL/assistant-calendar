@@ -156,3 +156,20 @@ an address or a photo of the family's own screen.
 | 10 | `.local` from an iPhone | `http://sunroom.local:8080` opens | Not tested yet |
 | 11 | `.local` from an Android phone | `http://sunroom.local:8080` opens | Not tested yet |
 | 12 | `.local` from a Windows computer | `http://sunroom.local:8080` opens | Not tested yet |
+
+Sunroom Screen (0.13.0, [M7](M7.md) T10): the same installer, now with the program that runs the
+screen. Rows 13 to 23 need no Sunroom OS; its rows, and macOS and Windows, follow in 0.14.0.
+
+| # | Setup or test | It passes when | Result |
+|---|---|---|---|
+| 13 | A Pi set up before 0.13.0, the installer run again with its first options | Sunroom Screen replaces the launcher and the screen helper (the log says so); the screen comes back paired, on its board; `sunroom-kiosk status` answers | Not tested yet |
+| 14 | A fresh Pi, `--display-only` with no `--url` | After the restart, Where Is Your Sunroom? lists the server under On Your Network, and Use This Sunroom opens it at its pair code | Not tested yet |
+| 15 | A typed address (Somewhere Else, on the wall's keyboard) | Check Address says whose Sunroom it is, or why not; Use This Sunroom opens it | Not tested yet |
+| 16 | Chrome's Local Network Access | Settings → This Screen shows on the wall with no prompt on the screen | Not tested yet |
+| 17 | This Screen's Restart and Shut Down | Restart: the screen is back on its board in about a minute; Shut Down asks first, then the Pi powers off | Not tested yet |
+| 18 | This Screen's Rotation, each of the four | The picture turns at once, and taps land where touched after each turn and after a restart | Not tested yet |
+| 19 | This Screen's Change Wi-Fi and Change Address | It joins the network whose password was typed on the wall's keyboard; Change Address asks first, keeps the pairing and opens Where Is Your Sunroom? | Not tested yet |
+| 20 | Update Now from a real older version | The Software row shows the percent and the screen comes back on the new version; Updates on Install overnight does the same in the sleep hours | Not tested yet |
+| 21 | The server's address changed | A Sunroom found on the network is found at its new address within a few minutes; a typed one shows Can't Reach | Not tested yet |
+| 22 | Sunroom stopped for five minutes | Can't Reach shows after about two minutes, and the board comes back by itself when Sunroom answers | Not tested yet |
+| 23 | A Linux desktop (Debian or Ubuntu with Chromium or Chrome), `--display-only` | It starts at sign-in, full screen, and pairs; This Screen has Quit Sunroom Screen, which closes it until the next sign-in | Not tested yet |

@@ -4,8 +4,9 @@ Sunroom is a self-hosted family wall calendar: a touchscreen in the kitchen, pho
 screen, one Docker container, no accounts anywhere.
 - **Backend:** FastAPI, async SQLAlchemy, SQLite and Alembic (Python 3.14, uv).
 - **Frontend:** React, TypeScript, Vite, Tailwind and TanStack; one app with two shells (the
-  wall display and the phone).
-- **Packaging:** one Docker image (`scopexl/sunroom`), plus `kiosk/` for a Raspberry Pi screen.
+  wall display and the phone), and the screen's own pages.
+- **Packaging:** one Docker image (`scopexl/sunroom`), plus `kiosk/`: the installer and Sunroom
+  Screen, the program that runs a wall screen (`kiosk/agent`).
 
 It is built and maintained entirely by AI sessions, and copied from Dinner Bell's engineering
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
@@ -18,8 +19,9 @@ M6 batch 1 (the owner's notes: docs/M6.md, ADR 0028) is built in 0.7.0, batch 2
 (docs/M6-batch-2.md, ADR 0029) in 0.8.0, batch 3 (docs/M6-batch-3.md, ADR 0030) in 0.9.0,
 batch 4 (docs/M6-batch-4.md, ADR 0032) in 0.10.0, batch 5 (docs/M6-batch-5.md, ADR 0033) in
 0.11.0, and batch 6 (docs/M6-batch-6.md, ADR 0034) for 0.12.0; more M6 comes from use.
-M7 (docs/M7.md, planned 2026-10-20) is Sunroom Screen: the OS image, one-command installs
-and This Screen; its batch 0 is two wall fixes.
+M7 (docs/M7.md, ADR 0035) is Sunroom Screen: batch 0 (two wall fixes, 0.12.1) and batch 1
+(the agent, This Screen, discovery, the installer, GitHub Releases; 0.13.0) are built; batch 2
+(Windows, macOS, Run it here, the Sunroom OS image; 0.14.0) is next.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -99,6 +101,7 @@ Keep this file under 15 KB; detail belongs in `docs/`.
 | `just scan` | gitleaks plus the private-terms scan (tree and history) |
 | `just smoke-image [REF]` | Build the image from git, boot it with no settings, set it up through the API, probe it |
 | `just smoke-caldav` | The CalDAV client against Radicale in Docker, with the ICS fixtures (opt-in; network) |
+| `just kiosk-test` / `kiosk-dev` / `kiosk-build` | Sunroom Screen: its tests; its pages on 5174 with a pretend agent; its wheel |
 | `just preflight` | The full release gate. The deploy skill runs it |
 
 ## Architecture map
@@ -125,8 +128,11 @@ frontend/src/
   ui/            primitives styled only with tokens; sized by ShellContext (display or phone)
   shell/         DisplayShell (rail, Header.tsx, Today panel, idle, Night, keyboard), PhoneShell
   features/      display (pairing), onboarding, auth, calendar, phone, settings; registry.ts
-kiosk/           install.sh, the launcher, sunroom-screen (sleep and brightness), systemd units,
-                 labwc-rule.py, update.sh, uninstall.sh
+  screen/        Sunroom Screen's own pages (Welcome, Find, Can't Reach…), built into the agent
+kiosk/           install.sh (Pi, Linux; --dry-run), files/ (what it installs), labwc-rule.py,
+                 update.sh, uninstall.sh
+  agent/         Sunroom Screen (`sunroom-kiosk`): API on 127.0.0.1:7800, browser, screen sleep,
+                 discovery, policy, updates; platform/ adapters (pi, linux, fake)
 ```
 
 ## Conventions
@@ -207,14 +213,6 @@ part your task touches, and move lines there when this file nears its limit.
   routers, not their routes. Walk `app.openapi()["paths"]` instead, and assert a count.
 - The first migration after a release failed its migration test: the release had no fixture
   database. A release's `tests/fixtures/db/<revision>.sql` must exist before the next migration.
-- Tap-target checks flagged the page behind an open sheet: a modal `<dialog>` makes the rest
-  inert with no `inert` attribute. The check looks only inside `dialog:modal`.
-- An a11y check failed only in the evening: the unpaired wall flips from the browser's clock to
-  the server's 10 AM, and headless Chromium draws no frame until asked, so 0.01 ms transitions
-  held old colors. `settled()` asks for frames; set the server's clock when a test needs "Up next".
-- `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answered
-  navigations from its precached `index.html`. Since ADR 0034 it asks the server first (the copy
-  answers only offline), but still test routes on a page never loaded before.
 - A plugin's setting reached the wall minutes late: `plugins.changed` refreshed only the plugin
   list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
 - The test server keeps plugin settings between tests (`/api/_test/reset` leaves

@@ -24,7 +24,8 @@
 # ~/.local/state/sunroom-kiosk/install.log.
 #
 # The rest of the kiosk/ folder (files/, labwc-rule.py, update.sh, uninstall.sh) is taken from
-# next to this script when present, otherwise downloaded from GitHub for the requested version.
+# next to this script when present, otherwise downloaded from GitHub at this installer's own
+# release tag, so the files and Sunroom Screen always come from one release.
 #
 # bash 3.2 (macOS's own) must run it: no associative arrays, no ${var,,}, and an array that may
 # be empty is expanded as ${a[@]+"${a[@]}"}.
@@ -247,7 +248,8 @@ What to set up (on a Pi the default is everything; elsewhere it's the screen):
   --server-only             Only Sunroom, no screen (Raspberry Pi OS Lite)
 
 Options:
-  --version X.Y.Z           Install this Sunroom version instead of the newest
+  --version X.Y.Z           Run this Sunroom version on the Pi instead of the newest (the
+                            kitchen screen's own software is always this installer's version)
   --port N                  The port phones use to reach Sunroom on this Pi (default 8080)
   --output NAME             The screen's connector, for example HDMI-A-1
                             (default: the one with a screen plugged in)

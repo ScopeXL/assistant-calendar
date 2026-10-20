@@ -106,7 +106,10 @@ def test_sudoers_allows_the_root_helper_and_nothing_else() -> None:
 
 
 def test_the_unit_starts_the_agent_with_no_arguments(monkeypatch: pytest.MonkeyPatch) -> None:
-    assert "ExecStart=%h/.local/bin/sunroom-kiosk" in lines("systemd/sunroom-kiosk.service")
+    unit = lines("systemd/sunroom-kiosk.service")
+    assert "ExecStart=%h/.local/bin/sunroom-kiosk" in unit
+    # Quit exits cleanly (os._exit(0)): a unit that restarted it anyway would undo Quit.
+    assert "Restart=on-failure" in unit
     ran: list[argparse.Namespace] = []
 
     def pretend_run(args: argparse.Namespace) -> int:

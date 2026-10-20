@@ -8,20 +8,18 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Added
 
-- Screens on the home network can find Sunroom by themselves.
-- On a kitchen screen set up with Sunroom's screen software, Settings → This Screen restarts or
-  shuts the screen down, updates it, changes its Wi-Fi, turns it, or points it at a different
-  Sunroom.
-- Such a screen can keep its own software up to date overnight (Settings → This Screen → Updates;
-  on by default on Sunroom OS), and goes back to the version before if a new one doesn't start.
-- Such a screen sets itself up in Sunroom's own look: it joins Wi-Fi, finds the Sunroom on the
-  home network or checks an address typed on its keyboard, and when it can't reach Sunroom it
-  says so, keeps trying, and goes back by itself.
-- Behind the scenes: the kitchen screen's software becomes one program, Sunroom Screen, with
-  tests that run on Linux, macOS and Windows; each release on GitHub carries it and the
-  installer, with checksums.
+- Sunroom Screen, the program that now runs a kitchen screen, sets the screen up in Sunroom's own
+  look: it joins Wi-Fi, finds the Sunroom on the home network or checks an address typed on its
+  keyboard, and when it can't reach Sunroom it says so, keeps trying, and goes back by itself.
+- On such a screen, Settings → This Screen restarts or shuts it down, updates it, changes its
+  Wi-Fi, turns it, or points it at a different Sunroom.
+- Such a screen can keep its own software up to date overnight (Settings → This Screen →
+  Updates), and goes back to the version before if a new one doesn't start.
+- A Pi that runs Sunroom announces it on the home network, so screens find it at once.
 - The installer can make another Linux computer a kitchen screen, and `--dry-run` shows what it
   would do without changing anything.
+- Behind the scenes: Sunroom Screen's tests run on Linux, macOS and Windows, and each release on
+  GitHub carries it and the installer, with checksums.
 
 ### Changed
 

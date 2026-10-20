@@ -80,7 +80,7 @@ found, its pairing, its Updates choice) and replaces only its own files. Its log
   uv gives it its own Python, apart from the system's. Its command is `~/.local/bin/sunroom-kiosk`;
   the copy it was installed from stays in `~/.local/share/sunroom-kiosk/wheels`, for updates to
   fall back on.
-- The user service `sunroom-kiosk.service` (restarted 3 seconds after any exit), which the
+- The user service `sunroom-kiosk.service` (started again 3 seconds after it fails), which the
   desktop starts when it logs in. Sunroom Screen runs the browser (and restarts it at about 04:00
   to give back memory), the screen's sleep and brightness, and its own pages on
   `http://127.0.0.1:7800`, which only this computer can open. Its settings are in

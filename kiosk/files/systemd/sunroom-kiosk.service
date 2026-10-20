@@ -15,7 +15,9 @@ StartLimitIntervalSec=0
 Type=simple
 # The agent (uv tool install puts it here); with no arguments it runs.
 ExecStart=%h/.local/bin/sunroom-kiosk
-Restart=always
+# Started again 3 s after it fails. It watches the browser itself, so it only ends cleanly when
+# stopped or when This Screen's Quit (on a computer) asks: then it stays off until next sign-in.
+Restart=on-failure
 RestartSec=3
 # On stop it switches the screen back on (at full brightness) and closes the browser.
 TimeoutStopSec=20

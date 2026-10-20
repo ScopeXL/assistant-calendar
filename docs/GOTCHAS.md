@@ -42,6 +42,9 @@ size limit.
 
 ## Backup, restore and the service worker
 
+- `/photos` gave a fresh browser a JSON 404 while e2e passed: the service worker answered
+  navigations from its precached `index.html`. Since ADR 0034 it asks the server first (the copy
+  answers only offline), but still test routes on a page never loaded before.
 - A restart's reload threw "e is not a function": `.then(refresh)` handed the waiter's `true`
   to `reloadFresh` as its optional `reload`. Call through a closure (`.then(() => refresh())`)
   when the function has optional parameters; a test's `vi.fn()` takes anything, so check
@@ -115,6 +118,12 @@ size limit.
   `/display` document that names the port, so the launcher passes `?screen=` on every load,
   nothing remembers it, and a fresh reload goes back to the launcher's address (the rooms
   change the URL and drop the parameter).
+- `install.sh` must run on macOS's `/bin/bash` 3.2 (its `--dry-run` in CI, and from 0.14.0 the
+  Mac's install): there an empty array's `"${a[@]}"` is an unbound variable under `set -u`, and
+  `${var,,}` doesn't parse. Write `${a[@]+"${a[@]}"}` (or `${a[*]-}`) and `lower`; try it with
+  `/bin/bash kiosk/install.sh --dry-run`.
+- A read of a missing file printed its error despite `2>/dev/null`: in `tr </missing 2>/dev/null`
+  the `<` fails before the later redirection applies. Wrap it: `{ tr </missing; } 2>/dev/null`.
 
 ## Time and live updates
 
@@ -127,6 +136,11 @@ size limit.
 
 ## End-to-end tests
 
+- Tap-target checks flagged the page behind an open sheet: a modal `<dialog>` makes the rest
+  inert with no `inert` attribute. The check looks only inside `dialog:modal`.
+- An a11y check failed only in the evening: the unpaired wall flips from the browser's clock to
+  the server's 10 AM, and headless Chromium draws no frame until asked, so 0.01 ms transitions
+  held old colors. `settled()` asks for frames; set the server's clock when a test needs "Up next".
 - Playwright's `context.route` answers a service worker's own fetches in Chromium (count the hits
   to be sure), so a test can hand the worker a proxy's 502; `setOffline` reaches the worker in
   Chromium, not WebKit.
