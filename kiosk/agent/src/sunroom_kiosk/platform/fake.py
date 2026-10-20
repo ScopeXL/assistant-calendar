@@ -124,7 +124,7 @@ class FakePlatform(Platform):
             for n in self.networks
         ]
 
-    async def rotate(self, rotation: int) -> None:
+    async def rotate(self, rotation: int, output: str) -> None:
         self.calls.append(f"rotate {rotation}")
         self.rotation = rotation
 

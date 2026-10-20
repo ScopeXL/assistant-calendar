@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import os
 import socket
+import sys
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,6 +101,13 @@ class WifiNetwork:
 type Progress = Callable[[int, str], Awaitable[None]]
 
 
+def user_id() -> str:
+    """This user's numeric id (for pgrep, pkill and the runtime folder); Windows has none."""
+    if sys.platform == "win32":
+        return "0"
+    return str(os.getuid())
+
+
 def local_ip() -> str | None:
     """This machine's address on its network: the one a packet to a public address would leave
     from. Nothing is sent (a UDP socket only picks its route)."""
@@ -178,8 +186,20 @@ class Platform:
 
     # ------------------------------------------------------------------ the screen
 
-    async def rotate(self, rotation: int) -> None:
+    async def rotate(self, rotation: int, output: str) -> None:
+        """Turn the picture on the screen connected at ``output`` (HDMI-A-1), and touch with it."""
         raise UnsupportedError("Turning the picture")
+
+    # ------------------------------------------------------------------ before the browser
+
+    async def wait_for_desktop(self) -> None:
+        """Until there's a desktop for the browser to draw on (nothing to wait for, here)."""
+
+    async def wait_for_clock(self) -> None:
+        """Until the clock is right (a Pi has no clock of its own)."""
+
+    async def prepare_session(self, rotation: int, output: str) -> None:
+        """What the desktop needs before the browser opens: no blanking, the picture turned."""
 
     # ------------------------------------------------------------------ privileged files
 

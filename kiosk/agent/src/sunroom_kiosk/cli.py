@@ -130,6 +130,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             ),
             page=lambda: holder["agent"].start_page(),
             environment=platform.environment,
+            before=lambda: holder["agent"].before_browser(),
         )
     agent = Agent(
         port=port,

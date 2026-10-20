@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -88,7 +89,8 @@ def test_a_new_file_has_a_header(tmp_path: Path) -> None:
 BASH = shutil.which("bash")
 
 
-@pytest.mark.skipif(BASH is None, reason="needs bash")
+# Windows' bash is another world's (Git's or WSL's), with its own idea of a path.
+@pytest.mark.skipif(BASH is None or sys.platform == "win32", reason="needs a Unix bash")
 def test_bash_still_sources_it(tmp_path: Path) -> None:
     """kiosk/install.sh and the uninstaller read it with `.`: quoting must survive."""
     path = tmp_path / "config"

@@ -16,6 +16,11 @@ file of their own, or starting a minimal one) so that:
   labwc picks the last matching <touch> entry and runs with --merge-config on Raspberry
   Pi OS, so entries in the user file override the system file.
 
+With --rotate N (Sunroom Screen's Rotation, docs/M7.md T7), touch follows the turned picture:
+with --output, Sunroom's own <touch> entries map to that output, and wlroots turns touch with
+the output's transform; without an output, a libinput calibration matrix for touch devices
+turns it instead (the matrices in docs/KIOSK.md). Never both, so touch is never turned twice.
+
 Each change is made once (a second run changes nothing). Before the first edit of a file
 the user wrote, a copy is kept as rc.xml.sunroom-backup. With --remove, the backup is put
 back if nothing else changed since; otherwise only Sunroom's own elements are taken out.
@@ -45,6 +50,8 @@ OPENBOX_NS = "http://openbox.org/3.4/rc"
 MINIMAL_RC = f'<?xml version="1.0" encoding="UTF-8"?>\n<openbox_config xmlns="{OPENBOX_NS}">\n</openbox_config>\n'
 BACKUP_SUFFIX = ".sunroom-backup"
 TRUE_WORDS = {"yes", "true", "on", "1"}  # what labwc's parse_tristate() accepts as true
+# libinput's calibration matrix for touch on a picture turned N degrees (docs/KIOSK.md).
+MATRICES = {90: "0 -1 1 1 0 0", 180: "-1 0 1 0 -1 1", 270: "0 1 0 -1 0 1"}
 HOME = os.path.expanduser("~")
 
 
@@ -208,6 +215,8 @@ def is_default_touch(element: ET.Element) -> bool:
 def looks_ours(node: ET.Element) -> bool:
     if is_our_rule(node):
         return True
+    if local_name(node.tag) == "libinput":
+        return True  # only ever one after Sunroom's own marker
     return local_name(node.tag) == "touch" and (get_key(node, "mouseEmulation") or "").strip().lower() == "no"
 
 
@@ -343,6 +352,60 @@ def ensure_touch(doc: Doc, system: Doc | None, label: str, state: dict, changes:
         )
 
 
+def ours_after_marker(doc: Doc) -> list[ET.Element]:
+    """The elements Sunroom added: each right after one of its marker comments."""
+    children = list(doc.root)
+    return [
+        children[index + 1]
+        for index, node in enumerate(children)
+        if is_marker(node) and index + 1 < len(children) and looks_ours(children[index + 1])
+    ]
+
+
+def ensure_rotation(doc: Doc, label: str, rotate: int, output: str, changes: list[str]) -> None:
+    ours = ours_after_marker(doc)
+    touch_entries = [node for node in ours if local_name(node.tag) == "touch"]
+    mapped = output if rotate else ""
+    moved = False
+    for entry in touch_entries:
+        if (entry.get("mapToOutput") or "") == mapped:
+            continue
+        moved = True
+        if mapped:
+            entry.set("mapToOutput", mapped)
+        else:
+            entry.attrib.pop("mapToOutput", None)
+    if moved:
+        changes.append(f"Touch now follows the screen {mapped}." if mapped else "Touch follows the whole desktop again.")
+    # The matrix only when no output can be named: never turn touch twice.
+    wanted = MATRICES.get(rotate) if rotate and not output else None
+    current = next((node for node in ours if local_name(node.tag) == "libinput"), None)
+    if current is not None:
+        matrix = current.find(f".//{doc.q('calibrationMatrix')}")
+        if wanted and matrix is not None and (matrix.text or "").strip() == wanted:
+            return
+        children = list(doc.root)
+        index = children.index(current)
+        remove_child(doc.root, current)
+        if index > 0 and is_marker(children[index - 1]):
+            remove_child(doc.root, children[index - 1])
+        if not wanted:
+            changes.append("Took out the touch turning for a turned picture.")
+    if wanted:
+        block = ET.Element(doc.q("libinput"))
+        device = ET.SubElement(block, doc.q("device"), {"category": "touch"})
+        matrix = ET.SubElement(device, doc.q("calibrationMatrix"))
+        matrix.text = wanted
+        indent = child_indent(doc.root, "", doc.unit)
+        block.text = "\n" + indent + doc.unit
+        device.text = "\n" + indent + doc.unit * 2
+        matrix.tail = "\n" + indent + doc.unit
+        device.tail = "\n" + indent
+        append_child(doc, doc.root, marker(label, f"turn touch with the picture ({rotate} degrees)"), "")
+        append_child(doc, doc.root, block, "")
+        changes.append(f"Touch now turns with the picture ({rotate} degrees).")
+
+
 def install(args: argparse.Namespace) -> int:
     rc, label = args.rc, f"installer {args.installer_version}"
     state = load_state(args.state)
@@ -378,6 +441,8 @@ def install(args: argparse.Namespace) -> int:
 
     ensure_rule(doc, label, state, changes)
     ensure_touch(doc, load_system(args.system_rc), label, state, changes)
+    if args.rotate is not None:
+        ensure_rotation(doc, label, args.rotate, args.output or "", changes)
 
     if not changes and os.path.exists(rc):
         state.pop("pending_backup", None)
@@ -493,6 +558,14 @@ def main(argv: list[str]) -> int:
         help="where to remember what was changed",
     )
     parser.add_argument("--installer-version", default="dev", help="written into the marker comments")
+    parser.add_argument(
+        "--rotate",
+        type=int,
+        choices=[0, 90, 180, 270],
+        default=None,
+        help="the picture's rotation: touch is turned to follow it",
+    )
+    parser.add_argument("--output", default="", help="the screen's connector (HDMI-A-1), with --rotate")
     args = parser.parse_args(argv)
     return remove(args) if args.remove else install(args)
 

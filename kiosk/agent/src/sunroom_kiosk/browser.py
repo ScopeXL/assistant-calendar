@@ -22,7 +22,7 @@ import os
 import random
 import shutil
 import sys
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -302,12 +302,15 @@ class Supervisor:
         argv: Callable[[], list[str]],
         page: Callable[[], str],
         environment: Callable[[], dict[str, str]] = lambda: dict(os.environ),
+        before: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         self.browser = browser
         self.profile = profile
         self.argv = argv
         self.page = page
         self.environment = environment
+        # Once, before the first start: the desktop, the clock, no blanking, the picture turned.
+        self.before = before
         self.devtools = DevTools(profile)
         self.process: asyncio.subprocess.Process | None = None
         self.next_page: str | None = None
@@ -318,6 +321,8 @@ class Supervisor:
         self.profile.mkdir(parents=True, exist_ok=True)
         with contextlib.suppress(OSError):
             self.profile.chmod(0o700)
+        if self.before is not None:
+            await self.before()
         nightly = asyncio.create_task(self._nightly())
         try:
             while not self._stopping:

@@ -260,6 +260,13 @@ class Agent:
         await self.browser.stop()
         self.hub.close()
 
+    async def before_browser(self) -> None:
+        """Before the browser's first start: a desktop to draw on, the clock set, the session's
+        blanking off and the saved rotation applied."""
+        await self.platform.wait_for_desktop()
+        await self.platform.wait_for_clock()
+        await self.platform.prepare_session(self.config.rotate, self.config.output)
+
     def _screen_settings(self) -> screen.Settings:
         return screen.Settings(
             url=self.config.url or screen.DEFAULT_URL,
@@ -468,7 +475,7 @@ class Agent:
         self.spawn(go())
 
     async def rotate(self, rotation: int) -> None:
-        await self.platform.rotate(rotation)
+        await self.platform.rotate(rotation, self.config.output)
         self.save(replace(self.config, rotate=rotation))
         self.publish_state()
 
