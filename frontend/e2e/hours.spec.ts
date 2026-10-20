@@ -1,13 +1,14 @@
 /**
  * The Week board's Hours layout end to end (UX §4 "Week board, Hours layout", ADR 0028): the
  * whole day with nothing to scroll, Zoom in (with no scrollbar), Zoom out and Fit the day, a
- * drop that keeps the time, a tap that adds at a time, and the layout and zoom staying through
- * two idle minutes. The server's clock reads Wednesday, October 7, 2026, 10:00 AM in New York.
+ * drop that keeps the time, a tap that adds at a time, the now line under the day heads, and the
+ * layout and zoom staying through two idle minutes. The server's clock reads Wednesday, October 7,
+ * 2026, 10:00 AM in New York.
  * Synthetic data only.
  */
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, pairWall, seed, test } from "./fixtures";
+import { expect, pairWall, seed, settled, test } from "./fixtures";
 
 const CSRF = { "X-Sunroom": "1" };
 const WEDNESDAY_10AM = "2026-10-07T14:00:00Z";
@@ -200,6 +201,70 @@ test("the Hours layout fits the day, zooms, keeps the time on a drop and adds at
       .getByRole("group", { name: "Day", exact: true })
       .getByRole("button", { name: "Fri, Oct 9" }),
   ).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the now line stays under the day heads while the hours scroll under them", async ({
+  page,
+}) => {
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  await expect(board).toBeVisible();
+  await page.getByRole("banner").getByRole("button", { name: "Hours", exact: true }).click();
+  const grid = board.locator("[data-hours]");
+  await expect(grid).toBeVisible();
+  const zoomIn = board
+    .getByRole("group", { name: "Zoom" })
+    .getByRole("button", { name: "Zoom in" });
+  await zoomIn.click();
+  await zoomIn.click();
+  const today = board.locator('[data-day="2026-10-07"]');
+  const head = today.locator(".day-column");
+  const line = today.locator("[data-now-line]");
+  const label = line.locator(".now-label");
+  await expect(label).toBeVisible();
+  // The line lets taps through (pointer-events: none), which hides it from elementFromPoint as
+  // well. Let it be hit for this measurement: that changes nothing about what's painted on top.
+  await line.evaluate((node) => {
+    for (const part of [node, ...node.querySelectorAll<HTMLElement>("*")]) {
+      if (part instanceof HTMLElement) part.style.pointerEvents = "auto";
+    }
+  });
+  const centre = async () => {
+    const box = await boxOf(label);
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const onTop = (point: { x: number; y: number }) =>
+    page.evaluate(({ x, y }) => {
+      const top = document.elementFromPoint(x, y);
+      return {
+        head: Boolean(top?.closest(".day-column")),
+        line: Boolean(top?.closest("[data-now-line]")),
+      };
+    }, point);
+
+  // Scrolled so the label is in today's head band: the head stays on top of it.
+  const rest = await grid.evaluate((node) => node.scrollTop);
+  const band = await boxOf(head);
+  const below = await centre();
+  await grid.evaluate(
+    (node, by) => {
+      node.scrollBy(0, by);
+    },
+    below.y - (band.y + band.height / 2),
+  );
+  await settled(page);
+  const under = await centre();
+  expect(under.y).toBeGreaterThan(band.y);
+  expect(under.y).toBeLessThan(band.y + band.height);
+  expect(await onTop(under)).toEqual({ head: true, line: false });
+
+  // Back down among the hours, the line and its label are on top again.
+  await grid.evaluate((node, top) => {
+    node.scrollTo(0, top);
+  }, rest);
+  await settled(page);
+  expect(await onTop(await centre())).toEqual({ head: false, line: true });
 });
 
 test("the layout and the zoom stay through two idle minutes, with now back in view", async ({

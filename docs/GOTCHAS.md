@@ -94,6 +94,8 @@ size limit.
   has `scroll-px-1`.
 - At Small text, 8 px gaps became 7 and failed the tap check: rem shrinks. `--spacing-2` is
   `max(0.5rem, 8px)`; Hours chips size by `tapPx(rem)`.
+- The now line painted over the Hours day heads when zoomed: a day's body had no stacking
+  context, so the line's z-30 beat the sticky head's z-20. The body is `isolate`.
 - The Hours grid's scrollbar flickered once a minute on the kitchen screen: Chromium's overlay
   bar shows on every scroll, and a resting grid sets `scrollTop` each minute to follow now. That
   scroller is `scrollbar-width: none`.
@@ -162,5 +164,7 @@ size limit.
   today. Move the clock before `seed()` when a test needs that day's forecast.
 - An exiting `AnimatePresence` child stayed tappable, and cleared a shared ref as it left:
   `ui/Leaves` makes it inert (`useIsPresent`); such a ref is set, never nulled.
+- A test of what's painted on top passed without the fix: `document.elementFromPoint` skips a
+  `pointer-events: none` element such as the now line. Make it hittable for the measurement.
 - A role locator's `toHaveCount(0)` passed before a chip had faded: leaving, it's `aria-hidden`
   at once. Poll for what the test means.

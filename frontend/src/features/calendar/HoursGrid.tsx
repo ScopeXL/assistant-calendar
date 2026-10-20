@@ -355,13 +355,15 @@ function HoursColumn({
           </div>
         ) : null}
       </div>
-      {/* A tap on an empty spot adds an event at that time: a shortcut for Add in the rail. */}
+      {/* A tap on an empty spot adds an event at that time: a shortcut for Add in the rail.
+          `isolate` gives the body its own stacking context: the now line's z-30 (over the chips)
+          stays inside it, and the sticky head's z-20 is above the whole body. */}
       <div
         data-dense=""
         data-day-body=""
         data-over={lighted ? "" : undefined}
         onClick={add}
-        className={`hour-lines relative min-w-0 @container ${lighted ? "bg-sun/15" : isToday ? "bg-lit" : ""}`}
+        className={`hour-lines relative isolate min-w-0 @container ${lighted ? "bg-sun/15" : isToday ? "bg-lit" : ""}`}
       >
         <div className="absolute inset-y-0 inset-x-1">
           {/* A chip taken off the day fades and shrinks away (UX §9 "Chips leave"). */}

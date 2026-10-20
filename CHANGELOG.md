@@ -10,6 +10,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - The kitchen screen's keyboard shows letters only; 123 switches to numbers and symbols.
 
+### Fixed
+
+- On the kitchen screen's Hours view, the now line no longer shows over the day names when zoomed
+  in.
+
 ## [0.12.0] - 2026-10-16
 
 ### Added
