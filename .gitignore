@@ -28,6 +28,10 @@ __pycache__/
 .ruff_cache/
 .hypothesis/
 /backend/dist/
+/kiosk/agent/.venv/
+/kiosk/agent/dist/
+# The screen's own pages, built from frontend/src/screen into the agent's package
+/kiosk/agent/src/sunroom_kiosk/static/
 
 # Frontend
 node_modules/

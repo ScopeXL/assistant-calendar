@@ -6,4 +6,6 @@ playwright-report
 test-results
 src/api/openapi.json
 src/api/schema.d.ts
+src/api/screen-openapi.json
+src/api/screen-schema.d.ts
 public

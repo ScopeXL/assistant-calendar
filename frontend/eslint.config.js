@@ -15,6 +15,7 @@ export default defineConfig(
       "playwright-report",
       "test-results",
       "src/api/schema.d.ts",
+      "src/api/screen-schema.d.ts",
     ],
   },
   js.configs.recommended,

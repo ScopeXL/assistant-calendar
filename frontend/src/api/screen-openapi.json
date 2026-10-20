@@ -1,0 +1,1835 @@
+{
+  "components": {
+    "schemas": {
+      "ScreenAboutOut": {
+        "description": "``GET /api/screen/about``: the Help sheet (never a password or the household's name).",
+        "properties": {
+          "browser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser"
+          },
+          "hostname": {
+            "title": "Hostname",
+            "type": "string"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "log": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Log",
+            "type": "array"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/ScreenPlatform"
+          },
+          "sunroom_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sunroom Url"
+          },
+          "system": {
+            "title": "System",
+            "type": "string"
+          },
+          "uptime_s": {
+            "title": "Uptime S",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "platform",
+          "model",
+          "system",
+          "browser",
+          "hostname",
+          "ip",
+          "uptime_s",
+          "sunroom_url"
+        ],
+        "title": "ScreenAboutOut",
+        "type": "object"
+      },
+      "ScreenAcceptedOut": {
+        "description": "An action has started; what it does next arrives on ``/api/screen/events``.",
+        "properties": {
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "title": "ScreenAcceptedOut",
+        "type": "object"
+      },
+      "ScreenBrightness": {
+        "enum": [
+          "ddc",
+          "sysfs",
+          "none"
+        ],
+        "type": "string"
+      },
+      "ScreenCapability": {
+        "enum": [
+          "restart",
+          "shutdown",
+          "update",
+          "wifi",
+          "rotate",
+          "brightness",
+          "quit",
+          "run_sunroom",
+          "open_network_settings"
+        ],
+        "type": "string"
+      },
+      "ScreenCheckIn": {
+        "properties": {
+          "url": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "ScreenCheckIn",
+        "type": "object"
+      },
+      "ScreenCheckOut": {
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "sunroom": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScreenFoundOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "sunroom",
+          "message"
+        ],
+        "title": "ScreenCheckOut",
+        "type": "object"
+      },
+      "ScreenDisplayOut": {
+        "properties": {
+          "brightness_method": {
+            "$ref": "#/components/schemas/ScreenBrightness"
+          },
+          "rotation": {
+            "$ref": "#/components/schemas/ScreenRotation"
+          }
+        },
+        "required": [
+          "rotation",
+          "brightness_method"
+        ],
+        "title": "ScreenDisplayOut",
+        "type": "object"
+      },
+      "ScreenErrorBody": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ScreenErrorBody",
+        "type": "object"
+      },
+      "ScreenErrorOut": {
+        "description": "Every refusal, in the server's own envelope: a plain-English message, never a trace.",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ScreenErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ScreenErrorOut",
+        "type": "object"
+      },
+      "ScreenFoundHow": {
+        "enum": [
+          "discovered",
+          "typed",
+          "local"
+        ],
+        "type": "string"
+      },
+      "ScreenFoundOut": {
+        "description": "A Sunroom found on the network (or the one an address check reached).",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "older": {
+            "title": "Older",
+            "type": "boolean"
+          },
+          "setup_complete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setup Complete"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "url",
+          "id",
+          "name",
+          "version",
+          "setup_complete",
+          "older"
+        ],
+        "title": "ScreenFoundOut",
+        "type": "object"
+      },
+      "ScreenNetworkKind": {
+        "enum": [
+          "wifi",
+          "wired",
+          "none"
+        ],
+        "type": "string"
+      },
+      "ScreenNetworkOut": {
+        "properties": {
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ScreenNetworkKind"
+          },
+          "ssid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssid"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength"
+          }
+        },
+        "required": [
+          "kind",
+          "ssid",
+          "ip",
+          "strength"
+        ],
+        "title": "ScreenNetworkOut",
+        "type": "object"
+      },
+      "ScreenOpenIn": {
+        "properties": {
+          "page": {
+            "enum": [
+              "sunroom",
+              "settings"
+            ],
+            "title": "Page",
+            "type": "string"
+          }
+        },
+        "required": [
+          "page"
+        ],
+        "title": "ScreenOpenIn",
+        "type": "object"
+      },
+      "ScreenPlatform": {
+        "enum": [
+          "pi",
+          "linux",
+          "macos",
+          "windows"
+        ],
+        "type": "string"
+      },
+      "ScreenRotation": {
+        "enum": [
+          0,
+          90,
+          180,
+          270
+        ],
+        "type": "integer"
+      },
+      "ScreenRotationIn": {
+        "properties": {
+          "rotation": {
+            "$ref": "#/components/schemas/ScreenRotation"
+          }
+        },
+        "required": [
+          "rotation"
+        ],
+        "title": "ScreenRotationIn",
+        "type": "object"
+      },
+      "ScreenSaveIn": {
+        "properties": {
+          "found": {
+            "enum": [
+              "discovered",
+              "typed"
+            ],
+            "title": "Found",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "found"
+        ],
+        "title": "ScreenSaveIn",
+        "type": "object"
+      },
+      "ScreenScanOut": {
+        "properties": {
+          "found": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenFoundOut"
+            },
+            "title": "Found",
+            "type": "array"
+          },
+          "scanning": {
+            "title": "Scanning",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "scanning",
+          "found"
+        ],
+        "title": "ScreenScanOut",
+        "type": "object"
+      },
+      "ScreenSession": {
+        "enum": [
+          "wayland",
+          "x11",
+          "desktop"
+        ],
+        "type": "string"
+      },
+      "ScreenStateOut": {
+        "description": "``GET /api/screen``: everything This Screen and the screen's own pages show.",
+        "properties": {
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenCapability"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "display": {
+            "$ref": "#/components/schemas/ScreenDisplayOut"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "network": {
+            "$ref": "#/components/schemas/ScreenNetworkOut"
+          },
+          "open_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Url"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/ScreenPlatform"
+          },
+          "session": {
+            "$ref": "#/components/schemas/ScreenSession"
+          },
+          "sunroom": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScreenSunroomOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sunroom_os": {
+            "title": "Sunroom Os",
+            "type": "boolean"
+          },
+          "update": {
+            "$ref": "#/components/schemas/ScreenUpdateOut"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "platform",
+          "model",
+          "session",
+          "sunroom_os",
+          "capabilities",
+          "sunroom",
+          "network",
+          "update",
+          "display",
+          "open_url"
+        ],
+        "title": "ScreenStateOut",
+        "type": "object"
+      },
+      "ScreenSunroomOut": {
+        "description": "The Sunroom this screen shows.",
+        "properties": {
+          "found": {
+            "$ref": "#/components/schemas/ScreenFoundHow"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "reachable": {
+            "title": "Reachable",
+            "type": "boolean"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "id",
+          "name",
+          "found",
+          "reachable"
+        ],
+        "title": "ScreenSunroomOut",
+        "type": "object"
+      },
+      "ScreenUpdateCheck": {
+        "enum": [
+          "nightly",
+          "off"
+        ],
+        "type": "string"
+      },
+      "ScreenUpdateOut": {
+        "properties": {
+          "check": {
+            "$ref": "#/components/schemas/ScreenUpdateCheck"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "installed": {
+            "title": "Installed",
+            "type": "string"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ScreenUpdateState"
+          }
+        },
+        "required": [
+          "check",
+          "state",
+          "installed",
+          "latest",
+          "checked_at",
+          "message"
+        ],
+        "title": "ScreenUpdateOut",
+        "type": "object"
+      },
+      "ScreenUpdatePolicyIn": {
+        "properties": {
+          "check": {
+            "$ref": "#/components/schemas/ScreenUpdateCheck"
+          }
+        },
+        "required": [
+          "check"
+        ],
+        "title": "ScreenUpdatePolicyIn",
+        "type": "object"
+      },
+      "ScreenUpdateState": {
+        "enum": [
+          "unknown",
+          "up_to_date",
+          "available",
+          "installing",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "ScreenWifiJoinIn": {
+        "properties": {
+          "password": {
+            "default": "",
+            "maxLength": 63,
+            "title": "Password",
+            "type": "string"
+          },
+          "ssid": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Ssid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ssid"
+        ],
+        "title": "ScreenWifiJoinIn",
+        "type": "object"
+      },
+      "ScreenWifiListOut": {
+        "properties": {
+          "networks": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenWifiOut"
+            },
+            "title": "Networks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "networks"
+        ],
+        "title": "ScreenWifiListOut",
+        "type": "object"
+      },
+      "ScreenWifiOut": {
+        "description": "One Wi-Fi network in range, or one this screen has joined before.",
+        "properties": {
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "saved": {
+            "title": "Saved",
+            "type": "boolean"
+          },
+          "secured": {
+            "title": "Secured",
+            "type": "boolean"
+          },
+          "ssid": {
+            "title": "Ssid",
+            "type": "string"
+          },
+          "strength": {
+            "title": "Strength",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "ssid",
+          "strength",
+          "secured",
+          "connected",
+          "saved"
+        ],
+        "title": "ScreenWifiOut",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Sunroom Screen",
+    "version": "0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/screen": {
+      "get": {
+        "operationId": "read_state_api_screen_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenStateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Read State",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/about": {
+      "get": {
+        "operationId": "about_api_screen_about_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAboutOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "About",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/display": {
+      "put": {
+        "operationId": "display_api_screen_display_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenRotationIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenStateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Display",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/open": {
+      "post": {
+        "operationId": "open_page_api_screen_open_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenOpenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Open Page",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/open-network-settings": {
+      "post": {
+        "operationId": "open_network_settings_api_screen_open_network_settings_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Open Network Settings",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/quit": {
+      "post": {
+        "operationId": "quit_screen_api_screen_quit_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Quit Screen",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/restart": {
+      "post": {
+        "operationId": "restart_api_screen_restart_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Restart",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/run-sunroom": {
+      "post": {
+        "operationId": "run_sunroom_api_screen_run_sunroom_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Run Sunroom",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/shutdown": {
+      "post": {
+        "operationId": "shutdown_api_screen_shutdown_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Shutdown",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/sunroom": {
+      "delete": {
+        "operationId": "forget_sunroom_api_screen_sunroom_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenStateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Forget Sunroom",
+        "tags": [
+          "screen"
+        ]
+      },
+      "put": {
+        "description": "Use this Sunroom from now on: checked again here, so only a Sunroom is ever saved.",
+        "operationId": "save_sunroom_api_screen_sunroom_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenSaveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenStateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Save Sunroom",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/sunroom/check": {
+      "post": {
+        "operationId": "check_address_api_screen_sunroom_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenCheckIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Check Address",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/sunrooms": {
+      "get": {
+        "operationId": "sunrooms_api_screen_sunrooms_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenScanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Sunrooms",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/sunrooms/scan": {
+      "post": {
+        "operationId": "scan_api_screen_sunrooms_scan_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenScanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Scan",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/update": {
+      "get": {
+        "description": "Check now: the newest version on GitHub, against this one.",
+        "operationId": "check_update_api_screen_update_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenUpdateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Check Update",
+        "tags": [
+          "screen"
+        ]
+      },
+      "post": {
+        "operationId": "install_update_api_screen_update_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Install Update",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/update-policy": {
+      "put": {
+        "operationId": "update_policy_api_screen_update_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenUpdatePolicyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenUpdateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Update Policy",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/wifi": {
+      "get": {
+        "operationId": "wifi_list_api_screen_wifi_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenWifiListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Wifi List",
+        "tags": [
+          "screen"
+        ]
+      },
+      "post": {
+        "operationId": "wifi_join_api_screen_wifi_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenWifiJoinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenWifiListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Wifi Join",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
+    "/api/screen/wifi/{network_id}": {
+      "delete": {
+        "operationId": "wifi_forget_api_screen_wifi__network_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "network_id",
+            "required": true,
+            "schema": {
+              "title": "Network Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenWifiListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Wifi Forget",
+        "tags": [
+          "screen"
+        ]
+      }
+    }
+  }
+}

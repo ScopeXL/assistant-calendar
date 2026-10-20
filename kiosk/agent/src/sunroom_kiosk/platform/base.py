@@ -1,0 +1,201 @@
+"""What the agent asks of the machine it runs on (docs/M7.md, "The pieces").
+
+One adapter per kind of machine (``pi``, ``linux``, and in batch 2 ``macos`` and ``windows``),
+each a thin layer over the system's own commands, and ``fake`` for tests and the e2e runs. The
+base class says no to everything; an adapter overrides what its machine can do and lists it in
+``capabilities()``, which is what This Screen shows buttons for.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import os
+import socket
+from collections.abc import Awaitable, Callable, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Protocol
+
+from sunroom_kiosk.schemas import ScreenCapability, ScreenNetworkKind, ScreenPlatform, ScreenSession
+
+COMMAND_TIMEOUT_S = 20.0
+
+
+@dataclass(frozen=True)
+class CommandResult:
+    code: int
+    output: str  # stderr then stdout, trimmed
+
+    @property
+    def ok(self) -> bool:
+        return self.code == 0
+
+    def first_line(self) -> str:
+        return next((line.strip() for line in self.output.splitlines() if line.strip()), "")
+
+
+class Runner(Protocol):
+    async def __call__(
+        self, argv: Sequence[str], *, limit: float = COMMAND_TIMEOUT_S, stdin: str | None = None
+    ) -> CommandResult: ...
+
+
+async def run_command(
+    argv: Sequence[str], *, limit: float = COMMAND_TIMEOUT_S, stdin: str | None = None
+) -> CommandResult:
+    """Run a command without a shell: its exit status (127: not installed, 124: too slow) and
+    what it printed."""
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *argv,
+            stdin=asyncio.subprocess.PIPE if stdin is not None else asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except FileNotFoundError:
+        return CommandResult(127, f"{argv[0]} isn't installed")
+    except OSError as error:
+        return CommandResult(126, str(error.strerror or error))
+    try:
+        out, err = await asyncio.wait_for(
+            process.communicate(stdin.encode() if stdin is not None else None), limit
+        )
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        return CommandResult(124, f"it took longer than {limit:g} s")
+    printed = [
+        part.decode(errors="replace").strip() for part in (err, out) if part and part.strip()
+    ]
+    return CommandResult(process.returncode or 0, "\n".join(printed))
+
+
+class PlatformError(Exception):
+    """A device action that didn't work. The message is for the family: plain words, no codes."""
+
+
+class UnsupportedError(PlatformError):
+    def __init__(self, what: str = "That") -> None:
+        super().__init__(f"{what} isn't something this screen can do.")
+
+
+@dataclass(frozen=True)
+class NetworkStatus:
+    kind: ScreenNetworkKind
+    ssid: str | None = None
+    ip: str | None = None
+    strength: int | None = None
+
+
+@dataclass(frozen=True)
+class WifiNetwork:
+    id: str | None  # a saved connection's own name, for Forget
+    ssid: str
+    strength: int
+    secured: bool
+    connected: bool
+    saved: bool
+
+
+type Progress = Callable[[int, str], Awaitable[None]]
+
+
+def local_ip() -> str | None:
+    """This machine's address on its network: the one a packet to a public address would leave
+    from. Nothing is sent (a UDP socket only picks its route)."""
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.connect(("192.0.2.1", 9))  # TEST-NET-1: never answered, never sent
+        address = probe.getsockname()[0]
+    except OSError:
+        return None
+    finally:
+        probe.close()
+    return str(address) if address and not address.startswith("0.") else None
+
+
+class Platform:
+    """The defaults: a machine that can do nothing but run the browser."""
+
+    def __init__(self, runner: Runner = run_command, root: Path = Path("/")) -> None:
+        self.run = runner
+        self.root = root
+
+    # ------------------------------------------------------------------ what it is
+
+    @property
+    def name(self) -> ScreenPlatform:
+        return "linux"
+
+    @property
+    def session(self) -> ScreenSession:
+        return "desktop"
+
+    @property
+    def sunroom_os(self) -> bool:
+        """The flashed image (kiosk/os), not an install on an existing system."""
+        return False
+
+    @property
+    def model(self) -> str:
+        return "Computer"
+
+    @property
+    def system(self) -> str:
+        return "Unknown system"
+
+    def hostname(self) -> str:
+        return socket.gethostname()
+
+    def capabilities(self) -> list[ScreenCapability]:
+        return []
+
+    # ------------------------------------------------------------------ the machine
+
+    async def restart(self) -> None:
+        raise UnsupportedError("Restarting")
+
+    async def shutdown(self) -> None:
+        raise UnsupportedError("Shutting down")
+
+    async def open_network_settings(self) -> None:
+        raise UnsupportedError("Opening the network settings")
+
+    # ------------------------------------------------------------------ the network
+
+    async def network(self) -> NetworkStatus:
+        ip = local_ip()
+        return NetworkStatus(kind="wired" if ip else "none", ip=ip)
+
+    async def wifi_networks(self) -> list[WifiNetwork]:
+        raise UnsupportedError("Wi-Fi")
+
+    async def wifi_join(self, ssid: str, password: str) -> None:
+        raise UnsupportedError("Wi-Fi")
+
+    async def wifi_forget(self, network_id: str) -> None:
+        raise UnsupportedError("Wi-Fi")
+
+    # ------------------------------------------------------------------ the screen
+
+    async def rotate(self, rotation: int) -> None:
+        raise UnsupportedError("Turning the picture")
+
+    # ------------------------------------------------------------------ privileged files
+
+    async def write_policy(self, path: Path, document: dict[str, Any]) -> bool:
+        """Write the browser's policy file (policy.py). False when this machine doesn't let the
+        agent write it (it then relies on the launch flags)."""
+        return False
+
+    async def update_system(self) -> bool:
+        """Install the system's own security updates (Sunroom OS). False when it isn't ours."""
+        return False
+
+    async def run_sunroom(self, progress: Progress) -> str:
+        """Start Sunroom on this machine (Sunroom OS, batch 2); returns its address."""
+        raise UnsupportedError("Running Sunroom here")
+
+    def environment(self) -> dict[str, str]:
+        """What the browser is started with: this process's environment."""
+        return dict(os.environ)

@@ -61,10 +61,17 @@ lint: kiosk-lint
     cd backend && uv run ruff check . && uv run ruff format --check .
     cd frontend && pnpm exec eslint . && pnpm exec prettier --check .
 
-# shellcheck on the Raspberry Pi installer and helpers; the labwc rule and the screen helper compile
+# shellcheck on the Raspberry Pi installer and helpers; the labwc rule compiles; Sunroom Screen's
+# agent (kiosk/agent) passes ruff and pyright strict
 kiosk-lint:
     {{shellcheck}} -x kiosk/install.sh kiosk/uninstall.sh kiosk/update.sh kiosk/sunroom-kiosk
     {{py}} -m py_compile kiosk/labwc-rule.py kiosk/sunroom-screen
+    cd kiosk/agent && uv run --quiet ruff check . && uv run --quiet ruff format --check . && uv run --quiet pyright
+
+# Sunroom Screen's agent: its tests, on the pretend platform (no network, no machine changes)
+[positional-arguments]
+kiosk-test *ARGS:
+    cd kiosk/agent && uv run --quiet pytest -q "$@"
 
 # Type checks: pyright strict, tsc
 typecheck:
@@ -89,10 +96,12 @@ test-fe *ARGS:
 test-py *ARGS:
     cd backend && uv run pytest -q --disable-socket --allow-unix-socket "$@"
 
-# Regenerate the frontend's API types from the backend's OpenAPI schema
+# Regenerate the frontend's API types from the backend's OpenAPI schema, and the screen agent's
 api-types:
     cd backend && uv run sunroom openapi --out ../frontend/src/api/openapi.json
     cd frontend && pnpm exec openapi-typescript src/api/openapi.json -o src/api/schema.d.ts
+    cd kiosk/agent && uv run --quiet sunroom-kiosk openapi --out ../../frontend/src/api/screen-openapi.json
+    cd frontend && pnpm exec openapi-typescript src/api/screen-openapi.json -o src/api/screen-schema.d.ts
 
 # Fail if the committed API types are stale
 api-types-check:
@@ -103,6 +112,10 @@ api-types-check:
     (cd frontend && pnpm exec openapi-typescript "$tmp/openapi.json" -o "$tmp/schema.d.ts" >/dev/null)
     diff -u frontend/src/api/openapi.json "$tmp/openapi.json"
     diff -u frontend/src/api/schema.d.ts "$tmp/schema.d.ts"
+    (cd kiosk/agent && uv run --quiet sunroom-kiosk openapi --out "$tmp/screen-openapi.json")
+    (cd frontend && pnpm exec openapi-typescript "$tmp/screen-openapi.json" -o "$tmp/screen-schema.d.ts" >/dev/null)
+    diff -u frontend/src/api/screen-openapi.json "$tmp/screen-openapi.json"
+    diff -u frontend/src/api/screen-schema.d.ts "$tmp/screen-schema.d.ts"
     echo "API types are up to date."
 
 # Migrations: upgrade an empty database, compare with the models, run the migration tests
@@ -120,7 +133,7 @@ release-meta-check:
     {{py}} scripts/check_release_meta.py
 
 # Everything a commit must pass
-check: lint typecheck test api-types-check migrations-check release-meta-check
+check: lint typecheck test kiosk-test api-types-check migrations-check release-meta-check
 
 # ---- build, end-to-end, screenshots ------------------------------------------------------------
 

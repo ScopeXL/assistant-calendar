@@ -33,6 +33,28 @@ jobs:
       - name: Kiosk scripts
         run: just kiosk-lint
 
+  # Sunroom Screen's agent on the three systems it runs on (docs/M7.md T6).
+  kiosk:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: kiosk/agent
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - name: Install
+        run: uv sync --locked
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Types
+        run: uv run pyright
+      - name: Tests
+        run: uv run pytest -q
+
   frontend:
     runs-on: ubuntu-24.04
     defaults:
@@ -71,6 +93,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: cd backend && uv sync --locked
+      - run: cd kiosk/agent && uv sync --locked
       - run: cd frontend && pnpm install --frozen-lockfile
       - name: API types are up to date
         run: just api-types-check

@@ -9,6 +9,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 ### Added
 
 - Screens on the home network can find Sunroom by themselves.
+- Behind the scenes: the kitchen screen's software becomes one program, Sunroom Screen, with
+  tests that run on Linux, macOS and Windows.
 
 ### Changed
 
