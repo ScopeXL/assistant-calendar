@@ -18,7 +18,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
   home network or checks an address typed on its keyboard, and when it can't reach Sunroom it
   says so, keeps trying, and goes back by itself.
 - Behind the scenes: the kitchen screen's software becomes one program, Sunroom Screen, with
-  tests that run on Linux, macOS and Windows.
+  tests that run on Linux, macOS and Windows; each release on GitHub carries it and the
+  installer, with checksums.
 - The installer can make another Linux computer a kitchen screen, and `--dry-run` shows what it
   would do without changing anything.
 

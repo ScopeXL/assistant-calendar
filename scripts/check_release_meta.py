@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """VERSION is the only version (PLAN §14.5, after Dinner Bell's ADR 0019); everything else stays
-0.0.0.
+0.0.0, except the two that must carry it: the Pi installer, fetched from main, and Sunroom
+Screen's package, whose wheel is named for it and whose updates compare it (docs/M7.md T11).
+`release.py bump` writes all of them.
 """
 
 from __future__ import annotations
@@ -30,6 +32,15 @@ if package.get("version") != "0.0.0":
 kiosk = re.search(r'^KIOSK_VERSION="([^"]*)"', (REPO / "kiosk" / "install.sh").read_text(), re.M)
 if not kiosk or kiosk.group(1) != version:
     problems.append(f"kiosk/install.sh KIOSK_VERSION must equal VERSION ({version}); `just bump` sets both")
+
+# Sunroom Screen: its pyproject.toml, and its own entry in uv.lock (or `uv sync --locked` fails).
+agent = tomllib.loads((REPO / "kiosk" / "agent" / "pyproject.toml").read_text())
+if agent["project"]["version"] != version:
+    problems.append(f"kiosk/agent/pyproject.toml version must equal VERSION ({version}); `just bump` sets both")
+lock = tomllib.loads((REPO / "kiosk" / "agent" / "uv.lock").read_text())
+locked = [p.get("version") for p in lock.get("package", []) if p.get("name") == "sunroom-kiosk"]
+if locked != [version]:
+    problems.append(f"kiosk/agent/uv.lock's sunroom-kiosk must be version {version} (found {locked}); `just bump` sets it")
 
 if "## [Unreleased]" not in (REPO / "CHANGELOG.md").read_text():
     problems.append("CHANGELOG.md needs an ## [Unreleased] section")

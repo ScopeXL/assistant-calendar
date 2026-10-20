@@ -20,6 +20,16 @@ updates:
       python:
         patterns: ["*"]
 
+  - package-ecosystem: uv
+    directory: /kiosk/agent
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      kiosk:
+        patterns: ["*"]
+
   - package-ecosystem: npm
     directory: /frontend
     schedule:

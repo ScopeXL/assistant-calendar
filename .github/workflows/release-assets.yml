@@ -1,0 +1,81 @@
+# A GitHub Release's files (docs/RELEASING.md, docs/M7.md T11): Sunroom Screen's wheel with its
+# pages built in, the installers, and SHA256SUMS, which the installers and Sunroom Screen's own
+# updates check every download against. The deploy skill makes the Release from the CHANGELOG
+# (`just github-release`); this fills it, so nothing is uploaded from a Mac.
+name: Release assets
+
+on:
+  push:
+    tags: ["v*"]
+  # The owner's one test, on a throwaway pre-release tag (for example v0.13.0-rc.1).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: An existing tag to build the files for
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-assets-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  assets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: frontend/.node-version
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - name: Check the version
+        run: |
+          version=$(cat VERSION)
+          case $TAG in
+          "v$version") ;;
+          v*-*) echo "A pre-release tag: its files are named for $version." ;;
+          *) echo "The tag $TAG isn't VERSION's ($version)."; exit 1 ;;
+          esac
+          uv run --quiet --no-project --python 3.14 scripts/check_release_meta.py
+      - name: Build Sunroom Screen
+        run: |
+          (cd frontend && pnpm install --frozen-lockfile && pnpm exec vite build --config vite.screen.config.ts)
+          (cd kiosk/agent && uv build --wheel --out-dir dist)
+      - name: Collect the files and their checksums
+        run: |
+          wheel="kiosk/agent/dist/sunroom_kiosk-$(cat VERSION)-py3-none-any.whl"
+          unzip -l "$wheel" | grep -q 'sunroom_kiosk/static/screen.html' ||
+            { echo "The wheel has no screen pages in it."; exit 1; }
+          mkdir assets
+          cp "$wheel" kiosk/install.sh assets/
+          if [ -f kiosk/install.ps1 ]; then cp kiosk/install.ps1 assets/; fi
+          (cd assets && sha256sum -- * >SHA256SUMS && cat SHA256SUMS)
+      - name: Wait for the Release, or make a draft
+        run: |
+          tries=30 # 10 minutes for the deploy skill's `just github-release`
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then tries=1; fi
+          for _ in $(seq "$tries"); do
+            if gh release view "$TAG" >/dev/null 2>&1; then exit 0; fi
+            sleep 20
+          done
+          prerelease=""
+          case $TAG in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$TAG" --verify-tag --draft $prerelease --title "$TAG" \
+            --notes "No Release was made for $TAG within 10 minutes, so this draft holds its files. Add the CHANGELOG section and publish it (just github-release does both)."
+      - name: Upload, the checksums last
+        run: |
+          find assets -type f ! -name SHA256SUMS -exec gh release upload "$TAG" --clobber {} +
+          gh release upload "$TAG" --clobber assets/SHA256SUMS

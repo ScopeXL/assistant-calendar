@@ -8,9 +8,16 @@ does the rest. This page explains the pieces, and how to release without Claude.
 - A version bump in `VERSION`: patch by default, minor when the household can see something new,
   major only when the owner asks. Each milestone is a minor release.
 - The same version in the Pi installer (`KIOSK_VERSION` in `kiosk/install.sh`), which is fetched
-  from main.
+  from main, and in Sunroom Screen (`kiosk/agent/pyproject.toml` and its entry in
+  `kiosk/agent/uv.lock`), whose wheel is named for it.
 - A plain-English `CHANGELOG.md` section.
 - An annotated git tag `vX.Y.Z` that is never moved.
+- A GitHub Release `vX.Y.Z` with that section as its notes, and its files, which
+  `.github/workflows/release-assets.yml` builds on GitHub when the tag is pushed: Sunroom
+  Screen's wheel (`sunroom_kiosk-X.Y.Z-py3-none-any.whl`, its pages built in), `install.sh`
+  (and `install.ps1` from 0.14.0), and `SHA256SUMS`, uploaded last. The installers and Sunroom
+  Screen's own updates take the wheel from there and check it against `SHA256SUMS`; nothing is
+  uploaded from the Mac. Sunroom's own update check stays on tags (ADR 0032).
 - A multi-arch image (`linux/amd64`, `linux/arm64`), `scopexl/sunroom:X.Y.Z`, also tagged `X.Y`
   and `latest`. Version tags are immutable on Docker Hub.
 
@@ -20,11 +27,13 @@ does the rest. This page explains the pieces, and how to release without Claude.
 |---|---|---|
 | Gate | `just preflight` | Not on main, uncommitted changes, behind origin, a dry-run push to GitHub fails, the newest migration has no fixture database, any check/e2e/scan failure, smoke-test failure, Docker not ready |
 | Version | `just bump <level>` | `[Unreleased]` is empty |
-| Tag | `just release-tag ["Co-Authored-By: …"]` | Anything besides `VERSION`, `CHANGELOG.md`, `released.lock` and `kiosk/install.sh` changed since preflight. If only the push fails, run it again: it resumes |
+| Tag | `just release-tag ["Co-Authored-By: …"]` | Anything besides `VERSION`, `CHANGELOG.md`, `released.lock`, `kiosk/install.sh` and Sunroom Screen's `pyproject.toml` and `uv.lock` changed since preflight. If only the push fails, run it again: it resumes |
+| GitHub Release | `just github-release` | The tag isn't on GitHub, or `gh` isn't signed in. It makes the Release (or publishes the draft the workflow made) and prints its URL; run it again any time |
 | Smoke | `just smoke-image vX.Y.Z` | The image from the tag doesn't start healthy on an empty volume with no settings, fails a probe or setup through the API, or starts on a bad volume |
 | Push | `just image` | The version already exists on Docker Hub |
 | Verify | `just image-verify` | Platforms missing, tags disagree, the pulled image fails a probe or setup on either architecture, or the image scan finds a private term |
 | CI | `gh run watch` on the run the push started | Never: the release is out by then. Its result goes in the report, green or the failing jobs with the run's link, and a red run is fixed in a working session, never from the deploy |
+| The Release's files | `gh run watch` on the tag's release-assets run, then `gh release view` | Never, as CI. It waits up to 10 minutes for the Release, then makes a draft of its own; until its files are up, installers and screens can't install or update to this version |
 
 Without Claude: `just release patch` runs all of it.
 
@@ -49,7 +58,12 @@ and stops after 45 minutes, and the deploy skill waits for the run and reports i
   4. In Docker Hub: **Repository → Settings → Immutable tags**, with the rule `^\d+\.\d+\.\d+$`.
 - **Private-terms list:** `just setup` walks you through creating
   `~/.config/sunroom/private-terms.txt`. Preflight refuses to release without it.
-- **GitHub:** pushes go over SSH; see *Pushing to GitHub* below.
+- **GitHub:** pushes go over SSH; see *Pushing to GitHub* below. The GitHub CLI signed in
+  (`gh auth login`, then `gh auth status`) makes the Release and watches the runs.
+- **The release-assets workflow, once:** push a throwaway pre-release tag (for example
+  `git tag v0.13.0-rc.1 && git push origin v0.13.0-rc.1`), or run the workflow by hand on one
+  (Actions → Release assets → Run workflow). It makes a draft pre-release with the files; check
+  them, then delete the draft and the tag.
 
 ## Pushing to GitHub
 

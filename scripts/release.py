@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Release helpers used by the deploy skill (docs/PLAN.md §14.5, docs/RELEASING.md).
 
-  release.py bump patch|minor|major   VERSION, KIOSK_VERSION, CHANGELOG section + links,
+  release.py bump patch|minor|major   VERSION, KIOSK_VERSION, Sunroom Screen's version (its
+                                      pyproject.toml and uv.lock), CHANGELOG section + links,
                                       released.lock
   release.py tag [--trailer TEXT]     commit the release files, tag vX.Y.Z, push atomically
+  release.py github                   the tag's GitHub Release, its CHANGELOG section as the
+                                      notes (the release-assets workflow uploads its files)
 
 `tag` refuses unless the only changes since `just preflight` are the release files. If its push
 fails after the commit and tag are made, run `tag` again: it pushes them and never re-tags.
@@ -18,6 +21,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import NoReturn
 
@@ -30,11 +34,19 @@ STAMP = REPO / ".git" / "sunroom-preflight"
 # The Pi installer is fetched from main, so it carries the released version (check_release_meta).
 KIOSK_INSTALLER = REPO / "kiosk" / "install.sh"
 KIOSK_VERSION = re.compile(r'^KIOSK_VERSION="[^"]*"', re.MULTILINE)
+# Sunroom Screen's wheel is named for its version, and its updates compare versions, so it
+# carries VERSION too: in its pyproject.toml and in its own entry of uv.lock (`uv sync --locked`).
+AGENT_PYPROJECT = REPO / "kiosk" / "agent" / "pyproject.toml"
+AGENT_LOCK = REPO / "kiosk" / "agent" / "uv.lock"
+AGENT_VERSION = re.compile(r'^(\[project\]\n(?:(?!\[).*\n)*?version = )"[^"]*"', re.MULTILINE)
+AGENT_LOCK_VERSION = re.compile(r'^(name = "sunroom-kiosk"\nversion = )"[^"]*"', re.MULTILINE)
 RELEASE_FILES = {
     "VERSION",
     "CHANGELOG.md",
     "backend/src/sunroom/migrations/released.lock",
     "kiosk/install.sh",
+    "kiosk/agent/pyproject.toml",
+    "kiosk/agent/uv.lock",
 }
 GITHUB = "https://github.com/ScopeXL/assistant-calendar"
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
@@ -99,6 +111,11 @@ def bump(level: str) -> None:
     if not KIOSK_VERSION.search(installer):
         fail("kiosk/install.sh has no KIOSK_VERSION line")
     KIOSK_INSTALLER.write_text(KIOSK_VERSION.sub(f'KIOSK_VERSION="{new}"', installer, count=1))
+    for path, pattern in ((AGENT_PYPROJECT, AGENT_VERSION), (AGENT_LOCK, AGENT_LOCK_VERSION)):
+        text = path.read_text()
+        if not pattern.search(text):
+            fail(f"{path.relative_to(REPO)} has no Sunroom Screen version line")
+        path.write_text(pattern.sub(lambda found: f'{found.group(1)}"{new}"', text, count=1))
     locked = {
         line.split()[0]
         for line in LOCK.read_text().splitlines()
@@ -190,6 +207,46 @@ def push(name: str) -> None:
     print(f"Tagged and pushed {name}.")
 
 
+def gh(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["gh", *args], cwd=REPO, capture_output=True, text=True)
+
+
+def github() -> None:
+    """The GitHub Release for VERSION's tag, with its CHANGELOG section as the notes. Nothing is
+    uploaded from here: the release-assets workflow builds the files on GitHub and adds them (it
+    makes a draft of its own when no Release turns up within 10 minutes; this publishes it)."""
+    version = current_version()
+    name = f"v{version}"
+    if not on_github(name):
+        fail(f"{name} isn't on GitHub yet; run `just release-tag` first")
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as handle:
+        handle.write(release_notes(version) + "\n")
+    notes = handle.name
+    try:
+        draft = gh("release", "view", name, "--json", "isDraft", "--jq", ".isDraft")
+        if draft.returncode == 0 and draft.stdout.strip() == "false":
+            print(f"The GitHub Release {name} is already published.")
+        elif draft.returncode == 0:
+            made = gh("release", "edit", name, "--draft=false", "--title", name, "--notes-file", notes)
+            if made.returncode:
+                fail(f"couldn't publish the draft Release {name}: {made.stderr.strip()}")
+            print(f"Published the draft GitHub Release {name}.")
+        else:
+            made = gh(
+                "release", "create", name, "--verify-tag", "--title", name, "--notes-file", notes
+            )
+            if made.returncode:
+                fail(
+                    f"couldn't make the GitHub Release {name}: {made.stderr.strip()} "
+                    '(is `gh auth status` signed in? docs/RELEASING.md, "One-time setup")'
+                )
+            print(f"Made the GitHub Release {name}; release-assets.yml adds its files.")
+    finally:
+        os.unlink(notes)
+    url = gh("release", "view", name, "--json", "url", "--jq", ".url").stdout.strip()
+    print(f"Release: {url or f'{GITHUB}/releases/tag/{name}'}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="release.py")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -197,9 +254,12 @@ def main() -> None:
     bump_parser.add_argument("level", choices=["patch", "minor", "major"])
     tag_parser = sub.add_parser("tag")
     tag_parser.add_argument("--trailer")
+    sub.add_parser("github")
     args = parser.parse_args()
     if args.command == "bump":
         bump(args.level)
+    elif args.command == "github":
+        github()
     else:
         tag(args.trailer)
 
