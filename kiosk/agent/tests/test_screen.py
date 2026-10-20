@@ -524,3 +524,32 @@ def test_a_surprise_counts_as_a_failure_not_a_crash(tmp_path: Path) -> None:
     r.helper.run_forever()
     assert r.sleeps == [2]
     assert "something unexpected went wrong" in r.lines[1]
+
+
+def test_a_mac_holds_its_display_awake_and_lets_it_sleep(tmp_path: Path) -> None:
+    held: list[str] = []
+
+    class Hold:
+        def hold(self) -> bool:
+            held.append("hold")
+            return True
+
+        def release(self) -> None:
+            held.append("release")
+
+    r = rig(
+        tmp_path,
+        answer("on", 100, "day", "e1"),
+        answer("off", 0, "sleep", "e2"),
+        answer("on", 100, "awake", "e3"),
+        SUNROOM_SESSION="macos",
+    )
+    r.helper.awake = Hold()
+    r.steps(3)
+    assert r.shell.calls == ["caffeinate -u -t 1", "pmset displaysleepnow", "caffeinate -u -t 1"]
+    assert held == ["hold", "release", "hold"]
+    assert r.lines == [
+        "Screen on: daytime.",
+        "Screen off: sleep time.",
+        "Screen on: tapped awake for 2 minutes.",
+    ]

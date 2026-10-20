@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Sunroom uninstaller: takes off this Pi (or another Linux computer) what kiosk/install.sh set
-# up for the kitchen screen.
+# Sunroom uninstaller: takes off this Pi (or another Linux computer, or a Mac) what
+# kiosk/install.sh set up for the kitchen screen.
 #
 #   bash uninstall.sh [--purge] [--yes]
 #   (the same as: bash install.sh --uninstall [--purge] [--yes]; the installer keeps a copy
@@ -8,7 +8,8 @@
 #
 # Removes Sunroom Screen (it switches the screen back on as it stops; then uv uninstalls it,
 # and its kept wheels go), its systemd user unit and the units of the screen helper and nightly
-# restart from before 0.13.0, its root helper and sudoers rule, the browser's policy files, its
+# restart from before 0.13.0, a Mac's LaunchAgent and the browser's preferences Sunroom Screen
+# set there, its root helper and sudoers rule, the browser's policy files, its
 # settings, the labwc autostart block or the XDG autostart entry, the labwc pointer and touch
 # settings (putting back rc.xml.sunroom-backup when nothing else changed), the Wi-Fi
 # power-saving drop-in, the backlight udev rule and i2c-dev module file, the kernel command line
@@ -35,6 +36,8 @@ BIN_DIR="$HOME/.local/bin"
 UNIT_DIR="$HOME/.config/systemd/user"
 LABWC_DIR="$HOME/.config/labwc"
 XDG_AUTOSTART_FILE="$HOME/.config/autostart/sunroom-kiosk.desktop"
+LAUNCH_AGENT_LABEL="app.sunroom.kiosk"
+LAUNCH_AGENT="$HOME/Library/LaunchAgents/$LAUNCH_AGENT_LABEL.plist"
 SERVER_DIR="/opt/sunroom"
 AVAHI_SERVICE="/etc/avahi/services/sunroom.service"
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
@@ -224,9 +227,24 @@ find_uv() {
 	fi
 }
 
-# Sunroom Screen is a uv tool (before 0.13.0, a bash launcher at the same path).
+# A Mac: stop Sunroom Screen and take its LaunchAgent out first (it switches nothing off there).
+remove_launch_agent() {
+	[[ $(uname -s) == Darwin ]] || return 0
+	launchctl bootout "gui/$(id -u)/$LAUNCH_AGENT_LABEL" >/dev/null 2>&1 || true
+	if [[ -e $LAUNCH_AGENT ]]; then
+		rm -f "$LAUNCH_AGENT"
+		note "Stopped the kitchen screen and removed $(tidy "$LAUNCH_AGENT")."
+	fi
+}
+
+# Sunroom Screen is a uv tool (before 0.13.0, a bash launcher at the same path). On a Mac it set
+# the browser's preferences itself, so it takes them out before it goes.
 remove_agent() {
 	local uv
+	if [[ $(uname -s) == Darwin && -x $BIN_DIR/sunroom-kiosk ]]; then
+		"$BIN_DIR/sunroom-kiosk" policy --remove >/dev/null 2>&1 || true
+		note "Took Sunroom Screen's settings out of the browser's preferences."
+	fi
 	if uv=$(find_uv) && "$uv" tool list 2>/dev/null | grep -q '^sunroom-kiosk '; then
 		"$uv" tool uninstall sunroom-kiosk >/dev/null 2>&1 || warn "uv couldn't uninstall Sunroom Screen; see: uv tool list"
 		note "Uninstalled Sunroom Screen."
@@ -455,8 +473,12 @@ finish() {
 	fi
 	say ""
 	say "The Sunroom kitchen screen setup is removed."
-	say "Left as they are: uv, Docker, the desktop logging in by itself and screen blanking being off"
-	say "(on a Pi, change those in Raspberry Pi Configuration if you like)."
+	if command -v raspi-config >/dev/null 2>&1; then
+		say "Left as they are: uv, Docker, the desktop logging in by itself and screen blanking being off"
+		say "(change those in Raspberry Pi Configuration if you like)."
+	else
+		say "Left as it is: uv, which installed Sunroom Screen."
+	fi
 	if ((!PURGE)) && [[ -d $SERVER_DIR ]]; then
 		say "Sunroom itself still runs on this Pi, with your family's data. To delete it as well:"
 		if ((keep_uninstaller)); then
@@ -476,6 +498,7 @@ main() {
 	setup
 	load_state
 	say "Removing the Sunroom kitchen screen setup..."
+	remove_launch_agent
 	remove_units
 	remove_root_files
 	remove_autostart

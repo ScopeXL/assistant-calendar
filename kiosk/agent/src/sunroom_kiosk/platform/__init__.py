@@ -23,5 +23,8 @@ def detect(fake: FakeKind | None = None, root: Path = Path("/")) -> Platform:
         from sunroom_kiosk.platform.windows import WindowsPlatform
 
         return WindowsPlatform()
-    # macOS gets its own adapter in batch 2 (docs/M7.md T15).
+    if sys.platform == "darwin":
+        from sunroom_kiosk.platform.macos import MacPlatform
+
+        return MacPlatform(root=root)
     return Platform(root=root)

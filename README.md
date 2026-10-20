@@ -94,6 +94,7 @@ tablet works as one (Android: Fully Kiosk Browser; iPad: Safari with Guided Acce
 | A Pi: Sunroom and the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh \| bash` |
 | A Pi or a Linux computer: only the screen | the same, then `\| bash -s -- --display-only` (add `--url <address>` to skip the search) |
 | A Pi: only Sunroom, no screen | the same with `--server-only` |
+| A Mac: only the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh \| bash` |
 | Windows: only the screen | `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.ps1 \| iex"` |
 
 `--dry-run` (`-DryRun` on Windows) says what it would do first. [docs/KIOSK.md](docs/KIOSK.md)

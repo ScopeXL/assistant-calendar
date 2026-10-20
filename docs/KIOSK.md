@@ -1,7 +1,7 @@
 # The kitchen screen: Sunroom Screen
 
-How `kiosk/install.sh` turns a Raspberry Pi (or another Linux computer) into Sunroom's wall
-screen, what it changes, how the screen sleeps and dims at night, and what to do when something
+How `kiosk/install.sh` turns a Raspberry Pi (or another Linux computer, or a Mac; Windows has
+`install.ps1`) into Sunroom's wall screen, what it changes, how the screen sleeps and dims at night, and what to do when something
 looks wrong. The design is in [PLAN §13](PLAN.md#13-setup-deployment-and-the-raspberry-pi-kiosk)
 and [ADR 0035](adr/0035-m7-sunroom-screen.md); what to buy, and the hardware it has been tried on,
 is in [HARDWARE.md](HARDWARE.md).
@@ -21,8 +21,8 @@ Restart and Shut Down).
   but taps do nothing).
 - The official power supply. Don't power a portable monitor from the Pi's USB ports.
 
-Another Linux computer with a desktop (systemd, and Chromium, Google Chrome or Microsoft Edge)
-can be the screen too; see [Another Linux computer](#another-linux-computer) below.
+Another Linux computer with a desktop (systemd, and Chromium, Google Chrome or Microsoft Edge),
+a Windows computer or a Mac can be the screen too; see their sections below.
 
 ## Install
 
@@ -164,7 +164,24 @@ With options, save the file first and run it:
 [-DryRun] [-AgentWheel FILE]`. `-Uninstall` takes it off again, asking before it deletes the
 pairing; uv stays.
 
-macOS comes in Sunroom 0.14.0.
+## A Mac
+
+On a Mac with Google Chrome (or Chromium, or Microsoft Edge) in Applications, sign in as the
+person the screen runs for, and in Terminal run:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash
+```
+
+It needs no administrator. It installs uv and Sunroom Screen (the same release and checks as
+above) for this user, and a LaunchAgent, `~/Library/LaunchAgents/app.sunroom.kiosk.plist`, which
+starts it at sign-in and again if it fails, then offers to start it now. Sunroom Screen sets the
+browser's policy in its own preferences (`defaults`, this user only), keeps the display awake
+while the household's times say on (`caffeinate`) and lets it sleep at night (`pmset
+displaysleepnow`); the page dims itself in the evening. The first Restart or Shut Down asks once
+whether Sunroom Screen may control System Events. **Quit Sunroom Screen** in This Screen closes
+it until the next sign-in. Its log: `~/Library/Logs/sunroom-kiosk.log`. `--url`, `--dry-run` and
+`--agent-wheel` work as on Linux; `bash ~/.local/share/sunroom-kiosk/uninstall.sh` takes it off.
 
 ## Sleep and dimming
 

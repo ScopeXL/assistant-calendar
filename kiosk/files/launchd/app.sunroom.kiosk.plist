@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Sunroom Screen on a Mac (docs/KIOSK.md), written by kiosk/install.sh @VERSION@ to
+     ~/Library/LaunchAgents. It starts at sign-in, and again 3 s after it fails; This Screen's
+     Quit (a clean exit) leaves it off until the next sign-in. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>app.sunroom.kiosk</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>@HOME@/.local/bin/sunroom-kiosk</string>
+		<string>run</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<false/>
+	</dict>
+	<key>ThrottleInterval</key>
+	<integer>3</integer>
+	<key>ProcessType</key>
+	<string>Interactive</string>
+	<key>StandardOutPath</key>
+	<string>@HOME@/Library/Logs/sunroom-kiosk.log</string>
+	<key>StandardErrorPath</key>
+	<string>@HOME@/Library/Logs/sunroom-kiosk.log</string>
+</dict>
+</plist>

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Sunroom installer: Sunroom and its kitchen screen on a Raspberry Pi (Raspberry Pi OS 64-bit,
-# Bookworm or Trixie), or the kitchen screen alone on another Linux computer. See docs/PLAN.md
-# §13 and docs/KIOSK.md. (macOS comes in 0.14.0; Windows has its own, install.ps1.)
+# Bookworm or Trixie), or the kitchen screen alone on another Linux computer or a Mac. See
+# docs/PLAN.md §13 and docs/KIOSK.md. (Windows has its own, install.ps1.)
 #
 # On a Pi, three ways to use it:
 #   a. Sunroom and the kitchen screen, both on this Pi          (no option)
 #   b. only the kitchen screen; Sunroom runs on another computer --display-only [--url URL]
 #   c. only Sunroom, no screen (Raspberry Pi OS Lite)            --server-only
-# Another Linux computer is always b. Without --url, the screen finds its Sunroom itself.
+# Another Linux computer or a Mac is always b. Without --url, the screen finds its Sunroom itself.
 #
 #   curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash
 #   bash kiosk/install.sh --display-only --url https://calendar.example.com
@@ -54,6 +54,9 @@ BIN_DIR="$HOME/.local/bin"
 UNIT_DIR="$HOME/.config/systemd/user"
 LABWC_DIR="$HOME/.config/labwc"
 XDG_AUTOSTART_FILE="$HOME/.config/autostart/sunroom-kiosk.desktop"
+# A Mac starts Sunroom Screen from a LaunchAgent (the label is the updater's too).
+LAUNCH_AGENT_LABEL="app.sunroom.kiosk"
+LAUNCH_AGENT="$HOME/Library/LaunchAgents/$LAUNCH_AGENT_LABEL.plist"
 SERVER_DIR="/opt/sunroom"
 # NetworkManager merges conf.d files in byte order and the last one wins, hence "zz-".
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
@@ -112,6 +115,7 @@ STEP="getting started"
 SUDO_KEEPALIVE_PID=""
 TEE_PID=""
 
+LAUNCHED=0             # a Mac: Sunroom Screen was running and started again on this version
 TEMPLATE_TZ=""         # the compose file's TZ
 TEMPLATE_ADVERTISED="" # the address phones open, printed on QR codes
 
@@ -234,7 +238,7 @@ ask_yes_no() {
 usage() {
 	cat <<EOF
 Sunroom installer $KIOSK_VERSION for Raspberry Pi OS (64-bit, Bookworm or Trixie), and for the
-kitchen screen alone on another Linux computer
+kitchen screen alone on another Linux computer or a Mac
 
 Usage: bash install.sh [options]
 
@@ -572,6 +576,7 @@ render() {
 		-e "s|@PORT@|$PORT|g" \
 		-e "s|@TZ@|${TEMPLATE_TZ:-Etc/UTC}|g" \
 		-e "s|@ADVERTISED@|${TEMPLATE_ADVERTISED:-}|g" \
+		-e "s|@HOME@|$HOME|g" \
 		"$1"
 }
 
@@ -656,7 +661,10 @@ save_state() {
 detect_platform() {
 	MACHINE="this computer"
 	case $(uname -s) in
-	Darwin) PLATFORM="macos" ;;
+	Darwin)
+		PLATFORM="macos"
+		MACHINE="this Mac"
+		;;
 	Linux)
 		if grep -qi 'raspberry pi' /proc/device-tree/model 2>/dev/null && command -v raspi-config >/dev/null 2>&1; then
 			PLATFORM="pi"
@@ -727,8 +735,8 @@ check_remote_server() {
 	if [[ $code == 200 ]]; then
 		note "Sunroom answered at $URL."
 	else
-		warn "Sunroom didn't answer at $URL just now. The kitchen screen keeps trying after the restart;" \
-			"if it stays on the desktop picture, check that this address opens on a phone."
+		warn "Sunroom didn't answer at $URL just now. The kitchen screen keeps trying when it starts;" \
+			"if it says it can't reach Sunroom, check that this address opens on a phone."
 	fi
 }
 
@@ -956,7 +964,8 @@ has_kiosk_files() {
 		files/systemd/sunroom-kiosk.service files/labwc/autostart-block files/xdg/sunroom-kiosk.desktop \
 		files/udev/90-sunroom-kiosk-backlight.rules files/modules-load/sunroom-kiosk-i2c.conf \
 		files/NetworkManager/zz-sunroom-kiosk-wifi.conf files/sunroom/docker-compose.yml \
-		files/sunroom/env files/sudoers/sunroom-kiosk files/sunroom-kiosk-root; do
+		files/sunroom/env files/sudoers/sunroom-kiosk files/sunroom-kiosk-root \
+		files/launchd/app.sunroom.kiosk.plist; do
 		[[ -f $dir/$file ]] || return 1
 	done
 }
@@ -980,7 +989,8 @@ download_kiosk_files() {
 			"  bash kiosk/install.sh${args}"
 	fi
 	mkdir -p "$TMP_DIR/src"
-	if ! tar -xzf "$tarball" -C "$TMP_DIR/src" --strip-components=1 --wildcards '*/kiosk/*' 2>/dev/null; then
+	# All of it: a Mac's tar has no --wildcards, and the repository is small.
+	if ! tar -xzf "$tarball" -C "$TMP_DIR/src" --strip-components=1 2>/dev/null; then
 		die "The download from GitHub has no kitchen-screen files in it, or it was damaged." \
 			"Run the installer again."
 	fi
@@ -2039,6 +2049,73 @@ offer_start() {
 	fi
 }
 
+# ---------------------------------------------------------------------------- a Mac
+
+# Google Chrome, Chromium or Microsoft Edge in Applications: where Sunroom Screen looks for them
+# (browser.py).
+mac_browser() {
+	local app
+	for app in "Google Chrome" "Chromium" "Microsoft Edge"; do
+		if [[ -d "/Applications/$app.app" ]]; then
+			printf '%s' "$app"
+			return 0
+		fi
+	done
+	return 1
+}
+
+check_macos() {
+	local browser
+	browser=$(mac_browser) || die "Sunroom Screen needs Google Chrome, Chromium or Microsoft Edge in Applications, and none is there." \
+		"Install Google Chrome first (from google.com/chrome), then run this again."
+	note "macOS $(sw_vers -productVersion 2>/dev/null || true) ($(uname -m)); the browser: $browser."
+	SESSION=""
+}
+
+launch_agent_loaded() {
+	launchctl print "gui/$(id -u)/$LAUNCH_AGENT_LABEL" >/dev/null 2>&1
+}
+
+# The LaunchAgent starts Sunroom Screen at sign-in, and again if it fails (not after Quit). One
+# that was running is started again at once, on this version.
+install_launch_agent() {
+	local plist="$TMP_DIR/launch-agent.plist" was_loaded=0
+	render "$SRC_DIR/files/launchd/$LAUNCH_AGENT_LABEL.plist" >"$plist"
+	plutil -lint "$plist" >/dev/null || die "Sunroom Screen's LaunchAgent didn't check out (plutil); nothing was changed."
+	mkdir -p "$(dirname "$LAUNCH_AGENT")" "$HOME/Library/Logs"
+	if launch_agent_loaded; then
+		was_loaded=1
+		launchctl bootout "gui/$(id -u)/$LAUNCH_AGENT_LABEL" >/dev/null 2>&1 || true
+	fi
+	install -m 0644 "$plist" "$LAUNCH_AGENT"
+	note "Sunroom Screen now starts when you sign in ($(tidy "$LAUNCH_AGENT"))."
+	if ((was_loaded)); then
+		launchctl bootstrap "gui/$(id -u)" "$LAUNCH_AGENT" ||
+			die "Sunroom Screen didn't start again. Its log: ~/Library/Logs/sunroom-kiosk.log"
+		LAUNCHED=1
+	fi
+}
+
+# Start the kitchen screen now when this Mac's desktop is signed in; else at the next sign-in.
+offer_start_mac() {
+	say ""
+	if ((LAUNCHED)); then
+		say "Sunroom Screen started again, on this version."
+		return 0
+	fi
+	if ! launchctl print "gui/$(id -u)" >/dev/null 2>&1; then
+		say "The kitchen screen starts the next time you sign in to this Mac."
+		return 0
+	fi
+	if ask_yes_no "Start the kitchen screen now? It fills the whole screen." n n; then
+		launchctl bootstrap "gui/$(id -u)" "$LAUNCH_AGENT" ||
+			die "Sunroom Screen didn't start. Its log: ~/Library/Logs/sunroom-kiosk.log"
+		say "Starting it. To close it: Settings → This Screen → Quit Sunroom Screen, on the screen."
+	else
+		say "OK. It starts the next time you sign in."
+	fi
+}
+
 # ---------------------------------------------------------------------------- --dry-run
 
 # What a real run would do here, from what it can see without changing anything: no sudo, no
@@ -2047,11 +2124,7 @@ dry_run() {
 	say "Sunroom installer $KIOSK_VERSION: a dry run. Nothing on this computer changes."
 	say ""
 	case $PLATFORM in
-	pi | linux) dry_run_linux ;;
-	macos)
-		say "This computer: macOS $(sw_vers -productVersion 2>/dev/null || true)."
-		say "Sunroom Screen for a Mac comes in Sunroom 0.14.0, so a real run stops here."
-		;;
+	pi | linux | macos) dry_run_screen ;;
 	windows)
 		say "This computer: Windows. A real run stops here: Windows has its own installer, in PowerShell:"
 		say "  $WINDOWS_COMMAND"
@@ -2060,13 +2133,15 @@ dry_run() {
 	esac
 }
 
-# The plan on a Pi or another Linux computer, step by step as main runs them.
-dry_run_linux() {
+# The plan on a Pi, another Linux computer or a Mac, step by step as main runs them.
+dry_run_screen() {
 	local name model browser shows wheel="from GitHub, checked against its release's SHA256SUMS"
 	name=$(os_name)
 	if [[ $PLATFORM == pi ]]; then
 		model=$({ tr -d '\0' </proc/device-tree/model; } 2>/dev/null || true)
 		say "This computer: ${model:-a Raspberry Pi}, ${name:-an unknown system}."
+	elif [[ $PLATFORM == macos ]]; then
+		say "This computer: macOS $(sw_vers -productVersion 2>/dev/null || true) ($(uname -m))."
 	else
 		say "This computer: ${name:-Linux} ($(uname -m))."
 	fi
@@ -2080,6 +2155,13 @@ dry_run_linux() {
 		else
 			say "  - install what it needs with apt, only what's missing (curl, jq, qrencode, python3,"
 			say "    Chromium and the desktop's screen tools)"
+		fi
+	elif [[ $PLATFORM == macos ]]; then
+		if browser=$(mac_browser); then
+			say "  - check for the internet, and use $browser"
+		else
+			say "  - stop: it needs Google Chrome, Chromium or Microsoft Edge in Applications"
+			return 0
 		fi
 	elif browser=$(linux_browser); then
 		say "  - check for the internet, and use $browser"
@@ -2129,6 +2211,11 @@ dry_run_linux() {
 		else
 			say "  - offer to restart"
 		fi
+	elif [[ $PLATFORM == macos ]]; then
+		say "  - start Sunroom Screen when you sign in (a LaunchAgent,"
+		say "    $(tidy "$LAUNCH_AGENT"))"
+		say "  - offer to start the kitchen screen now"
+		say "Nothing else is installed, nothing needs an administrator, and no other settings change."
 	else
 		say "  - start Sunroom Screen when you sign in ($(tidy "$XDG_AUTOSTART_FILE"),"
 		say "    sunroom-kiosk.service)"
@@ -2205,6 +2292,30 @@ install_on_pi() {
 	offer_reboot
 }
 
+# A Mac: Sunroom Screen alone, started at sign-in by a LaunchAgent. No administrator, no other
+# settings; Sunroom Screen writes the browser's policy itself (defaults, as this user).
+install_on_macos() {
+	begin_run
+	step "Checking this Mac" "checking this Mac"
+	check_macos
+	check_internet
+	if [[ -n $URL ]]; then
+		check_remote_server
+	fi
+	get_kiosk_files
+
+	step "Setting up the kitchen screen" "setting up the kitchen screen"
+	install_helper_copies
+	install_agent
+	write_kiosk_config
+	install_launch_agent
+	save_state
+
+	step "All done" "finishing"
+	summary
+	offer_start_mac
+}
+
 # Another Linux computer: Sunroom Screen alone, started at sign-in. No packages, no system
 # settings; root only for the browser's policy.
 install_on_linux() {
@@ -2248,10 +2359,7 @@ main() {
 	case $PLATFORM in
 	pi) install_on_pi ;;
 	linux) install_on_linux ;;
-	macos)
-		die "Sunroom Screen for a Mac comes in Sunroom 0.14.0." \
-			"Until then, put the kitchen screen on a Raspberry Pi or a Linux computer (docs/KIOSK.md)."
-		;;
+	macos) install_on_macos ;;
 	windows)
 		die "This installer is for a Raspberry Pi and Linux. Windows has its own; in PowerShell, run:" \
 			"  $WINDOWS_COMMAND"

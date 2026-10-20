@@ -288,9 +288,13 @@ class Agent:
     def _screen_settings(self) -> screen.Settings:
         return screen.Settings(
             url=self.config.url or screen.DEFAULT_URL,
-            session="x11" if self.config.session == "x11" else "wayland",
+            session="macos"
+            if self.platform.name == "macos"
+            else "x11"
+            if self.config.session == "x11"
+            else "wayland",
             output=self.config.output,
-            helper=self.config.screen_helper and self.platform.name in ("pi", "linux"),
+            helper=self.config.screen_helper and self.platform.name in ("pi", "linux", "macos"),
             brightness=self.config.brightness,
             ddc_bus=self.config.ddc_bus,
             backlight=self.config.backlight,

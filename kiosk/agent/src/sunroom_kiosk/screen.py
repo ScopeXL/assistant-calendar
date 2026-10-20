@@ -9,7 +9,10 @@ what changed:
   <SUNROOM_OUTPUT> --off`` / ``--on``; X11 ``xset dpms force off`` / ``on``, then ``xset dpms 0
   0 0`` so X never blanks the screen by itself (never ``xset -dpms``: that would switch a
   sleeping screen on). A panel with a backlight (Touch Display) switches only that off
-  (``bl_power``), which keeps the panel and its touch running behind the black page.
+  (``bl_power``), which keeps the panel and its touch running behind the black page. On a Mac
+  (docs/M7.md T15): on is ``caffeinate -u`` (a moment of activity wakes the display) and a
+  ``caffeinate -dis -w <the agent>`` held while it should stay on, which lets go by itself when
+  the agent ends; off lets go and runs ``pmset displaysleepnow``.
 * brightness, when the helper sets it (SUNROOM_BRIGHTNESS auto, ddc or sysfs): ``ddcutil --bus
   <SUNROOM_DDC_BUS> setvcp 10 <n>`` on monitors with DDC/CI, or the backlight's ``brightness``
   scaled to its ``max_brightness``. Otherwise the page darkens itself (``?dimmer=page``).
@@ -87,7 +90,7 @@ class NoAnswerError(Exception):
 @dataclass(frozen=True)
 class Settings:
     url: str = DEFAULT_URL
-    session: str = "wayland"  # or "x11"
+    session: str = "wayland"  # or "x11", or "macos"
     output: str = ""  # the screen's connector (HDMI-A-1, DSI-1), for wlr-randr
     helper: bool = True  # SUNROOM_SCREEN_HELPER
     brightness: str = "auto"  # auto, ddc, sysfs or none
@@ -109,7 +112,9 @@ def settings_from(values: dict[str, str]) -> Settings:
 
     return Settings(
         url=(values.get("SUNROOM_URL") or DEFAULT_URL).rstrip("/"),
-        session="x11" if values.get("SUNROOM_SESSION") == "x11" else "wayland",
+        session=values.get("SUNROOM_SESSION", "")
+        if values.get("SUNROOM_SESSION") in ("x11", "macos")
+        else "wayland",
         output=pick("SUNROOM_OUTPUT", r"[A-Za-z0-9-]+", ""),
         helper=values.get("SUNROOM_SCREEN_HELPER", "yes") != "no",
         brightness=pick("SUNROOM_BRIGHTNESS", r"auto|ddc|sysfs|none", "auto"),
@@ -252,6 +257,37 @@ def run_command(argv: list[str]) -> tuple[int, str]:
     return done.returncode, "\n".join(printed)
 
 
+class Awake:
+    """macOS: holds the display awake (``caffeinate -dis``) until let go, and never longer than
+    this process lives (``-w``: caffeinate ends when the agent does)."""
+
+    def __init__(self) -> None:
+        self.process: subprocess.Popen[bytes] | None = None
+
+    def hold(self) -> bool:
+        if self.process is not None and self.process.poll() is None:
+            return True
+        try:
+            self.process = subprocess.Popen(  # noqa: S603 - a fixed command
+                ["caffeinate", "-dis", "-w", str(os.getpid())],  # noqa: S607 - the system's own
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError:
+            return False
+        return True
+
+    def release(self) -> None:
+        if self.process is not None and self.process.poll() is None:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+        self.process = None
+
+
 class Helper:
     """Polls the state and keeps the panel matching it. ``screen`` and ``level`` are what was
     last applied successfully, so a failed command is tried again with the next answer."""
@@ -265,8 +301,10 @@ class Helper:
         root: Path = Path("/"),
         sleep: Callable[[float], None] = time.sleep,
         say: Callable[[str], None] = _say,
+        awake: Awake | None = None,
     ) -> None:
         self.settings = settings
+        self.awake = awake or Awake()
         self.fetch = fetch
         self.run = run
         self.sleep = sleep
@@ -366,6 +404,12 @@ class Helper:
         return self.dpms("on") or lit
 
     def dpms(self, word: str) -> bool:
+        if self.settings.session == "macos":
+            if word == "off":
+                self.awake.release()
+                return self.command(["pmset", "displaysleepnow"])
+            woke = self.command(["caffeinate", "-u", "-t", "1"])
+            return self.awake.hold() and woke
         if self.settings.session == "x11":
             commands = [["xset", "dpms", "force", word]]
             if word == "on":  # and with every DPMS timeout off, X never blanks it by itself
