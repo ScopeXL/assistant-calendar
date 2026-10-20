@@ -10,6 +10,9 @@ else; it checks everything it's given (docs/KIOSK.md, docs/M7.md T7):
   apt-upgrade         the system's own updates: unattended-upgrade when it's installed (Sunroom
                       OS), else apt-get's upgrade
   update-sunroom      /opt/sunroom/update.sh, the all-in-one Pi's own Sunroom
+  run-sunroom         Sunroom OS: start the Sunroom the image set up in /opt/sunroom (docker
+                      compose pull, printing its progress for the percent, then up -d), and
+                      announce it on the network (avahi)
 
 The system's Python, standard library only; root-owned in /usr/local/sbin.
 """
@@ -39,6 +42,11 @@ ALLOWED_KEYS = {
     "LocalNetworkAccessRestrictionsEnabled",
 }
 UPDATE_SH = "/opt/sunroom/update.sh"
+SERVER_DIR = "/opt/sunroom"
+COMPOSE_FILE = SERVER_DIR + "/docker-compose.yml"
+# The image renders kiosk/files/avahi/sunroom.service here; it's announced only once Sunroom runs.
+AVAHI_FILE = "/usr/local/share/sunroom-kiosk/sunroom.service"
+AVAHI_SERVICE = "/etc/avahi/services/sunroom.service"
 MOST_BYTES = 64 * 1024
 
 
@@ -93,6 +101,22 @@ def update_sunroom():
     return subprocess.call([UPDATE_SH])
 
 
+def run_sunroom():
+    if not os.path.isfile(COMPOSE_FILE):
+        return refuse("Sunroom isn't set up to run on this screen.")
+    compose = [
+        "docker", "compose", "--project-directory", SERVER_DIR, "-f", COMPOSE_FILE,
+        "--progress", "plain",
+    ]
+    sys.stdout.flush()
+    if subprocess.call(compose + ["pull"]) != 0 or subprocess.call(compose + ["up", "-d"]) != 0:
+        return 1
+    if os.path.isfile(AVAHI_FILE) and os.path.isdir(os.path.dirname(AVAHI_SERVICE)):
+        shutil.copyfile(AVAHI_FILE, AVAHI_SERVICE)
+        os.chmod(AVAHI_SERVICE, 0o644)
+    return 0
+
+
 def main(argv):
     if os.geteuid() != 0:
         return refuse("Run me with sudo.")
@@ -102,7 +126,11 @@ def main(argv):
         return apt_upgrade()
     if argv == ["update-sunroom"]:
         return update_sunroom()
-    return refuse("Usage: sunroom-kiosk-root write-policy PATH | apt-upgrade | update-sunroom")
+    if argv == ["run-sunroom"]:
+        return run_sunroom()
+    return refuse(
+        "Usage: sunroom-kiosk-root write-policy PATH | apt-upgrade | update-sunroom | run-sunroom"
+    )
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 from collections.abc import Callable, Mapping
@@ -22,7 +23,16 @@ from pathlib import Path
 from typing import Any
 
 from sunroom_kiosk import logs, policy
-from sunroom_kiosk.platform.base import PlatformError, Runner, run_command, user_id
+from sunroom_kiosk.platform.base import (
+    PlatformError,
+    Progress,
+    Runner,
+    Streamer,
+    UnsupportedError,
+    run_command,
+    stream_command,
+    user_id,
+)
 from sunroom_kiosk.platform.linux import LinuxPlatform
 from sunroom_kiosk.schemas import ScreenCapability, ScreenPlatform
 
@@ -32,6 +42,26 @@ ROOT_HELPER = "/usr/local/sbin/sunroom-kiosk-root"
 SUNROOM_OS_MARK = "etc/sunroom-os"
 LABWC_RULE = Path.home() / ".local" / "share" / "sunroom-kiosk" / "labwc-rule.py"
 X11_TURNS = {0: "normal", 90: "left", 180: "inverted", 270: "right"}
+LOCAL_SUNROOM = "http://localhost:8080"  # the image's /opt/sunroom/docker-compose.yml
+PULL_LIMIT_S = 1800.0  # a slow line: half an hour for the first download
+LAYER = re.compile(r"^\s*(?:#\d+\s+)?([0-9a-f]{12})\s+(.+?)\s*$")
+
+
+class PullProgress:
+    """Docker's plain progress for ``compose pull``, as a percent: the image's layers that have
+    finished (pulled, or already here) out of those it has named so far, 5 to 90."""
+
+    def __init__(self) -> None:
+        self.layers: dict[str, bool] = {}
+
+    def read(self, line: str) -> int | None:
+        found = LAYER.match(line)
+        if found is None:
+            return None
+        layer, what = found.groups()
+        finished = what.startswith(("Pull complete", "Already exists"))
+        self.layers[layer] = self.layers.get(layer, False) or finished
+        return 5 + (85 * sum(self.layers.values())) // len(self.layers)
 
 
 def is_pi(root: Path = Path("/")) -> bool:
@@ -52,10 +82,12 @@ class PiPlatform(LinuxPlatform):
         which: Callable[[str], str | None] = shutil.which,
         labwc_rule: Path = LABWC_RULE,
         version: str = "dev",
+        stream: Streamer = stream_command,
     ) -> None:
         super().__init__(runner, root, environ=environ, which=which)
         self.labwc_rule = labwc_rule
         self.version = version
+        self.stream = stream
 
     # ------------------------------------------------------------------ what it is
 
@@ -184,3 +216,29 @@ class PiPlatform(LinuxPlatform):
     async def update_sunroom(self) -> bool:
         """An all-in-one Pi's own Sunroom, through /opt/sunroom/update.sh."""
         return await self._as_root("update-sunroom", limit=900.0)
+
+    async def run_sunroom(self, progress: Progress) -> str:
+        """Sunroom OS: start the Sunroom the image set up (``/opt/sunroom``), through the root
+        helper, docker's download as a percent; the agent then waits for it to answer."""
+        if not self.can_run_sunroom() or not self._root_helper():
+            raise UnsupportedError("Running Sunroom here")
+        pulled = PullProgress()
+        said = -1
+
+        async def line(text: str) -> None:
+            nonlocal said
+            percent = pulled.read(text)
+            if percent is not None and percent != said:
+                said = percent
+                await progress(percent, "Downloading Sunroom…")
+
+        await progress(2, "Downloading Sunroom…")
+        code = await self.stream(
+            ["sudo", "-n", ROOT_HELPER, "run-sunroom"], line, limit=PULL_LIMIT_S
+        )
+        if code != 0:
+            log.info("Starting Sunroom here didn't work (exit status %d).", code)
+            raise PlatformError(
+                "Sunroom didn't start. Check this screen's internet connection, then try again."
+            )
+        return LOCAL_SUNROOM

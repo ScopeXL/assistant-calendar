@@ -72,6 +72,47 @@ async def run_command(
     return CommandResult(process.returncode or 0, "\n".join(printed))
 
 
+type LineSink = Callable[[str], Awaitable[None]]
+
+
+class Streamer(Protocol):
+    async def __call__(
+        self, argv: Sequence[str], line: LineSink, *, limit: float = COMMAND_TIMEOUT_S
+    ) -> int: ...
+
+
+async def stream_command(
+    argv: Sequence[str], line: LineSink, *, limit: float = COMMAND_TIMEOUT_S
+) -> int:
+    """Run a command and hand each line it prints (stdout and stderr together) to ``line`` as it
+    comes; its exit status (127: not installed, 124: too slow)."""
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *argv,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+    except FileNotFoundError:
+        return 127
+    except OSError:
+        return 126
+
+    async def read() -> None:
+        if process.stdout is not None:
+            while raw := await process.stdout.readline():
+                await line(raw.decode(errors="replace").rstrip())
+        await process.wait()
+
+    try:
+        await asyncio.wait_for(read(), limit)
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        return 124
+    return process.returncode or 0
+
+
 class PlatformError(Exception):
     """A device action that didn't work. The message is for the family: plain words, no codes."""
 

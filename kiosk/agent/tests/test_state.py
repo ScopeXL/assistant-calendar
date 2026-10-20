@@ -140,3 +140,59 @@ async def test_reachability_is_published_when_it_changes(
     sunrooms.healthy.clear()
     await agent.health_tick()
     assert not agent.reachable and kinds == ["state", "state"]
+
+
+LOCAL = "http://localhost:8080"
+
+
+async def test_run_it_here_waits_for_the_new_sunroom_then_shows_it(
+    make_agent: Callable[..., Agent],
+    sunrooms: FakeSunrooms,
+    config_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(agent_module, "RUN_SUNROOM_PAUSE_S", 0)
+    sunrooms.new[LOCAL] = {**sunrooms.new[SUNROOM], "setup_complete": False}
+    sunrooms.healthy = set()  # its database is still being made
+    agent = make_agent()
+    said: list[tuple[str, object]] = []
+    agent.hub.publish = lambda kind, data: said.append((kind, data))  # type: ignore[method-assign]
+    asked = 0
+    answers = agent.healthy
+
+    async def healthy(url: str) -> bool:
+        nonlocal asked
+        asked += 1
+        if asked == 3:
+            sunrooms.healthy.add(LOCAL)
+        return await answers(url)
+
+    agent.healthy = healthy  # type: ignore[method-assign]
+    await agent.run_sunroom()
+    saved = settings_file.load(config_path)
+    assert (saved.url, saved.found) == (LOCAL, "local")
+    steps = [data for kind, data in said if kind == "run.progress"]
+    assert steps[-2:] == [
+        {"percent": 92, "step": "Starting Sunroom…"},
+        {"percent": 100, "step": "Sunroom is running."},
+    ]
+
+
+async def test_run_it_here_says_so_when_sunroom_never_answers(
+    make_agent: Callable[..., Agent],
+    sunrooms: FakeSunrooms,
+    config_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(agent_module, "RUN_SUNROOM_PAUSE_S", 0)
+    monkeypatch.setattr(agent_module, "RUN_SUNROOM_TRIES", 3)
+    sunrooms.healthy = set()
+    agent = make_agent()
+    said: list[tuple[str, object]] = []
+    agent.hub.publish = lambda kind, data: said.append((kind, data))  # type: ignore[method-assign]
+    await agent.run_sunroom()
+    assert (
+        "toast",
+        {"message": "Sunroom didn't start. Restart this screen, then try again."},
+    ) in said
+    assert settings_file.load(config_path).url is None

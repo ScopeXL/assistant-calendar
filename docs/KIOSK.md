@@ -248,6 +248,15 @@ Screen off: sleep time.
 Screen on: tapped awake for 2 minutes.
 ```
 
+## Run It on This Screen (Sunroom OS)
+
+A screen flashed with Sunroom OS can be the Sunroom too, like an all-in-one Pi: on **Where Is
+Your Sunroom?**, **Run It on This Screen** → **Run Sunroom Here**. It downloads Sunroom
+("Downloading Sunroom… 40%"; the first time takes a few minutes), starts it, waits for it to
+answer, tells other screens on the network where it is, and opens Sunroom's own setup, whose QR
+code a phone scans to finish. The card shows only on Sunroom OS, and only while the screen has
+no Sunroom yet. Updates afterwards: This Screen's **Update Sunroom Too**, as on an all-in-one Pi.
+
 ## Letting screens find a Sunroom on a NAS or server
 
 A Sunroom screen that isn't told an address looks for Sunroom on its network: it asks every

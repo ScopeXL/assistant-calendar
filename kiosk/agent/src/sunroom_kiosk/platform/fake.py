@@ -154,8 +154,7 @@ class FakePlatform(Platform):
         steps = (
             (10, "Downloading Sunroom…"),
             (60, "Downloading Sunroom…"),
-            (90, "Starting Sunroom…"),
-            (100, "Sunroom is running."),
+            (90, "Downloading Sunroom…"),
         )
         for percent, step in steps:
             await progress(percent, step)

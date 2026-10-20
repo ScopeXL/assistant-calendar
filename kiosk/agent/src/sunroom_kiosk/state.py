@@ -52,6 +52,8 @@ WATCH_EVERY_S = 30.0
 NO_SUNROOM_FOR_S = 120.0
 ABOUT_EVERY_S = 600.0
 ACTION_DELAY_S = 1.5  # a restart waits this long, so its toast shows first
+RUN_SUNROOM_TRIES = 150  # a new Sunroom answering, 2 s apart: five minutes
+RUN_SUNROOM_PAUSE_S = 2.0
 
 
 def _rotation(degrees: int) -> ScreenRotation:
@@ -428,7 +430,19 @@ class Agent:
             url = await self.platform.run_sunroom(progress)
         except PlatformError as error:
             self.toast(str(error))
+            await progress(100, "Stopped")
             return
+        # Its first start migrates an empty database: up to five minutes, as the installer waits.
+        await progress(92, "Starting Sunroom…")
+        for _ in range(RUN_SUNROOM_TRIES):
+            if await self.healthy(url):
+                break
+            await asyncio.sleep(RUN_SUNROOM_PAUSE_S)
+        else:
+            self.toast("Sunroom didn't start. Restart this screen, then try again.")
+            await progress(100, "Stopped")
+            return
+        await progress(100, "Sunroom is running.")
         found = Found(url=url, id=None, name=None, version=None, setup_complete=False)
         try:
             found = await self.discovery.check(url)

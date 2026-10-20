@@ -139,3 +139,32 @@ def test_the_policy_command_prints_the_policy_for_an_address(
     assert json.loads(capsys.readouterr().out)["LocalNetworkAccessAllowedForUrls"] == [URL]
     assert cli.main(["policy"]) == 0
     assert "LocalNetworkAccessAllowedForUrls" not in json.loads(capsys.readouterr().out)
+
+
+def test_the_root_helper_runs_the_images_sunroom_and_announces_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    compose = tmp_path / "opt" / "sunroom" / "docker-compose.yml"
+    announcement = tmp_path / "share" / "sunroom.service"
+    services = tmp_path / "avahi" / "services"
+    monkeypatch.setattr(root_helper, "COMPOSE_FILE", str(compose))
+    monkeypatch.setattr(root_helper, "AVAHI_FILE", str(announcement))
+    monkeypatch.setattr(root_helper, "AVAHI_SERVICE", str(services / "sunroom.service"))
+    ran: list[list[str]] = []
+
+    def call(argv: list[str]) -> int:
+        ran.append(argv)
+        return 0
+
+    monkeypatch.setattr(root_helper.subprocess, "call", call)
+    assert root_helper.run_sunroom() == 2  # nothing set up: nothing runs
+    assert ran == []
+    compose.parent.mkdir(parents=True)
+    compose.write_text("name: sunroom\n")
+    announcement.parent.mkdir(parents=True)
+    announcement.write_text("<service-group/>\n")
+    services.mkdir(parents=True)
+    assert root_helper.run_sunroom() == 0
+    assert [argv[-1] for argv in ran] == ["pull", "-d"]
+    assert ran[0][:2] == ["docker", "compose"] and "plain" in ran[0]
+    assert (services / "sunroom.service").read_text() == "<service-group/>\n"
