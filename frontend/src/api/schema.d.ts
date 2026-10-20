@@ -1581,6 +1581,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/discover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Discover */
+        get: operations["discover_api_discover_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/display/state": {
         parameters: {
             query?: never;
@@ -3256,6 +3273,25 @@ export interface components {
             storage: components["schemas"]["StorageInfo"];
             /** Timezone */
             timezone: string;
+            /** Version */
+            version: string;
+        };
+        /** DiscoverOut */
+        DiscoverOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string | null;
+            /** Setup Complete */
+            setup_complete: boolean;
+            /**
+             * Sunroom
+             * @default true
+             * @constant
+             */
+            sunroom: true;
+            /** Url */
+            url: string | null;
             /** Version */
             version: string;
         };
@@ -8738,6 +8774,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discover_api_discover_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoverOut"];
                 };
             };
         };

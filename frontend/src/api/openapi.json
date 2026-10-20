@@ -2186,6 +2186,59 @@
         "title": "DiagnosticsOut",
         "type": "object"
       },
+      "DiscoverOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "setup_complete": {
+            "title": "Setup Complete",
+            "type": "boolean"
+          },
+          "sunroom": {
+            "const": true,
+            "default": true,
+            "title": "Sunroom",
+            "type": "boolean"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "setup_complete",
+          "name",
+          "url"
+        ],
+        "title": "DiscoverOut",
+        "type": "object"
+      },
       "DisplayStateOut": {
         "properties": {
           "awake_until": {
@@ -14094,6 +14147,27 @@
         "summary": "Restore Countdown",
         "tags": [
           "countdowns"
+        ]
+      }
+    },
+    "/api/discover": {
+      "get": {
+        "operationId": "discover_api_discover_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoverOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Discover",
+        "tags": [
+          "meta"
         ]
       }
     },

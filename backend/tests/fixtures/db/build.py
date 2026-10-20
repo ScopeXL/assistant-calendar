@@ -400,6 +400,15 @@ def _v0_12_0() -> list[Statement]:
 
 
 # Synthetic rows to insert, per released revision (the tables that exist at that revision).
+def _v0_13_0() -> list[Statement]:
+    """0.13.0 (M7 batch 1): 0.12.0's rows, with a fixed instance id (the migration makes a
+    random one, and a fixture must come out the same every time it's built)."""
+    return [
+        *_v0_12_0(),
+        "UPDATE app_meta SET instance_id = '00000000-0000-7000-8000-0000000000e1'",
+    ]
+
+
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
     "202610081454": _v0_2_0,
@@ -413,6 +422,7 @@ SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610141930": _v0_10_0,
     "202610151730": _v0_11_0,
     "202610161644": _v0_12_0,
+    "202610201813": _v0_13_0,
 }
 
 

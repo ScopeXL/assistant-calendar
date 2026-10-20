@@ -16,6 +16,7 @@ import os
 import shutil
 import sqlite3
 import sys
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
@@ -165,10 +166,12 @@ def _credential_tables(conn: sqlite3.Connection) -> list[tuple[str, bool]]:
 
 
 def reconcile_app_meta(settings: Settings, secret: str) -> None:
-    """Notice a changed secret key or APP_PASSWORD since the last boot (PLAN §8.2, §12.7).
+    """Notice a changed secret key or APP_PASSWORD since the last boot (PLAN §8.2, §12.7), and
+    make sure this Sunroom has its instance id (ADR 0035).
 
-    Either signs every device out. A new secret key also wipes every stored credential (they were
-    encrypted under the old one and can't be read) and marks their owners needs_reconnect."""
+    Either change signs every device out. A new secret key also wipes every stored credential
+    (they were encrypted under the old one and can't be read) and marks their owners
+    needs_reconnect."""
     env_password = settings.app_password.get_secret_value() if settings.app_password else None
     fingerprint = password_fingerprint(secret, env_password) if env_password else None
     check = key_check(secret)
@@ -191,6 +194,10 @@ def reconcile_app_meta(settings: Settings, secret: str) -> None:
             "UPDATE app_meta SET password_fp = ?, secret_key_check = ?, last_boot_version = ?, "
             "auth_epoch = auth_epoch + ?",
             (fingerprint, check, build_info().version, bump),
+        )
+        # The migration gives the row its id (ADR 0035); a row that somehow lacks one gets it here.
+        conn.execute(
+            "UPDATE app_meta SET instance_id = ? WHERE instance_id IS NULL", (str(uuid.uuid7()),)
         )
         if key_changed:
             for table, has_status in _credential_tables(conn):

@@ -56,6 +56,10 @@ probe() {
     | grep -qi 'strict-transport-security' || fail "a proxy's https from home wasn't believed"
   [ "$(curl -so /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' \
       -d '{}' "$base/api/auth/login")" = 403 ] || fail "a change without X-Sunroom wasn't refused"
+  # What a Sunroom screen finds on the network (ADR 0035): the same id every time.
+  [ "$(curl -fsS "$base/api/discover" | jq -r .sunroom)" = true ] || fail "/api/discover didn't answer"
+  [ "$(curl -fsS "$base/api/discover" | jq -r .id)" = "$(curl -fsS "$base/api/discover" | jq -r .id)" ] \
+    || fail "/api/discover's id changed between two asks"
 }
 
 # set_up PORT JAR: finish setup through the API as a phone would, keeping the cookie in JAR,
@@ -73,6 +77,11 @@ set_up() {
   [ "$status" = 201 ] || fail "setup through the API answered $status"
   [ "$(curl -fsS "$base/api/setup/status" | jq -r .setup_complete)" = true ] \
     || fail "setup didn't stick"
+  # The household's name goes to a local address only (ADR 0035).
+  [ "$(curl -fsS "$base/api/discover" | jq -r .name)" = "Smoke Test Home" ] \
+    || fail "/api/discover didn't name the household to a local address"
+  [ "$(curl -fsS -H 'Host: evil.example' "$base/api/discover" | jq -r .name)" = null ] \
+    || fail "/api/discover named the household to a public name"
   [ "$(curl -fsS -b "$jar" "$base/api/plugins" | jq -r '[.[] | "\(.id):\(.status)"] | join(",")')" \
     = "calendar_sync:running,lists:running,chores:running,meals:running,countdowns:running,screensaver:running,weather:running" ] \
     || fail "the plugins that ship aren't on and running"

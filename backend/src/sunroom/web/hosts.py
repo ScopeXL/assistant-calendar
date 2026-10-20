@@ -29,6 +29,8 @@ from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 LAN_SUFFIXES = (".local", ".lan", ".home", ".home.arpa", ".internal", ".ts.net", ".localhost")
+# Asked by machines, not people: they never go into About's "Recently reached at".
+UNNOTED = frozenset({"/api/health", "/api/discover"})
 
 
 def host_name(host_header: str) -> str:
@@ -49,6 +51,27 @@ def is_ip_literal(name: str) -> bool:
     return True
 
 
+def own_hostname() -> str:
+    """This machine's (the container's) own name, as a Host header would carry it."""
+    return socket.gethostname().lower().rstrip(".")
+
+
+def is_local_name(name: str, own: str) -> bool:
+    """A name only the home network uses: ``localhost``, an IP literal, this machine's own name
+    ``own``, a single-label name, or one with a LAN suffix. A page on the internet can't send
+    one as its Host, even rebound to a home address, which is why the lock trusts these and why
+    ``GET /api/discover`` names the household only to them (ADR 0035)."""
+    if not name:
+        return False
+    return (
+        name == "localhost"
+        or is_ip_literal(name)
+        or name == own
+        or "." not in name
+        or name.endswith(LAN_SUFFIXES)
+    )
+
+
 class HostRule:
     def __init__(
         self,
@@ -58,7 +81,7 @@ class HostRule:
     ) -> None:
         self.exact = {name for name in allowed if not name.startswith("*.")}
         self.suffixes = tuple(name[1:] for name in allowed if name.startswith("*."))
-        own = container_hostname if container_hostname is not None else socket.gethostname()
+        own = container_hostname if container_hostname is not None else own_hostname()
         self.own = own.lower().rstrip(".")
         # Only with APP_ALLOWED_HOSTS set: otherwise any name is answered (ADR 0034).
         self.strict = bool(allowed)
@@ -68,11 +91,7 @@ class HostRule:
             return True
         if not name:
             return False
-        if name == "localhost" or is_ip_literal(name) or name == self.own:
-            return True
-        if "." not in name:
-            return True
-        if name.endswith(LAN_SUFFIXES):
+        if is_local_name(name, self.own):
             return True
         return name in self.exact or name.endswith(self.suffixes)
 
@@ -98,7 +117,7 @@ class HostGuard:
         header = Headers(scope=scope).get("host", "")
         name = host_name(header)
         if self.rule.allows(name):
-            if self.note is not None and header.strip() and scope.get("path") != "/api/health":
+            if self.note is not None and header.strip() and scope.get("path") not in UNNOTED:
                 self.note(header.strip().lower())
             await self.app(scope, receive, send)
             return

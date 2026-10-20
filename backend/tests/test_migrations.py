@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import sqlite3
+import uuid
 from pathlib import Path
 
 import pytest
@@ -301,6 +302,28 @@ def test_a_household_from_0_11_0_keeps_its_nightly_backups(tmp_path: Path) -> No
         ).fetchall() == [(1, 14, 8)]
     finally:
         conn.close()
+
+
+def test_a_sunroom_from_0_12_0_gets_its_own_id(tmp_path: Path) -> None:
+    """0.13.0 (ADR 0035): GET /api/discover hands screens an id that lasts, made once by the
+    migration for the one app_meta row; everything else in the row stays."""
+    db = tmp_path / "sunroom.db"
+    conn = sqlite3.connect(db)
+    conn.executescript((FIXTURE_DBS / "202610161644.sql").read_text())
+    before = conn.execute(
+        "SELECT auth_epoch, password_hash, last_boot_version FROM app_meta"
+    ).fetchall()
+    conn.close()
+    assert migrate.upgrade(db) == migrate.head_revision()
+    conn = sqlite3.connect(db)
+    try:
+        rows = conn.execute(
+            "SELECT auth_epoch, password_hash, last_boot_version, instance_id FROM app_meta"
+        ).fetchall()
+    finally:
+        conn.close()
+    assert [row[:3] for row in rows] == before
+    assert len(rows) == 1 and uuid.UUID(rows[0][3]).version == 7
 
 
 def test_accounts_named_icloud_become_apple(tmp_path: Path) -> None:

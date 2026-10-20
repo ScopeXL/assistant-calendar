@@ -42,6 +42,7 @@ from sunroom.household import service as household_service
 from sunroom.household.models import AppMeta, NetworkAllowEntry
 from sunroom.household.router import router as household_router
 from sunroom.meta import updates as meta_updates
+from sunroom.meta.discover import router as discover_router
 from sunroom.meta.restore import router as restore_router
 from sunroom.meta.router import router as meta_router
 from sunroom.meta.setup import router as setup_router
@@ -299,6 +300,7 @@ def create_app(
     )
     install_error_handlers(app)
     app.include_router(meta_router)
+    app.include_router(discover_router)
     app.include_router(meta_updates.router)
     app.include_router(restore_router)
     app.include_router(setup_router)

@@ -6,6 +6,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Screens on the home network can find Sunroom by themselves.
+
 ### Changed
 
 - The kitchen screen's keyboard shows letters only; 123 switches to numbers and symbols.

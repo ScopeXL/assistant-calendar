@@ -63,8 +63,9 @@ And by default Sunroom answers to any name, so `http://<server>:8080` works the 
   to the address …". **When it's worth it:** when Sunroom is on the internet under a public name
   (Caddy, Cloudflare). The lock stops DNS rebinding: a web page that points its own name at your
   home address, so the browser treats it as the same site. Without the lock such a page could read
-  Sunroom's public pages (its version, whether it's set up) and leave a name in About's "Recently
-  reached at"; it can't sign in or change anything. To turn it on without a public name, list
+  Sunroom's public pages (its version, whether it's set up, and the id `/api/discover` gives the
+  screens that look for it; never the household's name, which that route tells only a local
+  address) and leave a name in About's "Recently reached at"; it can't sign in or change anything. To turn it on without a public name, list
   the name you use, for example `sunroom.local`.
 
 Where to put it:

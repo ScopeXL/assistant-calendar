@@ -169,6 +169,10 @@ class AppMeta(Base):
     password_fp: Mapped[str | None] = mapped_column(String(64), default=None)
     secret_key_check: Mapped[str | None] = mapped_column(String(64), default=None)
     last_boot_version: Mapped[str | None] = mapped_column(String(32), default=None)
+    # This Sunroom's own id (UUIDv7), made once by the migration or at boot. It travels with
+    # backups and restores, so a screen finds the same Sunroom again at a new address
+    # (GET /api/discover, ADR 0035).
+    instance_id: Mapped[str | None] = mapped_column(String(36), default=None)
 
 
 class Member(Base):
