@@ -276,6 +276,7 @@ async def test_saving_a_sunroom_writes_the_policy_and_opens_it(
         "name": "The Sample Family",
         "found": "discovered",
         "reachable": True,
+        "version": "0.13.0",
     }
     assert body["open_url"] == f"{SUNROOM}/display?dimmer=page&screen={PORT}"
     kept = settings_file.load(config_path)
@@ -412,5 +413,5 @@ async def test_the_schema_has_every_route(app: FastAPI) -> None:
     from sunroom_kiosk.app import router
 
     paths = get_openapi(title="t", version="0", routes=router.routes)["paths"]
-    assert len(paths) == 17
+    assert len(paths) == 18
     assert not any("_test" in path for path in paths)

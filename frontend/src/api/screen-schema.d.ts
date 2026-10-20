@@ -267,6 +267,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/screen/update-sunroom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update Sunroom
+         * @description An all-in-one Pi: the Sunroom on this screen too (it runs /opt/sunroom/update.sh).
+         */
+        post: operations["update_sunroom_api_screen_update_sunroom_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/screen/wifi": {
         parameters: {
             query?: never;
@@ -345,7 +365,7 @@ export interface components {
         /** @enum {string} */
         ScreenBrightness: "ddc" | "sysfs" | "none";
         /** @enum {string} */
-        ScreenCapability: "restart" | "shutdown" | "update" | "wifi" | "rotate" | "brightness" | "quit" | "run_sunroom" | "open_network_settings";
+        ScreenCapability: "restart" | "shutdown" | "update" | "wifi" | "rotate" | "brightness" | "quit" | "run_sunroom" | "open_network_settings" | "update_sunroom";
         /** ScreenCheckIn */
         ScreenCheckIn: {
             /** Url */
@@ -481,6 +501,8 @@ export interface components {
             reachable: boolean;
             /** Url */
             url: string;
+            /** Version */
+            version?: string | null;
         };
         /** @enum {string} */
         ScreenUpdateCheck: "nightly" | "off";
@@ -496,6 +518,11 @@ export interface components {
             /** Message */
             message: string | null;
             state: components["schemas"]["ScreenUpdateState"];
+            /**
+             * Sunroom Outdated
+             * @default false
+             */
+            sunroom_outdated: boolean;
         };
         /** ScreenUpdatePolicyIn */
         ScreenUpdatePolicyIn: {
@@ -1333,6 +1360,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScreenUpdateOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenErrorOut"];
+                };
+            };
+        };
+    };
+    update_sunroom_api_screen_update_sunroom_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenAcceptedOut"];
                 };
             };
             /** @description Forbidden */

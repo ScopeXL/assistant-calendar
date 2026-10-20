@@ -83,6 +83,11 @@ def _parser() -> argparse.ArgumentParser:
 
     status = commands.add_parser("status", help="what the running agent says about this screen")
     status.add_argument("--port", type=int, default=DEFAULT_PORT)
+
+    update = commands.add_parser("update", help="ask GitHub for a newer version (or apply one)")
+    update.add_argument("--apply", type=Path, default=None, help=argparse.SUPPRESS)
+    update.add_argument("--previous", type=Path, default=None, help=argparse.SUPPRESS)
+    update.add_argument("--port", type=int, default=DEFAULT_PORT)
     return parser
 
 
@@ -95,7 +100,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     from sunroom_kiosk.events import EventHub
     from sunroom_kiosk.platform import detect
     from sunroom_kiosk.state import Agent, BrowserLike
-    from sunroom_kiosk.updater import FakeUpdater, NoUpdates, UpdaterLike
+    from sunroom_kiosk.updater import FakeUpdater, NoUpdates, Updater, UpdaterLike
 
     logs.setup(getattr(logging, cast(str, args.log_level).upper()))
     log = logs.get("cli")
@@ -109,7 +114,9 @@ def cmd_run(args: argparse.Namespace) -> int:
         if fake
         else Discovery(hub.publish)
     )
-    updater: UpdaterLike = FakeUpdater() if fake else NoUpdates()
+    updater: UpdaterLike = (
+        FakeUpdater() if fake else Updater(port=port) if installed_as_tool() else NoUpdates()
+    )
     found = None if fake else find_browser()
     holder: dict[str, Agent] = {}
     browser: BrowserLike
@@ -196,6 +203,29 @@ def cmd_screen(args: argparse.Namespace) -> int:
     return 0
 
 
+def installed_as_tool() -> bool:
+    """Installed by uv as a tool (the installer's way): it can update itself. Run from a checkout
+    (``uv run``), it can't."""
+    prefix = Path(sys.prefix)
+    return prefix.name == "sunroom-kiosk" and prefix.parent.name == "tools"
+
+
+def cmd_update(args: argparse.Namespace) -> int:
+    from sunroom_kiosk import updater
+
+    wheel = cast(Path | None, args.apply)
+    if wheel is not None:
+        return updater.apply(wheel, cast(Path | None, args.previous), cast(int, args.port))
+    status = asyncio.run(updater.Updater().check_now())
+    if status.state == "available":
+        print(f"Sunroom Screen {status.latest} is ready (this is {status.installed}).")
+    elif status.message:
+        print(status.message)
+    else:
+        print(f"Sunroom Screen {status.installed} is up to date.")
+    return 0
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     url = f"http://127.0.0.1:{cast(int, args.port)}/api/screen"
     request = urllib.request.Request(url, headers={"Host": f"127.0.0.1:{args.port}"})
@@ -215,5 +245,6 @@ def main(argv: list[str] | None = None) -> int:
         "openapi": cmd_openapi,
         "screen": cmd_screen,
         "status": cmd_status,
+        "update": cmd_update,
     }
     return handlers[cast(str, args.command)](args)

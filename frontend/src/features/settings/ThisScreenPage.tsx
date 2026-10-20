@@ -99,7 +99,7 @@ export function ThisScreenPage({ onForgot }: { onForgot?: () => void } = {}) {
     await queryClient.invalidateQueries({ queryKey: qk.screen.state() });
   };
   const act = useMutation({
-    mutationFn: async (action: "restart" | "shutdown" | "quit" | "update") => {
+    mutationFn: async (action: "restart" | "shutdown" | "quit" | "update" | "update-sunroom") => {
       answer(await agent().POST(`/api/screen/${action}`));
       return action;
     },
@@ -110,6 +110,7 @@ export function ThisScreenPage({ onForgot }: { onForgot?: () => void } = {}) {
         shutdown: "Shutting down…",
         quit: "Quitting Sunroom Screen…",
         update: "Updating… this takes a few minutes",
+        "update-sunroom": "Updating Sunroom… this takes a few minutes",
       } as const;
       showToast(said[action]);
     },
@@ -227,6 +228,17 @@ export function ThisScreenPage({ onForgot }: { onForgot?: () => void } = {}) {
               }}
             >
               Update Now
+            </Button>
+          ) : null}
+          {can("update_sunroom") && update.sunroom_outdated ? (
+            <Button
+              variant="secondary"
+              pending={act.isPending && act.variables === "update-sunroom"}
+              onClick={() => {
+                act.mutate("update-sunroom");
+              }}
+            >
+              Update Sunroom Too
             </Button>
           ) : null}
         </Row>

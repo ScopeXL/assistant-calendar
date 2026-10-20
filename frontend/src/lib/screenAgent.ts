@@ -125,7 +125,8 @@ export async function fetchScreenState(): Promise<ScreenState> {
 }
 
 /** The agent's state, polled every 30 s (and kept current by `useScreenAgentEvents`); `null`
- * when this page has no agent or it doesn't answer. */
+ * when this page has no agent or it has never answered. Once it has, its last answer stays
+ * through a moment without one (the agent restarts itself to finish an update). */
 export function useScreenAgent(): ScreenState | null {
   const present = screenAgentPresent();
   const { data, isError } = useQuery({
@@ -135,7 +136,7 @@ export function useScreenAgent(): ScreenState | null {
     refetchInterval: POLL_MS,
     retry: 1,
   });
-  if (!present || isError) return null;
+  if (!present || (isError && data === undefined)) return null;
   return data ?? null;
 }
 

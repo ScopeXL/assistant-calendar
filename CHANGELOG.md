@@ -12,6 +12,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - On a kitchen screen set up with Sunroom's screen software, Settings → This Screen restarts or
   shuts the screen down, updates it, changes its Wi-Fi, turns it, or points it at a different
   Sunroom.
+- Such a screen can keep its own software up to date overnight (Settings → This Screen → Updates;
+  on by default on Sunroom OS), and goes back to the version before if a new one doesn't start.
 - Such a screen sets itself up in Sunroom's own look: it joins Wi-Fi, finds the Sunroom on the
   home network or checks an address typed on its keyboard, and when it can't reach Sunroom it
   says so, keeps trying, and goes back by itself.

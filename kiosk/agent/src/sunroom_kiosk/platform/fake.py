@@ -78,7 +78,16 @@ class FakePlatform(Platform):
 
     def capabilities(self) -> list[ScreenCapability]:
         if self.kind == "pi":
-            return ["restart", "shutdown", "update", "wifi", "rotate", "brightness", "run_sunroom"]
+            return [
+                "restart",
+                "shutdown",
+                "update",
+                "wifi",
+                "rotate",
+                "brightness",
+                "run_sunroom",
+                "update_sunroom",
+            ]
         return ["restart", "shutdown", "update", "quit", "open_network_settings"]
 
     async def restart(self) -> None:
@@ -130,6 +139,10 @@ class FakePlatform(Platform):
 
     async def write_policy(self, path: Path, document: dict[str, Any]) -> bool:
         self.policies[str(path)] = document
+        return True
+
+    async def update_sunroom(self) -> bool:
+        self.calls.append("update_sunroom")
         return True
 
     async def run_sunroom(self, progress: Progress) -> str:

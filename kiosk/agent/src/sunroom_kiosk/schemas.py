@@ -23,6 +23,7 @@ type ScreenCapability = Literal[
     "quit",
     "run_sunroom",
     "open_network_settings",
+    "update_sunroom",
 ]
 type ScreenFoundHow = Literal["discovered", "typed", "local"]
 type ScreenUpdateCheck = Literal["nightly", "off"]
@@ -53,6 +54,7 @@ class ScreenSunroomOut(BaseModel):
     name: str | None  # the household's name, when the server tells a local address
     found: ScreenFoundHow
     reachable: bool  # its /api/health answered the last time the agent asked
+    version: str | None = None  # what the Sunroom said it runs, when it said
 
 
 class ScreenNetworkOut(BaseModel):
@@ -69,6 +71,9 @@ class ScreenUpdateOut(BaseModel):
     latest: str | None
     checked_at: str | None  # ISO time of the last check
     message: str | None  # a failure, in plain words
+    # An all-in-one Pi: the Sunroom running on this screen is older than the newest release, and
+    # this screen can update it (Update Sunroom Too).
+    sunroom_outdated: bool = False
 
 
 class ScreenDisplayOut(BaseModel):

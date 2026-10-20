@@ -230,6 +230,14 @@ async def install_update(agent: AgentDep) -> ScreenAcceptedOut:
     return ScreenAcceptedOut()
 
 
+@router.post("/update-sunroom", status_code=202)
+async def update_sunroom(agent: AgentDep) -> ScreenAcceptedOut:
+    """An all-in-one Pi: the Sunroom on this screen too (it runs /opt/sunroom/update.sh)."""
+    need(agent, "update_sunroom", "Updating Sunroom from here")
+    agent.spawn(agent.update_sunroom())
+    return ScreenAcceptedOut()
+
+
 @router.put("/update-policy")
 async def update_policy(body: ScreenUpdatePolicyIn, agent: AgentDep) -> ScreenUpdateOut:
     agent.set_update_check(body.check)

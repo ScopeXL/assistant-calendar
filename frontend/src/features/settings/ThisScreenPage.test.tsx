@@ -38,6 +38,7 @@ function piState(overrides: Partial<ScreenState> = {}): ScreenState {
       latest: "0.13.0",
       checked_at: null,
       message: null,
+      sunroom_outdated: false,
     },
     display: { rotation: 0, brightness_method: "ddc" },
     open_url: "http://192.168.1.20:8080/display?dimmer=screen&screen=7800",
@@ -234,6 +235,7 @@ describe("Settings → This Screen (ADR 0035)", () => {
           latest: "0.14.0",
           checked_at: null,
           message: null,
+          sunroom_outdated: false,
         },
       }),
     );
@@ -243,6 +245,30 @@ describe("Settings → This Screen (ADR 0035)", () => {
       expect(said()).toEqual(["Updating… this takes a few minutes"]);
     });
     expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual(["POST /api/screen/update"]);
+  });
+
+  it("updates the Sunroom on this screen too, when it runs here and is behind", async () => {
+    draw(
+      piState({
+        capabilities: ["restart", "shutdown", "update", "update_sunroom"],
+        update: {
+          check: "nightly",
+          state: "up_to_date",
+          installed: "0.14.0",
+          latest: "0.14.0",
+          checked_at: null,
+          message: null,
+          sunroom_outdated: true,
+        },
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Update Sunroom Too" }));
+    await waitFor(() => {
+      expect(said()).toEqual(["Updating Sunroom… this takes a few minutes"]);
+    });
+    expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+      "POST /api/screen/update-sunroom",
+    ]);
   });
 
   it("turns the picture, and keeps the update setting", async () => {

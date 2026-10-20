@@ -40,7 +40,7 @@ from sunroom_kiosk.schemas import (
     ScreenSunroomOut,
     ScreenUpdateOut,
 )
-from sunroom_kiosk.updater import UpdaterLike
+from sunroom_kiosk.updater import UpdaterLike, newer
 from sunroom_kiosk.version import version
 
 log = logs.get("agent")
@@ -164,8 +164,9 @@ class Agent:
                 name=self.known.name,
                 found=self.config.found or "typed",
                 reachable=self.reachable,
+                version=self.known.version,
             )
-        status = self.updater.status(self.update_check())
+        status = {**self.updater.status(self.update_check()), "sunroom_outdated": self._outdated()}
         return ScreenStateOut(
             version=version(),
             platform=self.platform.name,
@@ -191,8 +192,25 @@ class Agent:
             case _:
                 return "none"
 
+    def sunroom_here(self) -> bool:
+        """Whether the Sunroom this screen shows runs on this machine (an all-in-one Pi)."""
+        url = self.config.url or ""
+        host = url.split("://", 1)[-1].split("/", 1)[0].rsplit(":", 1)[0].strip("[]")
+        return host in ("localhost", "127.0.0.1", "::1")
+
+    def _outdated(self) -> bool:
+        latest = self.updater.status(self.update_check()).get("latest")
+        return (
+            "update_sunroom" in self.capabilities()
+            and isinstance(latest, str)
+            and self.known.version is not None
+            and newer(latest, self.known.version)
+        )
+
     def capabilities(self) -> list[ScreenCapability]:
         have = list(self.platform.capabilities())
+        if "update_sunroom" in have and not self.sunroom_here():
+            have.remove("update_sunroom")
         if "brightness" in have and self._method() == "none" and not self.fake:
             have.remove("brightness")
         if "run_sunroom" in have and self.config.url is not None:
@@ -473,6 +491,16 @@ class Agent:
                 self.toast(str(error))
 
         self.spawn(go())
+
+    async def update_sunroom(self) -> None:
+        """An all-in-one Pi's Sunroom, through update.sh (minutes: it pulls the new image)."""
+        log.info("Updating the Sunroom on this screen.")
+        if await self.platform.update_sunroom():
+            await self.ask_sunroom()
+            self.toast("Sunroom is up to date.")
+        else:
+            self.toast("Sunroom didn't update. Try again in a while.")
+        self.publish_state()
 
     async def rotate(self, rotation: int) -> None:
         await self.platform.rotate(rotation, self.config.output)

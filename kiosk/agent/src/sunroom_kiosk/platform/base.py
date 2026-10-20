@@ -212,6 +212,10 @@ class Platform:
         """Install the system's own security updates (Sunroom OS). False when it isn't ours."""
         return False
 
+    async def update_sunroom(self) -> bool:
+        """Update the Sunroom that runs on this machine (an all-in-one Pi)."""
+        return False
+
     async def run_sunroom(self, progress: Progress) -> str:
         """Start Sunroom on this machine (Sunroom OS, batch 2); returns its address."""
         raise UnsupportedError("Running Sunroom here")

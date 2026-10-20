@@ -94,6 +94,8 @@ class PiPlatform(LinuxPlatform):
         have.append("brightness")  # the agent drops it when the helper found no way to dim
         if self.can_run_sunroom():
             have.append("run_sunroom")
+        if self._root_helper() and (self.root / "opt/sunroom/update.sh").exists():
+            have.append("update_sunroom")  # the agent keeps it only while it shows that Sunroom
         return have
 
     # ------------------------------------------------------------------ the screen
