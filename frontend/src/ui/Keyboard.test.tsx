@@ -70,7 +70,7 @@ describe("the on-screen keyboard (UX §1)", () => {
     expect((input as HTMLInputElement).value).toBe("Mi");
   });
 
-  it("has a row of numbers above the letters, and no second one on the number pad", () => {
+  it("shows letters only, with the numbers on 123, and the number pad unchanged", () => {
     render(
       <>
         <Field />
@@ -81,18 +81,20 @@ describe("the on-screen keyboard (UX §1)", () => {
     act(() => {
       input.focus();
     });
-    // The digits are a row of their own, above q: they type as they are, shift or not.
+    // The first row is the letters' own (ADR 0035): no row of numbers above q any more.
     const keys = screen.getByRole("group", { name: "On-screen keyboard" });
     const labels = [...keys.querySelectorAll("button")].map((key) =>
       key.getAttribute("aria-label"),
     );
-    expect(labels.slice(0, 11)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Q"]);
-    press("2");
-    press("b");
-    expect(input.value).toBe("2b");
-    // The symbols page keeps its own top row of numbers: only one row of them either way.
+    expect(labels.slice(0, 10)).toEqual(["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"]);
+    expect(screen.queryByRole("button", { name: "1" })).toBeNull();
+    // 123 is the way to the numbers: one row of them, typed as they are.
     press("Numbers and symbols");
     expect(screen.getAllByRole("button", { name: "1" })).toHaveLength(1);
+    press("2");
+    press("Letters");
+    press("b");
+    expect(input.value).toBe("2b");
     // The number pad has its digits, and no row above them.
     act(() => {
       keyboard.set({ ...keyboard.get(), layout: "numeric" });

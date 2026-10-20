@@ -15,14 +15,12 @@ import { useStore } from "../lib/store";
 
 /**
  * The wall display's own keyboard (UX §1, ADR 0022): the Pi's touchscreen has no physical one,
- * and the system's keyboard covers half the screen. Letters with a row of numbers above them,
- * numbers and symbols, and a number pad; shift is automatic for a first letter; holding a vowel
- * offers its accents. Keys are 80 × 64 in landscape and 88 × 72 in portrait. It's a dock across
+ * and the system's keyboard covers half the screen. Letters, numbers and symbols (on 123), and a
+ * number pad; shift is automatic for a first letter; holding a vowel offers its accents. Keys are 80 × 64 in landscape and 88 × 72 in portrait. It's a dock across
  * the bottom of the screen, from the rail to the screen's edge, with the keys centred in it
  * (ADR 0032: it was a 960 px box under the side panel), the whole width in portrait and before
  * pairing, and it never takes focus from the field.
  */
-const DIGITS = "1234567890";
 const LETTERS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 const SYMBOLS = ["1234567890", '-/:;()$&@"', ".,?!'#%*+="];
 const NUMBERS = ["123", "456", "789"];
@@ -296,8 +294,9 @@ function Keys({ target, layout }: { target: HTMLInputElement; layout: KeyboardLa
     );
   }
 
-  // The letters have the numbers above them, as a tablet's do (ADR 0032); 123 keeps its symbols.
-  const rows = page === "letters" ? [DIGITS, ...LETTERS] : SYMBOLS;
+  // Letters only: 123 is the way to the numbers and symbols (ADR 0035; ADR 0032's row of numbers
+  // above the letters cost a row of board on every field, and the family reached for 123 anyway).
+  const rows = page === "letters" ? LETTERS : SYMBOLS;
   return (
     <div className="flex flex-col gap-2">
       {/* The accents of a held key. No row at all until then (ADR 0030): it used to hold 56 px

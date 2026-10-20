@@ -859,7 +859,7 @@ test.describe("the wall screen", () => {
     expect(toast && before && toast.y + toast.height <= before.y + before.height).toBe(true);
   });
 
-  test("docks its keyboard across the bottom, the keys centred, numbers above the letters", async ({
+  test("docks its keyboard across the bottom, the keys centred, letters only", async ({
     page,
     request,
   }) => {
@@ -896,14 +896,14 @@ test.describe("the wall screen", () => {
     expect(Math.round(dock.x)).toBe(portrait ? 0 : Math.round(rail.x + rail.width));
     expect(Math.round(dock.x + dock.width)).toBe(size.width);
 
-    // A row of numbers above the letters, the keys at their size and 8 px apart.
-    const one = await keyboard.getByRole("button", { name: "1", exact: true }).boundingBox();
-    const two = await keyboard.getByRole("button", { name: "2", exact: true }).boundingBox();
+    // Letters only (ADR 0035): 123 reaches the numbers. The keys at their size and 8 px apart.
+    await expect(keyboard.getByRole("button", { name: "1", exact: true })).toHaveCount(0);
+    await expect(keyboard.getByRole("button", { name: "Numbers and symbols" })).toBeVisible();
     const q = await keyboard.getByRole("button", { name: /^q$/i }).boundingBox();
-    if (!one || !two || !q) throw new Error("no keys");
-    expect(one.y + one.height).toBeLessThan(q.y);
-    expect([Math.round(one.width), Math.round(one.height)]).toEqual(portrait ? [88, 72] : [80, 64]);
-    expect(Math.round(two.x - (one.x + one.width))).toBe(8);
+    const w = await keyboard.getByRole("button", { name: /^w$/i }).boundingBox();
+    if (!q || !w) throw new Error("no keys");
+    expect([Math.round(q.width), Math.round(q.height)]).toEqual(portrait ? [88, 72] : [80, 64]);
+    expect(Math.round(w.x - (q.x + q.width))).toBe(8);
     await keyboard.getByRole("button", { name: "Done" }).click();
     await expect(keyboard).toHaveCount(0);
     await page.getByRole("dialog", { name: "Add" }).getByRole("button", { name: "Close" }).click();

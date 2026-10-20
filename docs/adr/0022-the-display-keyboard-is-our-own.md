@@ -8,7 +8,8 @@
 - The Pi's touchscreen has no physical keyboard, and the system's own (squeekboard) covers half
   the screen, so UX §1 specifies an in-app keyboard: it slides up only for a focused field, docks
   960 px wide under the side panel in landscape (changed by ADR 0032: a dock from the rail to
-  the screen's edge with the keys centred, and a row of numbers above the letters) and spans the
+  the screen's edge with the keys centred, and a row of numbers above the letters, which ADR 0035
+  took away again) and spans the
   screen in portrait, never covers
   the field, has letters, symbols, a numeric pad for PINs, times and codes, long-press accents,
   an automatic capital for a title's first letter, and keys of 80 × 64 px (88 × 72 in portrait).

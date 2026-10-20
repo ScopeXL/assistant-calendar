@@ -6,6 +6,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The kitchen screen's keyboard shows letters only; 123 switches to numbers and symbols.
+
 ## [0.12.0] - 2026-10-16
 
 ### Added
