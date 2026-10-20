@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { api } from "../../api/client";
 import { qk } from "../../api/keys";
+import { useScreenAgent } from "../../lib/screenAgent";
 import { fetchSession } from "../../lib/session";
 import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
@@ -20,6 +21,7 @@ import { FeaturesPage } from "./FeaturesPage";
 import { HouseholdPage } from "./HouseholdPage";
 import { RecentlyRemoved } from "./RecentlyRemoved";
 import { SupportPage } from "./SupportPage";
+import { ThisScreenPage } from "./ThisScreenPage";
 import { usePluginModulesState } from "../usePluginModules";
 import { SETTINGS_PAGES, type SettingsPageKey } from "./pages";
 import { useProblems } from "../problems/data";
@@ -29,6 +31,7 @@ const PAGES: Record<SettingsPageKey, () => ReactNode> = {
   features: () => <FeaturesPage />,
   calendars: () => <CalendarsPage />,
   display: () => <DisplayPage />,
+  "this-screen": () => <ThisScreenPage />,
   household: () => <HouseholdPage />,
   devices: () => <DevicesPage />,
   removed: () => <RecentlyRemoved />,
@@ -43,10 +46,14 @@ interface Page {
   render: () => ReactNode;
 }
 
-/** Core's pages, with the enabled plugins' own (Chores) after Calendars & accounts. */
+/** Core's pages, with the enabled plugins' own (Chores) after Calendars & accounts. This Screen
+ * only where the wall's own Sunroom Screen answers (ADR 0035): never on a phone. */
 function usePages(): { pages: Page[]; ready: boolean } {
   const { modules, ready } = usePluginModulesState();
-  const core: Page[] = SETTINGS_PAGES.map((page) => ({ ...page, render: PAGES[page.key] }));
+  const screenAgent = useScreenAgent();
+  const core: Page[] = SETTINGS_PAGES.filter(
+    (page) => page.key !== "this-screen" || screenAgent !== null,
+  ).map((page) => ({ ...page, render: PAGES[page.key] }));
   const plugins: Page[] = modules.flatMap((module) =>
     (module.settingsPages ?? []).map(({ key, title, Page }) => ({
       key,

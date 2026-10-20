@@ -9,6 +9,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
 ### Added
 
 - Screens on the home network can find Sunroom by themselves.
+- On a kitchen screen set up with Sunroom's screen software, Settings → This Screen restarts or
+  shuts the screen down, updates it, changes its Wi-Fi, turns it, or points it at a different
+  Sunroom.
 - Behind the scenes: the kitchen screen's software becomes one program, Sunroom Screen, with
   tests that run on Linux, macOS and Windows.
 

@@ -5,6 +5,8 @@ export const SETTINGS_PAGES = [
   { key: "features", title: "Features" },
   { key: "calendars", title: "Calendars & Accounts" },
   { key: "display", title: "Display" },
+  // Only on a wall run by Sunroom Screen (ADR 0035): SettingsScreens drops it elsewhere.
+  { key: "this-screen", title: "This Screen" },
   { key: "household", title: "Household" },
   { key: "devices", title: "Devices" },
   { key: "removed", title: "Recently Removed" },
