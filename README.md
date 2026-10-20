@@ -70,11 +70,12 @@ name with `APP_ALLOWED_HOSTS`.
 Then set up the Pi with the same installer, as the screen only:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only --url http://<server>:8080
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only
 ```
 
-Use the address you open on a phone (an `https://` name works too), then pair the screen
-(step 4 above).
+After the restart the screen looks for Sunroom on your network: tap **Use This Sunroom**, or type
+the address you open on a phone (an `https://` name works too). Then pair the screen (step 4
+above).
 
 ### c. Any computer, no Pi
 
@@ -85,6 +86,16 @@ docker run -d --name sunroom --restart unless-stopped -p 8080:8080 -v sunroom_da
 Open `http://<computer>:8080` on a phone. Any browser shows the wall screen at `/display`; an old
 tablet works as one (Android: Fully Kiosk Browser; iPad: Safari with Guided Access; see
 [docs/HARDWARE.md](docs/HARDWARE.md#an-old-tablet-instead)).
+
+### The installer, in short
+
+| On | Command |
+|---|---|
+| A Pi: Sunroom and the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh \| bash` |
+| A Pi or a Linux computer: only the screen | the same, then `\| bash -s -- --display-only` (add `--url <address>` to skip the search) |
+| A Pi: only Sunroom, no screen | the same with `--server-only` |
+
+`--dry-run` says what it would do first. [docs/KIOSK.md](docs/KIOSK.md) has every option.
 
 ## Lost the household password?
 

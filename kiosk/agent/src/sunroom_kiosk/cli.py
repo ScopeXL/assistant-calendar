@@ -1,7 +1,9 @@
 """``sunroom-kiosk``: Sunroom Screen's one command (docs/KIOSK.md).
 
-    sunroom-kiosk run [--port 7800] [--fake pi|desktop] [--fake-sunroom URL] [--dev]
+    sunroom-kiosk [run] [--port 7800] [--fake pi|desktop] [--fake-sunroom URL] [--dev]
                                   the agent: the API on 127.0.0.1, the browser, the screen's sleep
+                                  (``run`` is the default: the units of a Pi set up before 0.13.0
+                                  start the old launcher's path with no arguments)
     sunroom-kiosk openapi [--out FILE]
                                   the API's schema (``just api-types`` makes screen-schema.d.ts)
     sunroom-kiosk screen --method | --ddc-bus NAME
@@ -9,6 +11,10 @@
                                   of the screen on connector NAME from ``ddcutil detect --brief``
                                   on stdin (the installer's two questions, as sunroom-screen's)
     sunroom-kiosk status          what the running agent says about this screen
+    sunroom-kiosk update          whether a newer Sunroom Screen is out
+    sunroom-kiosk policy [--url URL]
+                                  the browser's managed policy for a screen showing URL, as JSON
+                                  (the installer writes it on a computer with no root helper)
     sunroom-kiosk --version
 
 The service runs ``sunroom-kiosk run``; on a Pi that's the user unit sunroom-kiosk.service.
@@ -42,7 +48,7 @@ def _parser() -> argparse.ArgumentParser:
         prog="sunroom-kiosk", description="Sunroom Screen: runs a Sunroom wall screen."
     )
     parser.add_argument("--version", action="version", version=f"sunroom-kiosk {version()}")
-    commands = parser.add_subparsers(dest="command", required=True)
+    commands = parser.add_subparsers(dest="command")
 
     run = commands.add_parser("run", help="run the agent (the service does this)")
     run.add_argument("--port", type=int, default=DEFAULT_PORT)
@@ -83,6 +89,9 @@ def _parser() -> argparse.ArgumentParser:
 
     status = commands.add_parser("status", help="what the running agent says about this screen")
     status.add_argument("--port", type=int, default=DEFAULT_PORT)
+
+    policy = commands.add_parser("policy", help="the browser's policy for a Sunroom, as JSON")
+    policy.add_argument("--url", default=None)
 
     update = commands.add_parser("update", help="ask GitHub for a newer version (or apply one)")
     update.add_argument("--apply", type=Path, default=None, help=argparse.SUPPRESS)
@@ -238,13 +247,27 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_policy(args: argparse.Namespace) -> int:
+    from sunroom_kiosk import policy
+    from sunroom_kiosk.discovery import origin_of
+
+    url = cast(str | None, args.url)
+    sys.stdout.write(policy.linux_json(policy.document(origin_of(url) if url else None)))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
+    given = sys.argv[1:] if argv is None else argv
+    # No command, or only run's options: run (the old launcher's units start it bare).
+    if not given or (given[0].startswith("-") and given[0] not in ("-h", "--help", "--version")):
+        given = ["run", *given]
+    args = _parser().parse_args(given)
     handlers = {
         "run": cmd_run,
         "openapi": cmd_openapi,
         "screen": cmd_screen,
         "status": cmd_status,
         "update": cmd_update,
+        "policy": cmd_policy,
     }
     return handlers[cast(str, args.command)](args)

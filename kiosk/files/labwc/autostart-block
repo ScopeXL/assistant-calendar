@@ -1,0 +1,4 @@
+# >>> sunroom-kiosk (Sunroom Screen, installer @VERSION@; kiosk/install.sh rewrites this block) >>>
+systemctl --user import-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1
+systemctl --user --no-block restart sunroom-kiosk.service
+# <<< sunroom-kiosk <<<

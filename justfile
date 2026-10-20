@@ -61,11 +61,11 @@ lint: kiosk-lint
     cd backend && uv run ruff check . && uv run ruff format --check .
     cd frontend && pnpm exec eslint . && pnpm exec prettier --check .
 
-# shellcheck on the Raspberry Pi installer and helpers; the labwc rule compiles; Sunroom Screen's
-# agent (kiosk/agent) passes ruff and pyright strict
+# shellcheck on the installer and its helpers; the labwc rule and the root helper compile; Sunroom
+# Screen's agent (kiosk/agent) passes ruff and pyright strict
 kiosk-lint:
-    {{shellcheck}} -x kiosk/install.sh kiosk/uninstall.sh kiosk/update.sh kiosk/sunroom-kiosk
-    {{py}} -m py_compile kiosk/labwc-rule.py kiosk/sunroom-screen
+    {{shellcheck}} -x kiosk/install.sh kiosk/uninstall.sh kiosk/update.sh
+    {{py}} -m py_compile kiosk/labwc-rule.py kiosk/files/sunroom-kiosk-root
     cd kiosk/agent && uv run --quiet ruff check . && uv run --quiet ruff format --check . && uv run --quiet pyright
 
 # Sunroom Screen's pages in development: the pretend agent on 7800 (finding `just dev`'s Sunroom on

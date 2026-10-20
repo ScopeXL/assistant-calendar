@@ -112,14 +112,18 @@ phone used.
 
 ## 5. The kitchen screen
 
-On the Raspberry Pi (Raspberry Pi OS 64-bit with desktop):
+On the Raspberry Pi (Raspberry Pi OS 64-bit with desktop), or another Linux computer with
+Chromium, Google Chrome or Microsoft Edge:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only --url https://calendar.example.com
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only
 ```
 
-After the restart it shows a code; type it on your phone under **More → Pair a display**.
-[KIOSK.md](KIOSK.md) has the details.
+After the restart the screen looks for Sunroom on its network and lists what it finds; a Sunroom
+behind a proxy that picks a site by its name isn't found that way, so type its address there
+(`https://calendar.example.com`), or give it to the installer with `--url
+https://calendar.example.com`. Then the screen shows a code; type it on your phone under **More →
+Pair a display**. [KIOSK.md](KIOSK.md) has the details.
 
 **Optional: let screens find this server by name.** A Sunroom screen looking for Sunroom checks
 every address on its network on port 8080, which finds this setup as it is. A server that runs

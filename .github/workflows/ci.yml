@@ -54,6 +54,16 @@ jobs:
         run: uv run pyright
       - name: Tests
         run: uv run pytest -q
+      # The installer's plan on each system, changing nothing (docs/M7.md T8): macOS's own
+      # bash 3.2, and Git Bash on Windows.
+      - name: Installer dry run
+        working-directory: .
+        shell: bash
+        run: |
+          shell=bash
+          if [ "$RUNNER_OS" = macOS ]; then shell=/bin/bash; fi
+          "$shell" kiosk/install.sh --dry-run
+          "$shell" kiosk/install.sh --dry-run --display-only --url https://calendar.example.com
 
   frontend:
     runs-on: ubuntu-24.04

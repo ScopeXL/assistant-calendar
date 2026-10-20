@@ -1,0 +1,109 @@
+#!/usr/bin/python3
+"""sunroom-kiosk-root: the few things Sunroom Screen does as root on a Raspberry Pi.
+
+Allowed by /etc/sudoers.d/sunroom-kiosk for the screen's user, with no password, and nothing
+else; it checks everything it's given (docs/KIOSK.md, docs/M7.md T7):
+
+  write-policy PATH   the browser's managed policy, JSON on stdin: PATH must be
+                      sunroom-kiosk.json in one browser's policy folder, and the keys only
+                      Sunroom Screen's own (kiosk/agent policy.py lists the same)
+  apt-upgrade         the system's own updates: unattended-upgrade when it's installed (Sunroom
+                      OS), else apt-get's upgrade
+  update-sunroom      /opt/sunroom/update.sh, the all-in-one Pi's own Sunroom
+
+The system's Python, standard library only; root-owned in /usr/local/sbin.
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+POLICY_FILES = {
+    "/etc/chromium/policies/managed/sunroom-kiosk.json",
+    "/etc/opt/chrome/policies/managed/sunroom-kiosk.json",
+    "/etc/opt/edge/policies/managed/sunroom-kiosk.json",
+}
+ALLOWED_KEYS = {
+    "MetricsReportingEnabled",
+    "BackgroundModeEnabled",
+    "PasswordManagerEnabled",
+    "TranslateEnabled",
+    "DefaultBrowserSettingEnabled",
+    "BrowserSignin",
+    "PromotionsEnabled",
+    "ComponentUpdatesEnabled",
+    "LocalNetworkAccessAllowedForUrls",
+    "LocalNetworkAccessRestrictionsEnabled",
+}
+UPDATE_SH = "/opt/sunroom/update.sh"
+MOST_BYTES = 64 * 1024
+
+
+def refuse(message):
+    print(message, file=sys.stderr)
+    return 2
+
+
+def plain(value):
+    if isinstance(value, bool) or isinstance(value, int) or isinstance(value, str):
+        return True
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
+
+
+def write_policy(path):
+    if path not in POLICY_FILES:
+        return refuse("That isn't a policy file Sunroom Screen writes.")
+    data = sys.stdin.read(MOST_BYTES + 1)
+    if len(data) > MOST_BYTES:
+        return refuse("That policy is too big.")
+    try:
+        policy = json.loads(data)
+    except ValueError:
+        return refuse("That policy isn't JSON.")
+    if not isinstance(policy, dict) or set(policy) - ALLOWED_KEYS:
+        return refuse("That policy has keys Sunroom Screen doesn't write.")
+    if not all(plain(value) for value in policy.values()):
+        return refuse("That policy has values Sunroom Screen doesn't write.")
+    folder = os.path.dirname(path)
+    os.makedirs(folder, mode=0o755, exist_ok=True)
+    handle, tmp = tempfile.mkstemp(dir=folder, prefix=".sunroom-kiosk.")
+    with os.fdopen(handle, "w", encoding="utf-8") as out:
+        json.dump(policy, out, indent=2, sort_keys=True)
+        out.write("\n")
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, path)
+    return 0
+
+
+def apt_upgrade():
+    env = dict(os.environ, DEBIAN_FRONTEND="noninteractive")
+    if shutil.which("unattended-upgrade"):
+        return subprocess.call(["unattended-upgrade"], env=env)
+    if subprocess.call(["apt-get", "-q", "update"], env=env) != 0:
+        return 1
+    return subprocess.call(["apt-get", "-q", "-y", "upgrade"], env=env)
+
+
+def update_sunroom():
+    if not os.path.isfile(UPDATE_SH):
+        return refuse("Sunroom doesn't run on this Pi.")
+    return subprocess.call([UPDATE_SH])
+
+
+def main(argv):
+    if os.geteuid() != 0:
+        return refuse("Run me with sudo.")
+    if argv[:1] == ["write-policy"] and len(argv) == 2:
+        return write_policy(argv[1])
+    if argv == ["apt-upgrade"]:
+        return apt_upgrade()
+    if argv == ["update-sunroom"]:
+        return update_sunroom()
+    return refuse("Usage: sunroom-kiosk-root write-policy PATH | apt-upgrade | update-sunroom")
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

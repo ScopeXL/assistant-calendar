@@ -1,0 +1,33 @@
+# Sunroom on this Raspberry Pi: one container, its data in the sunroom_data volume.
+# Update with: sudo /opt/sunroom/update.sh   (or a version: sudo /opt/sunroom/update.sh 0.2.0)
+# Optional settings (household password, your own HTTPS address) go in .env next to this file.
+name: sunroom
+services:
+  sunroom:
+    image: @IMAGE@:@TAG@
+    container_name: sunroom
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: "@TZ@"
+      SUNROOM_ADVERTISED_URL: "@ADVERTISED@"
+      SUNROOM_INSTALL_KIND: "pi"
+    ports:
+      - "@PORT@:8080"
+    volumes:
+      - sunroom_data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  sunroom_data:
+    name: sunroom_data

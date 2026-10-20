@@ -1,9 +1,16 @@
-# The kitchen screen on a Raspberry Pi
+# The kitchen screen: Sunroom Screen
 
-How `kiosk/install.sh` turns a Raspberry Pi into Sunroom's wall screen, what it changes, how the
-screen sleeps and dims at night, and what to do when something looks wrong. The design is in
-[PLAN §13](PLAN.md#13-setup-deployment-and-the-raspberry-pi-kiosk); what to buy, and the hardware
-it has been tried on, is in [HARDWARE.md](HARDWARE.md).
+How `kiosk/install.sh` turns a Raspberry Pi (or another Linux computer) into Sunroom's wall
+screen, what it changes, how the screen sleeps and dims at night, and what to do when something
+looks wrong. The design is in [PLAN §13](PLAN.md#13-setup-deployment-and-the-raspberry-pi-kiosk)
+and [ADR 0035](adr/0035-m7-sunroom-screen.md); what to buy, and the hardware it has been tried on,
+is in [HARDWARE.md](HARDWARE.md).
+
+The screen runs **Sunroom Screen**, a small program the installer puts on it. It opens Sunroom
+full screen in the browser and keeps it there, puts the screen to sleep and dims it on Sunroom's
+schedule, finds Sunroom on your network, shows its own pages while it has no Sunroom or can't
+reach it, and gives the wall **Settings → This Screen** (its Wi-Fi, address, rotation, updates,
+Restart and Shut Down).
 
 ## What you need
 
@@ -14,6 +21,9 @@ it has been tried on, is in [HARDWARE.md](HARDWARE.md).
   but taps do nothing).
 - The official power supply. Don't power a portable monitor from the Pi's USB ports.
 
+Another Linux computer with a desktop (systemd, and Chromium, Google Chrome or Microsoft Edge)
+can be the screen too; see [Another Linux computer](#another-linux-computer) below.
+
 ## Install
 
 Sign in to the Pi (at its desktop, or `ssh` in) and run one of these as your normal user, not
@@ -22,17 +32,23 @@ root; it asks for `sudo` itself.
 | You want | Command |
 |---|---|
 | Sunroom and the screen on this Pi | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh \| bash` |
-| Only the screen; Sunroom runs elsewhere | the same, then `\| bash -s -- --display-only --url https://calendar.example.com` (or `http://192.168.1.20:8080`) |
+| Only the screen; Sunroom runs elsewhere | the same, then `\| bash -s -- --display-only` |
 | Only Sunroom, no screen (Pi OS Lite) | the same with `--server-only` |
 
-Use the address you open on a phone for `--url`. The installer finishes by printing the phone
-address (and a QR code), then offers to restart. After the restart the screen shows a
-six-character code: on a phone signed in to Sunroom, open **More → Pair a display** and type it.
+The installer finishes by printing the phone address (and a QR code), then offers to restart.
+
+With `--display-only`, the screen looks for Sunroom on your network after the restart and lists
+what it finds: tap **Use This Sunroom**, or type the address you open on a phone and tap **Check
+Address**. `--url https://calendar.example.com` (or `http://192.168.1.20:8080`) gives it the
+address and skips the search. Then the screen shows a six-character code: on a phone signed in to
+Sunroom, open **More → Pair a display** and type it.
 
 Other options (`--help` lists them all):
 
-- `--rotate 90|180|270` turns the picture for a screen mounted on its side (90 = left, 180 = upside
-  down, 270 = right). Raspberry Pi's own **Screen Configuration** tool works too.
+- `--dry-run` says what the installer would do on this computer, and changes nothing.
+- `--rotate 90|180|270` turns the picture for a screen mounted on its side (90 = left, 180 =
+  upside down, 270 = right), and touch with it. **Settings → This Screen → Rotation** changes it
+  later.
 - `--force-hdmi 1920x1080` keeps the HDMI output on at that size even when the monitor is off at
   startup (see "Blank after a restart" below).
 - `--output HDMI-A-2` picks the connector when two are in use.
@@ -40,29 +56,46 @@ Other options (`--help` lists them all):
   and dimming" below); `auto` is right for most screens.
 - `--no-screen-helper` leaves the screen itself on all night; the page still goes black or dim.
   It's for monitors whose touch stops working while the screen is off.
-- `--version X.Y.Z` installs that Sunroom version instead of the newest.
+- `--version X.Y.Z` runs that Sunroom version on the Pi instead of the newest. The screen's own
+  software is always the installer's version.
 - `--x11` uses the older X11 desktop instead of labwc.
 
-Running the installer again is safe: it keeps what is already right and replaces only its own
-files. Its log is `~/.local/state/sunroom-kiosk/install.log`.
+Running the installer again is safe: it keeps what is already right (the address the screen
+found, its pairing, its Updates choice) and replaces only its own files. Its log is
+`~/.local/state/sunroom-kiosk/install.log`.
 
 ## What it changes
 
-- Installs `chromium`, `curl`, `jq`, `qrencode` and the screen tools for the desktop (`wlr-randr`
-  on labwc, `x11-xserver-utils` and `unclutter` on X11) when they are missing.
+- Installs `chromium`, `curl`, `jq`, `qrencode`, `python3` and the screen tools for the desktop
+  (`wlr-randr` and `wlopm` on labwc, `x11-xserver-utils` and `unclutter` on X11) when they are
+  missing.
 - Without `--display-only`: Docker (from `get.docker.com`), and Sunroom in
   `/opt/sunroom/docker-compose.yml` with its data in the `sunroom_data` volume, optional settings
   in `/opt/sunroom/.env`, and `/opt/sunroom/update.sh`; and
   `/etc/avahi/services/sunroom.service`, which lets Sunroom screens on the network find this Pi
   by themselves (`--purge` removes it with Sunroom).
+- **Sunroom Screen:** `uv` in `~/.local/bin` when there is no uv yet (a pinned version, from its
+  makers' site), then Sunroom Screen itself with uv, from the same Sunroom release as the
+  installer on GitHub, checked against the release's `SHA256SUMS` before anything installs it.
+  uv gives it its own Python, apart from the system's. Its command is `~/.local/bin/sunroom-kiosk`;
+  the copy it was installed from stays in `~/.local/share/sunroom-kiosk/wheels`, for updates to
+  fall back on.
+- The user service `sunroom-kiosk.service` (restarted 3 seconds after any exit), which the
+  desktop starts when it logs in. Sunroom Screen runs the browser (and restarts it at about 04:00
+  to give back memory), the screen's sleep and brightness, and its own pages on
+  `http://127.0.0.1:7800`, which only this computer can open. Its settings are in
+  `~/.config/sunroom-kiosk/config`; the browser profile, which holds the screen's pairing, is in
+  `~/.config/sunroom-kiosk/profile`.
+- On a Pi, one root helper, `/usr/local/sbin/sunroom-kiosk-root`, which
+  `/etc/sudoers.d/sunroom-kiosk` lets your user run without a password, and nothing else: it
+  writes the browser's policy, installs the Pi's own updates, and runs `/opt/sunroom/update.sh`.
+  It checks what it's asked.
+- The browser's policy, `/etc/chromium/policies/managed/sunroom-kiosk.json` (Google Chrome's is
+  under `/etc/opt/chrome`, Edge's under `/etc/opt/edge`): no sign-in, password, translation or
+  default-browser prompts, and Sunroom's page may reach Sunroom Screen on this computer without a
+  prompt nobody is there to answer (Chrome's Local Network Access). Sunroom Screen rewrites it
+  when the address changes.
 - Logs in to the desktop by itself and turns off screen blanking (`raspi-config`).
-- The launcher `~/.local/bin/sunroom-kiosk`, run by the user service `sunroom-kiosk.service`
-  (restarted 3 seconds after any exit), and a timer that restarts the browser at about 04:00 to
-  give back memory. Its settings are in `~/.config/sunroom-kiosk/config`; the browser profile,
-  which holds the screen's pairing, is in `~/.config/sunroom-kiosk/profile`.
-- Unless `--no-screen-helper`: the screen helper `~/.local/bin/sunroom-screen`, run by the user
-  service `sunroom-screen.service`, which the desktop starts with the browser; and `wlopm` on
-  labwc.
 - For the brightness, depending on the screen: `ddcutil`, `i2c-dev` loaded at every start
   (`/etc/modules-load.d/sunroom-kiosk-i2c.conf`) and your user in the `i2c` group, for a monitor
   with DDC/CI; or a udev rule that lets the `video` group dim the backlight and switch it off
@@ -70,17 +103,44 @@ files. Its log is `~/.local/state/sunroom-kiosk/install.log`.
   with a backlight. Raspberry Pi OS's first user is usually in both groups already.
 - On labwc: a block between `# >>> sunroom-kiosk` and `# <<< sunroom-kiosk <<<` in
   `~/.config/labwc/autostart`, and a window rule in `~/.config/labwc/rc.xml` that hides the
-  pointer and gives Chromium real touch events (a copy from before is kept as
-  `rc.xml.sunroom-backup`). On X11: `~/.config/autostart/sunroom-kiosk.desktop`.
+  pointer and gives Chromium real touch events, and turns touch with a turned picture (a copy
+  from before is kept as `rc.xml.sunroom-backup`). On X11:
+  `~/.config/autostart/sunroom-kiosk.desktop`.
 - Turns off Wi-Fi power saving (`/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf`), which
   otherwise drops live updates.
 - Turns on `systemd-time-wait-sync`, so the clock is set from the internet before it's relied on.
-  The launcher also waits up to a minute for it, and the screen shows the server's time anyway.
+  Sunroom Screen also waits up to a minute for it, and the screen shows the server's time anyway.
 - With `--force-hdmi`: two options in the kernel command line (`cmdline.txt`), with the original
   kept beside it.
 
 `~/.local/state/sunroom-kiosk/install-state` records the changes to shared files, so the
-uninstaller can put them back.
+uninstaller can put them back. The files the installer copies are in `kiosk/files/`.
+
+### A Pi set up before Sunroom 0.13.0
+
+Run the installer again with the options you used the first time (for example `--display-only
+--url …`), then let it restart the Pi. It replaces the old launcher, the screen helper and their
+services with Sunroom Screen (the log says so), and keeps the address and the pairing. `update.sh`
+alone doesn't do this: it updates Sunroom, not the Pi's screen setup.
+
+## Another Linux computer
+
+On a Linux computer that isn't a Raspberry Pi, the installer sets up the screen only, and
+changes nothing else:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only
+```
+
+It needs systemd and Chromium, Google Chrome or Microsoft Edge, and installs no packages. It
+installs uv and Sunroom Screen as above, the user service, and
+`~/.config/autostart/sunroom-kiosk.desktop`, which starts it when you sign in. It asks for
+`sudo` once, only to write the browser's policy (without it, the browser asks once on the screen
+to let Sunroom reach Sunroom Screen). Run on the desktop itself, it offers to start the screen at
+once. The computer's own settings turn and dim its screen; This Screen has **Quit Sunroom
+Screen**, which closes it until the next sign-in.
+
+macOS and Windows come in Sunroom 0.14.0.
 
 ## Sleep and dimming
 
@@ -93,18 +153,18 @@ Set the times in Sunroom, on a phone or on the screen: **Settings → Display �
   **Half** or **Low**).
 - **A tap wakes it** for 2 minutes, at full brightness.
 
-The page does the part a browser can: the black screen, the dim clock, and on screens without the
-helper a darker page in the evening. On the Pi, the screen helper (`sunroom-screen`) does the rest:
-it asks Sunroom what the screen should be doing, switches the screen off and on, and sets its
-brightness. A tap on the dark screen still reaches the page (most touch monitors keep their touch
-working while the picture is off), the page tells Sunroom, and moments later the helper switches
-the screen back on. The launcher opens `/display?dimmer=screen` when the helper sets the
-brightness and `/display?dimmer=page` when it can't, so the page and the screen never both dim.
+The page does the part a browser can: the black screen, the dim clock, and on screens Sunroom
+Screen can't dim, a darker page in the evening. Sunroom Screen does the rest: it asks Sunroom
+what the screen should be doing, switches the screen off and on, and sets its brightness. A tap
+on the dark screen still reaches the page (most touch monitors keep their touch working while the
+picture is off), the page tells Sunroom, and moments later the screen comes back on. Sunroom
+Screen opens `/display?dimmer=screen` when it sets the brightness and `/display?dimmer=page` when
+it can't, so the page and the screen never both dim.
 
 ### How the brightness is set
 
 The installer's `--brightness` decides; what it finds is saved in `~/.config/sunroom-kiosk/config`
-and checked again each time the helper starts.
+and checked again each time Sunroom Screen starts.
 
 | `--brightness` | For | How |
 |---|---|---|
@@ -113,13 +173,13 @@ and checked again each time the helper starts.
 | `sysfs` | Raspberry Pi Touch Display and other panels on the DSI connector | the backlight in `/sys/class/backlight`; at night only the backlight goes off, so the touch panel keeps working |
 | `none` | Screens that misbehave with the others | the screen keeps its own brightness; the page darkens itself in the evening |
 
-`~/.local/bin/sunroom-screen --method` prints what the helper uses here (`ddc`, `sysfs` or
-`none`), and so does the first line of its log. Many monitors come with DDC/CI switched off: look
-for "DDC/CI" in the monitor's own menu, turn it on, then run the installer again (it looks for
-the monitor while installing, so leave the monitor on). `sudo ddcutil detect` shows whether the
-Pi can reach it. Portable USB-C monitors rarely have DDC/CI, so they get `none`.
+`sunroom-kiosk screen --method` prints what it uses here (`ddc`, `sysfs` or `none`), and so does
+its log when it starts. Many monitors come with DDC/CI switched off: look for "DDC/CI" in the
+monitor's own menu, turn it on, then run the installer again (it looks for the monitor while
+installing, so leave the monitor on). `sudo ddcutil detect` shows whether the Pi can reach it.
+Portable USB-C monitors rarely have DDC/CI, so they get `none`.
 
-To switch the screen off, the helper uses `wlopm` on labwc (or `wlr-randr` when `wlopm` is
+To switch the screen off, Sunroom Screen uses `wlopm` on labwc (or `wlr-randr` when `wlopm` is
 missing; a tap may not wake the screen then, so install it with `sudo apt install wlopm`), and
 `xset dpms force off` on X11. With `sysfs`, only the backlight is switched off.
 
@@ -131,14 +191,14 @@ or shows the dim clock, and the screen itself stays on (**Dim clock** suits thes
 
 ### If Sunroom can't be reached
 
-The helper tries again after 2 seconds, then waits longer each time, up to a minute. After about
-half a minute without an answer it switches the screen on, and when it stops, or is removed, it
-leaves the screen on at full brightness: a dark screen that can't wake up is worse than a lit one.
-As soon as Sunroom answers again, the screen follows the schedule again.
+Sunroom Screen asks again after 2 seconds, then waits longer each time, up to a minute. After
+about half a minute without an answer it switches the screen on, and when it stops, or is
+removed, it leaves the screen on at full brightness: a dark screen that can't wake up is worse
+than a lit one. As soon as Sunroom answers again, the screen follows the schedule again.
 
-### The helper's log
+### Its log
 
-`journalctl --user -u sunroom-screen` has one line per change, for example:
+`journalctl --user -u sunroom-kiosk` has one line per change, for example:
 
 ```text
 Following the screen's sleep times from http://localhost:8080; brightness through DDC/CI on I2C bus 20.
@@ -146,13 +206,6 @@ Brightness 40%: evening dim.
 Screen off: sleep time.
 Screen on: tapped awake for 2 minutes.
 ```
-
-### A Pi set up with Sunroom 0.5.0 or earlier
-
-Run the installer again with the options you used the first time (for example `--display-only
---url …`), then let it restart the Pi. It keeps what is already right, adds the screen helper and
-its service, and finds the brightness method. `update.sh` alone doesn't add the helper: it updates
-Sunroom, not the Pi's screen setup.
 
 ## Letting screens find a Sunroom on a NAS or server
 
@@ -186,39 +239,51 @@ screen instead.
   Sunroom itself, as `update.sh` does.
 - **Update Sunroom on the Pi:** `sudo /opt/sunroom/update.sh` (or `sudo /opt/sunroom/update.sh
   0.2.0` for exactly that version, which is also how to go back). Your family's data stays.
-- **The screen's own log:** `journalctl --user -u sunroom-kiosk`; the screen helper's:
-  `journalctl --user -u sunroom-screen`.
-- **Restart the browser:** `systemctl --user restart sunroom-kiosk`; the helper:
-  `systemctl --user restart sunroom-screen` (it switches the screen on while it restarts).
+- **The screen's log:** `journalctl --user -u sunroom-kiosk`; **what it says about itself:**
+  `sunroom-kiosk status`.
+- **Restart it:** `systemctl --user restart sunroom-kiosk` (the screen comes on while it
+  restarts), or **Restart** in This Screen, which restarts the whole Pi.
 - **Remove the screen setup:** `bash ~/.local/share/sunroom-kiosk/uninstall.sh`. It asks before
   deleting the browser profile (and with it the pairing). `--purge` also deletes Sunroom and all
   its data from the Pi.
 
+## Trying a change before a release
+
+From a checkout, `just kiosk-build` makes Sunroom Screen's wheel in `kiosk/agent/dist/`. Copy the
+`kiosk` folder and that wheel to the Pi, then run the installer from the copy with `--agent-wheel
+<the wheel>`: it uses the files next to it and that wheel instead of the release's (which isn't
+checked against a release, so use it only for testing). `--dry-run` shows the plan first.
+
 ## When something looks wrong
 
-**The desktop picture stays for more than two minutes.** The launcher waits for Sunroom to
-answer. On a Pi that runs Sunroom, `sudo docker logs sunroom` says why it isn't up; with
-`--display-only`, open the `--url` address on a phone. The launcher's log names the address it is
-waiting for.
+**The screen says it can't reach Sunroom.** Sunroom Screen tries again every 10 seconds and goes
+back to Sunroom by itself the moment it answers. On a Pi that runs Sunroom, `sudo docker logs
+sunroom` says why it isn't up; otherwise open the address on a phone. **Change Address** on that
+page finds or takes another one. A Sunroom the screen found by itself that moved to a new address
+is found again.
+
+**The desktop picture stays.** Sunroom Screen isn't running: `journalctl --user -u
+sunroom-kiosk` says why (for example, no browser found).
 
 **The screen shows a code again.** Its sign-in was ended: a new household password, a new secret
 key, a restore, or **Unpair** in Settings → Devices. Pair it again from a phone.
 
 **The screen doesn't go dark at night.** Check the times and **While asleep** in Settings →
-Display → Sleep (**Dim clock** keeps the screen on, turned down). Then read the helper's log: "No
-answer from Sunroom" means the Pi can't reach the address in `~/.config/sunroom-kiosk/config`; a
-line ending in "didn't work" names the command that failed.
+Display → Sleep (**Dim clock** keeps the screen on, turned down). Then read its log: "No answer
+from Sunroom" means the screen can't reach its address; a line ending in "didn't work" names the
+command that failed.
 
-**The evening dim makes the page darker but not the screen.** The helper found no way to set the
-brightness (`sunroom-screen --method` says `none`). Turn on DDC/CI in the monitor's menu and run
-the installer again, or keep the page's dimming.
+**The evening dim makes the page darker but not the screen.** Sunroom Screen found no way to set
+the brightness (`sunroom-kiosk screen --method` says `none`). Turn on DDC/CI in the monitor's menu
+and run the installer again, or keep the page's dimming.
 
 **A tap doesn't wake the dark screen.** The monitor's touch sleeps with its picture: see "When
 touch stops working while the screen is off" above.
 
-**Taps land in the wrong place on a turned screen.** Touch doesn't always follow a rotated
-output. Add a calibration matrix for touch devices to `~/.config/labwc/rc.xml`, inside
-`<openbox_config>` (or `<labwc_config>`), then restart the Pi:
+**Taps land in the wrong place on a turned screen.** Sunroom Screen tells labwc to turn touch
+with the picture (`mapToOutput` on its `<touch>` lines in `~/.config/labwc/rc.xml`). If a touch
+screen isn't matched that way, take `mapToOutput="…"` out of those lines and add a calibration
+matrix for touch devices inside `<openbox_config>` (or `<labwc_config>`), then restart the Pi:
 
 ```xml
 <libinput>
@@ -228,12 +293,13 @@ output. Add a calibration matrix for touch devices to `~/.config/labwc/rc.xml`, 
 </libinput>
 ```
 
-That matrix is for `--rotate 90`; if taps come out mirrored, use `0 1 0 -1 0 1` instead (the one
-for 270). For 180 it is `-1 0 1 0 -1 1`.
+That matrix is for a turn of 90; if taps come out mirrored, use `0 1 0 -1 0 1` instead (the one
+for 270). For 180 it is `-1 0 1 0 -1 1`. Changing the rotation in This Screen puts Sunroom
+Screen's own settings back, so check again after one.
 
 **The rotation doesn't stick.** If you once saved a layout in Raspberry Pi's **Screen
-Configuration**, the desktop may apply it after the installer's rotation. Set the rotation there
-instead, and run the installer with `--rotate 0`.
+Configuration**, the desktop may apply it after Sunroom Screen's. Turn the screen in one place
+only: This Screen → Rotation.
 
 **Blank after a restart, or the screen wakes right after going dark.** Some monitors that are off
 when the Pi starts are never detected. Run the installer again with `--force-hdmi 1920x1080` (use

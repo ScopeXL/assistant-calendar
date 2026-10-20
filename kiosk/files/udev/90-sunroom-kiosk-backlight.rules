@@ -1,0 +1,2 @@
+# Lets the video group dim the screen and switch its backlight off, for Sunroom Screen.
+SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video $sys$devpath/brightness $sys$devpath/bl_power", RUN+="/bin/chmod g+w $sys$devpath/brightness $sys$devpath/bl_power"

@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
-# Sunroom installer for Raspberry Pi OS (64-bit, Bookworm or Trixie). See docs/PLAN.md §13.
+# Sunroom installer: Sunroom and its kitchen screen on a Raspberry Pi (Raspberry Pi OS 64-bit,
+# Bookworm or Trixie), or the kitchen screen alone on another Linux computer. See docs/PLAN.md
+# §13 and docs/KIOSK.md. (macOS comes in 0.14.0; Windows has install.ps1.)
 #
-# Three ways to use it:
+# On a Pi, three ways to use it:
 #   a. Sunroom and the kitchen screen, both on this Pi          (no option)
-#   b. only the kitchen screen; Sunroom runs on another computer --display-only --url URL
+#   b. only the kitchen screen; Sunroom runs on another computer --display-only [--url URL]
 #   c. only Sunroom, no screen (Raspberry Pi OS Lite)            --server-only
+# Another Linux computer is always b. Without --url, the screen finds its Sunroom itself.
 #
 #   curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash
 #   bash kiosk/install.sh --display-only --url https://calendar.example.com
+#
+# The kitchen screen is Sunroom Screen, a program installed with uv from this version's GitHub
+# Release (its wheel checked against the Release's SHA256SUMS first), which runs the browser,
+# the screen's sleep and brightness and its own pages (docs/M7.md).
 #
 # Run it as your normal user, not root; it uses sudo where it must. Running it again is
 # safe: packages and Docker are installed only when missing, the files it owns are
@@ -16,9 +23,11 @@
 # take them back. Everything it prints is also logged to
 # ~/.local/state/sunroom-kiosk/install.log.
 #
-# The rest of the kiosk/ folder (launcher, screen helper, systemd units, labwc-rule.py,
-# update.sh, uninstall.sh) is taken from next to this script when present, otherwise
-# downloaded from GitHub for the requested version.
+# The rest of the kiosk/ folder (files/, labwc-rule.py, update.sh, uninstall.sh) is taken from
+# next to this script when present, otherwise downloaded from GitHub for the requested version.
+#
+# bash 3.2 (macOS's own) must run it: no associative arrays, no ${var,,}, and an array that may
+# be empty is expanded as ${a[@]+"${a[@]}"}.
 #
 # Nothing runs until `main "$@"` on the very last line, so a download that stops halfway
 # never runs half a script.
@@ -29,6 +38,7 @@ set -o errtrace
 KIOSK_VERSION="0.12.0" # Sunroom's VERSION (`just bump` sets it), written into every file it creates
 SUNROOM_REPO="ScopeXL/assistant-calendar"
 SUNROOM_IMAGE="scopexl/sunroom"
+UV_VERSION="0.12.23" # the uv installer it fetches when uv is missing (astral.sh/uv/<version>)
 
 SCRIPT_PATH="${BASH_SOURCE[0]:-}" # empty when the script is piped into bash
 
@@ -37,6 +47,7 @@ LOG_FILE="$STATE_DIR/install.log"
 STATE_FILE="$STATE_DIR/install-state"
 CONFIG_DIR="$HOME/.config/sunroom-kiosk"
 SHARE_DIR="$HOME/.local/share/sunroom-kiosk"
+WHEELS_DIR="$SHARE_DIR/wheels" # the running agent's wheel and the one before, for updates
 BIN_DIR="$HOME/.local/bin"
 UNIT_DIR="$HOME/.config/systemd/user"
 LABWC_DIR="$HOME/.config/labwc"
@@ -50,6 +61,9 @@ AVAHI_SERVICE="/etc/avahi/services/sunroom.service"
 # OS's own 60-backlight.rules covers brightness only), and i2c-dev at every start for DDC/CI.
 BACKLIGHT_RULE="/etc/udev/rules.d/90-sunroom-kiosk-backlight.rules"
 I2C_MODULES_FILE="/etc/modules-load.d/sunroom-kiosk-i2c.conf"
+# Sunroom Screen's few root tasks on a Pi (the browser's policy, updates), and who may run them.
+ROOT_HELPER="/usr/local/sbin/sunroom-kiosk-root"
+SUDOERS_FILE="/etc/sudoers.d/sunroom-kiosk"
 BLOCK_BEGIN="# >>> sunroom-kiosk"
 BLOCK_END="# <<< sunroom-kiosk <<<"
 HEALTH_TIMEOUT=300
@@ -71,11 +85,17 @@ SCREEN_HELPER="yes"
 SCREEN_OPTIONS_GIVEN=0
 NO_REBOOT=0
 FORCE_X11=0
+DRY_RUN=0
+AGENT_WHEEL="" # --agent-wheel: a local wheel instead of the Release's (testing before a release)
 UNINSTALL=0
 UNINSTALL_ARGS=()
 ORIGINAL_ARGS=()
 
 # Worked out while running
+PLATFORM="" # pi | linux | macos | windows
+MACHINE="this Pi" # "this computer" off a Pi, in the messages both share
+UV=""               # the uv that installs Sunroom Screen
+AGENT_WHEEL_PATH="" # Sunroom Screen's checked wheel, under $WHEELS_DIR
 SRC_DIR=""
 TMP_DIR=""
 CODENAME=""
@@ -90,6 +110,9 @@ STEP="getting started"
 SUDO_KEEPALIVE_PID=""
 TEE_PID=""
 
+TEMPLATE_TZ=""         # the compose file's TZ
+TEMPLATE_ADVERTISED="" # the address phones open, printed on QR codes
+
 # Remembered between runs for kiosk/uninstall.sh (see save_state)
 LABWC_AUTOSTART_CREATED=0
 TIME_WAIT_SYNC_BY_US=0
@@ -101,6 +124,14 @@ BACKLIGHT_RULE_WRITTEN=""
 I2C_MODULES_WRITTEN=""
 
 # ---------------------------------------------------------------------------- messages
+
+lower() {
+	printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
+}
+
+capitalized() {
+	printf '%s' "$1" | awk '{ print toupper(substr($0, 1, 1)) substr($0, 2) }'
+}
 
 say() {
 	printf '%s\n' "$*"
@@ -186,7 +217,7 @@ ask_yes_no() {
 		answer=""
 		IFS= read -r answer </dev/tty || true
 		log_only "$question $hint ${answer:-<Enter>}"
-		case ${answer,,} in
+		case $(lower "$answer") in
 		"")
 			[[ $default == y ]]
 			return
@@ -200,15 +231,19 @@ ask_yes_no() {
 
 usage() {
 	cat <<EOF
-Sunroom installer $KIOSK_VERSION for Raspberry Pi OS (64-bit, Bookworm or Trixie)
+Sunroom installer $KIOSK_VERSION for Raspberry Pi OS (64-bit, Bookworm or Trixie), and for the
+kitchen screen alone on another Linux computer
 
 Usage: bash install.sh [options]
 
-What to set up (the default is everything on this Pi):
+What to set up (on a Pi the default is everything; elsewhere it's the screen):
   (no option)               Sunroom and the kitchen screen, both on this Pi
-  --display-only --url URL  Only the kitchen screen; Sunroom runs on another computer.
+  --display-only [--url URL]
+                            Only the kitchen screen; Sunroom runs on another computer.
                             URL is that computer's address, for example
-                            http://192.168.1.20:8080 or https://calendar.example.com
+                            http://192.168.1.20:8080 or https://calendar.example.com;
+                            without it, the screen finds Sunroom on the network itself,
+                            or asks for the address on the screen
   --server-only             Only Sunroom, no screen (Raspberry Pi OS Lite)
 
 Options:
@@ -230,6 +265,9 @@ Options:
                             stops working while the screen is off)
   --x11                     Use the older X11 desktop instead of labwc (Wayland)
   --no-reboot               Don't offer to restart at the end
+  --dry-run                 Say what it would do on this computer, and change nothing
+  --agent-wheel FILE        Install Sunroom Screen from this wheel (just kiosk-build) instead
+                            of the one in this version's GitHub Release (for testing)
   --uninstall [--purge] [--yes]
                             Remove the kitchen screen setup; --purge also deletes Sunroom
                             and all its data from this Pi, --yes answers every question
@@ -259,6 +297,7 @@ example_for() {
 	--rotate) printf '90' ;;
 	--brightness) printf 'auto' ;;
 	--force-hdmi) printf '1920x1080' ;;
+	--agent-wheel) printf 'sunroom_kiosk-%s-py3-none-any.whl' "$KIOSK_VERSION" ;;
 	*) printf 'VALUE' ;;
 	esac
 }
@@ -337,6 +376,13 @@ parse_args() {
 			SCREEN_OPTIONS_GIVEN=1
 			;;
 		--no-reboot) NO_REBOOT=1 ;;
+		--dry-run) DRY_RUN=1 ;;
+		--agent-wheel)
+			need_value "$@"
+			AGENT_WHEEL=$2
+			shift
+			;;
+		--agent-wheel=*) AGENT_WHEEL=${1#*=} ;;
 		--x11)
 			FORCE_X11=1
 			SCREEN_OPTIONS_GIVEN=1
@@ -359,7 +405,6 @@ parse_args() {
 }
 
 validate_args() {
-	local lower
 	if ((${#UNINSTALL_ARGS[@]})); then
 		usage_error "--purge and --yes only go with --uninstall, for example: bash install.sh --uninstall --purge"
 	fi
@@ -370,23 +415,27 @@ validate_args() {
 	if ((WANT_SERVER_ONLY)) && [[ -n $URL ]]; then
 		usage_error "--url goes with --display-only (the screen shows Sunroom from another computer)."
 	fi
-	if ((WANT_DISPLAY_ONLY)) && [[ -z $URL ]]; then
-		usage_error "--display-only needs the address of the computer that runs Sunroom," \
-			"for example: --display-only --url http://192.168.1.20:8080"
+	if ((WANT_DISPLAY_ONLY)) || [[ $PLATFORM != pi ]]; then
+		MODE="display"
+	fi
+	if [[ $PLATFORM != pi ]] && ((WANT_SERVER_ONLY)); then
+		usage_error "--server-only is for a Raspberry Pi. Elsewhere, run Sunroom with Docker (docs/DEPLOY.md)."
+	fi
+	if [[ -n $AGENT_WHEEL && ! -f $AGENT_WHEEL ]]; then
+		usage_error "--agent-wheel: there's no file at $AGENT_WHEEL."
 	fi
 	if [[ -n $URL ]]; then
 		MODE="display"
-		if ((!WANT_DISPLAY_ONLY)); then
+		if ((!WANT_DISPLAY_ONLY)) && [[ $PLATFORM == pi ]]; then
 			say "Note: --url given, so this Pi will only be the kitchen screen (as with --display-only)."
 		fi
 		URL="${URL%/}"
 		URL="${URL%/display}"
-		lower=${URL,,}
-		if [[ ! $lower =~ ^https?://[a-z0-9.-]+(:[0-9]{1,5})?$ ]]; then
+		URL=$(lower "$URL")
+		if [[ ! $URL =~ ^https?://[a-z0-9.-]+(:[0-9]{1,5})?$ ]]; then
 			usage_error "\"$URL\" doesn't look like the address of Sunroom." \
 				"Use the address you open on a phone, for example http://192.168.1.20:8080 or https://calendar.example.com"
 		fi
-		URL=$lower
 	fi
 	if ((WANT_SERVER_ONLY)); then
 		MODE="server"
@@ -418,6 +467,16 @@ validate_args() {
 	if [[ $MODE == display ]] && ((PORT_GIVEN)); then
 		say "Note: --port is ignored with --display-only; the port is part of --url."
 	fi
+	if [[ $MODE == display && -n $VERSION ]]; then
+		say "Note: --version picks the Sunroom that runs on a Pi; the kitchen screen alone ignores it."
+	fi
+	if [[ $PLATFORM != pi ]] && { ((OUTPUT_GIVEN || FORCE_X11)) || [[ $ROTATE != 0 || -n $FORCE_HDMI ]]; }; then
+		say "Note: --output, --rotate, --force-hdmi and --x11 are for a Raspberry Pi; on $MACHINE, its own display settings do that."
+		OUTPUT=""
+		ROTATE=0
+		FORCE_HDMI=""
+		FORCE_X11=0
+	fi
 }
 
 # ---------------------------------------------------------------------------- plumbing
@@ -438,7 +497,7 @@ detect_tty() {
 
 setup_logging() {
 	mkdir -p "$STATE_DIR"
-	printf '\n----- %s  install.sh %s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$KIOSK_VERSION" "${ORIGINAL_ARGS[*]}" >>"$LOG_FILE"
+	printf '\n----- %s  install.sh %s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$KIOSK_VERSION" "${ORIGINAL_ARGS[*]-}" >>"$LOG_FILE"
 	exec > >(tee -a "$LOG_FILE") 2>&1
 	TEE_PID=$!
 	LOGGING=1
@@ -501,6 +560,26 @@ stamp_file() {
 	fi
 }
 
+# A file from kiosk/files with its placeholders filled in (values never hold a "|").
+render() {
+	sed -e "s|@VERSION@|$KIOSK_VERSION|g" \
+		-e "s|@USER@|$(id -un)|g" \
+		-e "s|@IMAGE@|$SUNROOM_IMAGE|g" \
+		-e "s|@TAG@|${IMAGE_TAG:-latest}|g" \
+		-e "s|@PORT@|$PORT|g" \
+		-e "s|@TZ@|${TEMPLATE_TZ:-Etc/UTC}|g" \
+		-e "s|@ADVERTISED@|${TEMPLATE_ADVERTISED:-}|g" \
+		"$1"
+}
+
+# install_template SRC DEST MODE [root]: render, stamp and install a file from kiosk/files.
+install_template() {
+	local src=$1 dest=$2 mode=$3 owner=${4:-} tmp
+	tmp=$(mktemp "$TMP_DIR/template.XXXXXX")
+	render "$src" >"$tmp"
+	install_stamped "$tmp" "$dest" "$mode" "$owner"
+}
+
 # install_stamped SRC DEST MODE [root]
 install_stamped() {
 	local src=$1 dest=$2 mode=$3 owner=${4:-} tmp
@@ -517,7 +596,7 @@ install_stamped() {
 pi_hostname() {
 	local name
 	name=$(hostname -s 2>/dev/null || hostname)
-	printf '%s' "${name,,}"
+	lower "$name"
 }
 
 pi_ip() {
@@ -569,6 +648,25 @@ save_state() {
 
 # ---------------------------------------------------------------------------- step 0: checks
 
+# Which kind of computer this is: a Raspberry Pi (with Raspberry Pi OS: everything), another
+# Linux computer (the screen only), a Mac, or Windows (install.ps1).
+detect_platform() {
+	MACHINE="this computer"
+	case $(uname -s) in
+	Darwin) PLATFORM="macos" ;;
+	Linux)
+		if grep -qi 'raspberry pi' /proc/device-tree/model 2>/dev/null && command -v raspi-config >/dev/null 2>&1; then
+			PLATFORM="pi"
+			MACHINE="this Pi"
+		else
+			PLATFORM="linux"
+		fi
+		;;
+	MINGW* | MSYS* | CYGWIN*) PLATFORM="windows" ;;
+	*) PLATFORM="unknown" ;;
+	esac
+}
+
 check_platform() {
 	local arch
 	arch=$(dpkg --print-architecture 2>/dev/null || uname -m)
@@ -589,7 +687,7 @@ check_platform() {
 			"Install the current Raspberry Pi OS (64-bit) with Raspberry Pi Imager, then run this again."
 		;;
 	esac
-	note "Raspberry Pi OS ${CODENAME^}, 64-bit."
+	note "Raspberry Pi OS $(capitalized "$CODENAME"), 64-bit."
 }
 
 check_disk() {
@@ -615,7 +713,7 @@ check_internet() {
 			sleep 5
 		fi
 	done
-	die "This Pi can't reach the internet." \
+	die "$(capitalized "$MACHINE") can't reach the internet." \
 		"Check the Wi-Fi or network cable, and that the date and time are right (type: date)," \
 		"then run the installer again."
 }
@@ -851,37 +949,41 @@ wait_for_apt() {
 
 has_kiosk_files() {
 	local dir=$1 file
-	for file in sunroom-kiosk labwc-rule.py update.sh uninstall.sh files/avahi/sunroom.service \
-		systemd/sunroom-kiosk.service systemd/sunroom-kiosk-restart.service systemd/sunroom-kiosk-restart.timer; do
+	for file in labwc-rule.py update.sh uninstall.sh files/avahi/sunroom.service \
+		files/systemd/sunroom-kiosk.service files/labwc/autostart-block files/xdg/sunroom-kiosk.desktop \
+		files/udev/90-sunroom-kiosk-backlight.rules files/modules-load/sunroom-kiosk-i2c.conf \
+		files/NetworkManager/zz-sunroom-kiosk-wifi.conf files/sunroom/docker-compose.yml \
+		files/sunroom/env files/sudoers/sunroom-kiosk files/sunroom-kiosk-root; do
 		[[ -f $dir/$file ]] || return 1
 	done
 }
 
 download_kiosk_files() {
 	local ref url tarball args
-	if [[ -n $VERSION ]]; then ref="refs/tags/v$VERSION"; else ref="refs/heads/main"; fi
+	# This installer's own version: its files and Sunroom Screen's wheel come from one release.
+	ref="refs/tags/v$KIOSK_VERSION"
 	url="https://codeload.github.com/$SUNROOM_REPO/tar.gz/$ref"
 	tarball="$TMP_DIR/kiosk.tar.gz"
 	args=""
 	if ((${#ORIGINAL_ARGS[@]})); then
 		args=$(printf ' %q' "${ORIGINAL_ARGS[@]}")
 	fi
-	note "Downloading the kitchen-screen files (${VERSION:+version $VERSION}${VERSION:-latest})..."
+	note "Downloading the kitchen-screen files (version $KIOSK_VERSION)..."
 	if ! curl -fsSL --retry 3 --connect-timeout 15 -o "$tarball" "$url" 2>>"$LOG_FILE"; then
 		die "I couldn't download the rest of the kitchen-screen files from GitHub." \
-			"Either GitHub can't be reached right now${VERSION:+, version $VERSION is not published}, or the project isn't public yet." \
-			"Instead, copy the whole kiosk folder to this Pi (for example: scp -r kiosk YOUR-USER@sunroom.local:)" \
+			"Either GitHub can't be reached right now, or version $KIOSK_VERSION isn't published yet." \
+			"Instead, copy the whole kiosk folder to $MACHINE (for example: scp -r kiosk YOUR-USER@sunroom.local:)" \
 			"and run the installer from that copy:" \
 			"  bash kiosk/install.sh${args}"
 	fi
 	mkdir -p "$TMP_DIR/src"
 	if ! tar -xzf "$tarball" -C "$TMP_DIR/src" --strip-components=1 --wildcards '*/kiosk/*' 2>/dev/null; then
 		die "The download from GitHub has no kitchen-screen files in it, or it was damaged." \
-			"Run the installer again${VERSION:+, or pick another version}."
+			"Run the installer again."
 	fi
 	SRC_DIR="$TMP_DIR/src/kiosk"
 	has_kiosk_files "$SRC_DIR" || die "The download from GitHub is missing some kitchen-screen files." \
-		"Copy the kiosk folder to this Pi and run: bash kiosk/install.sh${args}"
+		"Copy the kiosk folder to $MACHINE and run: bash kiosk/install.sh${args}"
 }
 
 get_kiosk_files() {
@@ -933,7 +1035,7 @@ install_packages() {
 			need_chromium=1
 		fi
 	fi
-	for pkg in "${wanted[@]}" "${optional[@]}"; do
+	for pkg in "${wanted[@]}" ${optional[@]+"${optional[@]}"}; do
 		if ! pkg_installed "$pkg"; then
 			missing+=("$pkg")
 		fi
@@ -1036,62 +1138,6 @@ existing_tag() {
 		}' "$SERVER_DIR/docker-compose.yml"
 }
 
-render_compose() {
-	local tz=$1 advertised=$2
-	header_comment
-	cat <<EOF
-# Sunroom on this Raspberry Pi: one container, its data in the sunroom_data volume.
-# Update with: sudo /opt/sunroom/update.sh   (or a version: sudo /opt/sunroom/update.sh 0.2.0)
-# Optional settings (household password, your own HTTPS address) go in .env next to this file.
-name: sunroom
-services:
-  sunroom:
-    image: $SUNROOM_IMAGE:$IMAGE_TAG
-    container_name: sunroom
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      TZ: "$tz"
-      SUNROOM_ADVERTISED_URL: "$advertised"
-      SUNROOM_INSTALL_KIND: "pi"
-    ports:
-      - "$PORT:8080"
-    volumes:
-      - sunroom_data:/data
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop: [ALL]
-    security_opt: ["no-new-privileges:true"]
-    stop_grace_period: 30s
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  sunroom_data:
-    name: sunroom_data
-EOF
-}
-
-render_env() {
-	header_comment | sed 's/ Running it again replaces this file./ It is created once and never overwritten./'
-	cat <<'EOF'
-# Optional settings for Sunroom on this Pi. To use one, remove the "# " in front of it,
-# then restart Sunroom:  cd /opt/sunroom && sudo docker compose up -d
-#
-# A household password that always wins over the one chosen in the setup wizard
-# (8 or more characters; single quotes keep symbols such as $ as they are):
-# APP_PASSWORD='a long family passphrase'
-#
-# Optional lock: answer only to these names and local ones (comma-separated; *.example.com
-# works too). Not needed for a proxy or Tailscale; worth it for a public name:
-# APP_ALLOWED_HOSTS=calendar.example.com
-EOF
-}
-
 write_stack() {
 	local tz host previous
 	previous=$(existing_tag || true)
@@ -1115,7 +1161,12 @@ write_stack() {
 	host=$(pi_hostname)
 
 	sudo install -d -m 0755 -o root -g root "$SERVER_DIR"
-	render_compose "$tz" "http://$host.local:$PORT" >"$TMP_DIR/docker-compose.yml"
+	TEMPLATE_TZ=$tz
+	TEMPLATE_ADVERTISED="http://$host.local:$PORT"
+	{
+		header_comment
+		render "$SRC_DIR/files/sunroom/docker-compose.yml"
+	} >"$TMP_DIR/docker-compose.yml"
 	if sudo test -f "$SERVER_DIR/docker-compose.yml" && ! sudo cmp -s "$TMP_DIR/docker-compose.yml" "$SERVER_DIR/docker-compose.yml"; then
 		sudo cp -p "$SERVER_DIR/docker-compose.yml" "$SERVER_DIR/docker-compose.yml.previous"
 		note "Saved the previous settings as $SERVER_DIR/docker-compose.yml.previous."
@@ -1125,7 +1176,10 @@ write_stack() {
 		sudo chown root:root "$SERVER_DIR/.env"
 		sudo chmod 0600 "$SERVER_DIR/.env"
 	else
-		render_env >"$TMP_DIR/env"
+		{
+			header_comment | sed 's/ Running it again replaces this file./ It is created once and never overwritten./'
+			render "$SRC_DIR/files/sunroom/env"
+		} >"$TMP_DIR/env"
 		sudo install -m 0600 -o root -g root "$TMP_DIR/env" "$SERVER_DIR/.env"
 	fi
 	install_stamped "$SRC_DIR/update.sh" "$SERVER_DIR/update.sh" 0755 root
@@ -1203,14 +1257,156 @@ install_helper_copies() {
 	install_stamped "$SRC_DIR/labwc-rule.py" "$SHARE_DIR/labwc-rule.py" 0755
 }
 
-write_kiosk_config() {
-	local url tmp="$TMP_DIR/kiosk-config"
-	if [[ $MODE == display ]]; then url=$URL; else url="http://localhost:$PORT"; fi
+# ---------------------------------------------------------------------------- Sunroom Screen
+
+# uv installs Sunroom Screen and the Python it runs on (3.14, kept apart from the system's).
+install_uv() {
+	if command -v uv >/dev/null 2>&1; then
+		UV=$(command -v uv)
+		return 0
+	fi
+	if [[ -x $BIN_DIR/uv ]]; then
+		UV="$BIN_DIR/uv"
+		return 0
+	fi
+	note "Installing uv $UV_VERSION, which installs Sunroom Screen..."
+	curl -LsSf --retry 3 -o "$TMP_DIR/uv-install.sh" "https://astral.sh/uv/$UV_VERSION/install.sh" ||
+		die "Couldn't download uv's installer. Check the internet connection, then run this again."
+	quietly env UV_NO_MODIFY_PATH=1 UV_INSTALL_DIR="$BIN_DIR" sh "$TMP_DIR/uv-install.sh" ||
+		die "uv's installer didn't finish; its last messages are above. Running this again is safe."
+	UV="$BIN_DIR/uv"
+}
+
+sha256_of() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" | awk '{print $1}'
+	else
+		shasum -a 256 "$1" | awk '{print $1}'
+	fi
+}
+
+# Sunroom Screen's wheel: --agent-wheel's, or this version's from its GitHub Release, checked
+# against the Release's SHA256SUMS before anything installs it. Kept in $WHEELS_DIR, so an
+# update can go back to it.
+fetch_agent_wheel() {
+	local name="sunroom_kiosk-$KIOSK_VERSION-py3-none-any.whl" base expected actual
+	mkdir -p "$WHEELS_DIR"
+	if [[ -n $AGENT_WHEEL ]]; then
+		name=$(basename "$AGENT_WHEEL")
+		cp "$AGENT_WHEEL" "$WHEELS_DIR/$name"
+		AGENT_WHEEL_PATH="$WHEELS_DIR/$name"
+		note "Using Sunroom Screen from $(tidy "$AGENT_WHEEL") (--agent-wheel: not checked against a release)."
+		return 0
+	fi
+	base="https://github.com/$SUNROOM_REPO/releases/download/v$KIOSK_VERSION"
+	if ! curl -fsSL --retry 3 -o "$TMP_DIR/SHA256SUMS" "$base/SHA256SUMS" 2>>"$LOG_FILE"; then
+		die "Couldn't download Sunroom Screen $KIOSK_VERSION's checksums from GitHub." \
+			"Either GitHub can't be reached right now, or this version's files are still being published" \
+			"(it takes a few minutes after a release). Try again in a little while."
+	fi
+	expected=$(awk -v file="$name" '$2 == file || $2 == "*" file {print $1; exit}' "$TMP_DIR/SHA256SUMS")
+	[[ $expected =~ ^[0-9a-f]{64}$ ]] || die "Sunroom Screen $KIOSK_VERSION isn't in its release's checksums." \
+		"Try again in a little while; if it lasts, run the installer of another version."
+	curl -fsSL --retry 3 -o "$TMP_DIR/$name" "$base/$name" 2>>"$LOG_FILE" ||
+		die "Couldn't download Sunroom Screen $KIOSK_VERSION from GitHub. Check the internet connection, then run this again."
+	actual=$(sha256_of "$TMP_DIR/$name")
+	if [[ $actual != "$expected" ]]; then
+		die "The download of Sunroom Screen didn't match its checksum, so it wasn't installed." \
+			"Run the installer again; if it happens again, tell us on GitHub."
+	fi
+	install -m 0644 "$TMP_DIR/$name" "$WHEELS_DIR/$name"
+	AGENT_WHEEL_PATH="$WHEELS_DIR/$name"
+	note "Downloaded Sunroom Screen $KIOSK_VERSION and checked it."
+}
+
+install_agent() {
+	install_uv
+	fetch_agent_wheel
+	# The bash launcher from before 0.13.0 sat where uv puts Sunroom Screen.
+	if [[ -f $BIN_DIR/sunroom-kiosk && ! -L $BIN_DIR/sunroom-kiosk ]]; then
+		rm -f "$BIN_DIR/sunroom-kiosk"
+	fi
+	note "Installing Sunroom Screen (with its own Python; the first time takes a minute)..."
+	quietly env UV_TOOL_BIN_DIR="$BIN_DIR" "$UV" tool install --reinstall --force --python 3.14 "$AGENT_WHEEL_PATH" ||
+		die "Couldn't install Sunroom Screen; the messages above say why. Running the installer again is safe."
+	"$BIN_DIR/sunroom-kiosk" --version >/dev/null 2>&1 ||
+		die "Sunroom Screen was installed but doesn't start. The full log has the details."
+	note "Installed Sunroom Screen $KIOSK_VERSION."
+}
+
+# A Pi: one root helper for the few root tasks (the browser's policy, the system's updates,
+# update.sh), allowed by sudoers for this user only, and checked by visudo first.
+install_root_helper() {
+	local sudoers="$TMP_DIR/sudoers"
+	install_template "$SRC_DIR/files/sunroom-kiosk-root" "$ROOT_HELPER" 0755 root
 	{
 		header_comment
-		printf '# Read by ~/.local/bin/sunroom-kiosk and ~/.local/bin/sunroom-screen at every start.\n'
-		printf '# After a change: systemctl --user restart sunroom-kiosk sunroom-screen\n'
+		render "$SRC_DIR/files/sudoers/sunroom-kiosk"
+	} >"$sudoers"
+	sudo visudo -cqf "$sudoers" >/dev/null 2>&1 ||
+		die "The sudoers file for Sunroom Screen didn't check out (visudo); nothing was changed there."
+	sudo install -m 0440 -o root -g root "$sudoers" "$SUDOERS_FILE"
+	note "Sunroom Screen may update this Pi and set the browser's settings (and nothing else as root)."
+}
+
+# Before 0.13.0 the screen helper and the 04:00 browser restart had units of their own; Sunroom
+# Screen does both now.
+retire_old_screen() {
+	local unit retired=0
+	for unit in sunroom-screen.service sunroom-kiosk-restart.timer sunroom-kiosk-restart.service; do
+		if [[ -e $UNIT_DIR/$unit ]]; then
+			user_systemctl disable --now "$unit" >/dev/null 2>&1 || true
+			rm -f "$UNIT_DIR/$unit" "$UNIT_DIR/timers.target.wants/$unit"
+			retired=1
+		fi
+	done
+	if [[ -e $BIN_DIR/sunroom-screen ]]; then
+		rm -f "$BIN_DIR/sunroom-screen"
+		retired=1
+	fi
+	if ((retired)); then
+		note "Sunroom Screen now does what the screen helper and the nightly restart did; their own services are gone."
+	fi
+}
+
+# What the agent saved in the screen's settings before (an address it found, its id, Updates):
+# kept when the installer runs again. Read in a child bash, as the uninstaller reads the file,
+# so nothing in it reaches this run.
+existing_setting() {
+	[[ -r $CONFIG_DIR/config ]] || return 0
+	# shellcheck disable=SC2016 # expanded by the child bash, not this one
+	bash -c 'set +u; . "$1" >/dev/null 2>&1; printf "%s" "${!2:-}"' _ "$CONFIG_DIR/config" "$1" 2>/dev/null || true
+}
+
+write_kiosk_config() {
+	local url found id check tmp="$TMP_DIR/kiosk-config"
+	if [[ $MODE == display ]]; then
+		url=$URL
+		found="typed"
+		if [[ -z $url ]]; then
+			# No --url: keep what the screen found or was told before; with none, it looks.
+			url=$(existing_setting SUNROOM_URL)
+			found=$(existing_setting SUNROOM_FOUND)
+		fi
+	else
+		url="http://localhost:$PORT"
+		found="local"
+	fi
+	if [[ -n $url && -z $found ]]; then
+		found="typed" # an address from before 0.13.0 was always given with --url
+	fi
+	id=""
+	if [[ -n $url && $url == "$(existing_setting SUNROOM_URL)" ]]; then
+		id=$(existing_setting SUNROOM_ID)
+	fi
+	check=$(existing_setting SUNROOM_UPDATE_CHECK)
+	{
+		header_comment
+		printf '# Sunroom Screen keeps this up to date (This Screen on the wall changes it). After a change\n'
+		printf '# by hand: systemctl --user restart sunroom-kiosk\n'
 		printf 'SUNROOM_URL=%q\n' "$url"
+		printf 'SUNROOM_ID=%q\n' "$id"
+		printf 'SUNROOM_FOUND=%q\n' "${url:+$found}"
 		printf 'SUNROOM_SESSION=%q\n' "$SESSION"
 		printf 'SUNROOM_OUTPUT=%q\n' "$OUTPUT"
 		printf 'SUNROOM_ROTATE=%q\n' "$ROTATE"
@@ -1222,37 +1418,25 @@ write_kiosk_config() {
 		printf 'SUNROOM_DDC_BUS=%q\n' "$DDC_BUS"
 		printf 'SUNROOM_BACKLIGHT=%q\n' "$BACKLIGHT"
 		printf 'SUNROOM_MODE=%q\n' "$MODE"
+		printf '# nightly (installed overnight) or off; empty is the default for this install (off).\n'
+		printf 'SUNROOM_UPDATE_CHECK=%q\n' "$check"
 	} >"$tmp"
 	mkdir -p "$CONFIG_DIR"
 	install -m 0644 "$tmp" "$CONFIG_DIR/config"
-	note "Saved the kitchen screen's settings in $(tidy "$CONFIG_DIR/config") (it opens $url/display)."
+	if [[ -n $url ]]; then
+		note "Saved the kitchen screen's settings in $(tidy "$CONFIG_DIR/config") (it opens $url)."
+	else
+		note "Saved the kitchen screen's settings in $(tidy "$CONFIG_DIR/config"); it finds its Sunroom itself."
+	fi
 }
 
 install_units() {
-	local unit
-	install_stamped "$SRC_DIR/sunroom-kiosk" "$BIN_DIR/sunroom-kiosk" 0755
-	for unit in sunroom-kiosk.service sunroom-kiosk-restart.service sunroom-kiosk-restart.timer; do
-		install_stamped "$SRC_DIR/systemd/$unit" "$UNIT_DIR/$unit" 0644
-	done
-	if [[ $SCREEN_HELPER == yes ]]; then
-		install_stamped "$SRC_DIR/sunroom-screen" "$BIN_DIR/sunroom-screen" 0755
-		install_stamped "$SRC_DIR/systemd/sunroom-screen.service" "$UNIT_DIR/sunroom-screen.service" 0644
-	else
-		remove_screen_helper
-	fi
-	if user_systemctl daemon-reload >/dev/null 2>&1 &&
-		user_systemctl enable --now sunroom-kiosk-restart.timer >/dev/null 2>&1; then
-		note "Installed the kitchen screen's service and its nightly restart at about 04:00."
-	else
-		mkdir -p "$UNIT_DIR/timers.target.wants"
-		ln -sfn "$UNIT_DIR/sunroom-kiosk-restart.timer" "$UNIT_DIR/timers.target.wants/sunroom-kiosk-restart.timer"
-		note "Installed the kitchen screen's service; its nightly restart starts after the Pi restarts."
-	fi
-	if [[ $SCREEN_HELPER == yes ]]; then
-		# A helper already running from an earlier install switches to this version now.
-		user_systemctl try-restart sunroom-screen.service >/dev/null 2>&1 || true
-		note "Installed the screen helper, which puts the screen to sleep and dims it on Sunroom's schedule."
-	fi
+	retire_old_screen
+	install_template "$SRC_DIR/files/systemd/sunroom-kiosk.service" "$UNIT_DIR/sunroom-kiosk.service" 0644
+	user_systemctl daemon-reload >/dev/null 2>&1 || true
+	# Sunroom Screen from an earlier install switches to this version now.
+	user_systemctl try-restart sunroom-kiosk.service >/dev/null 2>&1 || true
+	note "Installed Sunroom Screen's service; the desktop starts it at login."
 }
 
 # Print FILE without the managed block. An unfinished block is printed back unchanged.
@@ -1269,26 +1453,10 @@ drop_trailing_blank_lines() {
 	awk '{ line[NR] = $0 } END { n = NR; while (n > 0 && line[n] ~ /^[ \t]*$/) n--; for (i = 1; i <= n; i++) print line[i] }' "$1"
 }
 
-# Unverified: kanshi, started from /etc/xdg/labwc/autostart, may re-apply a screen layout
-# saved in the desktop's screen settings after the wlr-randr line below runs; if so, the
-# rotation should be set there instead (docs/KIOSK.md).
+# The rotation isn't in this block any more: Sunroom Screen applies it when it starts (and touch
+# follows, labwc-rule.py --rotate).
 labwc_block() {
-	printf '%s (Sunroom kitchen screen, installer %s; kiosk/install.sh rewrites this block) >>>\n' "$BLOCK_BEGIN" "$KIOSK_VERSION"
-	printf 'systemctl --user import-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1\n'
-	if [[ $ROTATE != 0 ]]; then
-		printf 'wlr-randr --output %s --transform %s >/dev/null 2>&1\n' "$OUTPUT" "$ROTATE"
-	fi
-	printf 'systemctl --user --no-block restart %s\n' "$(session_units)"
-	printf '%s\n' "$BLOCK_END"
-}
-
-# The user units the desktop session starts: the browser, and the screen helper when it's on.
-session_units() {
-	if [[ $SCREEN_HELPER == yes ]]; then
-		printf 'sunroom-kiosk.service sunroom-screen.service'
-	else
-		printf 'sunroom-kiosk.service'
-	fi
+	render "$SRC_DIR/files/labwc/autostart-block"
 }
 
 # labwc runs ~/.config/labwc/autostart with sh at login; Raspberry Pi OS starts labwc with
@@ -1341,24 +1509,14 @@ remove_swayidle() {
 # Unverified on hardware: that the Pi's X11 session (lxsession: rpd-x on Trixie, LXDE-pi-x
 # on Bookworm) runs ~/.config/autostart entries, as XDG autostart says it should.
 write_xdg_autostart() {
-	{
-		header_comment
-		printf '[Desktop Entry]\n'
-		printf 'Type=Application\n'
-		printf 'Name=Sunroom kitchen screen\n'
-		printf 'Comment=Starts the Sunroom kitchen screen\n'
-		printf 'Exec=sh -c "systemctl --user import-environment DISPLAY XAUTHORITY; systemctl --user --no-block restart %s"\n' "$(session_units)"
-		printf 'NoDisplay=true\n'
-		printf 'X-GNOME-Autostart-enabled=true\n'
-	} >"$TMP_DIR/sunroom-kiosk.desktop"
-	mkdir -p "$(dirname "$XDG_AUTOSTART_FILE")"
-	install -m 0644 "$TMP_DIR/sunroom-kiosk.desktop" "$XDG_AUTOSTART_FILE"
+	install_template "$SRC_DIR/files/xdg/sunroom-kiosk.desktop" "$XDG_AUTOSTART_FILE" 0644
 	note "The desktop now starts the kitchen screen at login ($(tidy "$XDG_AUTOSTART_FILE"))."
 }
 
 apply_labwc_settings() {
 	local status=0
-	python3 "$SHARE_DIR/labwc-rule.py" --installer-version "$KIOSK_VERSION" 2>&1 | sed 's/^/    /' || status=$?
+	python3 "$SHARE_DIR/labwc-rule.py" --installer-version "$KIOSK_VERSION" --rotate "$ROTATE" --output "$OUTPUT" 2>&1 |
+		sed 's/^/    /' || status=$?
 	if ((status != 0 && status != 2)); then
 		warn "couldn't adjust the pointer and touch settings (labwc rc.xml); the kitchen screen still works."
 	fi
@@ -1372,9 +1530,7 @@ write_wifi_dropin() {
 	fi
 	{
 		header_comment
-		printf '# Wi-Fi power saving drops the kitchen screen'"'"'s live updates, so it stays off.\n'
-		printf '[connection]\n'
-		printf 'wifi.powersave = 2\n'
+		render "$SRC_DIR/files/NetworkManager/zz-sunroom-kiosk-wifi.conf"
 	} >"$TMP_DIR/wifi.conf"
 	NM_DROPIN_WRITTEN=$NM_DROPIN
 	if sudo cmp -s "$TMP_DIR/wifi.conf" "$NM_DROPIN"; then
@@ -1505,16 +1661,6 @@ apply_force_hdmi() {
 
 # ---------------------------------------------------------------------------- the screen helper
 
-# Kitchen-screen files from before Sunroom 0.6.0 (--version 0.5.0 downloads those) have no
-# screen helper; the page then goes dark at night by itself.
-check_screen_helper_files() {
-	if [[ $SCREEN_HELPER == yes ]] &&
-		[[ ! -f $SRC_DIR/sunroom-screen || ! -f $SRC_DIR/systemd/sunroom-screen.service ]]; then
-		SCREEN_HELPER="no"
-		note "These kitchen-screen files have no screen helper; at night the page goes dark by itself."
-	fi
-}
-
 # The first backlight under /sys/class/backlight: DSI panels such as the Touch Display have
 # one, HDMI monitors don't.
 backlight_device() {
@@ -1558,9 +1704,7 @@ setup_backlight() {
 	local rule="$TMP_DIR/backlight.rules"
 	{
 		header_comment
-		printf '# Lets the video group dim the screen and switch its backlight off, for the Sunroom screen helper.\n'
-		# shellcheck disable=SC2016 # $sys$devpath is udev's, not the shell's
-		printf '%s\n' 'SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video $sys$devpath/brightness $sys$devpath/bl_power", RUN+="/bin/chmod g+w $sys$devpath/brightness $sys$devpath/bl_power"'
+		render "$SRC_DIR/files/udev/90-sunroom-kiosk-backlight.rules"
 	} >"$rule"
 	BACKLIGHT_RULE_WRITTEN=$BACKLIGHT_RULE
 	if ! sudo cmp -s "$rule" "$BACKLIGHT_RULE"; then
@@ -1589,8 +1733,7 @@ setup_ddc() {
 	fi
 	{
 		header_comment
-		printf '# Lets ddcutil reach the screen over HDMI (DDC/CI), for the Sunroom screen helper.\n'
-		printf 'i2c-dev\n'
+		render "$SRC_DIR/files/modules-load/sunroom-kiosk-i2c.conf"
 	} >"$conf"
 	I2C_MODULES_WRITTEN=$I2C_MODULES_FILE
 	if ! sudo cmp -s "$conf" "$I2C_MODULES_FILE"; then
@@ -1601,7 +1744,7 @@ setup_ddc() {
 	note "Asking the screen whether it takes brightness commands (DDC/CI); this takes a few seconds..."
 	detected=$(sudo ddcutil detect --brief 2>&1 || true)
 	printf '%s\n' "$detected" >>"$LOG_FILE"
-	DDC_BUS=$(python3 "$SRC_DIR/sunroom-screen" --ddc-bus "$OUTPUT" <<<"$detected" 2>>"$LOG_FILE" || true)
+	DDC_BUS=$("$BIN_DIR/sunroom-kiosk" screen --ddc-bus "$OUTPUT" <<<"$detected" 2>>"$LOG_FILE" || true)
 	if [[ $DDC_BUS =~ ^[0-9]+$ ]]; then
 		note "The screen helper dims the screen over HDMI (DDC/CI, I2C bus $DDC_BUS)."
 	else
@@ -1631,15 +1774,6 @@ setup_brightness() {
 	esac
 }
 
-# --no-screen-helper after an install that had it: stopping it switches the screen back on.
-remove_screen_helper() {
-	if [[ -e $UNIT_DIR/sunroom-screen.service || -e $BIN_DIR/sunroom-screen ]]; then
-		user_systemctl stop sunroom-screen.service >/dev/null 2>&1 || true
-		rm -f "$UNIT_DIR/sunroom-screen.service" "$BIN_DIR/sunroom-screen"
-		note "Removed the screen helper (--no-screen-helper); the screen itself now stays on."
-	fi
-}
-
 setup_kiosk() {
 	if ((SWITCH_TO_X11)); then
 		note "Switching the desktop to X11, as asked..."
@@ -1657,6 +1791,8 @@ setup_kiosk() {
 	if [[ $SESSION == wayland ]]; then
 		remove_swayidle
 	fi
+	install_agent
+	install_root_helper
 	setup_brightness
 	write_kiosk_config
 	install_units
@@ -1674,12 +1810,8 @@ setup_kiosk() {
 		apply_force_hdmi
 	fi
 	if [[ $ROTATE != 0 ]]; then
-		note "The picture on $OUTPUT will be turned $ROTATE degrees."
-		if [[ $SESSION == wayland ]]; then
-			# Unverified: whether touch follows a rotated output on Raspberry Pi OS's labwc;
-			# labwc-config(5) says touch rotation needs a libinput calibrationMatrix.
-			note "If taps land in the wrong place on the turned screen, see docs/KIOSK.md for the touch fix."
-		fi
+		note "The picture on $OUTPUT will be turned $ROTATE degrees, and touch with it."
+		note "To change it later: Settings → This Screen → Rotation, on the screen."
 	fi
 	if [[ $SCREEN_HELPER == yes ]]; then
 		note "Set the screen's sleep times in Sunroom: Settings → Display → Sleep."
@@ -1707,15 +1839,26 @@ summary() {
 	say ""
 	case $MODE in
 	display)
-		say "The kitchen screen is set up. It will show Sunroom from $URL"
+		if [[ -n $URL ]]; then
+			say "The kitchen screen is set up. It will show Sunroom from $URL"
+		else
+			say "The kitchen screen is set up. When it starts, it looks for Sunroom on your network:"
+			say "pick yours there, or type the address you open on a phone."
+		fi
 		say ""
 		say "Next:"
-		say "  1. After the restart, the kitchen screen shows a six-character code."
+		if [[ $PLATFORM == pi ]]; then
+			say "  1. After the restart, the kitchen screen shows a six-character code."
+		else
+			say "  1. When it starts, the kitchen screen shows a six-character code."
+		fi
 		say "  2. On a phone signed in to Sunroom, open More → Pair a display and type that code."
-		say ""
-		say "Phones use the same address: $URL"
-		say "If the screen stays on the desktop picture, check that this address opens on a phone."
-		show_qr "$URL"
+		if [[ -n $URL ]]; then
+			say ""
+			say "Phones use the same address: $URL"
+			say "If the screen says it can't reach Sunroom, check that this address opens on a phone."
+			show_qr "$URL"
+		fi
 		;;
 	all | server)
 		host=$(pi_hostname)
@@ -1796,25 +1939,220 @@ run_uninstall() {
 	exit "$status"
 }
 
+# ---------------------------------------------------------------------------- another Linux computer
+
+# Chromium, Google Chrome or Microsoft Edge: the names Sunroom Screen looks for (browser.py).
+linux_browser() {
+	local name
+	for name in chromium chromium-browser google-chrome google-chrome-stable microsoft-edge microsoft-edge-stable; do
+		if command -v "$name" >/dev/null 2>&1; then
+			printf '%s' "$name"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# The policy folders of the browsers installed here (policy.py's LINUX_DIRS).
+linux_policy_dirs() {
+	if command -v chromium >/dev/null 2>&1 || command -v chromium-browser >/dev/null 2>&1; then
+		printf '%s\n' /etc/chromium/policies/managed
+	fi
+	if command -v google-chrome >/dev/null 2>&1 || command -v google-chrome-stable >/dev/null 2>&1; then
+		printf '%s\n' /etc/opt/chrome/policies/managed
+	fi
+	if command -v microsoft-edge >/dev/null 2>&1 || command -v microsoft-edge-stable >/dev/null 2>&1; then
+		printf '%s\n' /etc/opt/edge/policies/managed
+	fi
+}
+
+os_name() {
+	# shellcheck source=/dev/null
+	(. /etc/os-release 2>/dev/null && printf '%s' "${PRETTY_NAME:-}") || true
+}
+
+check_linux() {
+	local browser name
+	command -v curl >/dev/null 2>&1 || die "The installer needs curl, which isn't installed." \
+		"Install it (for example: sudo apt install curl), then run this again."
+	if ! command -v systemctl >/dev/null 2>&1 || ! user_systemctl show-environment >/dev/null 2>&1; then
+		die "Sunroom Screen needs systemd's user services, which this computer doesn't have." \
+			"Put the kitchen screen on a Raspberry Pi instead (docs/KIOSK.md)."
+	fi
+	browser=$(linux_browser) || die "Sunroom Screen needs Chromium, Google Chrome or Microsoft Edge, and none is installed." \
+		"Install one (for example: sudo apt install chromium), then run this again."
+	name=$(os_name)
+	note "${name:-Linux} ($(uname -m)); the browser: $browser."
+	case ${XDG_SESSION_TYPE:-} in
+	wayland | x11) SESSION=$XDG_SESSION_TYPE ;;
+	*) SESSION="" ;; # Sunroom Screen works it out when the desktop starts it
+	esac
+}
+
+# The browser's policy (policy.py): quiet, and when the address is known, the Sunroom page may
+# reach Sunroom Screen here without asking. It's root's to write and nothing else here needs
+# root, so sudo is asked for this alone. Without it, or for an address the screen finds later
+# (there's no root helper here to rewrite it), the browser asks once, on the screen.
+write_linux_policy() {
+	local tmp="$TMP_DIR/policy.json" dir dirs wrote=0
+	dirs=$(linux_policy_dirs)
+	[[ -n $dirs ]] || return 0
+	if ! "$BIN_DIR/sunroom-kiosk" policy ${URL:+--url "$URL"} >"$tmp" 2>>"$LOG_FILE"; then
+		warn "couldn't make the browser's settings; the browser asks once, on the screen, instead."
+		return 0
+	fi
+	note "Setting up the browser needs sudo, so it may ask for your password."
+	if ! sudo -v; then
+		warn "without sudo the browser may ask once, on the screen, to reach Sunroom Screen."
+		return 0
+	fi
+	for dir in $dirs; do
+		if sudo install -d -m 0755 "$dir" && sudo install -m 0644 -o root -g root "$tmp" "$dir/sunroom-kiosk.json"; then
+			wrote=1
+		else
+			warn "couldn't write $dir/sunroom-kiosk.json; the browser may ask once, on the screen."
+		fi
+	done
+	if ((wrote)); then
+		note "The browser won't ask for sign-in, passwords or translations${URL:+, and Sunroom may reach Sunroom Screen}."
+	fi
+}
+
+# Start the kitchen screen now when this runs on the desktop it will fill; else at the next
+# sign-in.
+offer_start() {
+	say ""
+	if [[ -z ${WAYLAND_DISPLAY:-}${DISPLAY:-} ]]; then
+		say "The kitchen screen starts the next time you sign in to this computer's desktop."
+		return 0
+	fi
+	if ask_yes_no "Start the kitchen screen now? It fills the whole screen." n n; then
+		user_systemctl import-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || true
+		user_systemctl --no-block restart sunroom-kiosk.service ||
+			die "Sunroom Screen didn't start. Its log: journalctl --user -u sunroom-kiosk"
+		say "Starting it. To close it: Settings → This Screen → Quit Sunroom Screen, on the screen."
+	else
+		say "OK. It starts the next time you sign in."
+	fi
+}
+
+# ---------------------------------------------------------------------------- --dry-run
+
+# What a real run would do here, from what it can see without changing anything: no sudo, no
+# downloads, no files. CI runs it on Linux, macOS (bash 3.2) and Windows (Git Bash).
+dry_run() {
+	say "Sunroom installer $KIOSK_VERSION: a dry run. Nothing on this computer changes."
+	say ""
+	case $PLATFORM in
+	pi | linux) dry_run_linux ;;
+	macos)
+		say "This computer: macOS $(sw_vers -productVersion 2>/dev/null || true)."
+		say "Sunroom Screen for a Mac comes in Sunroom 0.14.0, so a real run stops here."
+		;;
+	windows)
+		say "This computer: Windows."
+		say "Sunroom Screen for Windows comes with its own installer, install.ps1, in Sunroom 0.14.0,"
+		say "so a real run stops here."
+		;;
+	*) say "This computer runs $(uname -s), which this installer doesn't know, so a real run stops here." ;;
+	esac
+}
+
+# The plan on a Pi or another Linux computer, step by step as main runs them.
+dry_run_linux() {
+	local name model browser shows wheel="from GitHub, checked against its release's SHA256SUMS"
+	name=$(os_name)
+	if [[ $PLATFORM == pi ]]; then
+		model=$({ tr -d '\0' </proc/device-tree/model; } 2>/dev/null || true)
+		say "This computer: ${model:-a Raspberry Pi}, ${name:-an unknown system}."
+	else
+		say "This computer: ${name:-Linux} ($(uname -m))."
+	fi
+	print_plan
+	say ""
+	say "A real run would:"
+	if [[ $PLATFORM == pi ]]; then
+		say "  - check for 64-bit Raspberry Pi OS (Bookworm or Trixie), 2 GB free and the internet"
+		if [[ $MODE == server ]]; then
+			say "  - install what it needs with apt, only what's missing (curl, jq and qrencode)"
+		else
+			say "  - install what it needs with apt, only what's missing (curl, jq, qrencode, python3,"
+			say "    Chromium and the desktop's screen tools)"
+		fi
+	elif browser=$(linux_browser); then
+		say "  - check for the internet, and use $browser"
+	else
+		say "  - stop: it needs Chromium, Google Chrome or Microsoft Edge, and none is installed"
+		return 0
+	fi
+	if [[ -n $URL ]]; then
+		say "  - check that Sunroom answers at $URL"
+	fi
+	if [[ $MODE != display ]]; then
+		say "  - install Docker when it's missing, and run Sunroom ($SUNROOM_IMAGE:${VERSION:-latest}) from"
+		say "    $SERVER_DIR on port $PORT"
+		say "  - tell Sunroom screens on the network where it is ($AVAHI_SERVICE)"
+	fi
+	if [[ $MODE == server ]]; then
+		say "  - offer to restart"
+		return 0
+	fi
+	if [[ -n $AGENT_WHEEL ]]; then
+		wheel="from $AGENT_WHEEL"
+	fi
+	say "  - install uv $UV_VERSION in $(tidy "$BIN_DIR") when there's no uv, and with it Sunroom Screen"
+	say "    $KIOSK_VERSION ($wheel)"
+	if [[ $PLATFORM == pi ]]; then
+		say "  - let Sunroom Screen update this Pi and set the browser's policy through one root helper"
+		say "    ($ROOT_HELPER, allowed by $SUDOERS_FILE)"
+	fi
+	case $MODE in
+	all) shows="http://localhost:$PORT" ;;
+	*) shows=${URL:-the Sunroom it finds on the network (or an address typed on it)} ;;
+	esac
+	say "  - save the screen's settings in $(tidy "$CONFIG_DIR/config"), where it shows"
+	say "    $shows"
+	if [[ $PLATFORM == pi ]]; then
+		say "  - log in to the desktop by itself, turn off screen blanking and Wi-Fi power saving,"
+		say "    wait for the clock at startup, and start Sunroom Screen with the desktop"
+		say "    (sunroom-kiosk.service)"
+		if [[ $ROTATE != 0 ]]; then
+			say "  - turn the picture ${ROTATE} degrees, and touch with it"
+		fi
+		if [[ -n $FORCE_HDMI ]]; then
+			say "  - always drive the screen at $FORCE_HDMI"
+		fi
+		if ((NO_REBOOT)); then
+			say "  - leave the restart to you (--no-reboot)"
+		else
+			say "  - offer to restart"
+		fi
+	else
+		say "  - start Sunroom Screen when you sign in ($(tidy "$XDG_AUTOSTART_FILE"),"
+		say "    sunroom-kiosk.service)"
+		say "  - set the browser's policy, with sudo, so it doesn't ask for sign-in or passwords"
+		say "  - offer to start the kitchen screen now"
+		say "Nothing else is installed, and no other settings on this computer change."
+	fi
+}
+
 # ---------------------------------------------------------------------------- main
 
 print_plan() {
+	local shows
+	if [[ -n $URL ]]; then
+		shows=", showing Sunroom from $URL"
+	else
+		shows="; it finds Sunroom on your network by itself"
+	fi
 	case $MODE in
 	all) say "This sets up Sunroom and the kitchen screen on this Pi. It takes about 10 to 20 minutes." ;;
-	display) say "This sets up the kitchen screen on this Pi, showing Sunroom from $URL. It takes a few minutes." ;;
+	display) say "This sets up the kitchen screen on $MACHINE$shows. It takes a few minutes." ;;
 	server) say "This sets up Sunroom on this Pi, without a screen. It takes about 10 minutes." ;;
 	esac
 }
 
-main() {
-	ORIGINAL_ARGS=("$@")
-	parse_args "$@"
-	refuse_root
-	detect_tty
-	if ((UNINSTALL)); then
-		run_uninstall
-	fi
-	validate_args
+begin_run() {
 	setup_logging
 	trap 'on_error $? $LINENO' ERR
 	trap cleanup EXIT
@@ -1822,13 +2160,16 @@ main() {
 	load_previous_state
 	say "Sunroom installer $KIOSK_VERSION"
 	print_plan
+}
 
+install_on_pi() {
+	begin_run
 	step "Checking this Pi" "checking this Pi"
 	start_sudo
 	check_platform
 	check_disk
 	check_internet
-	if [[ $MODE == display ]]; then
+	if [[ $MODE == display && -n $URL ]]; then
 		check_remote_server
 	fi
 	if [[ $MODE != server ]]; then
@@ -1837,9 +2178,6 @@ main() {
 	fi
 	wait_for_apt
 	get_kiosk_files
-	if [[ $MODE != server ]]; then
-		check_screen_helper_files
-	fi
 
 	step "Installing what it needs" "installing software"
 	install_packages
@@ -1863,6 +2201,62 @@ main() {
 	step "All done" "finishing"
 	summary
 	offer_reboot
+}
+
+# Another Linux computer: Sunroom Screen alone, started at sign-in. No packages, no system
+# settings; root only for the browser's policy.
+install_on_linux() {
+	begin_run
+	step "Checking this computer" "checking this computer"
+	check_linux
+	check_internet
+	if [[ -n $URL ]]; then
+		check_remote_server
+	fi
+	get_kiosk_files
+
+	step "Setting up the kitchen screen" "setting up the kitchen screen"
+	install_helper_copies
+	install_agent
+	write_kiosk_config
+	install_units
+	write_xdg_autostart
+	write_linux_policy
+	save_state
+
+	step "All done" "finishing"
+	summary
+	offer_start
+}
+
+main() {
+	ORIGINAL_ARGS=("$@")
+	parse_args "$@"
+	detect_platform
+	refuse_root
+	detect_tty
+	if ((UNINSTALL)); then
+		run_uninstall
+	fi
+	validate_args
+	if ((DRY_RUN)); then
+		dry_run
+		exit 0
+	fi
+	case $PLATFORM in
+	pi) install_on_pi ;;
+	linux) install_on_linux ;;
+	macos)
+		die "Sunroom Screen for a Mac comes in Sunroom 0.14.0." \
+			"Until then, put the kitchen screen on a Raspberry Pi or a Linux computer (docs/KIOSK.md)."
+		;;
+	windows)
+		die "This installer is for a Raspberry Pi and Linux; Windows gets its own (install.ps1) in Sunroom 0.14.0."
+		;;
+	*)
+		die "This installer works on a Raspberry Pi or another Linux computer; this one runs $(uname -s)."
+		;;
+	esac
 }
 
 main "$@"

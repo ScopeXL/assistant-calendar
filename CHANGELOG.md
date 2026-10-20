@@ -19,10 +19,15 @@ Everything that changes in Sunroom, written in plain English. The format follows
   says so, keeps trying, and goes back by itself.
 - Behind the scenes: the kitchen screen's software becomes one program, Sunroom Screen, with
   tests that run on Linux, macOS and Windows.
+- The installer can make another Linux computer a kitchen screen, and `--dry-run` shows what it
+  would do without changing anything.
 
 ### Changed
 
 - The kitchen screen's keyboard shows letters only; 123 switches to numbers and symbols.
+- The kitchen screen installer no longer needs Sunroom's address: without `--url`, the screen
+  finds Sunroom on the home network after the restart, or takes the address on the screen. Run
+  the installer again on a Pi set up before to switch it to Sunroom Screen; its pairing is kept.
 
 ### Fixed
 

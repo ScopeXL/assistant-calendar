@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-# Sunroom uninstaller: takes off this Pi what kiosk/install.sh set up for the kitchen screen.
+# Sunroom uninstaller: takes off this Pi (or another Linux computer) what kiosk/install.sh set
+# up for the kitchen screen.
 #
 #   bash uninstall.sh [--purge] [--yes]
 #   (the same as: bash install.sh --uninstall [--purge] [--yes]; the installer keeps a copy
 #    of this script at ~/.local/share/sunroom-kiosk/uninstall.sh)
 #
-# Removes the kitchen screen's systemd user units and nightly restart timer, the launcher and
-# the screen helper (which switches the screen back on as it stops), its settings, the labwc
-# autostart block or the X11 autostart entry, the labwc pointer and touch settings (putting
-# back rc.xml.sunroom-backup when nothing else changed), the Wi-Fi power-saving drop-in, the
-# screen helper's backlight udev rule and i2c-dev module file, the kernel command line
+# Removes Sunroom Screen (it switches the screen back on as it stops; then uv uninstalls it,
+# and its kept wheels go), its systemd user unit and the units of the screen helper and nightly
+# restart from before 0.13.0, its root helper and sudoers rule, the browser's policy files, its
+# settings, the labwc autostart block or the XDG autostart entry, the labwc pointer and touch
+# settings (putting back rc.xml.sunroom-backup when nothing else changed), the Wi-Fi
+# power-saving drop-in, the backlight udev rule and i2c-dev module file, the kernel command line
 # options it added, and systemd-time-wait-sync if the installer turned it on. It asks before
 # deleting the browser profile, which holds the screen's pairing. Docker and Sunroom with its
 # data stay unless you add --purge, which runs "docker compose down -v" in /opt/sunroom and
-# deletes that folder. Desktop autologin, "no screen blanking", installed packages (ddcutil,
-# wlopm) and group memberships (video, i2c) are left as they are.
+# deletes that folder. uv, desktop autologin, "no screen blanking", installed packages
+# (ddcutil, wlopm) and group memberships (video, i2c) are left as they are.
 #
 # Like the installer: run it as your normal user (it uses sudo itself), questions are read
 # from the keyboard (/dev/tty), --yes answers yes to all of them, and nothing runs until
@@ -38,6 +40,10 @@ AVAHI_SERVICE="/etc/avahi/services/sunroom.service"
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
 BACKLIGHT_RULE="/etc/udev/rules.d/90-sunroom-kiosk-backlight.rules"
 I2C_MODULES_FILE="/etc/modules-load.d/sunroom-kiosk-i2c.conf"
+ROOT_HELPER="/usr/local/sbin/sunroom-kiosk-root"
+SUDOERS_FILE="/etc/sudoers.d/sunroom-kiosk"
+# The browser's policy, which Sunroom Screen (or the installer) writes (agent policy.py).
+POLICY_FILES=(/etc/chromium/policies/managed/sunroom-kiosk.json /etc/opt/chrome/policies/managed/sunroom-kiosk.json /etc/opt/edge/policies/managed/sunroom-kiosk.json)
 BLOCK_BEGIN="# >>> sunroom-kiosk"
 BLOCK_END="# <<< sunroom-kiosk <<<"
 UNITS=(sunroom-kiosk.service sunroom-screen.service sunroom-kiosk-restart.service sunroom-kiosk-restart.timer)
@@ -77,7 +83,7 @@ tidy() {
 
 usage() {
 	cat <<'EOF'
-Remove the Sunroom kitchen screen setup from this Pi.
+Remove the Sunroom kitchen screen setup from this computer.
 
 Usage: bash uninstall.sh [--purge] [--yes]
 
@@ -86,7 +92,7 @@ Usage: bash uninstall.sh [--purge] [--yes]
   --yes     Answer yes to every question, including deleting the screen's pairing.
   --help    Show this help
 
-Docker itself, desktop autologin and "no screen blanking" are left as they are.
+Docker itself, uv, desktop autologin and "no screen blanking" are left as they are.
 EOF
 }
 
@@ -107,7 +113,7 @@ ask_yes_no() {
 		answer=""
 		IFS= read -r answer </dev/tty || true
 		printf '%s %s %s\n' "$question" "$hint" "${answer:-<Enter>}" >>"$LOG_FILE"
-		case ${answer,,} in
+		case $(printf '%s' "$answer" | tr '[:upper:]' '[:lower:]') in
 		"")
 			[[ $default == y ]]
 			return
@@ -186,7 +192,8 @@ load_state() {
 remove_units() {
 	local unit removed=0
 	user_systemctl disable --now sunroom-kiosk-restart.timer >/dev/null 2>&1 || true
-	# The screen helper switches the screen back on, at full brightness, as it stops.
+	# Sunroom Screen (or, before 0.13.0, the screen helper) switches the screen back on, at full
+	# brightness, as it stops.
 	user_systemctl stop sunroom-screen.service sunroom-kiosk.service >/dev/null 2>&1 || true
 	for unit in "${UNITS[@]}"; do
 		if [[ -e $UNIT_DIR/$unit ]]; then
@@ -200,14 +207,47 @@ remove_units() {
 	if ((removed)); then
 		note "Stopped the kitchen screen and removed its services and nightly restart."
 	fi
-	if [[ -e $BIN_DIR/sunroom-kiosk ]]; then
-		rm -f "$BIN_DIR/sunroom-kiosk"
-		note "Removed the launcher ($(tidy "$BIN_DIR/sunroom-kiosk"))."
-	fi
+	remove_agent
 	if [[ -e $BIN_DIR/sunroom-screen ]]; then
 		rm -f "$BIN_DIR/sunroom-screen"
 		note "Removed the screen helper ($(tidy "$BIN_DIR/sunroom-screen")); the screen stays on."
 	fi
+}
+
+find_uv() {
+	if command -v uv >/dev/null 2>&1; then
+		command -v uv
+	elif [[ -x $BIN_DIR/uv ]]; then
+		printf '%s' "$BIN_DIR/uv"
+	else
+		return 1
+	fi
+}
+
+# Sunroom Screen is a uv tool (before 0.13.0, a bash launcher at the same path).
+remove_agent() {
+	local uv
+	if uv=$(find_uv) && "$uv" tool list 2>/dev/null | grep -q '^sunroom-kiosk '; then
+		"$uv" tool uninstall sunroom-kiosk >/dev/null 2>&1 || warn "uv couldn't uninstall Sunroom Screen; see: uv tool list"
+		note "Uninstalled Sunroom Screen."
+	fi
+	if [[ -e $BIN_DIR/sunroom-kiosk || -L $BIN_DIR/sunroom-kiosk ]]; then
+		rm -f "$BIN_DIR/sunroom-kiosk"
+		note "Removed $(tidy "$BIN_DIR/sunroom-kiosk")."
+	fi
+}
+
+# On a Pi, Sunroom Screen's root helper and the sudoers rule that allows it; anywhere, the
+# browser's policy files.
+remove_root_files() {
+	local file
+	for file in "$SUDOERS_FILE" "$ROOT_HELPER" "${POLICY_FILES[@]}"; do
+		if [[ -e $file ]]; then
+			need_sudo
+			sudo rm -f "$file"
+			note "Removed $file."
+		fi
+	done
 }
 
 # The screen helper's system files: the udev rule that lets the video group switch the
@@ -405,7 +445,7 @@ purge_server() {
 
 finish() {
 	local keep_uninstaller=0
-	rm -f "$STATE_FILE" "$LABWC_STATE"
+	rm -f "$STATE_FILE" "$LABWC_STATE" "$STATE_DIR/update.json"
 	# While Sunroom's server stays, keep this script so --purge still works later.
 	if ((!PURGE)) && [[ -d $SERVER_DIR ]] && [[ -f $SHARE_DIR/uninstall.sh ]]; then
 		keep_uninstaller=1
@@ -415,8 +455,8 @@ finish() {
 	fi
 	say ""
 	say "The Sunroom kitchen screen setup is removed."
-	say "Left as they are: Docker, the desktop logging in by itself and screen blanking being off"
-	say "(change those in Raspberry Pi Configuration if you like)."
+	say "Left as they are: uv, Docker, the desktop logging in by itself and screen blanking being off"
+	say "(on a Pi, change those in Raspberry Pi Configuration if you like)."
 	if ((!PURGE)) && [[ -d $SERVER_DIR ]]; then
 		say "Sunroom itself still runs on this Pi, with your family's data. To delete it as well:"
 		if ((keep_uninstaller)); then
@@ -437,6 +477,7 @@ main() {
 	load_state
 	say "Removing the Sunroom kitchen screen setup..."
 	remove_units
+	remove_root_files
 	remove_autostart
 	remove_labwc_settings
 	remove_wifi_dropin
