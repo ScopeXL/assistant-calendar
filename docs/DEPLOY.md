@@ -121,6 +121,22 @@ curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kio
 After the restart it shows a code; type it on your phone under **More → Pair a display**.
 [KIOSK.md](KIOSK.md) has the details.
 
+**Optional: let screens find this server by name.** A Sunroom screen looking for Sunroom checks
+every address on its network on port 8080, which finds this setup as it is. A server that runs
+avahi (most Linux machines do; `systemctl status avahi-daemon`) can also announce Sunroom, which
+a screen hears even when Sunroom is on another port. Put this in
+`/etc/avahi/services/sunroom.service` (change `8080` to the port you publish); avahi picks it up
+by itself:
+
+```xml
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">Sunroom on %h</name>
+  <service><type>_sunroom._tcp</type><port>8080</port></service>
+</service-group>
+```
+
 ## Updating
 
 Each release prints these steps. In Sunroom's folder on the server:

@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<!-- @NOTE@ -->
+<!-- Lets a Sunroom screen on this network find this server by itself (docs/KIOSK.md). Avahi
+     announces it as _sunroom._tcp; the screen still checks /api/discover before it lists it. -->
+<service-group>
+  <name replace-wildcards="yes">Sunroom on %h</name>
+  <service>
+    <type>_sunroom._tcp</type>
+    <port>@PORT@</port>
+    <txt-record>v=@VERSION@</txt-record>
+  </service>
+</service-group>

@@ -34,6 +34,7 @@ UNIT_DIR="$HOME/.config/systemd/user"
 LABWC_DIR="$HOME/.config/labwc"
 XDG_AUTOSTART_FILE="$HOME/.config/autostart/sunroom-kiosk.desktop"
 SERVER_DIR="/opt/sunroom"
+AVAHI_SERVICE="/etc/avahi/services/sunroom.service"
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
 BACKLIGHT_RULE="/etc/udev/rules.d/90-sunroom-kiosk-backlight.rules"
 I2C_MODULES_FILE="/etc/modules-load.d/sunroom-kiosk-i2c.conf"
@@ -398,6 +399,7 @@ purge_server() {
 		sudo docker volume rm sunroom_data >/dev/null 2>&1 || true
 	fi
 	sudo rm -rf "$SERVER_DIR"
+	sudo rm -f "$AVAHI_SERVICE"
 	note "Deleted Sunroom, its data and $SERVER_DIR. Docker itself is still installed."
 }
 

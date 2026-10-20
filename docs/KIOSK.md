@@ -52,7 +52,9 @@ files. Its log is `~/.local/state/sunroom-kiosk/install.log`.
   on labwc, `x11-xserver-utils` and `unclutter` on X11) when they are missing.
 - Without `--display-only`: Docker (from `get.docker.com`), and Sunroom in
   `/opt/sunroom/docker-compose.yml` with its data in the `sunroom_data` volume, optional settings
-  in `/opt/sunroom/.env`, and `/opt/sunroom/update.sh`.
+  in `/opt/sunroom/.env`, and `/opt/sunroom/update.sh`; and
+  `/etc/avahi/services/sunroom.service`, which lets Sunroom screens on the network find this Pi
+  by themselves (`--purge` removes it with Sunroom).
 - Logs in to the desktop by itself and turns off screen blanking (`raspi-config`).
 - The launcher `~/.local/bin/sunroom-kiosk`, run by the user service `sunroom-kiosk.service`
   (restarted 3 seconds after any exit), and a timer that restarts the browser at about 04:00 to
@@ -151,6 +153,26 @@ Run the installer again with the options you used the first time (for example `-
 --url …`), then let it restart the Pi. It keeps what is already right, adds the screen helper and
 its service, and finds the brightness method. `update.sh` alone doesn't add the helper: it updates
 Sunroom, not the Pi's screen setup.
+
+## Letting screens find a Sunroom on a NAS or server
+
+A Sunroom screen that isn't told an address looks for Sunroom on its network: it asks every
+address on its own network on ports 8080, 80 and 443, which finds a server set up as
+[DEPLOY.md](DEPLOY.md) shows. It also listens for Sunrooms that announce themselves, which an
+all-in-one Pi does. To announce one on another Linux machine that runs avahi, put this in
+`/etc/avahi/services/sunroom.service` (with the port you publish); it's optional:
+
+```xml
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">Sunroom on %h</name>
+  <service><type>_sunroom._tcp</type><port>8080</port></service>
+</service-group>
+```
+
+A reverse proxy that picks a site by its name isn't found either way: type its address on the
+screen instead.
 
 ## Every day
 

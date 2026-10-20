@@ -44,6 +44,8 @@ XDG_AUTOSTART_FILE="$HOME/.config/autostart/sunroom-kiosk.desktop"
 SERVER_DIR="/opt/sunroom"
 # NetworkManager merges conf.d files in byte order and the last one wins, hence "zz-".
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
+# Announces Sunroom on the network for Sunroom screens (ADR 0035); avahi reloads it by itself.
+AVAHI_SERVICE="/etc/avahi/services/sunroom.service"
 # The screen helper's brightness: the backlight's bl_power for the video group (Raspberry Pi
 # OS's own 60-backlight.rules covers brightness only), and i2c-dev at every start for DDC/CI.
 BACKLIGHT_RULE="/etc/udev/rules.d/90-sunroom-kiosk-backlight.rules"
@@ -849,7 +851,7 @@ wait_for_apt() {
 
 has_kiosk_files() {
 	local dir=$1 file
-	for file in sunroom-kiosk labwc-rule.py update.sh uninstall.sh \
+	for file in sunroom-kiosk labwc-rule.py update.sh uninstall.sh files/avahi/sunroom.service \
 		systemd/sunroom-kiosk.service systemd/sunroom-kiosk-restart.service systemd/sunroom-kiosk-restart.timer; do
 		[[ -f $dir/$file ]] || return 1
 	done
@@ -1176,6 +1178,22 @@ start_stack() {
 	fi
 	printf '%s\n' "$output"
 	wait_for_health
+}
+
+# Sunroom screens on this network find this server by itself through avahi, which Raspberry Pi
+# OS runs (the server in its container can't announce itself: Docker's network keeps the
+# announcement in). Without avahi the screens still find it by looking at every address.
+write_avahi_service() {
+	local note tmp="$TMP_DIR/sunroom.service"
+	if ! sudo test -d "$(dirname "$AVAHI_SERVICE")"; then
+		log_only "No $(dirname "$AVAHI_SERVICE"); Sunroom screens will find this Pi by its address."
+		return 0
+	fi
+	note=$(header_comment | sed 's/^# //')
+	sed -e "s|@PORT@|$PORT|" -e "s|@VERSION@|$KIOSK_VERSION|" -e "s|@NOTE@|$note|" \
+		"$SRC_DIR/files/avahi/sunroom.service" >"$tmp"
+	sudo install -m 0644 -o root -g root "$tmp" "$AVAHI_SERVICE"
+	note "Sunroom screens on this network can find this Pi by themselves now."
 }
 
 # ---------------------------------------------------------------------------- step 4: the kitchen screen
@@ -1832,6 +1850,7 @@ main() {
 		step "Starting Sunroom" "starting Sunroom"
 		write_stack
 		start_stack
+		write_avahi_service
 	fi
 
 	install_helper_copies
