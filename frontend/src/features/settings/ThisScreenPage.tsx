@@ -6,6 +6,7 @@ import { qk } from "../../api/keys";
 import {
   screenClient,
   screenProgress,
+  sunroomName,
   useScreenAgent,
   type ScreenCapability,
   type ScreenState,
@@ -81,19 +82,12 @@ function networkWords(state: ScreenState): string {
   return "Not connected";
 }
 
-/** "The Sample Family's Sunroom", or plain "Sunroom" without a name to go by. */
-export function sunroomName(name: string | null | undefined): string {
-  const trimmed = name?.trim();
-  if (!trimmed || /^(home|our home)$/i.test(trimmed)) return "Sunroom";
-  return `${trimmed}${trimmed.endsWith("s") ? "’" : "’s"} Sunroom`;
-}
-
 /**
  * Settings → This Screen (UX §4, ADR 0035): the wall's own device, through Sunroom Screen beside
  * its browser. Parent-only like the rest of Settings, on a wall the launcher named an agent for
  * (`?screen=`), and every row and button only when the agent says this screen can do it.
  */
-export function ThisScreenPage() {
+export function ThisScreenPage({ onForgot }: { onForgot?: () => void } = {}) {
   const state = useScreenAgent();
   const queryClient = useQueryClient();
   const progress = useStore(screenProgress);
@@ -150,6 +144,7 @@ export function ThisScreenPage() {
     onSuccess: () => {
       setAsking(null);
       showToast("Address changed. This screen is reloading.");
+      onForgot?.();
     },
     onError: (error) => {
       showToast(refusal(error));
@@ -394,41 +389,135 @@ function SignalIcon({ strength: percent }: { strength: number }) {
   return <Icon aria-hidden="true" className="size-8 shrink-0" />;
 }
 
-/** Change Wi-Fi: the networks in range, a tap on one asks its password on the wall's keyboard. */
-function WifiSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+/**
+ * The networks in range, and the password of the one tapped, typed on the wall's keyboard
+ * (Change Wi-Fi's sheet, and the screen's own Wi-Fi page). `chosen` is held by the caller, which
+ * titles itself after it.
+ */
+export function WifiChooser({
+  chosen,
+  onChoose,
+  onJoined,
+}: {
+  chosen: ScreenWifi | null;
+  onChoose: (network: ScreenWifi | null) => void;
+  onJoined: () => void;
+}) {
   const queryClient = useQueryClient();
-  const [chosen, setChosen] = useState<ScreenWifi | null>(null);
   const [password, setPassword] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const { data: networks, isFetching } = useQuery({
     queryKey: qk.screen.wifi(),
-    queryFn: async () => {
-      return answer(await agent().GET("/api/screen/wifi")).networks;
-    },
-    enabled: open,
+    queryFn: async () => answer(await agent().GET("/api/screen/wifi")).networks,
   });
   const join = useMutation({
-    mutationFn: async (network: ScreenWifi) => {
-      return answer(
-        await agent().POST("/api/screen/wifi", {
-          body: { ssid: network.ssid, password },
-        }),
-      ).networks;
-    },
+    mutationFn: async (network: ScreenWifi) =>
+      answer(await agent().POST("/api/screen/wifi", { body: { ssid: network.ssid, password } }))
+        .networks,
     onSuccess: async (fresh, network) => {
       queryClient.setQueryData(qk.screen.wifi(), fresh);
       await queryClient.invalidateQueries({ queryKey: qk.screen.state() });
       showToast(`Joined ${network.ssid}`);
-      close();
+      setPassword("");
+      onJoined();
     },
     onError: (error) => {
       setProblem(refusal(error));
     },
   });
-  const close = () => {
-    setChosen(null);
+  const choose = (network: ScreenWifi | null) => {
     setPassword("");
     setProblem(null);
+    onChoose(network);
+  };
+  if (chosen) {
+    return (
+      <form
+        className="flex flex-col gap-5 pb-2 text-left"
+        onSubmit={(event) => {
+          event.preventDefault();
+          join.mutate(chosen);
+        }}
+      >
+        {chosen.secured ? (
+          <TextField
+            label="Password"
+            type="password"
+            layout="password"
+            autoCapitalize="none"
+            autoComplete="off"
+            value={password}
+            error={problem}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setProblem(null);
+            }}
+          />
+        ) : (
+          <Text soft>This network has no password.</Text>
+        )}
+        {!chosen.secured && problem ? (
+          <p role="alert" className="font-semibold text-alert">
+            {problem}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" pending={join.isPending}>
+            Connect
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              choose(null);
+            }}
+          >
+            Other Networks
+          </Button>
+        </div>
+      </form>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-2 pb-2 text-left">
+      {networks === undefined ? (
+        <Text soft>{isFetching ? "Looking for networks…" : "No networks found."}</Text>
+      ) : networks.length === 0 ? (
+        <Text soft>No networks found. Move the screen closer to the router, or try again.</Text>
+      ) : (
+        <ul className="divide-y divide-line rounded-chip border border-line bg-surface px-4">
+          {networks.map((network) => (
+            <li key={network.ssid}>
+              <button
+                type="button"
+                disabled={network.connected}
+                className="press-row flex min-h-20 w-full items-center gap-4 py-3 text-left disabled:opacity-100"
+                aria-label={`${network.ssid}, ${strength(network.strength)} signal${network.secured ? ", needs a password" : ""}${network.connected ? ", connected" : ""}`}
+                onClick={() => {
+                  choose(network);
+                }}
+              >
+                <SignalIcon strength={network.strength} />
+                <span className="min-w-0 flex-1 text-d-body font-semibold">{network.ssid}</span>
+                {network.connected ? (
+                  <span className="text-d-secondary text-ink-soft">Connected</span>
+                ) : null}
+                {network.secured ? (
+                  <Lock aria-hidden="true" className="size-7 shrink-0 text-ink-soft" />
+                ) : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Change Wi-Fi, in a sheet over This Screen. */
+function WifiSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [chosen, setChosen] = useState<ScreenWifi | null>(null);
+  const close = () => {
+    setChosen(null);
     onClose();
   };
   return (
@@ -438,86 +527,7 @@ function WifiSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       onClose={close}
       {...(chosen ? { step: chosen.ssid } : {})}
     >
-      {chosen ? (
-        <form
-          className="flex flex-col gap-5 pb-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            join.mutate(chosen);
-          }}
-        >
-          {chosen.secured ? (
-            <TextField
-              label="Password"
-              type="password"
-              layout="password"
-              autoCapitalize="none"
-              autoComplete="off"
-              value={password}
-              error={problem}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setProblem(null);
-              }}
-            />
-          ) : (
-            <Text soft>This network has no password.</Text>
-          )}
-          {!chosen.secured && problem ? (
-            <p role="alert" className="font-semibold text-alert">
-              {problem}
-            </p>
-          ) : null}
-          <div className="flex flex-wrap gap-3">
-            <Button type="submit" pending={join.isPending}>
-              Connect
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setChosen(null);
-                setPassword("");
-                setProblem(null);
-              }}
-            >
-              Other Networks
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <div className="flex flex-col gap-2 pb-2">
-          {networks === undefined ? (
-            <Text soft>{isFetching ? "Looking for networks…" : "No networks found."}</Text>
-          ) : networks.length === 0 ? (
-            <Text soft>No networks found. Move the screen closer to the router, or try again.</Text>
-          ) : (
-            <ul className="divide-y divide-line rounded-chip border border-line bg-surface px-4">
-              {networks.map((network) => (
-                <li key={network.ssid}>
-                  <button
-                    type="button"
-                    disabled={network.connected}
-                    className="press-row flex min-h-20 w-full items-center gap-4 py-3 text-left disabled:opacity-100"
-                    aria-label={`${network.ssid}, ${strength(network.strength)} signal${network.secured ? ", needs a password" : ""}${network.connected ? ", connected" : ""}`}
-                    onClick={() => {
-                      setChosen(network);
-                    }}
-                  >
-                    <SignalIcon strength={network.strength} />
-                    <span className="min-w-0 flex-1 text-d-body font-semibold">{network.ssid}</span>
-                    {network.connected ? (
-                      <span className="text-d-secondary text-ink-soft">Connected</span>
-                    ) : null}
-                    {network.secured ? (
-                      <Lock aria-hidden="true" className="size-7 shrink-0 text-ink-soft" />
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      {open ? <WifiChooser chosen={chosen} onChoose={setChosen} onJoined={close} /> : null}
     </Sheet>
   );
 }

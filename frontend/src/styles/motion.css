@@ -500,6 +500,23 @@ dialog[data-closing] [data-keyboard] {
   }
 }
 
+/* The sun breathing while a screen opens its Sunroom (src/screen, ADR 0035). Endless, so Reduce
+   Motion stops it outright (below), rather than flickering at 0.01 ms. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.8;
+  }
+}
+.sun-breathe {
+  animation: breathe 2.4s var(--ease-standard) infinite;
+}
+
 /* Reduce Motion: everything instant. 0.01 ms rather than 0, so every animation still runs to its
    end (and a sheet's close still sees one finish). */
 @media (prefers-reduced-motion: reduce) {
@@ -517,11 +534,12 @@ dialog[data-closing] [data-keyboard] {
     transform: none;
   }
   .live-turn,
-  .skeleton-shape {
+  .skeleton-shape,
+  .sun-breathe {
     animation: none !important;
   }
 }
-:root[data-reduce-motion] :is(.live-turn, .skeleton-shape) {
+:root[data-reduce-motion] :is(.live-turn, .skeleton-shape, .sun-breathe) {
   animation: none !important;
 }
 :root[data-reduce-motion] *,

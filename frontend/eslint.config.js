@@ -41,7 +41,13 @@ export default defineConfig(
     },
   },
   {
-    files: ["vite.config.ts", "playwright.config.ts", "e2e/**", "scripts/**"],
+    files: [
+      "vite.config.ts",
+      "vite.screen.config.ts",
+      "playwright.config.ts",
+      "e2e/**",
+      "scripts/**",
+    ],
     languageOptions: { globals: globals.node },
   },
   {

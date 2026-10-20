@@ -3,10 +3,15 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { qk } from "../../api/keys";
-import { forgetScreenAgent, noteScreenAgent, type ScreenState } from "../../lib/screenAgent";
+import {
+  forgetScreenAgent,
+  noteScreenAgent,
+  sunroomName,
+  type ScreenState,
+} from "../../lib/screenAgent";
 import { toasts } from "../../lib/toast";
 import { ShellContext } from "../../ui/shell";
-import { sunroomName, ThisScreenPage } from "./ThisScreenPage";
+import { ThisScreenPage } from "./ThisScreenPage";
 
 const AGENT = "http://127.0.0.1:7800";
 

@@ -17,6 +17,8 @@ router = APIRouter(prefix="/api/screen/_test", include_in_schema=False)
 class FakeIn(BaseModel):
     kind: Literal["pi", "desktop"] | None = None
     wired: bool | None = None
+    offline: bool | None = None  # no Wi-Fi joined (and no cable): the Wi-Fi step shows
+    sunroom: str | None = None  # an address saved without checking it (Can't Reach)
 
 
 def _agent(request: Request) -> Agent:
@@ -31,4 +33,6 @@ async def reset(request: Request) -> None:
 
 @router.post("/fake", status_code=204)
 async def fake(body: FakeIn, request: Request) -> None:
-    await _agent(request).change_fake(kind=body.kind, wired=body.wired)
+    await _agent(request).change_fake(
+        kind=body.kind, wired=body.wired, offline=body.offline, sunroom=body.sunroom
+    )

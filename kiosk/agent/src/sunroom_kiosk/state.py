@@ -94,6 +94,7 @@ class Agent:
         browser_info: Browser | None = None,
         screen_root: Path = Path("/"),
         fake: bool = False,
+        dev_origins: tuple[str, ...] = (),
     ) -> None:
         self.port = port
         self.config_path = config_path
@@ -106,6 +107,7 @@ class Agent:
         self.discovery = discovery or Discovery(self.hub.publish)
         self.http = http or (lambda: httpx.AsyncClient(timeout=HEALTH_TIMEOUT_S))
         self.fake = fake
+        self.dev_origins = dev_origins  # just kiosk-dev: Vite's page, in front of the agent
         self.reachable = False
         self.known = Known()
         self.started = time.monotonic()
@@ -124,7 +126,7 @@ class Agent:
 
     def origins(self) -> set[str]:
         """Who may call the agent from a page: the Sunroom it shows, and its own pages."""
-        allowed = {self.own_origin, f"http://localhost:{self.port}"}
+        allowed = {self.own_origin, f"http://localhost:{self.port}", *self.dev_origins}
         if self.config.url:
             allowed.add(origin_of(self.config.url))
         return allowed
@@ -510,7 +512,14 @@ class Agent:
         await self.refresh_network()
         self.publish_state()
 
-    async def change_fake(self, *, kind: str | None, wired: bool | None) -> None:
+    async def change_fake(
+        self,
+        *,
+        kind: str | None = None,
+        wired: bool | None = None,
+        offline: bool | None = None,
+        sunroom: str | None = None,
+    ) -> None:
         from sunroom_kiosk.platform.fake import FakePlatform
 
         if not isinstance(self.platform, FakePlatform):
@@ -519,6 +528,12 @@ class Agent:
             self.platform.kind = kind
         if wired is not None:
             self.platform.wired = wired
+        if offline:
+            self.platform.networks = [replace(n, connected=False) for n in self.platform.networks]
+        if sunroom is not None:
+            self.save(self.config.with_sunroom(sunroom.rstrip("/"), None, "typed"))
+            self.known = Known()
+            await self.health_tick()
         await self.refresh_network()
         self.publish_state()
 

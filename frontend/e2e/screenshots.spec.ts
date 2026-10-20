@@ -886,6 +886,51 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
   await shot(page, "board-dinners");
 });
 
+test("the screen's own pages (Sunroom Screen, ADR 0035)", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
+  test.setTimeout(240_000);
+  const agent = "http://127.0.0.1:4174";
+  const change = { "X-Sunroom-Screen": "1" };
+  const fake = async (data: Record<string, unknown>) => {
+    const response = await page.request.post(`${agent}/api/screen/_test/fake`, {
+      headers: change,
+      data,
+    });
+    expect(response.status()).toBe(204);
+  };
+  await seed(page.request);
+  // The pages take their theme from the screen's own clock: daytime, then evening.
+  for (const [theme, at] of [
+    ["light", "2026-10-07T14:00:00Z"],
+    ["dark", "2026-10-08T01:30:00Z"],
+  ] as const) {
+    await page.clock.setFixedTime(new Date(at));
+    const reset = await page.request.post(`${agent}/api/screen/_test/reset`, { headers: change });
+    expect(reset.status()).toBe(204);
+    await page.goto(`${agent}/`);
+    await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
+    await shot(page, `screen-welcome-${theme}`);
+    await page.goto(`${agent}/find`);
+    await expect(page.getByText("A Sunroom", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Look Again" })).toBeVisible();
+    await shot(page, `screen-find-${theme}`);
+    await fake({ offline: true });
+    await page.goto(`${agent}/wifi`);
+    await expect(page.getByRole("button", { name: /^SampleStreet-5G/ })).toBeVisible();
+    await shot(page, `screen-wifi-${theme}`);
+    await fake({ sunroom: "http://127.0.0.1:9" });
+    await page.goto(`${agent}/opening`);
+    await expect(page.getByRole("heading", { name: "Opening Sunroom…" })).toBeVisible();
+    await shot(page, `screen-opening-${theme}`);
+    await page.goto(`${agent}/cant-reach`);
+    await expect(page.getByRole("heading", { name: "Can’t Reach Sunroom" })).toBeVisible();
+    await shot(page, `screen-cant-reach-${theme}`);
+    await page.goto(`${agent}/settings`);
+    await expect(page.getByRole("heading", { name: "This Screen", level: 1 })).toBeVisible();
+    await shot(page, `screen-settings-${theme}`);
+  }
+});
+
 test("a phone's lists and chores", async ({ page, isMobile }) => {
   test.skip(!isMobile, "phones");
   test.setTimeout(240_000);

@@ -16,5 +16,11 @@
     "noUnusedParameters": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "e2e", "scripts/**/*.ts"]
+  "include": [
+    "vite.config.ts",
+    "vite.screen.config.ts",
+    "playwright.config.ts",
+    "e2e",
+    "scripts/**/*.ts"
+  ]
 }

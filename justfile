@@ -68,6 +68,21 @@ kiosk-lint:
     {{py}} -m py_compile kiosk/labwc-rule.py kiosk/sunroom-screen
     cd kiosk/agent && uv run --quiet ruff check . && uv run --quiet ruff format --check . && uv run --quiet pyright
 
+# Sunroom Screen's pages in development: the pretend agent on 7800 (finding `just dev`'s Sunroom on
+# 8080) and Vite's screen shell on http://127.0.0.1:5174
+kiosk-dev:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trap 'kill 0' EXIT
+    (cd kiosk/agent && uv run sunroom-kiosk run --fake pi --dev --fake-sunroom http://127.0.0.1:8080) &
+    (cd frontend && pnpm dev:screen) &
+    wait
+
+# Sunroom Screen's wheel, with its pages built in (frontend/src/screen into the package's static/)
+kiosk-build:
+    cd frontend && pnpm exec vite build --config vite.screen.config.ts
+    cd kiosk/agent && rm -rf dist && uv build --wheel --out-dir dist
+
 # Sunroom Screen's agent: its tests, on the pretend platform (no network, no machine changes)
 [positional-arguments]
 kiosk-test *ARGS:

@@ -19,17 +19,22 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import cast
 
+import httpx
+
 from sunroom_kiosk import config as settings_file
 from sunroom_kiosk import logs, screen
 from sunroom_kiosk.version import version
 
 DEFAULT_PORT = 7800
+# just kiosk-dev: Vite serves the pages on 5174 and passes /api/screen through to the agent.
+DEV_ORIGINS = ("http://127.0.0.1:5174", "http://localhost:5174")
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -54,6 +59,12 @@ def _parser() -> argparse.ArgumentParser:
         default=[],
         metavar="URL",
         help="with --fake: a Sunroom it finds on the network (asked for real)",
+    )
+    run.add_argument(
+        "--log-level",
+        choices=["debug", "info", "warning"],
+        default="info",
+        help="how much the agent says (the e2e runs keep it to warnings)",
     )
     run.add_argument(
         "--dev",
@@ -86,7 +97,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     from sunroom_kiosk.state import Agent, BrowserLike
     from sunroom_kiosk.updater import FakeUpdater, NoUpdates, UpdaterLike
 
-    logs.setup()
+    logs.setup(getattr(logging, cast(str, args.log_level).upper()))
     log = logs.get("cli")
     port = cast(int, args.port)
     path = cast(Path | None, args.config) or settings_file.config_file()
@@ -130,6 +141,10 @@ def cmd_run(args: argparse.Namespace) -> int:
         discovery=discovery,
         browser_info=found,
         fake=fake is not None,
+        dev_origins=DEV_ORIGINS if args.dev else (),
+        # The pretend screen's Sunrooms are on this machine: an address that doesn't answer
+        # says so at once, rather than after the real five seconds.
+        http=_quick_client if fake else None,
     )
     holder["agent"] = agent
     app = create_app(agent, static=None if args.dev else STATIC, test_routes=bool(fake))
@@ -142,6 +157,10 @@ def cmd_run(args: argparse.Namespace) -> int:
         log.info("Sunroom Screen couldn't start on port %d: %s", port, error)
         return 1
     return 0 if server.started else 1
+
+
+def _quick_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(timeout=httpx.Timeout(5.0, connect=0.5))
 
 
 def cmd_openapi(args: argparse.Namespace) -> int:

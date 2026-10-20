@@ -104,6 +104,13 @@ size limit.
 
 ## Sunroom Screen (the agent beside a wall's browser)
 
+- The screen's own build failed on `virtual:pwa-register`: it reached `ui/StatusLayer` for the
+  toasts, which registers the service worker. The toasts are `ui/ToastRegion` now.
+- The screen's pages called nothing in Vitest: a client with base `""` makes a relative
+  `Request`, which Node refuses (a browser resolves it). The own agent's base is the page's
+  origin, written out.
+- A card's `getByRole("region")` found nothing: a `<section>` is a region only once it has a name.
+  Give it `aria-labelledby` its heading.
 - The wall's calls to the agent were blocked by CSP: `connect-src` is widened only for a
   `/display` document that names the port, so the launcher passes `?screen=` on every load,
   nothing remembers it, and a fresh reload goes back to the launcher's address (the rooms
