@@ -173,3 +173,21 @@ screen. Rows 13 to 23 need no Sunroom OS; its rows, and macOS and Windows, follo
 | 21 | The server's address changed | A Sunroom found on the network is found at its new address within a few minutes; a typed one shows Can't Reach | Not tested yet |
 | 22 | Sunroom stopped for five minutes | Can't Reach shows after about two minutes, and the board comes back by itself when Sunroom answers | Not tested yet |
 | 23 | A Linux desktop (Debian or Ubuntu with Chromium or Chrome), `--display-only` | It starts at sign-in, full screen, and pairs; This Screen has Quit Sunroom Screen, which closes it until the next sign-in | Not tested yet |
+
+Sunroom OS, Run It on This Screen, macOS and Windows (0.14.0, [M7](M7.md) T13). Write the
+Raspberry Pi Imager version with each Sunroom OS result.
+
+| # | Setup or test | It passes when | Result |
+|---|---|---|---|
+| 24 | A fresh Sunroom OS card, Wi-Fi set in Imager | It boots to Welcome in under 90 seconds, on the Wi-Fi Imager was given (or: "Imager's Wi-Fi wasn't applied", with Imager's version) | Not tested yet |
+| 25 | A fresh Sunroom OS card, no Wi-Fi in Imager and no cable | Connect to Wi-Fi shows; a network joins with its password typed on the wall's keyboard; then Where Is Your Sunroom? | Not tested yet |
+| 26 | On Your Network, from Sunroom OS | It finds an all-in-one Pi's Sunroom and a NAS's (port 8080), each by its household's name | Not tested yet |
+| 27 | A typed address, then pairing | Check Address names the Sunroom; Use This Sunroom opens it at its pair code; a phone pairs it | Not tested yet |
+| 28 | This Screen on Sunroom OS | Restart, Shut Down, Update Now (from a real older version), Rotation (taps land right after each turn), Change Wi-Fi and Change Address each do what they say, and the board comes back | Not tested yet |
+| 29 | Pull the power plug, five times (Sunroom OS) | The board comes back each time, paired, with no "Restore pages?" bubble | Not tested yet |
+| 30 | A 72-hour soak on Sunroom OS | Still smooth after three days; Sunroom Screen's memory (`systemctl --user status sunroom-kiosk`, once an hour) stays level, and the browser's falls back at each 04:00 restart | Not tested yet |
+| 31 | The server's address changed (as row 21), on Sunroom OS | The screen finds its Sunroom at the new address by itself | Not tested yet |
+| 32 | Run It on This Screen, on a fresh card | "Downloading Sunroom…" counts up, then Sunroom's own Welcome with its QR code; a phone sets it up and pairs the screen | Not tested yet |
+| 33 | Overnight on Sunroom OS | Security updates install in the night; the screen restarts only inside the sleep hours, and only when an update needs it | Not tested yet |
+| 34 | A Mac with Google Chrome, `install.sh --display-only` | It starts at sign-in, full screen, and pairs; This Screen's Quit closes it until the next sign-in | Not tested yet |
+| 35 | A Windows computer, `install.ps1` | It starts at sign-in with no console window, in Edge, full screen, and pairs; This Screen's Quit closes it; `-Uninstall` takes it off | Not tested yet |
