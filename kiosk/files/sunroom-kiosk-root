@@ -11,15 +11,17 @@ else; it checks everything it's given (docs/KIOSK.md, docs/M7.md T7):
                       OS), else apt-get's upgrade
   update-sunroom      /opt/sunroom/update.sh, the all-in-one Pi's own Sunroom
   run-sunroom         Sunroom OS: start the Sunroom the image set up in /opt/sunroom (docker
-                      compose pull, printing its progress for the percent, then up -d), and
-                      announce it on the network (avahi)
+                      compose pull, printing its progress for the percent, then up -d) under this
+                      screen's own name (Imager may have renamed it), and announce it (avahi)
 
 The system's Python, standard library only; root-owned in /usr/local/sbin.
 """
 
 import json
 import os
+import re
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -101,9 +103,26 @@ def update_sunroom():
     return subprocess.call([UPDATE_SH])
 
 
+ADVERTISED = re.compile(r'(SUNROOM_ADVERTISED_URL: ")[^"]*(")')
+
+
+def name_it():
+    """The address phones open (and the QR codes show): this screen's own name, as it is now."""
+    host = socket.gethostname().split(".")[0].lower()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", host):
+        return
+    with open(COMPOSE_FILE, encoding="utf-8") as handle:
+        text = handle.read()
+    named = ADVERTISED.sub(lambda m: m.group(1) + "http://" + host + ".local:8080" + m.group(2), text)
+    if named != text:
+        with open(COMPOSE_FILE, "w", encoding="utf-8") as handle:
+            handle.write(named)
+
+
 def run_sunroom():
     if not os.path.isfile(COMPOSE_FILE):
         return refuse("Sunroom isn't set up to run on this screen.")
+    name_it()
     compose = [
         "docker", "compose", "--project-directory", SERVER_DIR, "-f", COMPOSE_FILE,
         "--progress", "plain",

@@ -18,6 +18,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - A Pi that runs Sunroom announces it on the home network, so screens find it at once.
 - The installer can make another Linux computer a kitchen screen, and `--dry-run` shows what it
   would do without changing anything.
+- Sunroom OS: a memory card image for a Raspberry Pi that is a kitchen screen from its first
+  start, written with Raspberry Pi Imager; no terminal, no installer.
 - A screen running Sunroom OS can run Sunroom itself: Run It on This Screen downloads it,
   starts it, and opens its setup for a phone.
 - A Windows computer or a Mac can be a kitchen screen too: one line installs Sunroom Screen for

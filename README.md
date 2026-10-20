@@ -28,6 +28,10 @@ adds, and [CHANGELOG.md](CHANGELOG.md) what each release did.
 You need a Raspberry Pi 4 or 5, a touch screen (HDMI plus its USB touch cable) and the official
 power supply. [docs/HARDWARE.md](docs/HARDWARE.md) helps you choose them.
 
+**The simplest way: write Sunroom OS** to the card with Raspberry Pi Imager, start the Pi, and
+on the screen choose **Run It on This Screen**. No terminal at all;
+[docs/SUNROOM-OS.md](docs/SUNROOM-OS.md) shows each step. Or, on Raspberry Pi OS:
+
 1. With [Raspberry Pi Imager](https://www.raspberrypi.com/software/), write **Raspberry Pi OS
    (64-bit)**, the one with the desktop. In Imager's settings, set the hostname to `sunroom`,
    your user name and password, your Wi-Fi, your time zone, and turn on SSH.

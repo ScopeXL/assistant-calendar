@@ -160,7 +160,8 @@ def test_the_root_helper_runs_the_images_sunroom_and_announces_it(
     assert root_helper.run_sunroom() == 2  # nothing set up: nothing runs
     assert ran == []
     compose.parent.mkdir(parents=True)
-    compose.write_text("name: sunroom\n")
+    compose.write_text('    SUNROOM_ADVERTISED_URL: "http://sunroom.local:8080"\n')
+    monkeypatch.setattr(root_helper.socket, "gethostname", lambda: "kitchen.lan")
     announcement.parent.mkdir(parents=True)
     announcement.write_text("<service-group/>\n")
     services.mkdir(parents=True)
@@ -168,3 +169,26 @@ def test_the_root_helper_runs_the_images_sunroom_and_announces_it(
     assert [argv[-1] for argv in ran] == ["pull", "-d"]
     assert ran[0][:2] == ["docker", "compose"] and "plain" in ran[0]
     assert (services / "sunroom.service").read_text() == "<service-group/>\n"
+    # Imager named this screen "kitchen": phones are told that name.
+    assert 'SUNROOM_ADVERTISED_URL: "http://kitchen.local:8080"' in compose.read_text()
+
+
+def test_imagers_repository_file_describes_the_image(tmp_path: Path) -> None:
+    import datetime as dt
+    import hashlib
+    import lzma
+
+    imager: Any = _load(FILES.parent / "os" / "imager.py", "sunroom_imager")
+    raw = b"a pretend disk image " * 1000
+    image = tmp_path / "sunroom-os-0.14.0-pi-arm64.img.xz"
+    image.write_bytes(lzma.compress(raw))
+    (entry,) = imager.describe("0.14.0", image, dt.date(2026, 10, 20))["os_list"]
+    assert entry["url"] == (
+        "https://github.com/ScopeXL/assistant-calendar/releases/download/v0.14.0/"
+        "sunroom-os-0.14.0-pi-arm64.img.xz"
+    )
+    assert entry["extract_size"] == len(raw)
+    assert entry["extract_sha256"] == hashlib.sha256(raw).hexdigest()
+    assert entry["image_download_size"] == image.stat().st_size
+    assert entry["init_format"] == "cloudinit-rpi"
+    assert entry["release_date"] == "2026-10-20"

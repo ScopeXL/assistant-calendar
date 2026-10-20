@@ -18,6 +18,9 @@ does the rest. This page explains the pieces, and how to release without Claude.
   (and `install.ps1` from 0.14.0), and `SHA256SUMS`, uploaded last. The installers and Sunroom
   Screen's own updates take the wheel from there and check it against `SHA256SUMS`; nothing is
   uploaded from the Mac. Sunroom's own update check stays on tags (ADR 0032).
+- Sunroom OS's card image, `sunroom-os-X.Y.Z-pi-arm64.img.xz` with its `.sha256` and Imager's
+  `imager.json`, built by `.github/workflows/sunroom-os.yml` on GitHub's arm64 runner (about an
+  hour; [SUNROOM-OS.md](SUNROOM-OS.md)) and added to the same Release.
 - A multi-arch image (`linux/amd64`, `linux/arm64`), `scopexl/sunroom:X.Y.Z`, also tagged `X.Y`
   and `latest`. Version tags are immutable on Docker Hub.
 
@@ -34,6 +37,7 @@ does the rest. This page explains the pieces, and how to release without Claude.
 | Verify | `just image-verify` | Platforms missing, tags disagree, the pulled image fails a probe or setup on either architecture, or the image scan finds a private term |
 | CI | `gh run watch` on the run the push started | Never: the release is out by then. Its result goes in the report, green or the failing jobs with the run's link, and a red run is fixed in a working session, never from the deploy |
 | The Release's files | `gh run watch` on the tag's release-assets run, then `gh release view` | Never, as CI. It waits up to 10 minutes for the Release, then makes a draft of its own; until its files are up, installers and screens can't install or update to this version |
+| Sunroom OS | The tag's sunroom-os run, by link in the report | Never: about an hour, and the skill doesn't wait. A failed run is fixed in a working session, and run again on the same tag (Actions → Sunroom OS → Run workflow) |
 
 Without Claude: `just release patch` runs all of it.
 
@@ -60,10 +64,11 @@ and stops after 45 minutes, and the deploy skill waits for the run and reports i
   `~/.config/sunroom/private-terms.txt`. Preflight refuses to release without it.
 - **GitHub:** pushes go over SSH; see *Pushing to GitHub* below. The GitHub CLI signed in
   (`gh auth login`, then `gh auth status`) makes the Release and watches the runs.
-- **The release-assets workflow, once:** push a throwaway pre-release tag (for example
-  `git tag v0.13.0-rc.1 && git push origin v0.13.0-rc.1`), or run the workflow by hand on one
-  (Actions → Release assets → Run workflow). It makes a draft pre-release with the files; check
-  them, then delete the draft and the tag.
+- **The release workflows, once:** push a throwaway pre-release tag (for example
+  `git tag v0.14.0-rc.1 && git push origin v0.14.0-rc.1`), or run them by hand on one (Actions →
+  Release assets, and Sunroom OS → Run workflow). They make a draft pre-release with the files,
+  and an hour later the Sunroom OS image; check them (write the image to a card), then delete the
+  draft and the tag.
 
 ## Pushing to GitHub
 

@@ -64,8 +64,8 @@ lint: kiosk-lint
 # shellcheck on the installer and its helpers; the labwc rule and the root helper compile; Sunroom
 # Screen's agent (kiosk/agent) passes ruff and pyright strict
 kiosk-lint:
-    {{shellcheck}} -x kiosk/install.sh kiosk/uninstall.sh kiosk/update.sh
-    {{py}} -m py_compile kiosk/labwc-rule.py kiosk/files/sunroom-kiosk-root
+    {{shellcheck}} -x kiosk/install.sh kiosk/uninstall.sh kiosk/update.sh kiosk/os/build.sh kiosk/os/stage-sunroom/prerun.sh kiosk/os/stage-sunroom/*/*.sh
+    {{py}} -m py_compile kiosk/labwc-rule.py kiosk/files/sunroom-kiosk-root kiosk/os/imager.py
     cd kiosk/agent && uv run --quiet ruff check . && uv run --quiet ruff format --check . && uv run --quiet pyright
 
 # Sunroom Screen's pages in development: the pretend agent on 7800 (finding `just dev`'s Sunroom on
@@ -82,6 +82,11 @@ kiosk-dev:
 kiosk-build:
     cd frontend && pnpm exec vite build --config vite.screen.config.ts
     cd kiosk/agent && rm -rf dist && uv build --wheel --out-dir dist
+
+# Sunroom OS's image, built here (docs/SUNROOM-OS.md): pi-gen in Docker (OrbStack is arm64: no
+# emulation) into kiosk/os/deploy/. About an hour and 20 GB; CI builds it for each release.
+kiosk-image: kiosk-build
+    kiosk/os/build.sh "kiosk/agent/dist/sunroom_kiosk-$(cat VERSION)-py3-none-any.whl"
 
 # Sunroom Screen's agent: its tests, on the pretend platform (no network, no machine changes)
 [positional-arguments]

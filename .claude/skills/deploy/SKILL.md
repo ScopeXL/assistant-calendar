@@ -78,15 +78,18 @@ Requested level: "$level" (empty means you choose, below).
    files: `gh run list --workflow release-assets.yml --branch vX.Y.Z --json databaseId,url
    --limit 1`, `gh run watch <databaseId> --exit-status`, and `gh release view vX.Y.Z --json
    assets --jq '.assets[].name'`, which lists `sunroom_kiosk-X.Y.Z-py3-none-any.whl`,
-   `install.sh` and `SHA256SUMS`. Missing or red: say which in the report, with the run's link
-   (installers and screens can't install or update to this version until they're there).
+   `install.sh`, `install.ps1` and `SHA256SUMS`. Missing or red: say which in the report, with
+   the run's link (installers and screens can't install or update to this version until they're
+   there). Sunroom OS's image takes about an hour: don't wait for it; put its run's link in the
+   report (`gh run list --workflow sunroom-os.yml --branch vX.Y.Z --json url --limit 1`).
 9. **Report** to the owner, in this shape:
 
 ```
 Sunroom vX.Y.Z released: git <sha7>, image <digest>, amd64 + arm64 verified.
 CI on GitHub: green (<run link>)   or   red: <failing jobs> (<run link>), with the proposed fix
-GitHub Release: <release URL>, with Sunroom Screen's wheel, install.sh and SHA256SUMS
+GitHub Release: <release URL>, with Sunroom Screen's wheel, the installers and SHA256SUMS
   (or: which files are missing, and the release-assets run's link)
+Sunroom OS: building (<the sunroom-os run's link>; about an hour, its image lands on the Release)
 What's new: <the CHANGELOG bullets, plain English>
 Database change: yes/no   (yes: rolling back means restoring the pre-upgrade backup)
 Server (in the folder with Sunroom's docker-compose.yml):

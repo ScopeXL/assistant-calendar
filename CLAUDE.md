@@ -129,8 +129,8 @@ frontend/src/
   shell/         DisplayShell (rail, Header.tsx, Today panel, idle, Night, keyboard), PhoneShell
   features/      display (pairing), onboarding, auth, calendar, phone, settings; registry.ts
   screen/        Sunroom Screen's own pages (Welcome, Find, Can't Reach…), built into the agent
-kiosk/           install.sh (Pi, Linux; --dry-run), files/ (what it installs), labwc-rule.py,
-                 update.sh, uninstall.sh
+kiosk/           install.sh (Pi, Linux, macOS; --dry-run), install.ps1, files/, labwc-rule.py,
+                 update.sh, uninstall.sh; os/: Sunroom OS (pi-gen stage, build.sh, imager.py)
   agent/         Sunroom Screen (`sunroom-kiosk`): API on 127.0.0.1:7800, browser, screen sleep,
                  discovery, policy, updates; platform/ adapters (pi, linux, fake)
 ```

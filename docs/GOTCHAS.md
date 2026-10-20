@@ -122,6 +122,9 @@ size limit.
   Mac's install): there an empty array's `"${a[@]}"` is an unbound variable under `set -u`, and
   `${var,,}` doesn't parse. Write `${a[@]+"${a[@]}"}` (or `${a[*]-}`) and `lower`; try it with
   `/bin/bash kiosk/install.sh --dry-run`.
+- Sunroom OS's build failed at pi-gen's export on a Mac ("mkdosfs: unable to open
+  /dev/loop0p1: Operation not permitted"): in a Docker VM the image's loop partitions appear only
+  in the host's `/dev`. `kiosk/os/build.sh` passes `--volume /dev:/dev` (`PIGEN_DOCKER_OPTS`).
 - A read of a missing file printed its error despite `2>/dev/null`: in `tr </missing 2>/dev/null`
   the `<` fails before the later redirection applies. Wrap it: `{ tr </missing; } 2>/dev/null`.
 
