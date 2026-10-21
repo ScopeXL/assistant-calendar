@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-10-21
+
 ### Changed
 
 - The kitchen screen's keyboard shows letters only; 123 switches to numbers and symbols.
@@ -576,5 +578,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.11.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.10.0...v0.11.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.0...HEAD
 [0.12.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.11.0...v0.12.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.0...v0.12.1
