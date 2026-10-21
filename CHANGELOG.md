@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-21
+
 ### Added
 
 - The Week view's header has a Rolling week switch, so a screen can keep today in the same
@@ -13,20 +15,19 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Tasks → All Tasks lists every task, due this week or next month, with its rule and its next
   day; tap one to change or remove it.
 - Settings → Photos & Screensaver → Photo Libraries: connect an Immich server with its address
-  and an API key, and its people, albums and tags appear to pick from: faces, album and tag
-  chips, and a sentence that says what's shown (every photo, newest first, when nothing is
-  picked). The screensaver draws on them within minutes, up to the number you keep; a library's
-  photo says "From Immich" and is hidden rather than removed. Immich is the first library, and
-  more kinds can follow.
+  and an API key, and its people, albums and tags appear to pick from, with a sentence that says
+  what's shown (every photo, newest first, when nothing is picked). The screensaver draws on them
+  within minutes, up to the number you keep; a library's photo says "From Immich" and is hidden
+  rather than removed. Immich is the first library, and more kinds can follow.
 
 ### Changed
 
-- Every item on a list ends in a chevron, so it's plain that a tap opens it to change its day,
-  who it's for, or remove it; on a phone, a row swiped to the left shows Remove, for any item,
-  and for a whole list on a parent's phone or its maker's.
-- Every task row ends in a chevron, and a task's sheet says what it is in words; on the wall,
-  Change asks for the PIN before its form, and Skip Today shows only when the task is due today.
-  On a parent's phone a task row swiped to the left shows Remove.
+- Every item on a list ends in a small arrow (›), so it's plain that a tap opens it to change
+  its day, who it's for, or remove it; on a phone, a row swiped to the left shows Remove, for any
+  item, and for a whole list on a parent's phone or its maker's.
+- Every task ends in a small arrow (›) too, and a task's sheet says what it is in words; on the
+  wall, Change asks for the PIN before its form, and Skip Today shows only when the task is due
+  today. On a parent's phone a task row swiped to the left shows Remove.
 - A task that's finished (done on its day, or past its last repeat) leaves for Recently Removed
   the next day, where Put Back keeps it; a person whose tasks are all finished no longer keeps an
   empty column.
@@ -646,5 +647,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.12.1]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.0...v0.12.1
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.13.0...HEAD
 [0.13.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.1...v0.13.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.13.0...v0.14.0
