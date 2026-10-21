@@ -2,8 +2,9 @@
 
 Time and zone, its own settings, read and write sessions (the write transaction's ``publish``
 sends live-update events after commit), read-only facades for core data (the household, members,
-photos, the calendar, which also takes overlays), the SSRF-guarded HTTP client, encryption under
-the ``plugin-secrets-v1`` key, and job registration. Never the engine, never app state.
+photos, the calendar, which also takes overlays), the network allowlist's rows a home-network
+tick writes, the SSRF-guarded HTTP client, encryption under the ``plugin-secrets-v1`` key, and job
+registration. Never the engine, never app state.
 """
 
 from __future__ import annotations
@@ -85,6 +86,35 @@ class HouseholdFacade:
                 home.latitude,
                 home.longitude,
             )
+
+
+class NetworkFacade:
+    """The network allowlist as a parent's "This server is on your home network" tick writes it
+    (PLAN §12.6, ADR 0036): a plugin adds its own row for a host and takes it out again, and
+    never reads the table. ``label`` names the feature ("Photos & Screensaver"), so its rows
+    are its own."""
+
+    def __init__(self, sessions: Sessions, now_of: Callable[[], datetime]) -> None:
+        self._sessions = sessions
+        self._now_of = now_of
+
+    async def allow(self, target: str, label: str) -> bool:
+        """The host joins the allowlist. True when a row was added (False: it was there)."""
+        from sunroom.household.service import allow_network
+
+        async with self._sessions.write() as tx:
+            added = await allow_network(tx.session, target, label, self._now_of())
+            if added:
+                tx.publish("settings.changed", {"area": "network"})
+            return added
+
+    async def disallow(self, target: str, label: str) -> None:
+        """This feature's rows for the host go; anyone else's stay."""
+        from sunroom.household.service import disallow_network
+
+        async with self._sessions.write() as tx:
+            if await disallow_network(tx.session, target, label):
+                tx.publish("settings.changed", {"area": "network"})
 
 
 class MembersFacade:
@@ -431,6 +461,7 @@ class PluginContext:
         self._enabled_of = enabled_of
         self.household = HouseholdFacade(sessions)
         self.members = MembersFacade(sessions)
+        self.network = NetworkFacade(sessions, clock.now)
         self.photos = photos
         self.calendar = CalendarFacade(
             plugin_id, sessions, calendar, zone_of, clock.now, enabled_of

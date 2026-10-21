@@ -3,9 +3,6 @@
 
 from __future__ import annotations
 
-import ipaddress
-import re
-
 from fastapi import APIRouter, Request
 from sqlalchemy import delete, select
 
@@ -31,25 +28,6 @@ from sunroom.photos.router import read_upload
 from sunroom.state import AppState, StateDep
 
 router = APIRouter(prefix="/api", tags=["household"])
-_LABEL = r"[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?"
-_HOST_NAME = re.compile(rf"^{_LABEL}(\.{_LABEL})*$")
-
-
-def allow_target(raw: str) -> str:
-    """A host name, an IP or a CIDR, lowercased; nothing else (no addresses with paths)."""
-    target = raw.strip().lower().rstrip(".")
-    try:
-        return str(ipaddress.ip_network(target, strict=False))
-    except ValueError:
-        pass
-    if _HOST_NAME.match(target):
-        return target
-    raise AppError(
-        422,
-        "invalid",
-        "Enter a server name (nas.lan), an address (192.168.1.20) or a range (192.168.1.0/24).",
-        extra={"fields": ["target"]},
-    )
 
 
 async def refresh_members(state: AppState) -> None:
@@ -256,7 +234,7 @@ async def list_allowlist(state: StateDep, actor: ParentDep) -> list[AllowEntryOu
 async def add_allowlist(body: AllowEntryIn, state: StateDep, actor: ParentDep) -> AllowEntryOut:
     async with state.db.write() as tx:
         entry = NetworkAllowEntry(
-            target=allow_target(body.target),
+            target=service.allow_target(body.target),
             label=body.label,
             created_by_member_id=actor.member_id,
             created_at=state.clock.now(),

@@ -27,6 +27,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Fixed
 
+- A calendar server on the home network can be allowed from its own sheet: the "This server is
+  on your home network" tick now does what it says.
 - On the People view, the arrows go to the day before or after, Today brings it back, and the
   day is written over the columns; a person's tasks on another day show without boxes. The
   Today view no longer shows arrows that did nothing.

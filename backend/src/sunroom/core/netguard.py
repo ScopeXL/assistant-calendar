@@ -8,8 +8,9 @@ check, one of them could point the server at something on the home network it sh
 * the host is resolved, and any address that isn't public (loopback, link-local, RFC 1918, ULA,
   carrier-grade NAT, multicast, reserved) makes the target *private*;
 * a private target is allowed only when the account opted in ("This server is on your home
-  network") **and** the host or one of its addresses is on the network allowlist a parent keeps
-  in Settings, or SUNROOM_ALLOW_PRIVATE_URLS is on;
+  network") **and** the host or one of its addresses is on the network allowlist, or
+  SUNROOM_ALLOW_PRIVATE_URLS is on. A parent's tick writes the host into the allowlist itself
+  (``ctx.network``, ADR 0036), and the row goes with the account or source;
 * the connection is pinned to an address that was checked (core/http.py), so DNS can't change
   its answer between the check and the request.
 """
@@ -117,7 +118,7 @@ class NetGuard:
             raise OutboundError(
                 "private_address",
                 'That address is on your home network. A parent can allow it: tick "This '
-                'server is on your home network" and add it under Settings → Network.',
+                'server is on your home network".',
             )
         return Target(parts, host, port, tuple(addresses), private)
 

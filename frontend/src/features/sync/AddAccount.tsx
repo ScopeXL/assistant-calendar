@@ -440,7 +440,7 @@ function AddressFlow({
       {google ? null : (
         <Switch
           label="This server is on your home network"
-          hint="Only for a server at home. A parent also adds it under Settings → Network."
+          hint="Only for a server at home: a parent's tick lets Sunroom reach a home address."
           checked={home}
           onChange={setHome}
         />
@@ -656,7 +656,7 @@ function ServerFlow({
       {apple ? null : (
         <Switch
           label="This server is on your home network"
-          hint="Only for a server at home. A parent also adds it under Settings → Network."
+          hint="Only for a server at home: a parent's tick lets Sunroom reach a home address."
           checked={home}
           onChange={setHome}
         />

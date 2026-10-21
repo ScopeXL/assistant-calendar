@@ -164,27 +164,61 @@ async def test_an_address_that_isnt_a_calendar_says_so(
     assert (await phone.get("/api/calendar-sync/accounts")).json() == []
 
 
-async def test_a_private_address_waits_for_a_parent_to_allow_it(phone: httpx.AsyncClient) -> None:
+async def allowlist(phone: httpx.AsyncClient) -> list[tuple[str, str]]:
+    response = await phone.get("/api/network-allowlist")
+    assert response.status_code == 200, response.text
+    return [(row["target"], row["label"]) for row in response.json()]
+
+
+async def test_a_private_address_waits_for_a_parent_s_tick(phone: httpx.AsyncClient) -> None:
     body = {"url": "http://192.168.1.20/school.ics"}
     refused = await phone.post("/api/calendar-sync/accounts/ics", json=body, headers=CSRF)
     assert refused.status_code == 422
     assert refused.json()["error"]["code"] == "address_failed"
-    assert "home network" in refused.json()["error"]["message"]
-    # Ticking the box isn't enough on its own; the address must be on the allowlist too.
-    ticked = await phone.post(
-        "/api/calendar-sync/accounts/ics", json=body | {"allow_private": True}, headers=CSRF
+    assert refused.json()["error"]["message"] == (
+        'That address is on your home network. A parent can allow it: tick "This server is on '
+        'your home network".'
     )
-    assert ticked.status_code == 422
-    allowed = await phone.post(
-        "/api/network-allowlist",
-        json={"target": "192.168.1.20", "label": "Sample NAS"},
-        headers=CSRF,
-    )
-    assert allowed.status_code in {200, 201}, allowed.text
+    assert await allowlist(phone) == []
+    # The tick does what it says (ADR 0036): the host joins the allowlist, named after the
+    # feature, and the account is added.
     added = await phone.post(
         "/api/calendar-sync/accounts/ics", json=body | {"allow_private": True}, headers=CSRF
     )
     assert added.status_code == 201, added.text
+    assert await allowlist(phone) == [("192.168.1.20/32", "Calendars & Accounts")]
+    # A second account on the same server shares the row; the row goes with the last of them.
+    second = await phone.post(
+        "/api/calendar-sync/accounts/ics",
+        json={"url": "http://192.168.1.20/school.ics?term=2", "allow_private": True},
+        headers=CSRF,
+    )
+    assert second.status_code == 201, second.text
+    assert await allowlist(phone) == [("192.168.1.20/32", "Calendars & Accounts")]
+    gone = await phone.delete(f"/api/calendar-sync/accounts/{added.json()['id']}", headers=CSRF)
+    assert gone.status_code == 204
+    assert await allowlist(phone) == [("192.168.1.20/32", "Calendars & Accounts")]
+    gone = await phone.delete(f"/api/calendar-sync/accounts/{second.json()['id']}", headers=CSRF)
+    assert gone.status_code == 204
+    assert await allowlist(phone) == []
+
+
+async def test_a_tick_on_an_address_that_fails_leaves_the_allowlist_as_it_was(
+    phone: httpx.AsyncClient,
+) -> None:
+    by_hand = await phone.post(
+        "/api/network-allowlist", json={"target": "nas.lan", "label": "Sample NAS"}, headers=CSRF
+    )
+    assert by_hand.status_code == 201, by_hand.text
+    for url in ("http://192.168.1.20/missing.ics", "http://nas.lan/missing.ics"):
+        failed = await phone.post(
+            "/api/calendar-sync/accounts/ics",
+            json={"url": url, "allow_private": True},
+            headers=CSRF,
+        )
+        assert failed.status_code == 422, failed.text
+    # Nothing of the failed attempts stays, and a row added by hand is never taken out.
+    assert await allowlist(phone) == [("nas.lan", "Sample NAS")]
 
 
 async def test_holidays_need_no_address(phone: httpx.AsyncClient) -> None:

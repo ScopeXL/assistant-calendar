@@ -77,6 +77,9 @@ size limit.
   `shutil.disk_usage` and know that's what it is.
 - A Protocol over SQLAlchemy `Mapped[...]` fields didn't satisfy pyright: pass a small dataclass
   (`calendar.people.Person`).
+- A home server never passed the guard with the tick alone: the guard wants the tick and an
+  allowlist row, and nothing wrote the row. `ctx.network.allow` writes it before the first
+  check, and a failed check takes it back.
 - A test's "done on its day" was done late: a completion's day is the household day the clock
   says when it's made, whatever its due date. Set the clock to that day before completing.
 - `boot.reexec` runs `sys.orig_argv[1:]` again with `sys.executable`: for the console script

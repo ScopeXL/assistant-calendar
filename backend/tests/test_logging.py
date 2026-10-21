@@ -37,6 +37,13 @@ def test_sensitive_keys_are_masked() -> None:
         assert out[key] == MASK, key
 
 
+def test_a_photo_library_s_api_key_is_masked_however_it_is_spelled() -> None:
+    # Immich's header (ADR 0036), and the same name with an underscore or none.
+    out = Redactor()(None, "info", {"event": "x", "x-api-key": "k", "api_key": "k", "apikey": "k"})
+    assert (out["x-api-key"], out["api_key"], out["apikey"]) == (MASK, MASK, MASK)
+    assert out["event"] == "x"
+
+
 def test_literal_secrets_and_token_shapes_are_scrubbed_anywhere() -> None:
     redact = Redactor([SECRET])
     out = redact(

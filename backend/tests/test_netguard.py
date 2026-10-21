@@ -160,6 +160,22 @@ async def test_credentials_never_follow_a_redirect_to_another_server() -> None:
     assert "authorization" not in seen[2].headers and "cookie" not in seen[2].headers
 
 
+async def test_a_photo_library_s_api_key_never_follows_a_redirect_to_another_server() -> None:
+    # Immich's X-Api-Key (ADR 0036): kept on the same server, dropped on the way to another.
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/people":
+            return httpx.Response(302, headers={"location": "/api/people/"})
+        if request.url.path == "/api/people/":
+            return httpx.Response(302, headers={"location": "https://elsewhere.example.org/x"})
+        return httpx.Response(200, text="ok")
+
+    seen, transport = recording(respond)
+    http = GuardedHttp(guard(), transport_factory=transport)
+    result = await http.get("https://calendar.example.com/api/people", headers={"X-Api-Key": "k"})
+    assert result.ok
+    assert [r.headers.get("x-api-key") for r in seen] == ["k", "k", None]
+
+
 async def test_redirect_loops_stop() -> None:
     def respond(request: httpx.Request) -> httpx.Response:
         return httpx.Response(301, headers={"location": "/again"})

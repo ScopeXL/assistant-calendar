@@ -48,6 +48,8 @@ TOKEN_INTERVAL_S = 300  # CalDAV and Google: cheap token syncs every 5 minutes
 HOLIDAYS_INTERVAL_S = 24 * 3600
 DEFAULT_COLOR = "sea"
 READ_ONLY_PROVIDERS = {Provider.ICS, Provider.HOLIDAYS}
+# The allowlist rows a home-network tick writes are named after this feature (ADR 0036).
+NETWORK_LABEL = "Calendars & Accounts"
 
 
 def bad(message: str, code: str = "invalid") -> AppError:
@@ -304,14 +306,18 @@ async def add_ics(
     url = addresses.normalize(body.url)
     owner = await _check_member(ctx, body.owner_member_id)
     provider = IcsProvider(ctx.http(allow_private=body.allow_private), url, "", ctx.zone)
+    added = await _allow_home(ctx, url, ticked=body.allow_private)
     try:
         _status, content, cursor = await provider.fetch(None)
         parsed = await asyncio.to_thread(parse_calendar, content, ctx.zone())
     except SyncError as exc:
+        await _forget_home(ctx, url, added)
         raise bad(exc.message, "address_failed") from None
     except OutboundError as exc:
+        await _forget_home(ctx, url, added)
         raise bad(exc.message, exc.code) from None
     except ValueError:
+        await _forget_home(ctx, url, added)
         raise bad(NOT_A_CALENDAR, "not_a_calendar") from None
     name = body.label or parsed.name or addresses.host_of(url) or "Calendar"
     now = ctx.now()
@@ -554,8 +560,10 @@ async def patch_account(
             account.next_sync_at = ctx.now() + timedelta(seconds=account.interval_s)
         if body.owner_member_id is not None:
             account.owner_member_id = body.owner_member_id
+        ticked = body.allow_private is not None and body.allow_private != account.allow_private
         if body.allow_private is not None:
             account.allow_private = body.allow_private
+        host = _host(account.server_url)
         if body.paused is True:
             account.status = AccountStatus.PAUSED
         elif body.paused is False and account.status == AccountStatus.PAUSED:
@@ -563,6 +571,10 @@ async def patch_account(
             account.next_sync_at = ctx.now()
         account.version += 1
         tx.publish("sync.changed", {"account_id": account_id, "status": account.status})
+    if ticked and body.allow_private:
+        await _allow_home(ctx, host, ticked=True)
+    elif ticked:
+        await _release_home(ctx, host)
     return await get_account(ctx, engine, account_id)
 
 
@@ -583,12 +595,16 @@ async def reconnect(
             raise bad("Paste the calendar's address.")
         url = addresses.normalize(body.url)
         probe = IcsProvider(ctx.http(allow_private=account.allow_private), url, "", ctx.zone)
+        # A new address on the home network: its host joins the allowlist as the tick says.
+        added = await _allow_home(ctx, url, ticked=account.allow_private)
         try:
             _status, content, _cursor = await probe.fetch(None)
             await asyncio.to_thread(parse_calendar, content, ctx.zone())
         except SyncError as exc:
+            await _forget_home(ctx, url, added)
             raise bad(exc.message, "address_failed") from None
         except ValueError:
+            await _forget_home(ctx, url, added)
             raise bad(NOT_A_CALENDAR, "not_a_calendar") from None
         secrets = {"url": url}
         shown = addresses.shown(url)
@@ -626,9 +642,11 @@ async def reconnect(
 
 
 async def disconnect(ctx: PluginContext, account_id: str) -> None:
-    """Credentials wiped, calendars off the board (their events kept 30 days), account gone."""
+    """Credentials wiped, calendars off the board (their events kept 30 days), account gone, and
+    its host off the allowlist when the tick put it there and no other account needs it."""
     async with ctx.write() as tx:
         account = await _account(tx.session, account_id)
+        ticked, host = account.allow_private, _host(account.server_url)
         account.credentials_enc = None
         account.deleted_at = ctx.now()
         rows = (
@@ -642,6 +660,50 @@ async def disconnect(ctx: PluginContext, account_id: str) -> None:
         tx.publish("sync.changed", {"account_id": account_id, "status": "disconnected"})
     for calendar_id in calendar_ids:
         await ctx.calendar.remove_synced_calendar(calendar_id)
+    if ticked:
+        await _release_home(ctx, host)
+
+
+# ---- the home network (PLAN §12.6, ADR 0036) -------------------------------------------------
+
+
+def _host(address: str | None) -> str:
+    """The server an account reaches: from its address, or from what Settings shows of a feed's
+    ("nas.lan/…/school.ics")."""
+    text = address or ""
+    return addresses.host_of(text) if "://" in text else text.split("/", 1)[0].lower()
+
+
+async def _allow_home(ctx: PluginContext, address: str, *, ticked: bool) -> bool:
+    """A parent's "This server is on your home network" tick: the host joins the allowlist
+    before the first check (the guard wants both the tick and the row). True when this added
+    the row, so a check that fails takes it out again."""
+    host = _host(address)
+    if not ticked or not host:
+        return False
+    return await ctx.network.allow(host, NETWORK_LABEL)
+
+
+async def _forget_home(ctx: PluginContext, address: str, added: bool) -> None:
+    if added:
+        await ctx.network.disallow(_host(address), NETWORK_LABEL)
+
+
+async def _release_home(ctx: PluginContext, host: str) -> None:
+    """The host leaves the allowlist once no live account here reaches it with the tick."""
+    if not host:
+        return
+    async with ctx.read() as session:
+        others = (
+            await session.scalars(
+                select(SyncAccount.server_url).where(
+                    SyncAccount.deleted_at.is_(None), SyncAccount.allow_private.is_(True)
+                )
+            )
+        ).all()
+    if any(_host(address) == host for address in others):
+        return
+    await ctx.network.disallow(host, NETWORK_LABEL)
 
 
 def failure_message(exc: SyncError) -> AppError:
@@ -672,11 +734,14 @@ async def add_caldav(
     server_url = addresses.normalize(body.server_url)
     login = (body.username, body.app_password)
     client = caldav_client(ctx, server_url, *login, private=body.allow_private)
+    added = await _allow_home(ctx, server_url, ticked=body.allow_private)
     try:
         found = await client.discover()
     except SyncError as exc:
+        await _forget_home(ctx, server_url, added)
         raise failure_message(exc) from None
     except OutboundError as exc:
+        await _forget_home(ctx, server_url, added)
         raise bad(exc.message, exc.code) from None
     icloud = addresses.host_of(server_url).endswith("icloud.com")
     name = "Apple" if icloud else addresses.host_of(server_url)

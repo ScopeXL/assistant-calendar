@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import ipaddress
+import re
 from datetime import date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sunroom.core.config import Settings
@@ -15,8 +17,12 @@ from sunroom.household.models import (
     Household,
     KioskPanel,
     Member,
+    NetworkAllowEntry,
 )
 from sunroom.household.schemas import KioskPanelOut, MemberOut, SettingsOut
+
+_LABEL = r"[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?"
+_HOST_NAME = re.compile(rf"^{_LABEL}(\.{_LABEL})*$")
 
 
 def avatar_url(photo_id: str | None) -> str | None:
@@ -187,3 +193,52 @@ async def kiosk_panels(session: AsyncSession) -> list[KioskPanelOut]:
         )
         for row in rows
     ]
+
+
+# ---- the network allowlist (PLAN §12.6) --------------------------------------------------------
+
+
+def allow_target(raw: str) -> str:
+    """A host name, an IP or a CIDR, lowercased; nothing else (no addresses with paths)."""
+    target = raw.strip().lower().rstrip(".")
+    try:
+        return str(ipaddress.ip_network(target, strict=False))
+    except ValueError:
+        pass
+    if _HOST_NAME.match(target):
+        return target
+    raise AppError(
+        422,
+        "invalid",
+        "Enter a server name (nas.lan), an address (192.168.1.20) or a range (192.168.1.0/24).",
+        extra={"fields": ["target"]},
+    )
+
+
+async def allow_network(session: AsyncSession, target: str, label: str, now: datetime) -> bool:
+    """A parent's "This server is on your home network" tick (ADR 0036): the host joins the
+    allowlist in a row named after what asked for it, unless that row is there already. Each
+    feature keeps its own rows, so one taking its row out never cuts another off the same
+    server. True when a row was added."""
+    target = allow_target(target)
+    found = await session.scalar(
+        select(NetworkAllowEntry.id).where(
+            NetworkAllowEntry.target == target, NetworkAllowEntry.label == label
+        )
+    )
+    if found is not None:
+        return False
+    session.add(NetworkAllowEntry(target=target, label=label, created_at=now))
+    await session.flush()
+    return True
+
+
+async def disallow_network(session: AsyncSession, target: str, label: str) -> int:
+    """Take out the rows ``allow_network`` added for ``label``: a row added by hand, or by
+    another feature, stays. How many went."""
+    result = await session.execute(
+        delete(NetworkAllowEntry).where(
+            NetworkAllowEntry.target == allow_target(target), NetworkAllowEntry.label == label
+        )
+    )
+    return int(getattr(result, "rowcount", 0) or 0)

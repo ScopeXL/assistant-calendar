@@ -5,7 +5,8 @@ Every request goes through core/netguard first. The connection is then pinned to
 guard checked: the URL's host is swapped for that IP, while the ``Host`` header and the TLS
 server name (httpcore's ``sni_hostname``) keep the real name, so certificates still verify.
 Redirects are followed by hand, at most three, and each hop is checked again; credentials
-(``Authorization``, cookies) never follow a redirect to another server. Bodies are capped; a
+(``Authorization``, cookies, a photo library's ``X-Api-Key``) never follow a redirect to another
+server. Bodies are capped; a
 response bigger than its cap is refused rather than truncated.
 
 A fresh client per request, on purpose: connections pinned by IP must never be pooled across
@@ -31,7 +32,9 @@ DEFAULT_MAX_BYTES = 20 * 1024 * 1024
 REDIRECT_CODES = frozenset({301, 302, 303, 307, 308})
 
 TransportFactory = Callable[[], httpx.AsyncBaseTransport]
-CREDENTIAL_HEADERS = frozenset({"authorization", "proxy-authorization", "cookie"})
+# Never sent on to another server by a redirect: a password, a cookie, or a photo library's API
+# key (Immich's), which would otherwise follow a redirect wherever it pointed.
+CREDENTIAL_HEADERS = frozenset({"authorization", "proxy-authorization", "cookie", "x-api-key"})
 
 
 @dataclass(frozen=True, slots=True)

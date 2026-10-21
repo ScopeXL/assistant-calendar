@@ -15,7 +15,7 @@ from typing import Any, cast
 import structlog
 
 _SENSITIVE_KEY = re.compile(
-    r"password|secret|token|authorization|cookie|code_verifier|^code$|refresh|api_key"
+    r"password|secret|token|authorization|cookie|code_verifier|^code$|refresh|api[-_]?key"
     r"|^pin$|pin_hash|key_json|credentials|poll",
     re.IGNORECASE,
 )
