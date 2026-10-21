@@ -9,12 +9,20 @@ import { EmptyState } from "../../ui/EmptyState";
 import { Screen } from "../../ui/Screen";
 import { Sheet } from "../../ui/Sheet";
 import { AddPhotosButton } from "./AddPhotosButton";
-import { useLibrary, useManifest, usePhotoChanges, type LibraryPhoto } from "./data";
+import {
+  fromLibrary,
+  useLibraries,
+  useLibrary,
+  useManifest,
+  usePhotoChanges,
+  type LibraryPhoto,
+} from "./data";
 import { photosCount } from "./PhotosRoom";
 
 /**
  * Photos on a phone (UX §5 "More"): where photos are added, from the camera or the library,
- * several at once, and removed (with Undo). A parent can start the screensaver on the kitchen
+ * several at once, and removed (with Undo); a photo library's is hidden instead, since the
+ * library is where it's changed (ADR 0036). A parent can start the screensaver on the kitchen
  * screen from here.
  */
 export function PhotosTab() {
@@ -24,6 +32,8 @@ export function PhotosTab() {
   const changes = usePhotoChanges();
   const photos = library.data?.pages.flatMap((page) => page.photos) ?? [];
   const [open, setOpen] = useState<LibraryPhoto | null>(null);
+  const { data: libraries = [] } = useLibraries({ enabled: session?.is_parent ?? false });
+  const from = open ? fromLibrary(open, libraries) : null;
   return (
     <Screen title="Photos" back="/more" actions={<AddPhotosButton block />}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -112,20 +122,23 @@ export function PhotosTab() {
               >
                 {open.hidden ? "Show on the Screensaver" : "Hide from Screensaver"}
               </Button>
-              <Button
-                variant="quiet-danger"
-                onClick={() => {
-                  changes.remove.mutate(open.id);
-                  setOpen(null);
-                }}
-              >
-                Remove
-              </Button>
+              {from ? null : (
+                <Button
+                  variant="quiet-danger"
+                  onClick={() => {
+                    changes.remove.mutate(open.id);
+                    setOpen(null);
+                  }}
+                >
+                  Remove
+                </Button>
+              )}
             </div>
           ) : null
         }
       >
         {open ? <img src={open.url} alt="" className="w-full rounded-chip object-contain" /> : null}
+        {from ? <p className="mt-3 text-secondary font-semibold text-ink-soft">{from}</p> : null}
       </Sheet>
     </Screen>
   );

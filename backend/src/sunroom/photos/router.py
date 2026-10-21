@@ -25,6 +25,7 @@ router = APIRouter(prefix="/api", tags=["photos"])
 
 UPLOADS_PER_HOUR = 60
 PAGE_SIZE = 60
+LIBRARY_PREFIX = "source:"  # a photo library's photos (the screensaver plugin's sources)
 
 
 class PhotoOut(BaseModel):
@@ -37,6 +38,8 @@ class PhotoOut(BaseModel):
     taken_at: datetime | None
     created_at: datetime
     hidden: bool
+    # Where it came from: "upload", "inbox", or "source:<id>" for a photo library's (ADR 0036).
+    source_key: str
 
 
 class PhotoPage(BaseModel):
@@ -58,6 +61,7 @@ def photo_out(photo: Photo) -> PhotoOut:
             "width": photo.width,
             "height": photo.height,
             "taken_at": photo.taken_at,
+            "source_key": photo.source_key,
             "created_at": photo.created_at,
             "hidden": photo.hidden,
         }
@@ -145,11 +149,20 @@ async def get_photo(photo_id: str, state: StateDep, actor: ActorDep) -> PhotoOut
 
 @router.delete("/photos/{photo_id}", status_code=204)
 async def delete_photo(photo_id: str, state: StateDep, actor: ParentDep) -> None:
-    """Removed with Undo: the row and files stay for 7 days (POST …/restore brings it back)."""
+    """Removed with Undo: the row and files stay for 7 days (POST …/restore brings it back). A
+    photo library's photo isn't removed one by one (its next pass would bring it back, ADR 0036):
+    it's hidden, or the library is changed."""
     async with state.db.write() as tx:
         photo = await tx.session.get(Photo, photo_id)
         if photo is None or photo.deleted_at is not None:
             raise AppError(404, "not_found", "That photo isn't here anymore.")
+        if photo.source_key.startswith(LIBRARY_PREFIX):
+            raise AppError(
+                409,
+                "from_library",
+                "This photo comes from a photo library. Hide it from the screensaver instead, "
+                "or take it out of the library.",
+            )
         photo.deleted_at = state.clock.now()
         tx.publish("photos.changed", {"id": photo.id})
 

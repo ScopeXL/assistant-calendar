@@ -1,8 +1,9 @@
 /**
  * Photos and the screensaver's data (PLAN §11.1 Photos, §11.3 screensaver): what the screensaver
  * shows (its manifest and settings), the household's photos a page at a time, the photo
- * sources, and every change, each with the toast UX §2 names and Undo where it applies.
- * Removing and hiding photos are a parent's (the wall asks for the PIN).
+ * sources and photo libraries (ADR 0036), and every change, each with the toast UX §2 names and
+ * Undo where it applies. Removing and hiding photos, and the libraries, are a parent's (the wall
+ * asks for the PIN).
  */
 import {
   useInfiniteQuery,
@@ -22,12 +23,25 @@ export type Manifest = components["schemas"]["ManifestOut"];
 export type SaverPhoto = components["schemas"]["ManifestPhoto"];
 export type PhotoSource = components["schemas"]["SourceOut"];
 export type LibraryPhoto = components["schemas"]["PhotoOut"];
+export type PhotoLibrary = components["schemas"]["LibraryOut"];
+export type LibraryKind = components["schemas"]["LibraryKindOut"];
+export type LibraryChoices = components["schemas"]["LibraryChoicesOut"];
+export type LibraryChoice = components["schemas"]["LibraryChoiceOut"];
+export type LibraryPicks = components["schemas"]["LibraryPicks"];
+export type LibraryIn = components["schemas"]["LibraryIn"];
+export type LibraryPatch = components["schemas"]["LibraryPatch"];
 
 export const saverKeys = {
   manifest: () => ["screensaver", "manifest"] as const,
   sources: () => ["screensaver", "sources"] as const,
   library: () => ["photos", "library"] as const,
+  libraryKinds: () => ["screensaver", "library-kinds"] as const,
+  libraries: () => ["screensaver", "libraries"] as const,
+  choices: (id: string) => ["screensaver", "libraries", id, "choices"] as const,
 };
+
+/** While a library is bringing photos in, its line counts them: look again every 5 s. */
+const BUSY_REFETCH_MS = 5000;
 
 export function useManifest({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
@@ -58,6 +72,60 @@ export function useSources({ enabled = true }: { enabled?: boolean } = {}) {
     queryKey: saverKeys.sources(),
     queryFn: async () => unwrap(await api.GET("/api/screensaver/sources")),
     enabled,
+  });
+}
+
+const LIBRARY_KEY = "source:";
+
+/**
+ * Where a photo came from, for the viewer and the phone's sheet (ADR 0036): "From Immich" for a
+ * photo library's (its name, from the libraries a parent's device may read), "From a photo
+ * library" when the name isn't known here; null for an upload or the inbox's.
+ */
+export function fromLibrary(
+  photo: { source_key: string },
+  libraries: PhotoLibrary[],
+): string | null {
+  if (!photo.source_key.startsWith(LIBRARY_KEY)) return null;
+  const id = photo.source_key.slice(LIBRARY_KEY.length);
+  const library = libraries.find((each) => each.id === id);
+  return library ? `From ${library.name}` : "From a photo library";
+}
+
+export function useLibraryKinds({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: saverKeys.libraryKinds(),
+    queryFn: async () => unwrap(await api.GET("/api/screensaver/library-kinds")),
+    staleTime: Infinity,
+    enabled,
+  });
+}
+
+/** The photo libraries (a parent's, so only where the device may ask). */
+export function useLibraries({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: saverKeys.libraries(),
+    queryFn: async () => unwrap(await api.GET("/api/screensaver/libraries")),
+    enabled,
+    refetchInterval: (query) =>
+      (query.state.data ?? []).some((library) => library.checking || library.pending > 0)
+        ? BUSY_REFETCH_MS
+        : false,
+  });
+}
+
+/** The people, albums and tags a library offers (the server fetches them again when they're
+ * over an hour old). */
+export function useLibraryChoices(id: string | null) {
+  return useQuery({
+    queryKey: saverKeys.choices(id ?? ""),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/api/screensaver/libraries/{source_id}/choices", {
+          params: { path: { source_id: id ?? "" } },
+        }),
+      ),
+    enabled: id !== null,
   });
 }
 
@@ -188,5 +256,108 @@ export function usePhotoChanges() {
     },
   });
 
-  return { upload, remove, hide, startOnWall, scan, setSource };
+  /** Connect a library: its refusal is shown in the panel, under the key, not as a toast. */
+  const addLibrary = useMutation({
+    mutationFn: async (body: LibraryIn) =>
+      asParent(async () => unwrap(await api.POST("/api/screensaver/libraries", { body }))),
+    onSuccess: async () => {
+      await refresh(queryClient);
+    },
+  });
+
+  /** Picks, Keep up to, the switch: saved as they change (the panel shows "Saved"). */
+  const patchLibrary = useMutation({
+    mutationFn: async ({ id, change }: { id: string; change: LibraryPatch }) =>
+      asParent(async () =>
+        unwrap(
+          await api.PATCH("/api/screensaver/libraries/{source_id}", {
+            params: { path: { source_id: id } },
+            body: change,
+          }),
+        ),
+      ),
+    onSuccess: async () => {
+      await refresh(queryClient);
+    },
+  });
+
+  const reconnectLibrary = useMutation({
+    mutationFn: async ({ id, apiKey, url }: { id: string; apiKey: string; url?: string }) =>
+      asParent(async () =>
+        unwrap(
+          await api.POST("/api/screensaver/libraries/{source_id}/reconnect", {
+            params: { path: { source_id: id } },
+            body: { api_key: apiKey, ...(url ? { url } : {}) },
+          }),
+        ),
+      ),
+    onSuccess: async (library) => {
+      await refresh(queryClient);
+      showToast(`Connected ${library.name} again`);
+    },
+  });
+
+  /** No Undo: its key is gone with it (the panel asked first). */
+  const removeLibrary = useMutation({
+    mutationFn: async (library: PhotoLibrary) => {
+      await asParent(async () => {
+        unwrap(
+          await api.DELETE("/api/screensaver/libraries/{source_id}", {
+            params: { path: { source_id: library.id } },
+          }),
+        );
+      });
+      return library;
+    },
+    onSuccess: async (library) => {
+      await refresh(queryClient);
+      showToast(`Removed ${library.name}`);
+    },
+  });
+
+  /** Check Now: the library's line does the talking after the toast. */
+  const checkLibrary = useMutation({
+    mutationFn: async (library: PhotoLibrary) =>
+      asParent(async () =>
+        unwrap(
+          await api.POST("/api/screensaver/libraries/{source_id}/scan", {
+            params: { path: { source_id: library.id } },
+          }),
+        ),
+      ),
+    onSuccess: async (library) => {
+      await refresh(queryClient);
+      showToast(`Checking ${library.name}…`);
+    },
+  });
+
+  /** Refresh Choices: the people, albums and tags fetched again now. */
+  const refreshChoices = useMutation({
+    mutationFn: async (id: string) =>
+      asParent(async () =>
+        unwrap(
+          await api.GET("/api/screensaver/libraries/{source_id}/choices", {
+            params: { path: { source_id: id }, query: { refresh: true } },
+          }),
+        ),
+      ),
+    onSuccess: (choices, id) => {
+      queryClient.setQueryData(saverKeys.choices(id), choices);
+    },
+  });
+
+  return {
+    upload,
+    remove,
+    hide,
+    startOnWall,
+    scan,
+    setSource,
+    addLibrary,
+    patchLibrary,
+    reconnectLibrary,
+    removeLibrary,
+    checkLibrary,
+    refreshChoices,
+  };
 }

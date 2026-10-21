@@ -12,7 +12,14 @@ import { EmptyState } from "../../ui/EmptyState";
 import { Pop } from "../../ui/Pop";
 import { QrCode } from "../../ui/QrCode";
 import { AddPhotosButton } from "./AddPhotosButton";
-import { useLibrary, useManifest, usePhotoChanges, type LibraryPhoto } from "./data";
+import {
+  fromLibrary,
+  useLibraries,
+  useLibrary,
+  useManifest,
+  usePhotoChanges,
+  type LibraryPhoto,
+} from "./data";
 import { startSaver } from "./start";
 
 /** "124 photos". */
@@ -25,7 +32,7 @@ export function photosCount(count: number): string {
  * Settings (behind the PIN), and the photos newest first. The kitchen screen shows a code for
  * adding photos from a phone; a computer adds them itself with Add photos (ADR 0028). A photo
  * opens full screen with Previous, Next and Hide from screensaver: this room can hide photos
- * but never removes them (phones do, with Undo).
+ * but never removes them (phones do, with Undo). A photo library's says where it's from.
  */
 export function PhotosRoom() {
   const navigate = useNavigate();
@@ -143,6 +150,7 @@ export function PhotosRoom() {
         <Viewer
           photos={photos}
           index={open}
+          parent={session?.is_parent ?? false}
           onIndex={setOpen}
           onClose={() => {
             setOpen(null);
@@ -153,21 +161,27 @@ export function PhotosRoom() {
   );
 }
 
-/** One photo full screen, with Previous, Next, Hide from screensaver and Close. */
+/** One photo full screen, with Previous, Next, Hide from screensaver and Close; a photo library's
+ * says where it's from ("From Immich"). */
 function Viewer({
   photos,
   index,
+  parent,
   onIndex,
   onClose,
 }: {
   photos: LibraryPhoto[];
   index: number;
+  /** The libraries' names are a parent's to read (the PIN's grant on the wall). */
+  parent: boolean;
   onIndex: (index: number) => void;
   onClose: () => void;
 }) {
   const { hide } = usePhotoChanges();
+  const { data: libraries = [] } = useLibraries({ enabled: parent });
   const photo = photos[index];
   if (!photo) return null;
+  const from = fromLibrary(photo, libraries);
   const step = (by: number) => {
     onIndex((index + by + photos.length) % photos.length);
   };
@@ -202,6 +216,7 @@ function Viewer({
             <ChevronRight aria-hidden="true" className="size-7" />
           </Button>
         </div>
+        {from ? <p className="text-d-secondary font-semibold text-ink-soft">{from}</p> : null}
         <div className="flex gap-3">
           <Button
             variant="secondary"

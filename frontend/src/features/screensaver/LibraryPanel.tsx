@@ -1,0 +1,597 @@
+import { RefreshCw, Search } from "lucide-react";
+import { useState } from "react";
+
+import { errorMessage } from "../../api/client";
+import { isHomeAddress } from "../../lib/address";
+import { formatTime } from "../../lib/dates";
+import { useSavedFlash } from "../../lib/savedFlash";
+import { useDebounced } from "../../lib/useDebounced";
+import { Button } from "../../ui/Button";
+import { Chip, ChipRow } from "../../ui/Chip";
+import { Field } from "../../ui/Field";
+import { PanelActions } from "../../ui/PanelActions";
+import { SavedMark } from "../../ui/SavedMark";
+import { Segmented } from "../../ui/Segmented";
+import { useShell } from "../../ui/shell";
+import { SidePanel } from "../../ui/SidePanel";
+import { Switch } from "../../ui/Switch";
+import { TextField } from "../../ui/TextField";
+import {
+  useLibraries,
+  useLibraryChoices,
+  useLibraryKinds,
+  usePhotoChanges,
+  type LibraryChoice,
+  type LibraryKind,
+  type LibraryPicks,
+  type PhotoLibrary,
+} from "./data";
+import { connectedLine, count, libraryLine, picksSentence } from "./words";
+
+/** Which page the panel opens on: connecting a new library, or one that's connected. */
+export type LibraryOpening = { page: "add" } | { page: "library"; id: string };
+
+const LIMITS = [100, 250, 500, 1000, 2000] as const;
+
+/** What's picked, every list there (the API leaves an empty one out). */
+interface Picked {
+  people: string[];
+  albums: string[];
+  tags: string[];
+}
+
+function picked(picks: LibraryPicks): Picked {
+  return { people: picks.people ?? [], albums: picks.albums ?? [], tags: picks.tags ?? [] };
+}
+type Limit = (typeof LIMITS)[number];
+/** Over this many albums, a field finds one by name. */
+const ALBUMS_BEFORE_SEARCH = 12;
+
+/**
+ * One panel for a photo library (UX §4 "Photo Libraries", ADR 0036), with two openings: **Add a
+ * Library**, which connects one (its kind, its address, its key, the home-network switch), and a
+ * library's row, which opens on what it shows. Connecting turns the panel into the library's own
+ * page, so the family picks what to show at once.
+ */
+export function LibraryPanel({
+  opening,
+  onOpen,
+  onClose,
+}: {
+  opening: LibraryOpening | null;
+  onOpen: (opening: LibraryOpening) => void;
+  onClose: () => void;
+}) {
+  const { data: libraries = [] } = useLibraries({ enabled: opening !== null });
+  const { data: kinds = [] } = useLibraryKinds({ enabled: opening !== null });
+  const library =
+    opening?.page === "library" ? libraries.find((each) => each.id === opening.id) : undefined;
+  const title = opening?.page === "library" ? (library?.name ?? "Photo Library") : "Add a Library";
+  return (
+    <SidePanel
+      open={opening !== null}
+      title={title}
+      onClose={onClose}
+      scrollKey={opening?.page === "library" ? opening.id : "add"}
+    >
+      {opening?.page === "add" ? (
+        <AddLibrary
+          kinds={kinds}
+          onConnected={(added) => {
+            onOpen({ page: "library", id: added.id });
+          }}
+        />
+      ) : library ? (
+        <LibraryPage
+          key={library.id}
+          library={library}
+          kind={kinds.find((kind) => kind.kind === library.kind)}
+          onRemoved={onClose}
+        />
+      ) : null}
+    </SidePanel>
+  );
+}
+
+/** Connecting: the kind (Immich alone today), the address, the key and the home network. */
+function AddLibrary({
+  kinds,
+  onConnected,
+}: {
+  kinds: LibraryKind[];
+  onConnected: (library: PhotoLibrary) => void;
+}) {
+  const display = useShell() === "display";
+  const { addLibrary } = usePhotoChanges();
+  const [chosen, setChosen] = useState<string | null>(null);
+  const kind = kinds.find((each) => each.kind === chosen) ?? kinds[0];
+  const [url, setUrl] = useState("");
+  const [key, setKey] = useState("");
+  // Until it's touched, the switch follows the address: on for one that looks like home.
+  const [home, setHome] = useState<boolean | null>(null);
+  const ticked = home ?? isHomeAddress(url);
+  const ready = Boolean(kind && url.trim() && key.trim());
+  return (
+    <form
+      className={`flex flex-col ${display ? "gap-6" : "gap-5"}`}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!ready || !kind) return;
+        addLibrary.mutate(
+          { kind: kind.kind, url: url.trim(), api_key: key.trim(), allow_private: ticked },
+          { onSuccess: onConnected },
+        );
+      }}
+    >
+      <Field label="Kind">
+        {/* A row, so the next kind of library is a chip, not a redesign. */}
+        <ChipRow label="Kind">
+          {kinds.map((each) => (
+            <Chip
+              key={each.kind}
+              on={each.kind === kind?.kind}
+              onClick={() => {
+                setChosen(each.kind);
+              }}
+            >
+              {each.name}
+            </Chip>
+          ))}
+        </ChipRow>
+      </Field>
+      <TextField
+        label="Address"
+        placeholder={kind?.placeholder}
+        hint={kind?.address_hint ?? null}
+        autoCapitalize="none"
+        autoComplete="off"
+        {...(display ? {} : { inputMode: "url" as const })}
+        value={url}
+        onChange={(event) => {
+          setUrl(event.target.value);
+        }}
+      />
+      <TextField
+        label="API key"
+        type="password"
+        layout="password"
+        autoComplete="off"
+        hint={kind?.key_help ?? null}
+        value={key}
+        onChange={(event) => {
+          setKey(event.target.value);
+        }}
+        error={addLibrary.isError ? errorMessage(addLibrary.error) : null}
+      />
+      <Switch
+        label="This server is on your home network"
+        hint={`For ${kind?.name ?? "a library"} at home (an address like 192.168…). A parent's tick lets Sunroom reach it.`}
+        checked={ticked}
+        onChange={setHome}
+      />
+      <PanelActions>
+        <Button type="submit" block pending={addLibrary.isPending} disabled={!ready}>
+          {addLibrary.isPending ? "Connecting…" : "Connect"}
+        </Button>
+      </PanelActions>
+    </form>
+  );
+}
+
+/** A connected library: how it's doing, what it shows, how many, and the rest. */
+function LibraryPage({
+  library,
+  kind,
+  onRemoved,
+}: {
+  library: PhotoLibrary;
+  kind: LibraryKind | undefined;
+  onRemoved: () => void;
+}) {
+  const display = useShell() === "display";
+  const text = display ? "text-d-body" : "text-body";
+  const soft = display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft";
+  const kindName = kind?.name ?? library.name;
+  const changes = usePhotoChanges();
+  const { data: choices } = useLibraryChoices(library.id);
+  const { saved, flash } = useSavedFlash();
+  // What's picked, as tapped: each tap saves the whole set (ADR 0029, settings save themselves).
+  const [picks, setPicks] = useState<Picked>(() => picked(library.picks));
+  const [asking, setAsking] = useState(false);
+  const save = (change: Parameters<typeof changes.patchLibrary.mutate>[0]["change"]) => {
+    changes.patchLibrary.mutate({ id: library.id, change }, { onSuccess: flash });
+  };
+  const toggle = (group: keyof Picked, id: string) => {
+    const now = picks[group].includes(id)
+      ? picks[group].filter((each) => each !== id)
+      : [...picks[group], id];
+    const next = { ...picks, [group]: now };
+    setPicks(next);
+    save({ picks: next });
+  };
+  const line = libraryLine(library);
+  const needsKey = library.status === "needs_reconnect";
+  return (
+    <div className={`flex flex-col ${display ? "gap-8" : "gap-6"}`}>
+      <div className="flex flex-col gap-1">
+        {library.status === "connected" ? (
+          <p className={`${text} font-semibold`}>{connectedLine(library, kindName)}</p>
+        ) : null}
+        <p
+          role={line.trouble ? "status" : undefined}
+          className={
+            line.trouble
+              ? `${display ? "text-d-secondary" : "text-secondary"} font-semibold text-alert`
+              : soft
+          }
+        >
+          {line.text}
+        </p>
+      </div>
+      {needsKey ? <ConnectAgain library={library} kind={kind} /> : null}
+      <section aria-labelledby={`${library.id}-show`} className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h3
+            id={`${library.id}-show`}
+            className={display ? "text-d-body font-bold" : "text-row font-bold"}
+          >
+            What to Show
+          </h3>
+          <SavedMark show={saved} />
+        </div>
+        <p className={text}>{picksSentence(picks, choices, library.limit)}</p>
+        <Faces
+          libraryId={library.id}
+          people={choices?.people ?? []}
+          unnamed={choices?.unnamed_people ?? 0}
+          kindName={kindName}
+          chosen={picks.people}
+          onToggle={(id) => {
+            toggle("people", id);
+          }}
+        />
+        <Chips
+          label="Albums"
+          empty={`No albums in ${kindName} yet.`}
+          choices={choices?.albums ?? []}
+          chosen={picks.albums}
+          search
+          onToggle={(id) => {
+            toggle("albums", id);
+          }}
+        />
+        <Chips
+          label="Tags"
+          empty={`No tags in ${kindName} yet.`}
+          choices={choices?.tags ?? []}
+          chosen={picks.tags}
+          onToggle={(id) => {
+            toggle("tags", id);
+          }}
+        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="quiet"
+            pending={changes.refreshChoices.isPending}
+            onClick={() => {
+              changes.refreshChoices.mutate(library.id);
+            }}
+          >
+            <RefreshCw aria-hidden="true" className={display ? "size-6" : "size-5"} />
+            Refresh Choices
+          </Button>
+          {choices?.fetched_at ? (
+            <span
+              className={soft}
+            >{`Choices from ${formatTime(new Date(choices.fetched_at))}`}</span>
+          ) : null}
+        </div>
+        {changes.refreshChoices.isError ? (
+          <p role="alert" className="font-semibold text-alert">
+            {errorMessage(changes.refreshChoices.error)}
+          </p>
+        ) : null}
+      </section>
+      <Field label="Keep up to" hint="The newest ones. More photos take more room on the server.">
+        <Segmented
+          label="Keep up to"
+          value={String(library.limit)}
+          options={LIMITS.map((limit) => ({ value: String(limit), label: count(limit) }))}
+          onChange={(value) => {
+            save({ limit: Number(value) as Limit });
+          }}
+        />
+      </Field>
+      <Switch
+        label="Show on the screensaver"
+        hint="Off keeps the photos and shows none of them."
+        checked={library.enabled}
+        onChange={(enabled) => {
+          save({ enabled });
+        }}
+      />
+      <div>
+        <Button
+          variant="secondary"
+          disabled={!library.enabled || library.checking}
+          pending={changes.checkLibrary.isPending}
+          onClick={() => {
+            changes.checkLibrary.mutate(library);
+          }}
+        >
+          Check Now
+        </Button>
+      </div>
+      {changes.patchLibrary.isError || changes.checkLibrary.isError ? (
+        <p role="alert" className="font-semibold text-alert">
+          {errorMessage(changes.patchLibrary.error ?? changes.checkLibrary.error)}
+        </p>
+      ) : null}
+      {asking ? (
+        <div className="flex flex-col gap-3 rounded-button border-2 border-line p-4">
+          <p className={`${text} font-semibold`}>
+            {`Remove ${library.name}? Its ${count(library.photo_count)} ${
+              library.photo_count === 1 ? "photo leaves" : "photos leave"
+            } the screensaver and this server. Nothing changes in ${kindName}.`}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="danger"
+              pending={changes.removeLibrary.isPending}
+              onClick={() => {
+                changes.removeLibrary.mutate(library, { onSuccess: onRemoved });
+              }}
+            >
+              Remove {library.name}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setAsking(false);
+              }}
+            >
+              Keep It
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          block
+          variant="quiet-danger"
+          onClick={() => {
+            setAsking(true);
+          }}
+        >
+          Remove Library
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** A library that needs its key again: the key (and, opened on request, a new address). */
+function ConnectAgain({ library, kind }: { library: PhotoLibrary; kind: LibraryKind | undefined }) {
+  const display = useShell() === "display";
+  const { reconnectLibrary } = usePhotoChanges();
+  const [key, setKey] = useState("");
+  const [moving, setMoving] = useState(false);
+  const [url, setUrl] = useState(library.url);
+  return (
+    <form
+      className="flex flex-col gap-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!key.trim()) return;
+        reconnectLibrary.mutate({
+          id: library.id,
+          apiKey: key.trim(),
+          ...(moving && url.trim() ? { url: url.trim() } : {}),
+        });
+      }}
+    >
+      {moving ? (
+        <TextField
+          label="Address"
+          placeholder={kind?.placeholder}
+          autoCapitalize="none"
+          autoComplete="off"
+          {...(display ? {} : { inputMode: "url" as const })}
+          value={url}
+          onChange={(event) => {
+            setUrl(event.target.value);
+          }}
+        />
+      ) : (
+        <div>
+          <Chip
+            opener
+            expanded={false}
+            onClick={() => {
+              setMoving(true);
+            }}
+          >
+            Change Address
+          </Chip>
+        </div>
+      )}
+      <TextField
+        label="API key"
+        type="password"
+        layout="password"
+        autoComplete="off"
+        hint={kind?.key_help ?? null}
+        value={key}
+        onChange={(event) => {
+          setKey(event.target.value);
+        }}
+        error={reconnectLibrary.isError ? errorMessage(reconnectLibrary.error) : null}
+      />
+      <div>
+        <Button type="submit" disabled={!key.trim()} pending={reconnectLibrary.isPending}>
+          Connect Again
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * The library's named people as faces with their names under them, wrapping (a family's library
+ * can know thirty), ringed when chosen as the Who picker rings its people. A face Sunroom can't
+ * fetch is the person's initial in a neutral circle.
+ */
+function Faces({
+  libraryId,
+  people,
+  unnamed,
+  kindName,
+  chosen,
+  onToggle,
+}: {
+  libraryId: string;
+  people: LibraryChoice[];
+  unnamed: number;
+  kindName: string;
+  chosen: readonly string[];
+  onToggle: (id: string) => void;
+}) {
+  const display = useShell() === "display";
+  const hint = display ? "text-d-caption text-ink-soft" : "text-caption text-ink-soft";
+  return (
+    <Field label="People">
+      {people.length ? (
+        <div role="group" aria-label="People" className="flex flex-wrap gap-2">
+          {people.map((person) => (
+            <button
+              key={person.id}
+              type="button"
+              aria-pressed={chosen.includes(person.id)}
+              aria-label={person.name}
+              onClick={() => {
+                onToggle(person.id);
+              }}
+              className={`press select-fill flex flex-col items-center gap-1 rounded-button px-1 aria-pressed:bg-p-tint aria-pressed:ring-[3px] aria-pressed:ring-ink aria-pressed:ring-inset ${
+                display ? "w-24 py-2" : "w-16 py-1"
+              }`}
+            >
+              <Face libraryId={libraryId} person={person} />
+              <span
+                className={`w-full truncate text-center font-semibold ${display ? "text-d-caption" : "text-caption"}`}
+              >
+                {person.name}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className={hint}>{`No people in ${kindName} yet.`}</p>
+      )}
+      {unnamed ? (
+        <p className={hint}>
+          {unnamed === 1
+            ? "and 1 person without a name isn't listed"
+            : `and ${count(unnamed)} people without a name aren't listed`}
+        </p>
+      ) : null}
+    </Field>
+  );
+}
+
+function Face({ libraryId, person }: { libraryId: string; person: LibraryChoice }) {
+  const display = useShell() === "display";
+  const [failed, setFailed] = useState(false);
+  const size = display ? "size-16 text-d-body" : "size-12 text-body";
+  if (!person.has_thumb || failed) {
+    return (
+      <span
+        aria-hidden="true"
+        className={`inline-flex ${size} items-center justify-center rounded-full border-2 border-line bg-wall font-bold text-ink-soft`}
+      >
+        {person.name.trim().charAt(0).toUpperCase() || "?"}
+      </span>
+    );
+  }
+  return (
+    <img
+      alt=""
+      src={`/api/screensaver/libraries/${libraryId}/thumb?person=${encodeURIComponent(person.id)}`}
+      onError={() => {
+        setFailed(true);
+      }}
+      className={`${size} rounded-full bg-line object-cover`}
+    />
+  );
+}
+
+/** Albums or tags as chips that wrap, the chosen ones first, with a count when the library
+ * gives one; over a dozen albums, a field finds one by name. */
+function Chips({
+  label,
+  empty,
+  choices,
+  chosen,
+  search = false,
+  onToggle,
+}: {
+  label: string;
+  empty: string;
+  choices: LibraryChoice[];
+  chosen: readonly string[];
+  search?: boolean;
+  onToggle: (id: string) => void;
+}) {
+  const display = useShell() === "display";
+  const [query, setQuery] = useState("");
+  const typed = useDebounced(query, 200).trim().toLowerCase();
+  const finding = search && choices.length > ALBUMS_BEFORE_SEARCH;
+  const shown = [
+    ...choices.filter((choice) => chosen.includes(choice.id)),
+    ...choices.filter(
+      (choice) =>
+        !chosen.includes(choice.id) && (!typed || choice.name.toLowerCase().includes(typed)),
+    ),
+  ];
+  return (
+    <Field label={label}>
+      {finding ? (
+        <div className="relative">
+          <TextField
+            label="Find an album"
+            hideLabel
+            placeholder="Find an album"
+            autoComplete="off"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+            }}
+          />
+          <Search
+            aria-hidden="true"
+            className={`pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-ink-soft ${
+              display ? "size-7" : "size-5"
+            }`}
+          />
+        </div>
+      ) : null}
+      {choices.length ? (
+        <ChipRow label={label}>
+          {shown.map((choice) => (
+            <Chip
+              key={choice.id}
+              on={chosen.includes(choice.id)}
+              onClick={() => {
+                onToggle(choice.id);
+              }}
+            >
+              {choice.count !== null ? `${choice.name} · ${count(choice.count)}` : choice.name}
+            </Chip>
+          ))}
+        </ChipRow>
+      ) : (
+        <p className={display ? "text-d-caption text-ink-soft" : "text-caption text-ink-soft"}>
+          {empty}
+        </p>
+      )}
+    </Field>
+  );
+}

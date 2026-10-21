@@ -13,8 +13,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - Tasks → All Tasks lists every task, due this week or next month, with its rule and its next
   day; tap one to change or remove it.
 - Settings → Photos & Screensaver → Photo Libraries: connect an Immich server with its address
-  and an API key, pick the people, albums or tags to show (or show every photo), and the
-  screensaver draws on them; Immich is the first library, and more kinds can follow.
+  and an API key, and its people, albums and tags appear to pick from: faces, album and tag
+  chips, and a sentence that says what's shown (every photo, newest first, when nothing is
+  picked). The screensaver draws on them within minutes, up to the number you keep; a library's
+  photo says "From Immich" and is hidden rather than removed. Immich is the first library, and
+  more kinds can follow.
 
 ### Changed
 

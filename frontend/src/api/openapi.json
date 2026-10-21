@@ -6177,6 +6177,10 @@
             "title": "Kind",
             "type": "string"
           },
+          "source_key": {
+            "title": "Source Key",
+            "type": "string"
+          },
           "taken_at": {
             "anyOf": [
               {
@@ -6211,7 +6215,8 @@
           "height",
           "taken_at",
           "created_at",
-          "hidden"
+          "hidden",
+          "source_key"
         ],
         "title": "PhotoOut",
         "type": "object"
@@ -16459,7 +16464,7 @@
     },
     "/api/photos/{photo_id}": {
       "delete": {
-        "description": "Removed with Undo: the row and files stay for 7 days (POST \u2026/restore brings it back).",
+        "description": "Removed with Undo: the row and files stay for 7 days (POST \u2026/restore brings it back). A\nphoto library's photo isn't removed one by one (its next pass would bring it back, ADR 0036):\nit's hidden, or the library is changed.",
         "operationId": "delete_photo_api_photos__photo_id__delete",
         "parameters": [
           {

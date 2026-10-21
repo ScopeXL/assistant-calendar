@@ -178,6 +178,8 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Pair a Display", level: 1 })).toBeVisible();
       await check(page, "pair a display");
       await scriptedAccount(page.request);
+      // The pretend Immich (ADR 0036), for its row and its panel.
+      await page.request.post("/api/screensaver/_test/library", { headers: CSRF, data: {} });
       await page.goto("/settings");
       await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
       await check(page, "settings");
@@ -194,6 +196,10 @@ for (const scheme of ["light", "dark"] as const) {
         if (title === "Devices") {
           await sheet(page, "Add a Device", "add a device");
           await sheet(page, "Pair a Display", "pair a display from Settings");
+        }
+        if (title === "Photos & Screensaver") {
+          await sheet(page, "Add a Library", "add a photo library");
+          await sheet(page, "Edit Immich", "a photo library");
         }
       }
       await page.goto("/install?from=more");
@@ -414,6 +420,7 @@ for (const scheme of ["light", "dark"] as const) {
       for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
       await expect(pin).toBeHidden();
       await scriptedAccount(page.request); // the PIN's grant makes this screen a parent's for now
+      await page.request.post("/api/screensaver/_test/library", { headers: CSRF, data: {} });
       for (const title of [...SETTINGS, "About"]) {
         await page
           .getByRole("navigation", { name: "Settings" })
@@ -429,6 +436,10 @@ for (const scheme of ["light", "dark"] as const) {
           await sheet(page, "Edit Kids' activities", "display: change a calendar");
           await sheet(page, "Add an Account", "display: add an account");
           await sheet(page, "Edit Test server", "display: an account");
+        }
+        if (title === "Photos & Screensaver") {
+          await sheet(page, "Add a Library", "display: add a photo library");
+          await sheet(page, "Edit Immich", "display: a photo library");
         }
       }
     });

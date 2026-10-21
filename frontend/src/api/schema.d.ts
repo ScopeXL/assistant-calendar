@@ -2216,7 +2216,9 @@ export interface paths {
         post?: never;
         /**
          * Delete Photo
-         * @description Removed with Undo: the row and files stay for 7 days (POST …/restore brings it back).
+         * @description Removed with Undo: the row and files stay for 7 days (POST …/restore brings it back). A
+         *     photo library's photo isn't removed one by one (its next pass would bring it back, ADR 0036):
+         *     it's hidden, or the library is changed.
          */
         delete: operations["delete_photo_api_photos__photo_id__delete"];
         options?: never;
@@ -4625,6 +4627,8 @@ export interface components {
              * @enum {string}
              */
             kind: "library" | "avatar";
+            /** Source Key */
+            source_key: string;
             /** Taken At */
             taken_at: string | null;
             /** Thumb Url */

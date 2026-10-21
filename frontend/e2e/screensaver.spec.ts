@@ -6,7 +6,7 @@
  * from the Photos room, where the wall shows a code for a device instead. The browser's clock is
  * Playwright's, so ten idle minutes take no time. Synthetic photos only (the seed draws them).
  */
-import type { Locator, Page } from "@playwright/test";
+import type { APIRequestContext, Locator, Page } from "@playwright/test";
 
 import { expect, pairWall, phone, seed, signInPhone, test } from "./fixtures";
 
@@ -28,8 +28,8 @@ function saver(page: Page): Locator {
 
 test.beforeEach(async ({ request }, testInfo) => {
   test.skip(
-    testInfo.project.name !== "display-1080p" && testInfo.project.name !== "desktop",
-    "the wall screen at 1080p, and a computer",
+    !["display-1080p", "desktop", "phone-webkit"].includes(testInfo.project.name),
+    "the wall screen at 1080p, a computer and a phone",
   );
   await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
   await seed(request);
@@ -37,6 +37,24 @@ test.beforeEach(async ({ request }, testInfo) => {
 
 function onTheWall(): void {
   test.skip(test.info().project.name !== "display-1080p", "the wall screen at 1080p");
+}
+
+function onTheComputer(): void {
+  test.skip(test.info().project.name !== "desktop", "a computer, with a real keyboard");
+}
+
+/** The test server's pretend Immich (http://immich.test), connected, its twelve photos in. */
+async function pretendLibrary(request: APIRequestContext): Promise<void> {
+  const added = await request.post("/api/screensaver/_test/library", { headers: CSRF, data: {} });
+  expect(added.ok()).toBe(true);
+}
+
+/** How many photos the screensaver shows. */
+async function shown(page: Page): Promise<number> {
+  const manifest = (await (await page.request.get("/api/screensaver/manifest")).json()) as {
+    photos: unknown[];
+  };
+  return manifest.photos.length;
 }
 
 test("the photos fade in after the idle minutes, and a tap goes back to where the wall was", async ({
@@ -111,6 +129,7 @@ test("a phone adds a photo, and removes it with Undo", async ({ browser, watch }
 test("a computer adds photos itself, where the wall shows a code for a device", async ({
   page,
 }, testInfo) => {
+  test.skip(testInfo.project.name === "phone-webkit", "a computer and the wall");
   const code = page.getByRole("img", { name: "A code that opens Photos on a device" });
   const mia = page.getByRole("dialog", { name: "Edit Mia" });
   if (testInfo.project.name === "display-1080p") {
@@ -142,4 +161,112 @@ test("a computer adds photos itself, where the wall shows a code for a device", 
   await page.goto("/settings/family");
   await page.getByRole("button", { name: "Edit Mia" }).click();
   await expect(mia.getByLabel("Add a Photo", { exact: true })).toBeAttached();
+});
+
+// ---- photo libraries (ADR 0036): the pretend Immich, never a real one --------------------------
+
+test("a parent connects Immich, picks a person, and the screensaver gets their photos", async ({
+  page,
+}) => {
+  onTheComputer();
+  await signInPhone(page, "Ana");
+  const seeded = await shown(page);
+  await page.goto("/settings/screensaver");
+  await page.getByRole("button", { name: "Add a Library" }).click();
+  const adding = page.getByRole("dialog", { name: "Add a Library" });
+  // Immich, the one kind today, is chosen.
+  await expect(
+    adding.getByRole("group", { name: "Kind" }).getByRole("button", { name: "Immich" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await adding.getByLabel("Address", { exact: true }).fill("http://immich.test");
+  await adding.getByLabel("API key", { exact: true }).fill("sample-key");
+  // Not an address at home: the switch stays off.
+  await expect(
+    adding.getByRole("switch", { name: /^This server is on your home network/ }),
+  ).not.toBeChecked();
+  await adding.getByRole("button", { name: "Connect", exact: true }).click();
+
+  // The panel stays open, and is the library's now.
+  const library = page.getByRole("dialog", { name: "Immich" });
+  await expect(library).toContainText("Connected · Immich 2.7 · 12 photos");
+  await expect(library).toContainText(
+    "Showing every photo, newest first, up to 500. Pick people, albums or tags to narrow it.",
+  );
+  const people = library.getByRole("group", { name: "People" });
+  await expect(people.getByRole("button")).toHaveText(["Ana", "Sam", "Mia", "Leo"]);
+  await expect(library).toContainText("and 2 people without a name aren't listed");
+  await expect(library.getByRole("group", { name: "Albums" })).toContainText("Beach 2026 · 3");
+  await expect.poll(() => shown(page), { timeout: 15_000 }).toBe(seeded + 12);
+
+  await people.getByRole("button", { name: "Mia" }).click();
+  await expect(people.getByRole("button", { name: "Mia" })).toHaveAttribute("aria-pressed", "true");
+  await expect(library).toContainText("Showing photos of Mia, newest first, up to 500.");
+  await expect(library.getByText("Saved")).toBeVisible();
+  // Within seconds, the screensaver shows Mia's four, and the row says so.
+  await expect.poll(() => shown(page), { timeout: 15_000 }).toBe(seeded + 4);
+  const row = page.getByRole("button", { name: "Edit Immich" });
+  await expect(row).toContainText(/Checked .* · 4 photos/);
+
+  // Removed (asked first): its photos leave, and nothing changes in Immich.
+  await library.getByRole("button", { name: "Remove Library" }).click();
+  await expect(library).toContainText(
+    "Remove Immich? Its 4 photos leave the screensaver and this server. Nothing changes in Immich.",
+  );
+  await library.getByRole("button", { name: "Remove Immich" }).click();
+  await expect(toast(page, "Removed Immich")).toBeVisible();
+  await expect(row).toHaveCount(0);
+  await expect(page.getByText("No library connected yet.")).toBeVisible();
+  await expect.poll(() => shown(page)).toBe(seeded);
+});
+
+test("a wrong key says so, and nothing is kept", async ({ page }) => {
+  onTheComputer();
+  await signInPhone(page, "Ana");
+  await page.goto("/settings/screensaver");
+  await page.getByRole("button", { name: "Add a Library" }).click();
+  const adding = page.getByRole("dialog", { name: "Add a Library" });
+  await adding.getByLabel("Address", { exact: true }).fill("http://immich.test");
+  await adding.getByLabel("API key", { exact: true }).fill("wrong");
+  await adding.getByRole("button", { name: "Connect", exact: true }).click();
+  await expect(adding.getByRole("alert")).toHaveText(
+    "Immich said that key isn't right. Make a new API key in Immich and connect again.",
+  );
+  const libraries = (await (await page.request.get("/api/screensaver/libraries")).json()) as [];
+  expect(libraries).toEqual([]);
+});
+
+test("the wall shows a library's row, and a photo from it says where it's from", async ({
+  page,
+  request,
+}) => {
+  onTheWall();
+  await pretendLibrary(request);
+  await pairWall(page);
+  await page.goto("/settings/screensaver");
+  const row = page.getByRole("button", { name: "Edit Immich" });
+  await expect(row).toContainText("12 photos");
+  await expect(row).toContainText(/Checked /);
+  await page.goto("/photos");
+  // The newest come first: the library's, brought in after the Sample Family's.
+  await page.getByRole("list", { name: "Photos" }).getByRole("button").first().click();
+  const viewer = page.getByRole("dialog", { name: "Photo" });
+  await expect(viewer).toContainText("From Immich");
+  await expect(viewer.getByRole("button", { name: "Hide from Screensaver" })).toBeVisible();
+  await expect(viewer.getByRole("button", { name: /^Remove/ })).toHaveCount(0);
+});
+
+test("a phone's photo sheet hides a library's photo, and never removes it", async ({
+  page,
+  request,
+}) => {
+  test.skip(test.info().project.name !== "phone-webkit", "a phone");
+  await pretendLibrary(request);
+  await signInPhone(page, "Ana");
+  await page.goto("/photos");
+  await page.getByRole("list", { name: "Photos" }).getByRole("button").first().click();
+  const sheet = page.getByRole("dialog", { name: "Photo" });
+  await expect(sheet).toContainText("From Immich");
+  await expect(sheet.getByRole("button", { name: "Remove" })).toHaveCount(0);
+  await sheet.getByRole("button", { name: "Hide from Screensaver" }).click();
+  await expect(toast(page, "Hidden from the screensaver")).toBeVisible();
 });

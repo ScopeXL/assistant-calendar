@@ -526,6 +526,12 @@ test("a phone", async ({ page, isMobile }) => {
     await page.goto("/settings/features");
     await page.getByRole("group", { name: "Birthdays in Coming Up" }).scrollIntoViewIfNeeded();
     await shot(page, `settings-features-countdowns-${scheme}`);
+    // A photo library's panel (ADR 0036), the pretend Immich.
+    await page.request.post("/api/screensaver/_test/library", { headers: CSRF, data: {} });
+    await page.goto("/settings/screensaver");
+    await page.getByRole("button", { name: "Edit Immich" }).click();
+    await expect(page.getByRole("dialog", { name: "Immich" })).toContainText("What to Show");
+    await shot(page, `settings-screensaver-library-${scheme}`);
     await page.goto("/settings/family");
     await page.getByRole("button", { name: "Edit Mia" }).click();
     await expect(page.getByRole("dialog", { name: "Edit Mia" })).toBeVisible();
@@ -825,6 +831,13 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
     data: { password: PASSWORD, label: "Kitchen screen" },
   });
   expect(paired.status()).toBe(200);
+  // The pretend Immich (ADR 0036): its photos come first in the Photos room, so the viewer
+  // shows "From Immich".
+  const library = await page.request.post("/api/screensaver/_test/library", {
+    headers: CSRF,
+    data: {},
+  });
+  expect(library.ok()).toBe(true);
   for (const theme of ["light", "dark"]) {
     await change(page, { theme });
     await page.goto("/meals");
@@ -853,6 +866,18 @@ test("the wall's meals, countdowns, photos and screensaver", async ({ page }, te
     );
     await shot(page, `photos-one-${theme}`);
     await page.getByRole("button", { name: "Close" }).click();
+    // Photo Libraries: the row, Add a Library, and a library's own panel.
+    await page.goto("/settings/screensaver");
+    await expect(page.getByRole("button", { name: "Edit Immich" })).toBeVisible();
+    await page.getByRole("button", { name: "Add a Library" }).click();
+    await expect(page.getByRole("dialog", { name: "Add a Library" })).toBeVisible();
+    await shot(page, `settings-screensaver-add-library-${theme}`);
+    await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+    await page.getByRole("button", { name: "Edit Immich" }).click();
+    await expect(page.getByRole("dialog", { name: "Immich" })).toContainText("What to Show");
+    await shot(page, `settings-screensaver-library-${theme}`);
+    await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+    await page.goto("/photos");
     await page.getByRole("button", { name: "Start Screensaver" }).click();
     const saver = page.getByRole("button", { name: "Photos are showing. Tap to go back." });
     await expect(saver).toBeVisible();

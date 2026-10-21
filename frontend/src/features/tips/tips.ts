@@ -100,6 +100,11 @@ export const TIPS: readonly Tip[] = [
     text: "Leave the screen alone and your photos take over. A tap brings the calendar back.",
     needs: ["screensaver"],
   },
+  {
+    id: "photo-libraries",
+    text: "Photos: Settings → Photos & Screensaver shows your Immich photos, by person, album or tag.",
+    needs: ["screensaver"],
+  },
   { id: "weather", text: "Tap the weather to see the forecast.", needs: ["weather"] },
   {
     id: "dim",

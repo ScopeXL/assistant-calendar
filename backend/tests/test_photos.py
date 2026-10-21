@@ -137,6 +137,38 @@ async def test_upload_list_hide_remove_and_restore(parent: httpx.AsyncClient) ->
     assert len((await parent.get("/api/photos")).json()["photos"]) == 1
 
 
+async def test_a_photo_library_s_photo_is_hidden_never_removed_one_by_one(
+    app: FastAPI, parent: httpx.AsyncClient, store: PhotoStore
+) -> None:
+    """Its library's next pass would bring it back (ADR 0036): hide it, or change the library."""
+    state = state_of(app)
+    async with state.db.write() as tx:
+        photo = await store.ingest(
+            tx.session,
+            picture((60, 40)),
+            kind=PhotoKind.LIBRARY,
+            zone=NY,
+            now=state.clock.now(),
+            source_key="source:01890000-0000-7000-8000-00000000beef",
+            taken_at=datetime(2026, 7, 4, 15, 0, tzinfo=UTC),
+        )
+    listed = (await parent.get("/api/photos")).json()["photos"]
+    assert [(p["id"], p["source_key"]) for p in listed] == [
+        (photo.id, "source:01890000-0000-7000-8000-00000000beef")
+    ]
+    # Dated from the library's record: the picture itself has no EXIF.
+    assert listed[0]["taken_at"] == "2026-07-04T15:00:00Z"
+    refused = await parent.delete(f"/api/photos/{photo.id}", headers=CSRF)
+    assert refused.status_code == 409
+    assert refused.json()["error"] == {
+        "code": "from_library",
+        "message": "This photo comes from a photo library. Hide it from the screensaver "
+        "instead, or take it out of the library.",
+    }
+    hidden = await parent.post(f"/api/photos/{photo.id}/hide", headers=CSRF)
+    assert hidden.status_code == 200 and hidden.json()["hidden"] is True
+
+
 async def test_uploads_are_capped_per_device(
     parent: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

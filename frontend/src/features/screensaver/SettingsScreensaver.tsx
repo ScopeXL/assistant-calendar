@@ -1,22 +1,37 @@
+import { Plus } from "lucide-react";
+import { useState } from "react";
+
 import { formatTime } from "../../lib/dates";
 import { usePlugins } from "../../lib/household";
 import { Button } from "../../ui/Button";
+import { ListRow } from "../../ui/ListRow";
 import { useShell } from "../../ui/shell";
 import { Switch } from "../../ui/Switch";
 import { Group, Text } from "../settings/parts";
 import { PluginSettingsForm } from "../settings/PluginSettingsForm";
-import { usePhotoChanges, useSources, type PhotoSource } from "./data";
+import {
+  useLibraries,
+  useLibraryKinds,
+  usePhotoChanges,
+  useSources,
+  type PhotoLibrary,
+  type PhotoSource,
+} from "./data";
+import { LibraryPanel, type LibraryOpening } from "./LibraryPanel";
 import { photosCount } from "./PhotosRoom";
+import { libraryLine } from "./words";
 
 /**
  * Settings → Photos & screensaver (UX §4 "Photos room" Settings): when it starts, how often the
- * photo changes, the clock and what's next, shuffle; and the photos folder on the server, which
- * brings in whatever is put there.
+ * photo changes, the clock and what's next, shuffle; the photos folder on the server, which
+ * brings in whatever is put there; and the photo libraries (ADR 0036), a row each and Add a
+ * Library, which open one panel.
  */
 export function SettingsScreensaver() {
   const { data: plugins = [] } = usePlugins();
   const plugin = plugins.find((p) => p.id === "screensaver");
   const { data: sources = [] } = useSources();
+  const [opening, setOpening] = useState<LibraryOpening | null>(null);
   return (
     <>
       {plugin ? (
@@ -31,7 +46,76 @@ export function SettingsScreensaver() {
       {sources.map((source) => (
         <SourceGroup key={source.id} source={source} />
       ))}
+      <LibrariesGroup onOpen={setOpening} />
+      <LibraryPanel
+        opening={opening}
+        onOpen={setOpening}
+        onClose={() => {
+          setOpening(null);
+        }}
+      />
     </>
+  );
+}
+
+/** Photo Libraries: a row per library (how it's doing, how many photos), then Add a Library. */
+function LibrariesGroup({ onOpen }: { onOpen: (opening: LibraryOpening) => void }) {
+  const display = useShell() === "display";
+  const { data: libraries = [] } = useLibraries();
+  const { data: kinds = [] } = useLibraryKinds();
+  const names = kinds.map((kind) => kind.name).join(" and ") || "Immich";
+  return (
+    <Group
+      title="Photo Libraries"
+      note={`Sunroom can show photos kept on a photo server. ${names} works today.`}
+    >
+      {libraries.map((library) => (
+        <LibraryRow
+          key={library.id}
+          library={library}
+          onOpen={() => {
+            onOpen({ page: "library", id: library.id });
+          }}
+        />
+      ))}
+      {libraries.length === 0 ? (
+        <div className={display ? "py-5" : "py-4"}>
+          <Text>No library connected yet.</Text>
+        </div>
+      ) : null}
+      <div className={display ? "py-5" : "py-4"}>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            onOpen({ page: "add" });
+          }}
+        >
+          <Plus aria-hidden="true" className={display ? "size-7" : "size-5"} />
+          Add a Library
+        </Button>
+      </div>
+    </Group>
+  );
+}
+
+function LibraryRow({ library, onOpen }: { library: PhotoLibrary; onOpen: () => void }) {
+  const line = libraryLine(library);
+  return (
+    <ListRow
+      label={`Edit ${library.name}`}
+      title={library.name}
+      subtitle={
+        line.trouble ? (
+          <span role="status" className="font-semibold text-alert">
+            {line.text}
+          </span>
+        ) : (
+          line.text
+        )
+      }
+      value={photosCount(library.photo_count)}
+      onClick={onOpen}
+    />
   );
 }
 

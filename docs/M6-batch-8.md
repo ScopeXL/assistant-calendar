@@ -979,7 +979,7 @@ network' tick now does what it says."
 
 ### T6 Photo libraries: the screens
 
-- [ ] Done (commit: )
+- [x] Done (commit: "screensaver: Photo Libraries in Settings, and a library's photo says where it's from")
 
 **What exists.** `features/screensaver/SettingsScreensaver.tsx:22-92` (the page: the generic
 form's **Screensaver** group, then one `SourceGroup` per source with its switch, "N photos from
@@ -1135,6 +1135,22 @@ minute and the rest as they come." `UX.md:2`'s word list: **Photo Libraries**, *
 Library**, **Remove Library**, **What to Show**, **Keep up to**. `PLAN.md:402` (§9) as T5.
 
 **CHANGELOG.** T5's line, edited to say what the screens do.
+
+**As built.** As planned, with these differences:
+- The panel's first page is titled **Add a Library**; a library's row says **Edit Immich** to a
+  screen reader, as an account's says Edit; Remove Library's question ends **Keep It**.
+- `PhotoOut` gained `source_key` (a core shape): the viewer and the phone's sheet need it to know
+  a library's photo. Its name ("From Immich") comes from the libraries, which are a parent's to
+  read, so a device without a parent's rights says "From a photo library".
+- The tip is shortened to fit the list's 90 characters: "Photos: Settings → Photos &
+  Screensaver shows your Immich photos, by person, album or tag."
+- `getByLabel("Address")` in the e2e also found the home-network switch, whose label wraps its
+  hint ("an address like 192.168…"): the specs use `exact`.
+- The screenshots add `settings-screensaver-add-library-*` on the walls beside
+  `settings-screensaver-library-*` (walls and phones), and the wall's Photos shots open a library
+  photo; the a11y journeys check both panels on the wall and on a phone.
+- No `_test/library {wipe}` look by hand in this session; the route has it (and the pytest
+  covers the wiped key).
 
 ### T7 Wrap up the batch
 
