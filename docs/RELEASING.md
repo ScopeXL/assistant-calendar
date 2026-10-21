@@ -15,7 +15,7 @@ does the rest. This page explains the pieces, and how to release without Claude.
 - A GitHub Release `vX.Y.Z` with that section as its notes, and its files, which
   `.github/workflows/release-assets.yml` builds on GitHub when the tag is pushed: Sunroom
   Screen's wheel (`sunroom_kiosk-X.Y.Z-py3-none-any.whl`, its pages built in), `install.sh`
-  (and `install.ps1` from 0.14.0), and `SHA256SUMS`, uploaded last. The installers and Sunroom
+  and `install.ps1`, and `SHA256SUMS`, uploaded last. The installers and Sunroom
   Screen's own updates take the wheel from there and check it against `SHA256SUMS`; nothing is
   uploaded from the Mac. Sunroom's own update check stays on tags (ADR 0032).
 - Sunroom OS's card image, `sunroom-os-X.Y.Z-pi-arm64.img.xz` with its `.sha256` and Imager's
@@ -65,7 +65,7 @@ and stops after 45 minutes, and the deploy skill waits for the run and reports i
 - **GitHub:** pushes go over SSH; see *Pushing to GitHub* below. The GitHub CLI signed in
   (`gh auth login`, then `gh auth status`) makes the Release and watches the runs.
 - **The release workflows, once:** push a throwaway pre-release tag (for example
-  `git tag v0.14.0-rc.1 && git push origin v0.14.0-rc.1`), or run them by hand on one (Actions →
+  `git tag v0.13.1-rc.1 && git push origin v0.13.1-rc.1`), or run them by hand on one (Actions →
   Release assets, and Sunroom OS → Run workflow). They make a draft pre-release with the files,
   and an hour later the Sunroom OS image; check them (write the image to a card), then delete the
   draft and the tag.

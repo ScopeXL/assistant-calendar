@@ -7,7 +7,7 @@ name: Release assets
 on:
   push:
     tags: ["v*"]
-  # The owner's one test, on a throwaway pre-release tag (for example v0.13.0-rc.1).
+  # The owner's one test, on a throwaway pre-release tag (for example v0.13.1-rc.1).
   workflow_dispatch:
     inputs:
       tag:

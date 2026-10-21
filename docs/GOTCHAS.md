@@ -118,8 +118,8 @@ size limit.
   `/display` document that names the port, so the launcher passes `?screen=` on every load,
   nothing remembers it, and a fresh reload goes back to the launcher's address (the rooms
   change the URL and drop the parameter).
-- `install.sh` must run on macOS's `/bin/bash` 3.2 (its `--dry-run` in CI, and from 0.14.0 the
-  Mac's install): there an empty array's `"${a[@]}"` is an unbound variable under `set -u`, and
+- `install.sh` must run on macOS's `/bin/bash` 3.2 (its `--dry-run` in CI, and the Mac's
+  install): there an empty array's `"${a[@]}"` is an unbound variable under `set -u`, and
   `${var,,}` doesn't parse. Write `${a[@]+"${a[@]}"}` (or `${a[*]-}`) and `lower`; try it with
   `/bin/bash kiosk/install.sh --dry-run`.
 - Sunroom OS's build failed at pi-gen's export on a Mac ("mkdosfs: unable to open

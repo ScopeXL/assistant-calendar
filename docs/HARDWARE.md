@@ -158,7 +158,7 @@ an address or a photo of the family's own screen.
 | 12 | `.local` from a Windows computer | `http://sunroom.local:8080` opens | Not tested yet |
 
 Sunroom Screen (0.13.0, [M7](M7.md) T10): the same installer, now with the program that runs the
-screen. Rows 13 to 23 need no Sunroom OS; its rows, and macOS and Windows, follow in 0.14.0.
+screen. Rows 13 to 23 need no Sunroom OS; its rows, and macOS and Windows, follow.
 
 | # | Setup or test | It passes when | Result |
 |---|---|---|---|
@@ -174,7 +174,7 @@ screen. Rows 13 to 23 need no Sunroom OS; its rows, and macOS and Windows, follo
 | 22 | Sunroom stopped for five minutes | Can't Reach shows after about two minutes, and the board comes back by itself when Sunroom answers | Not tested yet |
 | 23 | A Linux desktop (Debian or Ubuntu with Chromium or Chrome), `--display-only` | It starts at sign-in, full screen, and pairs; This Screen has Quit Sunroom Screen, which closes it until the next sign-in | Not tested yet |
 
-Sunroom OS, Run It on This Screen, macOS and Windows (0.14.0, [M7](M7.md) T13). Write the
+Sunroom OS, Run It on This Screen, macOS and Windows (0.13.0, [M7](M7.md) T13). Write the
 Raspberry Pi Imager version with each Sunroom OS result.
 
 | # | Setup or test | It passes when | Result |
