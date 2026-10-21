@@ -12,6 +12,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   column for itself; Settings → Display → Rolling week still sets every screen.
 - Tasks → All Tasks lists every task, due this week or next month, with its rule and its next
   day; tap one to change or remove it.
+- Settings → Photos & Screensaver → Photo Libraries: connect an Immich server with its address
+  and an API key, pick the people, albums or tags to show (or show every photo), and the
+  screensaver draws on them; Immich is the first library, and more kinds can follow.
 
 ### Changed
 
@@ -27,8 +30,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Fixed
 
-- A calendar server on the home network can be allowed from its own sheet: the "This server is
-  on your home network" tick now does what it says.
+- A calendar server or a photo library on the home network can be allowed from its own sheet:
+  the "This server is on your home network" tick now does what it says.
 - On the People view, the arrows go to the day before or after, Today brings it back, and the
   day is written over the columns; a person's tasks on another day show without boxes. The
   Today view no longer shows arrows that did nothing.

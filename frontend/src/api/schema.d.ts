@@ -2368,6 +2368,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/screensaver/_test/library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test Library */
+        post: operations["test_library_api_screensaver__test_library_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/libraries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Libraries */
+        get: operations["get_libraries_api_screensaver_libraries_get"];
+        put?: never;
+        /** Add Library */
+        post: operations["add_library_api_screensaver_libraries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/libraries/{source_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Library */
+        get: operations["get_library_api_screensaver_libraries__source_id__get"];
+        put?: never;
+        post?: never;
+        /** Remove Library */
+        delete: operations["remove_library_api_screensaver_libraries__source_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Library */
+        patch: operations["patch_library_api_screensaver_libraries__source_id__patch"];
+        trace?: never;
+    };
+    "/api/screensaver/libraries/{source_id}/choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Choices */
+        get: operations["get_choices_api_screensaver_libraries__source_id__choices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/libraries/{source_id}/reconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reconnect Library */
+        post: operations["reconnect_library_api_screensaver_libraries__source_id__reconnect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/libraries/{source_id}/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scan Library */
+        post: operations["scan_library_api_screensaver_libraries__source_id__scan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/libraries/{source_id}/thumb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Thumb */
+        get: operations["get_thumb_api_screensaver_libraries__source_id__thumb_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/screensaver/library-kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Library Kinds */
+        get: operations["get_library_kinds_api_screensaver_library_kinds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/screensaver/manifest": {
         parameters: {
             query?: never;
@@ -4012,6 +4151,144 @@ export interface components {
             member_id: string | null;
             /** Text */
             text: string;
+        };
+        /** LibraryChoiceOut */
+        LibraryChoiceOut: {
+            /** Count */
+            count: number | null;
+            /** Has Thumb */
+            has_thumb: boolean;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** LibraryChoicesOut */
+        LibraryChoicesOut: {
+            /** Albums */
+            albums: components["schemas"]["LibraryChoiceOut"][];
+            /** Fetched At */
+            fetched_at: string | null;
+            /** People */
+            people: components["schemas"]["LibraryChoiceOut"][];
+            /** Tags */
+            tags: components["schemas"]["LibraryChoiceOut"][];
+            /** Unnamed People */
+            unnamed_people: number;
+        };
+        /** LibraryIn */
+        LibraryIn: {
+            /**
+             * Allow Private
+             * @default false
+             */
+            allow_private: boolean;
+            /** Api Key */
+            api_key: string;
+            /** Kind */
+            kind: string;
+            /** Label */
+            label?: string | null;
+            /** Url */
+            url: string;
+        };
+        /**
+         * LibraryKindOut
+         * @description A kind of library the screens offer, with what its fields say.
+         */
+        LibraryKindOut: {
+            /** Address Hint */
+            address_hint: string;
+            /** Key Help */
+            key_help: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Placeholder */
+            placeholder: string;
+        };
+        /** LibraryOut */
+        LibraryOut: {
+            /** Allow Private */
+            allow_private: boolean;
+            /** Checking */
+            checking: boolean;
+            /** Enabled */
+            enabled: boolean;
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Scan At */
+            last_scan_at: string | null;
+            /** Library Photos */
+            library_photos: number | null;
+            /** Limit */
+            limit: number;
+            /** Name */
+            name: string;
+            /** Options At */
+            options_at: string | null;
+            /** Pending */
+            pending: number;
+            /** Photo Count */
+            photo_count: number;
+            picks: components["schemas"]["LibraryPicks"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "connected" | "needs_reconnect" | "error";
+            /** Url */
+            url: string;
+            /** Version */
+            version: string | null;
+        };
+        /**
+         * LibraryPatch
+         * @description Only what's sent changes; a change of picks, limit or switch starts a pass.
+         */
+        LibraryPatch: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Label */
+            label?: string | null;
+            /** Limit */
+            limit?: (100 | 250 | 500 | 1000 | 2000) | null;
+            picks?: components["schemas"]["LibraryPicks"] | null;
+        };
+        /**
+         * LibraryPicks
+         * @description What to show, by the library's ids: any pick matches, none means every photo.
+         */
+        LibraryPicks: {
+            /** Albums */
+            albums?: string[];
+            /** People */
+            people?: string[];
+            /** Tags */
+            tags?: string[];
+        };
+        /** LibraryReconnectIn */
+        LibraryReconnectIn: {
+            /** Api Key */
+            api_key: string;
+            /** Url */
+            url?: string | null;
+        };
+        /**
+         * LibraryTestIn
+         * @description The test server's pretend library: ``wipe`` leaves it needing its key again.
+         */
+        LibraryTestIn: {
+            /**
+             * Wipe
+             * @default false
+             */
+            wipe: boolean;
         };
         /** ListDetailOut */
         ListDetailOut: {
@@ -10466,6 +10743,340 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemsOut"];
+                };
+            };
+        };
+    };
+    test_library_api_screensaver__test_library_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibraryTestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_libraries_api_screensaver_libraries_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"][];
+                };
+            };
+        };
+    };
+    add_library_api_screensaver_libraries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibraryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_library_api_screensaver_libraries__source_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_library_api_screensaver_libraries__source_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_library_api_screensaver_libraries__source_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibraryPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_choices_api_screensaver_libraries__source_id__choices_get: {
+        parameters: {
+            query?: {
+                refresh?: boolean;
+            };
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryChoicesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconnect_library_api_screensaver_libraries__source_id__reconnect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibraryReconnectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_library_api_screensaver_libraries__source_id__scan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_thumb_api_screensaver_libraries__source_id__thumb_get: {
+        parameters: {
+            query?: {
+                person?: string | null;
+                asset?: string | null;
+            };
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A face or a picture */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_library_kinds_api_screensaver_library_kinds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryKindOut"][];
                 };
             };
         };

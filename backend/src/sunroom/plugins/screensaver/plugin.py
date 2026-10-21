@@ -19,6 +19,7 @@ from sunroom.plugins.spec import ParamField
 
 INBOX_SCAN_S = 5 * 60
 THUMB_BACKLOG_S = 10 * 60
+LIBRARY_SYNC_S = 30 * 60
 
 MANIFEST = PluginManifest(
     id="screensaver",
@@ -81,13 +82,14 @@ class Screensaver(PluginBase):
         build(router, self)
 
     async def problems(self, ctx: PluginContext) -> list[Problem]:
-        """A photo source that fails (Needs Attention, ADR 0034)."""
-        from sunroom.plugins.screensaver import service
+        """The inbox when it fails, and a photo library that needs its key again or stopped
+        answering (Needs Attention, ADR 0034, 0036)."""
+        from sunroom.plugins.screensaver import libraries, service
 
-        return await service.problems(ctx)
+        return [*await service.problems(ctx), *await libraries.problems(ctx)]
 
     async def on_enable(self, ctx: PluginContext) -> None:
-        from sunroom.plugins.screensaver import service
+        from sunroom.plugins.screensaver import libraries, service
 
         self.ctx = ctx
         await service.ensure_inbox(ctx)
@@ -98,8 +100,14 @@ class Screensaver(PluginBase):
         async def thumb_backlog() -> None:
             await service.thumb_backlog(ctx)
 
+        async def library_sync() -> None:
+            # Each library's pass runs in a task of its own, so a slow one never holds up the
+            # inbox, and a failing one stays inside it (hard rule 7).
+            await libraries.sync_all(ctx)
+
         ctx.every("inbox-scan", INBOX_SCAN_S, inbox_scan)
         ctx.every("thumb-backlog", THUMB_BACKLOG_S, thumb_backlog)
+        ctx.every("library-sync", LIBRARY_SYNC_S, library_sync)
 
     # No on_disable: the context stays, so routes keep answering while a failed job has the
     # plugin errored (PLAN §11.4); switched off, the framework's gate answers for them.

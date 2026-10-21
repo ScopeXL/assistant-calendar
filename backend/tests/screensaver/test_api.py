@@ -345,7 +345,7 @@ async def test_off_every_route_is_404_and_on_again_everything_is_there(
             response = await parent.request(method, path, json=body, headers=CSRF)
             assert (response.status_code, response.json()["error"]) == (404, OFF), (method, path)
             answered.append((method, route.path))
-    assert len(answered) == 4  # every route the plugin has
+    assert len(answered) == 15  # every route the plugin has (11 are photo libraries')
     on = await parent.post("/api/plugins/screensaver/enable", headers=CSRF)
     assert on.status_code == 200, on.text
 

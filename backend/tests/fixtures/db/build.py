@@ -409,6 +409,47 @@ def _v0_13_0() -> list[Statement]:
     ]
 
 
+LIBRARY = "00000000-0000-7000-8000-000000000b22"  # a photo library (Immich), needing its key
+LIBRARY_PHOTO = "00000000-0000-7000-8000-000000000b23"  # core's copy of one of its photos
+
+
+def _v0_14_0() -> list[Statement]:
+    """0.14.0 (M6 batch 8): 0.13.0's rows, with a photo library: picks and choices in its
+    config and cache, its key wiped by a new secret key (needs its key again), one photo
+    brought in and one still waiting. Made-up ids and a pretend address only."""
+    config = (
+        '{"url": "http://immich.test", "picks": {"people": ["p-mia"], "albums": [],'
+        ' "tags": []}, "limit": 500}'
+    )
+    options = (
+        '{"people": [{"id": "p-mia", "name": "Sample Kid", "count": null, "has_thumb": true}],'
+        ' "albums": [{"id": "a-beach", "name": "Beach 2026", "count": 2, "has_thumb": true}],'
+        ' "tags": [], "unnamed_people": 1}'
+    )
+    return [
+        *_v0_13_0(),
+        (
+            "INSERT INTO photo_sources (id, kind, label, config_json, credentials_enc,"
+            " allow_private, enabled, last_scan_at, last_error, items_seen, created_at,"
+            " deleted_at, status, options_json, options_at) VALUES (?, 'immich', 'Immich', ?,"
+            " NULL, 0, 1, '2026-10-21 17:00:00', 'Sunroom can''t read this library''s saved"
+            " key any more. Connect it again.', 1, '2026-10-21 16:00:00', NULL,"
+            " 'needs_reconnect', ?, '2026-10-21 16:00:00')",
+            (LIBRARY, config, options),
+        ),
+        "INSERT INTO photos (id, kind, source_key, original_name, taken_at, width, height, bytes,"
+        f" sha256, created_at, hidden, deleted_at) VALUES ('{LIBRARY_PHOTO}', 'library',"
+        f" 'source:{LIBRARY}', 'r-1.jpg', '2026-07-04 15:00:00', 1440, 960, 4096,"
+        f" '{'0' * 63}2', '2026-10-21 16:01:00', 0, NULL)",
+        "INSERT INTO photo_source_items (id, source_id, remote_id, photo_id, taken_at, seen_at,"
+        " fetched_at, dropped_at, fetch_failures) VALUES"
+        f" ('00000000-0000-7000-8000-000000000b24', '{LIBRARY}', 'r-1', '{LIBRARY_PHOTO}',"
+        " '2026-07-04 15:00:00', '2026-10-21 17:00:00', '2026-10-21 16:01:00', NULL, 0),"
+        f" ('00000000-0000-7000-8000-000000000b25', '{LIBRARY}', 'r-2', NULL,"
+        " '2026-06-01 12:00:00', '2026-10-21 17:00:00', NULL, NULL, 1)",
+    ]
+
+
 SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610071800": _v0_1_0,
     "202610081454": _v0_2_0,
@@ -423,6 +464,7 @@ SEEDS: dict[str, Callable[[], list[Statement]]] = {
     "202610151730": _v0_11_0,
     "202610161644": _v0_12_0,
     "202610201813": _v0_13_0,
+    "202610211809": _v0_14_0,
 }
 
 

@@ -335,9 +335,10 @@ async def test_only_a_parent_checks_now(
     assert names(inbox) == ["IMG_0012.JPG"]
 
 
-async def test_only_the_inbox_can_be_checked_yet(
+async def test_sources_are_the_inbox_and_a_library_is_checked_from_its_own_page(
     app: FastAPI, parent: httpx.AsyncClient, ctx: PluginContext, store: PhotoStore
 ) -> None:
+    """A photo library has its own list and its own Check Now (ADR 0036)."""
     async with state_of(app).db.write() as tx:
         album = PhotoSource(kind="immich", label="Family album", created_at=ctx.now())
         tx.session.add(album)
@@ -347,12 +348,11 @@ async def test_only_the_inbox_can_be_checked_yet(
     listed = await all_sources(parent)
     assert [(each["kind"], each["label"], each["photo_count"]) for each in listed] == [
         ("inbox", "Photos folder", 0),
-        ("immich", "Family album", 1),
     ]
     assert error(await scan(parent, album_id)) == (
         409,
         "cant_check",
-        "That one can't be checked yet.",
+        "Check a photo library from Photo Libraries.",
     )
     gone = await scan(parent, "nope")
     assert (gone.status_code, gone.json()["error"]) == (404, GONE)

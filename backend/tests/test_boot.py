@@ -121,7 +121,7 @@ def test_every_real_credentials_table_is_wiped_when_the_key_changes(data_dir: Pa
     boot.prepare(make_settings(data_dir), CLOCK)
     with closing(sqlite3.connect(db)) as conn:
         assert sorted(boot._credential_tables(conn)) == [  # pyright: ignore[reportPrivateUsage]
-            ("photo_sources", False),
+            ("photo_sources", True),
             ("sync_accounts", True),
         ]
         conn.execute(
@@ -142,7 +142,11 @@ def test_every_real_credentials_table_is_wiped_when_the_key_changes(data_dir: Pa
             "needs_reconnect",
             None,
         )
-        assert conn.execute("SELECT credentials_enc FROM photo_sources").fetchone() == (None,)
+        # A photo library (ADR 0036) asks for its key again, as an account does.
+        assert conn.execute("SELECT status, credentials_enc FROM photo_sources").fetchone() == (
+            "needs_reconnect",
+            None,
+        )
 
 
 def test_a_version_change_takes_a_pre_migration_backup_once(data_dir: Path) -> None:

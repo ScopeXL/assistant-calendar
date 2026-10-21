@@ -121,6 +121,8 @@ context stays, so the routes keep answering while the plugin is errored.
   `APP_SECRET_KEY` wipes every `credentials_enc` at boot and sets that status. `ctx.decrypt()`
   raises `PluginDecryptError` for a secret it can no longer read. Add the table to
   `backend/tests/test_boot.py::test_every_real_credentials_table_is_wiped_when_the_key_changes`.
+  (`sync_accounts` and, since 0.14.0, `photo_sources` have their status: a photo library asks for
+  its key again, ADR 0036.)
 - `backend/tests/test_export.py`: add the exported tables to the expected list, after the last
   plugin's (core's tables first, then each plugin's in registry order).
 - `backend/tests/plugins/test_manager.py::test_the_real_registry_turns_its_plugins_on`: add

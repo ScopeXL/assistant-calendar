@@ -22,7 +22,9 @@ photo files.
 - Copies of the events in calendars you connect (below), so the screen works when they can't be
   reached.
 - Photos you upload or put in the photos inbox, resized, with their location and other EXIF data
-  removed (the date taken is read first).
+  removed (the date taken is read first); and copies of the photos a photo library you connect
+  picks out (its previews, resized the same way, up to the number you choose), with which of
+  its people, albums and tags you picked and the names it offered to pick from.
 - Signed-in phones and paired screens: a short label, whose phone it is, and when it was last
   used. Phones' IP addresses are not stored or logged: the server keeps them in memory only for a
   few minutes, to slow down password guessing. (Behind a reverse proxy that doesn't say the
@@ -30,8 +32,9 @@ photo files.
   address this device used (its URL), not the phone's own.
 - The household password and the parent PIN, only as one-way hashes.
 - "Add a phone" and pairing codes, as one-way hashes, usable once, for a few minutes.
-- The passwords, keys and sign-ins of calendars you connect, encrypted with the server's secret
-  key (`secret.key` in the volume, or `APP_SECRET_KEY`). Backups never include that key.
+- The passwords, keys and sign-ins of calendars you connect, and the key of a photo library you
+  connect, encrypted with the server's secret key (`secret.key` in the volume, or
+  `APP_SECRET_KEY`). Backups never include that key.
 
 The server's log records each request's method, address path, result and duration, never what
 was in it.
@@ -46,6 +49,7 @@ Settings → Features stops it.
 | **The weather** | Open-Meteo (`api.open-meteo.com`) | About once an hour, once you've set where home is | The place's coordinates (rounded to about 10 m), the time zone and the units, and the server's internet address |
 | **Finding your place** for the weather | Open-Meteo's place search (`geocoding-api.open-meteo.com`) | When a parent searches for a place | The words typed into the search |
 | **Calendars you connect** | iCloud, Google, or the calendar server or address you add | Every 5 minutes or so (a calendar address as often as you chose) | Those calendars' events, both ways for iCloud, Google and other calendar servers; the sign-in you gave for them |
+| **Photo libraries you connect** | The Immich server you add | Every 30 minutes, and when you check | Your API key for it, to that server only; copies of the photos it picks are kept on this server, resized, as uploaded photos are |
 | **Check for updates daily** (off unless you turn it on) | GitHub (`api.github.com`) | Once a day | The server's internet address and Sunroom's version |
 
 Holidays calendars are made on the server from a built-in list; nothing is sent for them.

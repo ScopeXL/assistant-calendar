@@ -197,9 +197,12 @@ class PhotoStore:
         source_key: str = "upload",
         original_name: str | None = None,
         encoded: Encoded | None = None,
+        taken_at: datetime | None = None,
     ) -> Photo:
         """Store a photo (or bring back the same one, removed or not). ``encoded``: from
-        ``encode``, done outside the transaction; without it the encoding happens here."""
+        ``encode``, done outside the transaction; without it the encoding happens here.
+        ``taken_at``: when it was taken, if its EXIF doesn't say (a photo library's preview
+        carries none; the library's record does)."""
         self._check_room()
         digest = hashlib.sha256(data).hexdigest()
         existing = await session.scalar(
@@ -213,7 +216,7 @@ class PhotoStore:
         photo = existing or Photo(kind=kind.value, sha256=digest)
         photo.source_key = source_key
         photo.original_name = (original_name or "")[:255] or None
-        photo.taken_at = encoded.taken_at
+        photo.taken_at = encoded.taken_at or taken_at
         photo.width, photo.height = encoded.width, encoded.height
         photo.bytes = len(encoded.main)
         photo.deleted_at = None

@@ -2,11 +2,12 @@
 "Screensaver"; ADR 0009).
 
 The pictures are core's (``photos``): phones upload into the library, and this plugin's sources
-import into it, each under its own ``source_key`` ("inbox"; later "source:<id>" for Immich and
-Nextcloud). The **manifest** is what the wall's screensaver shows: every library photo that isn't
-hidden or removed, newest first, with the plugin's settings.
+import into it, each under its own ``source_key`` ("inbox", or "source:<id>" for a photo library,
+libraries.py). The **manifest** is what the wall's screensaver shows: every library photo that
+isn't hidden or removed, and isn't from a photo library switched off, newest first, with the
+plugin's settings.
 
-The one source in this milestone is the **inbox**, a folder on the volume
+This module is the manifest and the **inbox**, a folder on the volume
 (``$DATA_DIR/photos/inbox``). Every 5 minutes, and when a parent taps Check now, each photo file
 at its top that has sat still for 10 seconds (by the file system's clock: a file still being
 copied waits) is re-encoded into the library, which drops its EXIF and GPS, and the original
@@ -103,11 +104,23 @@ def saver_settings(ctx: PluginContext) -> SaverSettings:
 
 async def manifest(ctx: PluginContext) -> ManifestOut:
     """Every library photo the screensaver may show, newest first (ids are time-ordered), with
-    the addresses ``/photos/…`` serves them at (as the core photos API builds them)."""
+    the addresses ``/photos/…`` serves them at (as the core photos API builds them). A photo
+    library switched off (Show on the screensaver) keeps its photos and shows none of them."""
     async with ctx.read() as session:
+        off = [
+            f"source:{source_id}"
+            for source_id in await session.scalars(
+                select(PhotoSource.id).where(
+                    PhotoSource.kind != SourceKind.INBOX.value,
+                    PhotoSource.enabled.is_(False),
+                    PhotoSource.deleted_at.is_(None),
+                )
+            )
+        ]
+        shown = and_(VISIBLE, Photo.source_key.not_in(off)) if off else VISIBLE
         rows = await session.execute(
             select(Photo.id, Photo.width, Photo.height, Photo.taken_at)
-            .where(VISIBLE)
+            .where(shown)
             .order_by(Photo.id.desc())
             .limit(MANIFEST_MAX)
         )
@@ -129,13 +142,18 @@ async def manifest(ctx: PluginContext) -> ManifestOut:
 
 
 async def problems(ctx: PluginContext) -> list[Problem]:
-    """A photo source on and failing (Needs Attention, ADR 0034): its last check's own line,
-    with the page where it's checked again."""
+    """The inbox on and failing (Needs Attention, ADR 0034): its last check's own line, with the
+    page where it's checked again. A photo library's are libraries.py's."""
     async with ctx.read() as session:
         failing = (
             await session.scalars(
                 select(PhotoSource)
-                .where(PhotoSource.enabled.is_(True), PhotoSource.last_error.is_not(None))
+                .where(
+                    PhotoSource.kind == SourceKind.INBOX.value,
+                    PhotoSource.deleted_at.is_(None),
+                    PhotoSource.enabled.is_(True),
+                    PhotoSource.last_error.is_not(None),
+                )
                 .order_by(PhotoSource.created_at)
             )
         ).all()
@@ -171,7 +189,7 @@ def _source_out(source: PhotoSource, counts: dict[str, int]) -> SourceOut:
     )
 
 
-async def _photo_counts(session: AsyncSession) -> dict[str, int]:
+async def photo_counts(session: AsyncSession) -> dict[str, int]:
     """How many photos the screensaver shows, by source_key."""
     rows = await session.execute(
         select(Photo.source_key, func.count()).where(VISIBLE).group_by(Photo.source_key)
@@ -209,16 +227,17 @@ async def ensure_inbox(ctx: PluginContext) -> None:
 
 
 async def sources(ctx: PluginContext) -> list[SourceOut]:
+    """The inbox (the photo libraries have their own list, libraries.py)."""
     await ensure_inbox(ctx)
     async with ctx.read() as session:
         rows = list(
             await session.scalars(
                 select(PhotoSource)
-                .where(PhotoSource.deleted_at.is_(None))
+                .where(PhotoSource.deleted_at.is_(None), PhotoSource.kind == SourceKind.INBOX.value)
                 .order_by(PhotoSource.created_at, PhotoSource.id)
             )
         )
-        counts = await _photo_counts(session)
+        counts = await photo_counts(session)
     return [_source_out(row, counts) for row in rows]
 
 
@@ -232,7 +251,7 @@ async def update_source(ctx: PluginContext, source_id: str, body: SourcePatch) -
             source.enabled = body.enabled
         if (source.label, source.enabled) != before:
             tx.publish(EVENT, {"source_id": source.id})
-        return _source_out(source, await _photo_counts(tx.session))
+        return _source_out(source, await photo_counts(tx.session))
 
 
 # ---- checking the inbox ------------------------------------------------------------------------
@@ -440,7 +459,8 @@ async def scan_source(ctx: PluginContext, source_id: str) -> ScanOut:
         source = await _live_source(session, source_id)
         kind, enabled = source.kind, source.enabled
     if kind != SourceKind.INBOX:
-        raise AppError(409, "cant_check", "That one can't be checked yet.")
+        # A photo library has its own Check Now (libraries.py, POST libraries/{id}/scan).
+        raise AppError(409, "cant_check", "Check a photo library from Photo Libraries.")
     if not enabled:
         raise AppError(409, "source_off", "Turn it on first.")
     tally = await _check_inbox(ctx, store, source_id, asked=True)
@@ -448,7 +468,7 @@ async def scan_source(ctx: PluginContext, source_id: str) -> ScanOut:
         raise AppError(409, "already_checking", "It's checking the folder right now.")
     async with ctx.read() as session:
         source = await _live_source(session, source_id)
-        out = _source_out(source, await _photo_counts(session))
+        out = _source_out(source, await photo_counts(session))
     return ScanOut(source=out, imported=tally.imported, unreadable=tally.unreadable)
 
 

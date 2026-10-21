@@ -80,6 +80,10 @@ size limit.
 - A home server never passed the guard with the tick alone: the guard wants the tick and an
   allowlist row, and nothing wrote the row. `ctx.network.allow` writes it before the first
   check, and a failed check takes it back.
+- Test photos that had to differ were taken for one: flat JPEG colors a step apart encode alike,
+  and the store dedupes by the bytes' hash. Make such pictures PNG.
+- A plugin's spawned task, or a job, that raises stops the whole plugin (`PluginRunner._fail`).
+  Work that may fail on its own (a photo library's pass) catches its errors and records them.
 - A test's "done on its day" was done late: a completion's day is the household day the clock
   says when it's made, whatever its due date. Set the clock to that day before completing.
 - `boot.reexec` runs `sys.orig_argv[1:]` again with `sys.executable`: for the console script

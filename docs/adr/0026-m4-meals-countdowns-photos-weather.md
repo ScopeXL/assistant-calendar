@@ -1,6 +1,7 @@
 # ADR 0026: Meals, countdowns, photos and weather: where each part lives
 
-- **Status:** Accepted
+- **Status:** Accepted; the screensaver's photo libraries (the seat this record left for Immich)
+  were built by ADR 0036: copies on the volume, a library's photos hidden rather than removed
 - **Date:** 2026-10-08
 
 ## Context

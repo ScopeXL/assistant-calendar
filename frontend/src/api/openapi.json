@@ -4628,6 +4628,437 @@
         "title": "LastChange",
         "type": "object"
       },
+      "LibraryChoiceOut": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "has_thumb": {
+            "title": "Has Thumb",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "count",
+          "has_thumb"
+        ],
+        "title": "LibraryChoiceOut",
+        "type": "object"
+      },
+      "LibraryChoicesOut": {
+        "properties": {
+          "albums": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryChoiceOut"
+            },
+            "title": "Albums",
+            "type": "array"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryChoiceOut"
+            },
+            "title": "People",
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryChoiceOut"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "unnamed_people": {
+            "title": "Unnamed People",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "people",
+          "albums",
+          "tags",
+          "unnamed_people",
+          "fetched_at"
+        ],
+        "title": "LibraryChoicesOut",
+        "type": "object"
+      },
+      "LibraryIn": {
+        "properties": {
+          "allow_private": {
+            "default": false,
+            "title": "Allow Private",
+            "type": "boolean"
+          },
+          "api_key": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Api Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "url": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "url",
+          "api_key"
+        ],
+        "title": "LibraryIn",
+        "type": "object"
+      },
+      "LibraryKindOut": {
+        "description": "A kind of library the screens offer, with what its fields say.",
+        "properties": {
+          "address_hint": {
+            "title": "Address Hint",
+            "type": "string"
+          },
+          "key_help": {
+            "title": "Key Help",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "placeholder": {
+            "title": "Placeholder",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "placeholder",
+          "address_hint",
+          "key_help"
+        ],
+        "title": "LibraryKindOut",
+        "type": "object"
+      },
+      "LibraryOut": {
+        "properties": {
+          "allow_private": {
+            "title": "Allow Private",
+            "type": "boolean"
+          },
+          "checking": {
+            "title": "Checking",
+            "type": "boolean"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_scan_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Scan At"
+          },
+          "library_photos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Photos"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "options_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options At"
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "integer"
+          },
+          "photo_count": {
+            "title": "Photo Count",
+            "type": "integer"
+          },
+          "picks": {
+            "$ref": "#/components/schemas/LibraryPicks"
+          },
+          "status": {
+            "enum": [
+              "connected",
+              "needs_reconnect",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "url",
+          "status",
+          "enabled",
+          "allow_private",
+          "picks",
+          "limit",
+          "photo_count",
+          "pending",
+          "checking",
+          "last_scan_at",
+          "last_error",
+          "options_at",
+          "version",
+          "library_photos"
+        ],
+        "title": "LibraryOut",
+        "type": "object"
+      },
+      "LibraryPatch": {
+        "description": "Only what's sent changes; a change of picks, limit or switch starts a pass.",
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "enum": [
+                  100,
+                  250,
+                  500,
+                  1000,
+                  2000
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "picks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibraryPicks"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "LibraryPatch",
+        "type": "object"
+      },
+      "LibraryPicks": {
+        "description": "What to show, by the library's ids: any pick matches, none means every photo.",
+        "properties": {
+          "albums": {
+            "items": {
+              "pattern": "^[A-Za-z0-9-]{1,100}$",
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Albums",
+            "type": "array"
+          },
+          "people": {
+            "items": {
+              "pattern": "^[A-Za-z0-9-]{1,100}$",
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "People",
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "pattern": "^[A-Za-z0-9-]{1,100}$",
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "title": "LibraryPicks",
+        "type": "object"
+      },
+      "LibraryReconnectIn": {
+        "properties": {
+          "api_key": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Api Key",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "api_key"
+        ],
+        "title": "LibraryReconnectIn",
+        "type": "object"
+      },
+      "LibraryTestIn": {
+        "description": "The test server's pretend library: ``wipe`` leaves it needing its key again.",
+        "properties": {
+          "wipe": {
+            "default": false,
+            "title": "Wipe",
+            "type": "boolean"
+          }
+        },
+        "title": "LibraryTestIn",
+        "type": "object"
+      },
       "ListDetailOut": {
         "properties": {
           "done": {
@@ -16463,6 +16894,479 @@
         "summary": "List Problems",
         "tags": [
           "problems"
+        ]
+      }
+    },
+    "/api/screensaver/_test/library": {
+      "post": {
+        "operationId": "test_library_api_screensaver__test_library_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryTestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Library",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/libraries": {
+      "get": {
+        "operationId": "get_libraries_api_screensaver_libraries_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LibraryOut"
+                  },
+                  "title": "Response Get Libraries Api Screensaver Libraries Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Libraries",
+        "tags": [
+          "screensaver"
+        ]
+      },
+      "post": {
+        "operationId": "add_library_api_screensaver_libraries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Library",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/libraries/{source_id}": {
+      "delete": {
+        "operationId": "remove_library_api_screensaver_libraries__source_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Library",
+        "tags": [
+          "screensaver"
+        ]
+      },
+      "get": {
+        "operationId": "get_library_api_screensaver_libraries__source_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Library",
+        "tags": [
+          "screensaver"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_library_api_screensaver_libraries__source_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Library",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/libraries/{source_id}/choices": {
+      "get": {
+        "operationId": "get_choices_api_screensaver_libraries__source_id__choices_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryChoicesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Choices",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/libraries/{source_id}/reconnect": {
+      "post": {
+        "operationId": "reconnect_library_api_screensaver_libraries__source_id__reconnect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryReconnectIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconnect Library",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/libraries/{source_id}/scan": {
+      "post": {
+        "operationId": "scan_library_api_screensaver_libraries__source_id__scan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scan Library",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/libraries/{source_id}/thumb": {
+      "get": {
+        "operationId": "get_thumb_api_screensaver_libraries__source_id__thumb_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "person",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Person"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Asset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {}
+            },
+            "description": "A face or a picture"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Thumb",
+        "tags": [
+          "screensaver"
+        ]
+      }
+    },
+    "/api/screensaver/library-kinds": {
+      "get": {
+        "operationId": "get_library_kinds_api_screensaver_library_kinds_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LibraryKindOut"
+                  },
+                  "title": "Response Get Library Kinds Api Screensaver Library Kinds Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Library Kinds",
+        "tags": [
+          "screensaver"
         ]
       }
     },

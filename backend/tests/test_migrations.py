@@ -326,6 +326,32 @@ def test_a_sunroom_from_0_12_0_gets_its_own_id(tmp_path: Path) -> None:
     assert len(rows) == 1 and uuid.UUID(rows[0][3]).version == 7
 
 
+def test_photo_sources_from_0_13_0_are_connected_with_nothing_cached(tmp_path: Path) -> None:
+    """0.14.0 (ADR 0036): every source gets a status (the inbox is connected), an empty cache of
+    choices, and the new table of a library's photos starts empty; nothing else changes."""
+    db = tmp_path / "sunroom.db"
+    conn = sqlite3.connect(db)
+    conn.executescript((FIXTURE_DBS / "202610201813.sql").read_text())
+    before = conn.execute(
+        "SELECT id, kind, label, config_json, enabled, items_seen FROM photo_sources"
+    ).fetchall()
+    conn.close()
+    assert before
+    assert migrate.upgrade(db) == migrate.head_revision()
+    conn = sqlite3.connect(db)
+    try:
+        rows = conn.execute(
+            "SELECT id, kind, label, config_json, enabled, items_seen, status, options_json,"
+            " options_at FROM photo_sources"
+        ).fetchall()
+        items = conn.execute("SELECT count(*) FROM photo_source_items").fetchone()
+    finally:
+        conn.close()
+    assert [row[:6] for row in rows] == before
+    assert {row[6:] for row in rows} == {("connected", "{}", None)}
+    assert items == (0,)
+
+
 def test_accounts_named_icloud_become_apple(tmp_path: Path) -> None:
     """0.10.0 (ADR 0032): the family reads "Apple", so a CalDAV account 0.9.0 named "iCloud · …"
     as it connected reads "Apple · …". A name someone chose, and a calendar address, keep theirs."""

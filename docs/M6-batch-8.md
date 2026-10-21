@@ -693,7 +693,9 @@ day, or past its last repeat) leaves for Recently Removed the next day, where Pu
 
 ### T5 Photo libraries: the backend, with Immich as the first
 
-- [ ] Done (commit: )
+- [x] Done (commits: "net: the home-network tick writes the allowlist, and an API key never
+  follows a redirect" for (a); "screensaver: photo libraries, Immich first (the backend)" for the
+  rest)
 
 **Owner's note.** "Plan an integration to Photos where they can connect to an Immich server with
 an API Key and can select various filters on what to use for the screensaver. List People they
@@ -942,6 +944,39 @@ Immich is the first library, and more kinds can follow." (Fixed.) "A calendar se
 library on the home network can be allowed from its own sheet: the 'This server is on your home
 network' tick now does what it says."
 
+**As built.** In two commits, (a) and then the rest. What differs, each in ADR 0036:
+- *Immich's API* was checked against the specs at **v2.7.5** and **v3.3.4**: Immich 3.0 came out
+  in July, and 3.3.4 the day before this batch, so the client is "2.0 and newer", tested against
+  both versions' answers. Smallest fixes to the plan's names: the version from
+  `/api/server/version` (`/server/about` needs a permission a family's key may lack); an album's
+  photos through the search's `albumIds` (since 3.0 an album no longer carries its `assets`); a
+  photo's own `width`/`height`; `visibility: "timeline"` and `withDeleted: false` (the search has
+  no `isArchived`/`isTrashed`); the library's count from `/api/assets/statistics` (the search's
+  `total` counts one page). The search's flat filters and `page` are deprecated since 3.2.0 in
+  favour of `filter` and `cursor`, but still answer and are all 2.x knows: a follow-up below.
+- *The tick*: the guard wants both the tick and the allowlist row, so the row is written
+  **before** the first check and taken back if the check fails (the plan had it after a
+  successful check, which could never succeed for a home server). Rows are named after the
+  feature ("Calendars & Accounts", "Photos & Screensaver") rather than the account, and added
+  unless that feature's row is there: a renamed account still finds its row, and two features or
+  accounts on one server never cut each other off.
+- *Passes* run in tasks of their own, and the 30-minute job only starts them: a job or spawned
+  task that raises stops the whole plugin, and a pass of 200 fetches would otherwise hold up the
+  inbox's scan. `photo_source_items` has a `fetch_failures` column the plan didn't list, for
+  "three tries over three passes". Check Now is `POST libraries/{id}/scan`, which starts a pass
+  (the plan's first option); `sources/{id}/scan` stays the inbox's, and `GET sources` lists only
+  the inbox, so the existing page shows no library twice.
+- *`LibraryOut`* also carries `version` and `library_photos` (for T6's "Connected · Immich 2.7 ·
+  12,345 photos"), kept in `config_json` from the last check; `LibraryKindOut` a `placeholder`.
+- *The pretend Immich* answers at `http://immich.test` with `sample-key` when `ctx.test_mode` is
+  on (the plan wrote `ctx.settings().test_mode`); pytest's own pretend server is a
+  `MockTransport` handler at made-up hosts, so tests never meet the test-mode stand-in.
+- A library switched off keeps its photos, and the manifest leaves them out; problems, `GET
+  sources` and Check Now in `service.py` are the inbox's, and the plugin adds the libraries'.
+- Tested also: Immich 3.x answers the same; picks that come back restore without a fetch; a key
+  wiped by a new secret key; faces proxied with an id that can't reach another path; the routes
+  are a parent's. No end-to-end spec (T6 drives it from the screens).
+
 ### T6 Photo libraries: the screens
 
 - [ ] Done (commit: )
@@ -1158,6 +1193,10 @@ Library**, **Remove Library**, **What to Show**, **Keep up to**. `PLAN.md:402` (
 - **Album covers** beside the album chips (the `thumb?asset=` route is there).
 - **The next kinds**: Nextcloud (WebDAV folders), a plain folder on a network share, Google
   Photos (its API no longer allows third-party library reads: likely never).
+- **Immich's newer search**: since 3.2.0 the flat search filters and `page` are deprecated for a
+  `filter` object (with `or` branches, which could ask for every pick at once) and a `cursor`.
+  When a release drops the flat ones, ask for `filter` on 3.2 and newer (the version is checked
+  already) and keep the flat ones for 2.x.
 - **Paused tasks**: `active` exists in the API; a Pause in the task's sheet and a Paused group in
   All Tasks.
 - **Undo after adding a task** asks the PIN on the wall (`DELETE chores/{id}` is parent-only;
