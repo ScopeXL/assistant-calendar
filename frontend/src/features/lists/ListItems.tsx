@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -7,6 +7,7 @@ import { addDays, shortWeekday, zonedParts } from "../../lib/dates";
 import { useMembers, useSettings, type Member } from "../../lib/household";
 import { whenIdle } from "../../lib/idle";
 import { createStore, useStore } from "../../lib/store";
+import { showToast } from "../../lib/toast";
 import { useMinute } from "../../lib/time";
 import { GLIDE } from "../../lib/motion";
 import { Avatar } from "../../ui/Avatar";
@@ -17,6 +18,7 @@ import { Field } from "../../ui/Field";
 import { PanelActions } from "../../ui/PanelActions";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
+import { SwipeRow } from "../../ui/SwipeRow";
 import { TextField } from "../../ui/TextField";
 import { TickBox } from "../../ui/TickBox";
 import { WhoPicker } from "../../ui/WhoPicker";
@@ -108,6 +110,17 @@ export function ItemRows({ detail }: { detail: ListDetail }) {
   ].sort((a, b) => a.position - b.position);
   const done = detail.done.filter((item) => !(item.id in striking));
   const shownDone = showDone ? done : done.slice(0, 1);
+  // A phone's swipe: the sheet's own Remove, toast and Undo.
+  const remove = (item: Item) => {
+    changes.removeItem.mutate(
+      { item },
+      {
+        onError: (error) => {
+          showToast(errorMessage(error));
+        },
+      },
+    );
+  };
 
   return (
     <>
@@ -127,6 +140,9 @@ export function ItemRows({ detail }: { detail: ListDetail }) {
               }}
               onOpen={() => {
                 setEditing(item);
+              }}
+              onRemove={() => {
+                remove(item);
               }}
             />
           );
@@ -149,6 +165,9 @@ export function ItemRows({ detail }: { detail: ListDetail }) {
                   }}
                   onOpen={() => {
                     setEditing(item);
+                  }}
+                  onRemove={() => {
+                    remove(item);
                   }}
                 />
               );
@@ -185,6 +204,10 @@ export function ItemRows({ detail }: { detail: ListDetail }) {
   );
 }
 
+/**
+ * An item's row: its box, then its words as one button that opens the item, ending in a chevron
+ * because that's what the row is (ADR 0036). On a phone a swipe to the left shows Remove.
+ */
 function ItemRow({
   item,
   checked,
@@ -192,6 +215,7 @@ function ItemRow({
   meta,
   onToggle,
   onOpen,
+  onRemove,
 }: {
   item: Item;
   checked: boolean;
@@ -200,6 +224,7 @@ function ItemRow({
   meta: string;
   onToggle: () => void;
   onOpen: () => void;
+  onRemove: () => void;
 }) {
   const display = useShell() === "display";
   const text = item.quantity ? `${item.text} (${item.quantity})` : item.text;
@@ -211,32 +236,44 @@ function ItemRow({
       layoutId={`item ${item.id}`}
       transition={GLIDE}
       data-person={person ?? "everyone"}
-      className={`flex items-stretch gap-2 border-b border-line ${display ? "min-h-[72px]" : "min-h-20"}`}
+      className="border-b border-line"
     >
-      <TickBox
-        checked={checked}
-        person={person}
-        label={meta ? `${text}, ${meta}` : text}
-        onToggle={onToggle}
-      />
-      <button
-        type="button"
-        onClick={onOpen}
-        className={`press-row flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 rounded-button py-2 pr-3 text-left ${
-          display ? "text-d-body" : "text-body"
-        }`}
-      >
-        <span
-          className={`font-semibold break-words hyphens-auto ${checked ? "strike text-ink-soft" : ""}`}
-        >
-          {text}
-        </span>
-        {meta ? (
-          <span className={`text-ink-soft ${display ? "text-d-secondary" : "text-secondary"}`}>
-            {meta}
-          </span>
-        ) : null}
-      </button>
+      <SwipeRow action="Remove" label={`Remove ${item.text}`} onAction={onRemove}>
+        <div className={`flex items-stretch gap-2 ${display ? "min-h-[72px]" : "min-h-20"}`}>
+          <TickBox
+            checked={checked}
+            person={person}
+            label={meta ? `${text}, ${meta}` : text}
+            onToggle={onToggle}
+          />
+          <button
+            type="button"
+            onClick={onOpen}
+            className={`press-row flex min-w-0 flex-1 items-center gap-3 rounded-button py-2 pr-3 text-left ${
+              display ? "text-d-body" : "text-body"
+            }`}
+          >
+            <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4">
+              <span
+                className={`font-semibold break-words hyphens-auto ${checked ? "strike text-ink-soft" : ""}`}
+              >
+                {text}
+              </span>
+              {meta ? (
+                <span
+                  className={`text-ink-soft ${display ? "text-d-secondary" : "text-secondary"}`}
+                >
+                  {meta}
+                </span>
+              ) : null}
+            </span>
+            <ChevronRight
+              aria-hidden="true"
+              className={`shrink-0 text-ink-soft ${display ? "size-6" : "size-5"}`}
+            />
+          </button>
+        </div>
+      </SwipeRow>
     </motion.li>
   );
 }

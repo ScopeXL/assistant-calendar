@@ -292,21 +292,32 @@ function ListPage({ listId }: { listId: string }) {
   );
 }
 
-/** Rename a list, or remove it (asked first while it still has things on it, UX §1). */
+/**
+ * Rename a list, or remove it (asked first while it still has things on it, UX §1). `asking`
+ * opens it on that question: a phone's swipe on the list of lists (ADR 0036).
+ */
 export function ChangeListPanel({
   list,
   open,
+  asking: askFirst = false,
   onClose,
 }: {
   list: ListInfo;
   open: boolean;
+  asking?: boolean;
   onClose: () => void;
 }) {
   const display = useShell() === "display";
   const navigate = useNavigate();
   const { renameList, removeList } = useListChanges();
   const [name, setName] = useState(list.name);
-  const [asking, setAsking] = useState(false);
+  const [asking, setAsking] = useState(open && askFirst);
+  // Each opening starts where it was asked to: reset during render (docs/GOTCHAS.md).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setAsking(askFirst);
+  }
   const holds = list.open_count + list.done_count;
   const remove = () => {
     removeList.mutate(
@@ -371,6 +382,7 @@ export function ChangeListPanel({
           </div>
         ) : (
           <Button
+            block
             variant="quiet-danger"
             onClick={() => {
               if (holds > 0) setAsking(true);

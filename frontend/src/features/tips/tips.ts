@@ -49,6 +49,16 @@ export const TIPS: readonly Tip[] = [
     text: "Lists: Usuals are the things you add most. One tap puts one back on the list.",
     needs: ["lists"],
   },
+  {
+    id: "item-sheet",
+    text: "Lists: tap an item to change its day or who it's for, or to remove it.",
+    needs: ["lists"],
+  },
+  {
+    id: "list-hold",
+    text: "Hold a list's tile to rename or remove the list.",
+    needs: ["lists"],
+  },
   { id: "chores", text: "Tasks: one tap on the box marks it done.", needs: ["chores"] },
   {
     id: "routines",

@@ -39,6 +39,9 @@ size limit.
 - `react-hooks/set-state-in-effect` refused resetting a sheet when its input changed: reset during
   render instead (`const [shown, setShown] = useState(file); if (file !== shown) …`), as
   `EraseSheet` and `RestoreSheet` do.
+- A swipe on a phone's list of lists did nothing in Chromium, while an item's row swiped: the
+  row is a link, and a link (or an image) starts the browser's own drag-and-drop. `ui/SwipeRow`
+  cancels `dragstart` inside itself.
 
 ## Backup, restore and the service worker
 
@@ -205,3 +208,6 @@ size limit.
   `pointer-events: none` element such as the now line. Make it hittable for the measurement.
 - A role locator's `toHaveCount(0)` passed before a chip had faded: leaving, it's `aria-hidden`
   at once. Poll for what the test means.
+- `getByRole("button", { name: "Eggs" })` on a phone also found the swiped row's hidden
+  "Remove Eggs": Playwright's role queries don't skip `inert`. `ui/SwipeRow`'s hidden action is
+  `aria-hidden` too.

@@ -2,14 +2,17 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight, ListChecks, ListX, Plus } from "lucide-react";
 import { useState } from "react";
 
+import { errorMessage } from "../../api/client";
 import { zonedParts } from "../../lib/dates";
 import { useMembers } from "../../lib/household";
 import { useMinute } from "../../lib/time";
+import { showToast } from "../../lib/toast";
 import { Button } from "../../ui/Button";
 import { EmptyState, QuietLine } from "../../ui/EmptyState";
 import { Screen } from "../../ui/Screen";
 import { Pop } from "../../ui/Pop";
-import { useList, useListChanges, useLists } from "./data";
+import { SwipeRow } from "../../ui/SwipeRow";
+import { useList, useListChanges, useLists, type ListInfo } from "./data";
 import { AddBar, ItemRows } from "./ListItems";
 import { ChangeListPanel, NewListPanel, tileCount } from "./ListsRoom";
 import { lastChangeLine } from "./words";
@@ -20,11 +23,29 @@ export function ListsTab({ path }: { path: string[] }) {
   return listId ? <PhoneList listId={listId} /> : <PhoneLists />;
 }
 
+/** The lists, each row a link with a chevron; swiped left, Remove (asked first when the list
+ * still has things on it, in Change List; ADR 0036). */
 function PhoneLists() {
   const { data: lists, isSuccess } = useLists();
   const { data: members = [] } = useMembers();
+  const { removeList } = useListChanges();
   const today = zonedParts(useMinute()).day;
   const [making, setMaking] = useState(false);
+  const [asking, setAsking] = useState<{ list: ListInfo; open: boolean } | null>(null);
+  const remove = (list: ListInfo) => {
+    if (list.open_count + list.done_count > 0) {
+      setAsking({ list, open: true });
+      return;
+    }
+    removeList.mutate(
+      { list },
+      {
+        onError: (error) => {
+          showToast(errorMessage(error));
+        },
+      },
+    );
+  };
   return (
     <Screen
       title="Lists"
@@ -50,26 +71,34 @@ function PhoneLists() {
         <ul className="divide-y divide-line rounded-chip border border-line bg-surface">
           {(lists ?? []).map((list) => (
             <li key={list.id}>
-              <Link
-                to="/$room/$"
-                params={{ room: "lists", _splat: list.id }}
-                className="press-row flex min-h-16 items-center justify-between gap-3 px-4 py-3"
+              <SwipeRow
+                action="Remove"
+                label={`Remove ${list.name}`}
+                onAction={() => {
+                  remove(list);
+                }}
               >
-                <span className="flex min-w-0 flex-col">
-                  <span className="text-row font-bold break-words">{list.name}</span>
-                  <Pop value={tileCount(list)} className="text-secondary font-semibold" />
-                  {list.last_change ? (
-                    <span className="text-secondary text-ink-soft">
-                      {lastChangeLine(
-                        list.last_change,
-                        (id) => members.find((m) => m.id === id)?.name,
-                        today,
-                      )}
-                    </span>
-                  ) : null}
-                </span>
-                <ChevronRight aria-hidden="true" className="shrink-0 text-ink-soft" />
-              </Link>
+                <Link
+                  to="/$room/$"
+                  params={{ room: "lists", _splat: list.id }}
+                  className="press-row flex min-h-16 items-center justify-between gap-3 px-4 py-3"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-row font-bold break-words">{list.name}</span>
+                    <Pop value={tileCount(list)} className="text-secondary font-semibold" />
+                    {list.last_change ? (
+                      <span className="text-secondary text-ink-soft">
+                        {lastChangeLine(
+                          list.last_change,
+                          (id) => members.find((m) => m.id === id)?.name,
+                          today,
+                        )}
+                      </span>
+                    ) : null}
+                  </span>
+                  <ChevronRight aria-hidden="true" className="shrink-0 text-ink-soft" />
+                </Link>
+              </SwipeRow>
             </li>
           ))}
         </ul>
@@ -80,6 +109,17 @@ function PhoneLists() {
           setMaking(false);
         }}
       />
+      {asking ? (
+        <ChangeListPanel
+          key={asking.list.id}
+          list={asking.list}
+          open={asking.open}
+          asking
+          onClose={() => {
+            setAsking({ ...asking, open: false });
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }

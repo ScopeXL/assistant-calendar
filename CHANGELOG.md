@@ -11,6 +11,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - The Week view's header has a Rolling week switch, so a screen can keep today in the same
   column for itself; Settings → Display → Rolling week still sets every screen.
 
+### Changed
+
+- Every item on a list ends in a chevron, so it's plain that a tap opens it to change its day,
+  who it's for, or remove it; on a phone, a row swiped to the left shows Remove, for an item or
+  a whole list.
+
 ### Fixed
 
 - On the People view, the arrows go to the day before or after, Today brings it back, and the

@@ -25,16 +25,40 @@ async function groceriesOnTheWall(page: Page): Promise<Locator> {
 }
 
 test.beforeEach(async ({ request }, testInfo) => {
-  test.skip(testInfo.project.name !== "display-1080p", "the wall screen at 1080p");
+  test.skip(
+    testInfo.project.name !== "display-1080p" && testInfo.project.name !== "phone-chromium",
+    "the wall screen at 1080p, and a phone",
+  );
   await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
   await seed(request);
 });
+
+function onTheWall(): void {
+  test.skip(test.info().project.name !== "display-1080p", "the wall screen at 1080p");
+}
+
+function onAPhone(): void {
+  test.skip(test.info().project.name !== "phone-chromium", "a phone");
+}
+
+/** A finger's swipe to the left across a row (a press, three moves, a release). */
+async function swipeLeft(page: Page, row: Locator): Promise<void> {
+  const box = await row.boundingBox();
+  if (!box) throw new Error("no row to swipe");
+  const x = box.x + box.width * 0.75;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (const step of [40, 80, 120]) await page.mouse.move(x - step, y);
+  await page.mouse.up();
+}
 
 test("items added on the wall reach a phone, and checking one folds it into Done", async ({
   page,
   browser,
   watch,
 }) => {
+  onTheWall();
   const items = await groceriesOnTheWall(page);
   const { context, page: ana } = await phone(browser, watch);
   await signInPhone(ana, "Ana");
@@ -64,6 +88,7 @@ test("items added on the wall reach a phone, and checking one folds it into Done
 });
 
 test("Clear done comes back with Undo", async ({ page }) => {
+  onTheWall();
   await groceriesOnTheWall(page);
   await expect(page.getByRole("region", { name: "Done" })).toContainText("Bread");
   await page.getByRole("button", { name: "Clear Done" }).click();
@@ -76,6 +101,7 @@ test("Clear done comes back with Undo", async ({ page }) => {
 test("New list is one field, a usual name fills it, and the list opens once made", async ({
   page,
 }) => {
+  onTheWall();
   await pairWall(page);
   await page.goto("/lists");
   await page.getByRole("button", { name: "New List" }).click();
@@ -91,6 +117,7 @@ test("New list is one field, a usual name fills it, and the list opens once made
 });
 
 test("an empty Lists room says what goes there, with one big New List", async ({ page }) => {
+  onTheWall();
   await pairWall(page);
   const lists = (await (await page.request.get("/api/lists")).json()) as { id: string }[];
   for (const list of lists) {
@@ -115,6 +142,7 @@ test("an empty Lists room says what goes there, with one big New List", async ({
 });
 
 test("a long press on a tile opens Change list, and doesn't open the list", async ({ page }) => {
+  onTheWall();
   await pairWall(page);
   await page.goto("/lists");
   const tile = page.getByRole("link", { name: /^Groceries/ });
@@ -130,4 +158,48 @@ test("a long press on a tile opens Change list, and doesn't open the list", asyn
   // A tap still opens it.
   await tile.click();
   await expect(page.getByRole("heading", { name: "Groceries", level: 1 })).toBeVisible();
+});
+
+test("an item's row opens its sheet, and Remove takes it off the list with Undo", async ({
+  page,
+}) => {
+  onTheWall();
+  const items = await groceriesOnTheWall(page);
+  const eggs = items.getByRole("button", { name: /^Eggs/ });
+  // The row says it opens: a chevron at its end (ADR 0036).
+  await expect(eggs.locator("svg")).toHaveCount(1);
+  await eggs.click();
+  const sheet = page.getByRole("dialog", { name: "Eggs" });
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole("button", { name: "Remove Eggs" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(items.getByRole("button", { name: /^Eggs/ })).toHaveCount(0);
+  await toast(page, "Removed Eggs").getByRole("button", { name: "Undo" }).click();
+  await expect(items.getByRole("button", { name: /^Eggs/ })).toBeVisible();
+});
+
+test("a phone: a swiped row shows Remove, for an item and for a whole list", async ({ page }) => {
+  onAPhone();
+  await signInPhone(page);
+  await page.getByRole("link", { name: "Lists" }).click();
+  await page.getByRole("link", { name: /^Groceries/ }).click();
+  const items = page.getByRole("list", { name: "On Groceries" });
+  await swipeLeft(page, items.getByRole("button", { name: /^Eggs/ }));
+  // The swipe opened nothing; Remove is there to tap, and does what the sheet's does.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Remove Eggs" }).click();
+  await expect(toast(page, "Removed Eggs").getByRole("button", { name: "Undo" })).toBeVisible();
+  await expect(items.getByRole("button", { name: /^Eggs/ })).toHaveCount(0);
+
+  // On the list of lists: Groceries still has things on it, so its Remove asks first.
+  await page.getByRole("link", { name: "Lists", exact: true }).click();
+  const groceries = page.getByRole("link", { name: /^Groceries/ });
+  await swipeLeft(page, groceries);
+  await expect(page).toHaveURL(/\/lists$/);
+  await page.getByRole("button", { name: "Remove Groceries" }).click();
+  const panel = page.getByRole("dialog", { name: "Change Groceries" });
+  await expect(panel).toContainText(/Groceries still has \d+ things? on it\./);
+  await expect(panel.getByRole("button", { name: "Keep Groceries" })).toBeVisible();
+  await panel.getByRole("button", { name: "Keep Groceries" }).click();
+  await expect(panel.getByRole("button", { name: "Remove Groceries" })).toBeVisible();
 });

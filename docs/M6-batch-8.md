@@ -424,7 +424,7 @@ The e2e header test (`shell.spec`, an ordinary day, nobody filtered) still sees 
 
 ### T3 Lists: rows that say they open, and a swipe on phones
 
-- [ ] Done (commit: )
+- [x] Done (commit: "lists: rows end in a chevron, and a phone swipes a row for Remove")
 
 **Owner's note.** "Currently there is no way to manage Lists or Tasks. You can create new ones,
 but deleting is hard to find. I see you can delete lists if you open the Change List modal.
@@ -524,6 +524,16 @@ GOTCHAS if `motion`'s drag and the rows' `layout` fought.
 **CHANGELOG** (Changed). "Every item on a list ends in a chevron, so it's plain that a tap opens
 it to change its day, who it's for, or remove it; on a phone, a row swiped to the left shows
 Remove, for an item or a whole list."
+
+**As built.** As planned, with three changes. The chevron sits at the very end of the row's
+button, after a wrapping group of the words and the meta, rather than grouped with the meta
+(which wraps under long words and would have taken the chevron with it to the left). The swiped
+row's hidden Remove is `aria-hidden` as well as `inert` (Playwright's role queries don't skip
+`inert`, so the a11y journey's `{ name: "Eggs" }` found both). And the row cancels `dragstart`:
+on the list of lists the row is a link, and a link starts Chromium's own drag-and-drop under a
+mouse, so the swipe never moved. `motion`'s drag and the rows' `layout` didn't fight. The phone
+cases in `lists.spec.ts` run on `phone-chromium` (the spec's `beforeEach` now admits it, and each
+case says which it's for).
 
 ### T4 Tasks: rows that open, a swipe on phones, All Tasks, and finished tasks that leave
 
