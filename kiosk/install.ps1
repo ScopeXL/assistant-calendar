@@ -45,7 +45,7 @@ $Options = [pscustomobject]@{
     $ErrorActionPreference = "Stop"
     $ProgressPreference = "SilentlyContinue" # Invoke-WebRequest's progress bar is very slow on 5.1
 
-    $KioskVersion = "0.12.1" # Sunroom's VERSION (`just bump` sets it), as in install.sh
+    $KioskVersion = "0.13.0" # Sunroom's VERSION (`just bump` sets it), as in install.sh
     $SunroomRepo = "ScopeXL/assistant-calendar"
     $UvVersion = "0.12.23" # the uv installer it fetches when there's no uv (astral.sh/uv/<version>)
     $AgentPort = 7800
