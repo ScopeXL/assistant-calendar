@@ -146,20 +146,22 @@ export function ChoresTodayPhone() {
   );
 }
 
-/** Who's doing what (UX §4): the person's chores under their events, with working boxes; the
- * Everyone column gets Anyone's. */
-export function ChoresPersonColumn({ memberId }: { memberId: string | null; day: string }) {
+/** Who's doing what (UX §4): the person's tasks on the day the view shows, under their events;
+ * the Everyone column gets Anyone's. Boxes work on today only: another day's tasks say their
+ * state in words, so nobody does tomorrow's for stars. */
+export function ChoresPersonColumn({ memberId, day }: { memberId: string | null; day: string }) {
   const today = zonedParts(useMinute()).day;
-  const { data: day } = useChoresDay(today);
-  const column = day?.columns.find((c) => c.member_id === memberId);
-  if (!day || !column || column.total === 0) return null;
+  const { data: board } = useChoresDay(day);
+  const column = board?.columns.find((c) => c.member_id === memberId);
+  if (!board || !column || column.total === 0) return null;
   return (
     <div className="mt-2 border-t border-line pt-2">
       <ChoreColumn
         column={{ ...column, routines: [] }}
-        day={day}
-        starsOn={day.stars_on}
+        day={board}
+        starsOn={board.stars_on}
         header={false}
+        readOnly={day !== today}
       />
     </div>
   );

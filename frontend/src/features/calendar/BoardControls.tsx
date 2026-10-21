@@ -14,15 +14,17 @@ const LAYOUTS: IconSegmentOption<WeekLayout>[] = [
 
 /**
  * The Calendar room's part of the wall's header (UX §3, ADR 0030). After today: the arrows
- * around "This Week" (or Today, This Month) and, on the Week view, its layout as two icons
- * (Agenda · Hours), beside the arrows because it changes the same board they page. At the
- * right: Filter (the people), then the view switch. No month and no span: the day heads carry
- * the dates, and the Month and Day views name themselves. People and Today don't filter, and
- * the Today view has no switch.
+ * around "This Week" (or Today on the Day and People views, This Month) and, on the Week view,
+ * its layout as two icons (Agenda · Hours), beside the arrows because it changes the same board
+ * they page. At the right: Filter (the people), then the view switch. No month and no span: the
+ * day heads carry the dates, and the Month, Day and People views name their own. People and
+ * Today don't filter; the Today view has no switch, and no arrows (`paging`): it is always today
+ * and the six days after.
  */
 export function BoardControls({
   view,
   onView,
+  paging = true,
   homeLabel,
   atHome,
   onPage,
@@ -35,6 +37,8 @@ export function BoardControls({
 }: {
   view: BoardView;
   onView: (view: SwitchableView) => void;
+  /** The arrows and the quick jump; off where there's nothing to page (ADR 0036). */
+  paging?: boolean;
   homeLabel: string;
   atHome: boolean;
   onPage: (step: -1 | 1) => void;
@@ -45,34 +49,37 @@ export function BoardControls({
   people: string[];
   onPeople: (people: string[]) => void;
 }) {
-  const span = view === "month" ? "month" : view === "day" ? "day" : "week";
+  // The arrows say what they step: People pages a day, as Day does.
+  const span = view === "month" ? "month" : view === "day" || view === "people" ? "day" : "week";
   return (
     <>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="secondary"
-          icon
-          aria-label={`Previous ${span}`}
-          onClick={() => {
-            onPage(-1);
-          }}
-        >
-          <ChevronLeft aria-hidden="true" className="size-8" />
-        </Button>
-        <Button variant="secondary" disabled={atHome} onClick={onHome}>
-          {homeLabel}
-        </Button>
-        <Button
-          variant="secondary"
-          icon
-          aria-label={`Next ${span}`}
-          onClick={() => {
-            onPage(1);
-          }}
-        >
-          <ChevronRight aria-hidden="true" className="size-8" />
-        </Button>
-      </div>
+      {paging ? (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            icon
+            aria-label={`Previous ${span}`}
+            onClick={() => {
+              onPage(-1);
+            }}
+          >
+            <ChevronLeft aria-hidden="true" className="size-8" />
+          </Button>
+          <Button variant="secondary" disabled={atHome} onClick={onHome}>
+            {homeLabel}
+          </Button>
+          <Button
+            variant="secondary"
+            icon
+            aria-label={`Next ${span}`}
+            onClick={() => {
+              onPage(1);
+            }}
+          >
+            <ChevronRight aria-hidden="true" className="size-8" />
+          </Button>
+        </div>
+      ) : null}
       {view === "week" ? (
         <IconSegmented label="Week layout" value={layout} onChange={onLayout} options={LAYOUTS} />
       ) : null}

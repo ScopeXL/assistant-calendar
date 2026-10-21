@@ -128,6 +128,12 @@ size limit.
 - A read of a missing file printed its error despite `2>/dev/null`: in `tr </missing 2>/dev/null`
   the `<` fails before the later redirection applies. Wrap it: `{ tr </missing; } 2>/dev/null`.
 
+## The board
+
+- People's arrows did nothing (0.13.0): they stepped `weekOffset`, which that view never read,
+  and the page turn still slid the columns. Every view's arrows must change what that view
+  reads, and `BoardControls` names the step by the view ("Next day" on Day and People).
+
 ## Time and live updates
 
 - The wall clock ignored the server's time until the next minute: the minute store didn't hear

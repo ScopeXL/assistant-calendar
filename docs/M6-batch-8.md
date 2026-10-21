@@ -238,7 +238,7 @@ wrote it. Nothing else to do here; T1 starts ADR 0036.
 
 ### T1 People: the arrows page a day, and the day is written over the columns
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: People pages a day and says which; the Today view has no arrows")
 
 **Owner's note.** "When viewing the calendar from the People tab, navigating to the next day
 doesn't change the day. When it's fixed, display the day it is showing the items for (if not on

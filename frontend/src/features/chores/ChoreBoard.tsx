@@ -73,6 +73,7 @@ export function ChoreColumn({
   starsOn,
   stars,
   header = true,
+  readOnly = false,
 }: {
   column: Column;
   day: Day;
@@ -80,6 +81,8 @@ export function ChoreColumn({
   /** The person's balance, when stars are on. */
   stars?: number | undefined;
   header?: boolean;
+  /** Another day than today (the People view paged): rows without boxes (`ChoreRow`). */
+  readOnly?: boolean;
 }) {
   const display = useShell() === "display";
   const { data: members = [] } = useMembers();
@@ -165,6 +168,7 @@ export function ChoreColumn({
             box={box}
             owner={person}
             starsOn={starsOn}
+            readOnly={readOnly}
             onTicked={() => {
               linger(boxKey(box));
             }}
@@ -183,7 +187,13 @@ export function ChoreColumn({
           </h3>
           <ul className="flex flex-col">
             {done.map((box) => (
-              <ChoreRow key={boxKey(box)} box={box} owner={person} starsOn={starsOn} />
+              <ChoreRow
+                key={boxKey(box)}
+                box={box}
+                owner={person}
+                starsOn={starsOn}
+                readOnly={readOnly}
+              />
             ))}
           </ul>
         </>
@@ -202,17 +212,21 @@ export function ChoreColumn({
  * A chore's row: its box, its title and line. Ticking a fixed chore credits the column's person
  * with one tap; an Anyone chore asks "Who did it?" beside it, with the person whose turn it is
  * picked for 2 seconds so someone else can claim it. Ticking a done box takes it back.
+ * `readOnly` (another day than today) draws no box: a check mark before a done row's line,
+ * the due line otherwise; the title still opens the task.
  */
 export function ChoreRow({
   box,
   owner,
   starsOn,
+  readOnly = false,
   onTicked,
   onAllDone,
 }: {
   box: Box;
   owner: Member | undefined;
   starsOn: boolean;
+  readOnly?: boolean;
   /** Ticked here: the column keeps the row in place while it's stamped. */
   onTicked?: () => void;
   onAllDone?: () => void;
@@ -335,15 +349,17 @@ export function ChoreRow({
       className="relative flex flex-col border-b border-line"
     >
       <div className="flex items-stretch gap-2">
-        <div ref={tick} className="flex">
-          <TickBox
-            checked={done}
-            waiting={waiting}
-            person={(doer ?? owner)?.color}
-            label={label}
-            onToggle={toggle}
-          />
-        </div>
+        {readOnly ? null : (
+          <div ref={tick} className="flex">
+            <TickBox
+              checked={done}
+              waiting={waiting}
+              person={(doer ?? owner)?.color}
+              label={label}
+              onToggle={toggle}
+            />
+          </div>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -351,7 +367,7 @@ export function ChoreRow({
           }}
           className={`press-row flex min-w-0 flex-1 flex-col justify-center rounded-button py-2 pr-2 text-left ${
             display ? "min-h-[72px]" : "min-h-20"
-          }`}
+          } ${readOnly ? "pl-2" : ""}`}
         >
           <span
             className={`font-semibold break-words hyphens-auto ${display ? "text-d-body" : "text-body"} ${
@@ -363,10 +379,16 @@ export function ChoreRow({
           <span className="sr-only">, </span>
           {line ? (
             <span
-              className={
-                display ? "text-d-secondary text-ink-soft" : "text-secondary text-ink-soft"
-              }
+              className={`${display ? "text-d-secondary" : "text-secondary"} text-ink-soft ${
+                readOnly && done ? "inline-flex items-center gap-1" : ""
+              }`}
             >
+              {readOnly && done ? (
+                <Check
+                  aria-hidden="true"
+                  className={`shrink-0 text-p-text ${display ? "size-6" : "size-5"}`}
+                />
+              ) : null}
               {line}
             </span>
           ) : null}

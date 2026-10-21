@@ -202,6 +202,62 @@ test("the views, the event sheet and Recently Removed", async ({ page }) => {
   await expect(board.getByRole("button", { name: /^Vet, / })).toBeVisible();
 });
 
+test("People pages a day at a time and says which day (ADR 0036)", async ({ page }) => {
+  await pairWall(page);
+  await page.goto("/display");
+  const header = page.getByRole("banner");
+  await header.getByRole("button", { name: "People", exact: true }).click();
+  const people = page.getByRole("region", { name: "People" });
+  const mia = people.getByRole("region", { name: "Mia" });
+  // The day over the columns, as the Day view writes its own, and "today" beside it.
+  await expect(people.getByText("Wednesday, October 7", { exact: true })).toBeVisible();
+  await expect(people.getByText("today", { exact: true })).toBeVisible();
+  await expect(mia).toContainText("Free day");
+  const backToToday = header.getByRole("button", { name: "Today", exact: true });
+  await expect(backToToday).toBeDisabled();
+  await expect(header.getByRole("button", { name: "Previous day" })).toBeVisible();
+
+  // Next day: Thursday's events, and Today comes back to Wednesday.
+  await header.getByRole("button", { name: "Next day" }).click();
+  await expect(people.getByText("Thursday, October 8", { exact: true })).toBeVisible();
+  await expect(people.getByText("today", { exact: true })).toHaveCount(0);
+  await expect(mia).toContainText("Soccer practice");
+  await expect(people.getByRole("region", { name: "Sam" })).toContainText("Book club");
+  await expect(backToToday).toBeEnabled();
+  await backToToday.click();
+  await expect(people.getByText("Wednesday, October 7", { exact: true })).toBeVisible();
+  await expect(backToToday).toBeDisabled();
+  await expect(mia).toContainText("Free day");
+
+  // People's arrows page its day, never the Week view's week behind its back.
+  await header.getByRole("button", { name: "Next day" }).click();
+  await expect(people.getByText("Thursday, October 8", { exact: true })).toBeVisible();
+  await header.getByRole("button", { name: "Week", exact: true }).click();
+  await expect(header.getByRole("button", { name: "This Week" })).toBeDisabled();
+});
+
+test("the Today view has no arrows and no quick jump: nothing to page (ADR 0036)", async ({
+  page,
+  request,
+}) => {
+  const parent = await request.post("/api/auth/login", {
+    headers: CSRF,
+    data: { password: PASSWORD },
+  });
+  expect(parent.ok()).toBe(true);
+  const home = await request.patch("/api/settings", {
+    headers: CSRF,
+    data: { display_home_view: "today" },
+  });
+  expect(home.ok()).toBe(true);
+  await pairWall(page);
+  await page.goto("/display");
+  await expect(page.getByRole("region", { name: "Today", exact: true })).toContainText("Vet");
+  const header = page.getByRole("banner");
+  await expect(header.getByRole("button", { name: /^(Previous|Next) / })).toHaveCount(0);
+  await expect(header.getByRole("button", { name: /^(Today|This Week)$/ })).toHaveCount(0);
+});
+
 test("Filter is one button in the header: several people, a tap elsewhere, Everyone", async ({
   page,
 }) => {

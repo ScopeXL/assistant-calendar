@@ -74,15 +74,13 @@ export function CalendarRoom() {
   const focusDay = state.day ?? today;
   const month = monthGrid(today, state.monthOffset, weekStartsOn);
   const range =
-    view === "day"
+    view === "day" || view === "people"
       ? { from: focusDay, to: addDays(focusDay, 1) }
       : view === "month"
         ? { from: month.days[0] ?? today, to: addDays(month.days.at(-1) ?? today, 1) }
         : view === "today"
           ? { from: today, to: addDays(today, 7) }
-          : view === "people"
-            ? { from: today, to: addDays(today, 1) }
-            : { from: week[0] ?? today, to: addDays(week[6] ?? today, 1) };
+          : { from: week[0] ?? today, to: addDays(week[6] ?? today, 1) };
   const { data, isPlaceholderData } = useOccurrences(range.from, range.to, { overlays: true });
   const occurrences = data?.occurrences ?? [];
   // A chip added or moved while this week (day, month) shows eases in; paging or another view
@@ -133,11 +131,16 @@ export function CalendarRoom() {
     });
   };
 
+  // Each view's arrows change what that view reads: People pages a day, as Day does.
   const page = (step: -1 | 1) => {
     pages.turn(step);
-    if (view === "day") updateDisplay({ day: addDays(focusDay, step) });
+    if (view === "day" || view === "people") updateDisplay({ day: addDays(focusDay, step) });
     else if (view === "month") updateDisplay({ monthOffset: state.monthOffset + step });
     else updateDisplay({ weekOffset: state.weekOffset + step });
+  };
+  const backToToday = () => {
+    pages.turn(focusDay > today ? -1 : 1);
+    updateDisplay({ day: null });
   };
   // The room's name, for a screen reader (the header draws none: the day heads carry the dates,
   // and the Month and Day views say theirs), and what the middle button goes back to.
@@ -155,10 +158,7 @@ export function CalendarRoom() {
       title: shortDate(focusDay),
       homeLabel: "Today",
       atHome: focusDay === today,
-      home: () => {
-        pages.turn(focusDay > today ? -1 : 1);
-        updateDisplay({ day: null });
-      },
+      home: backToToday,
     },
     month: {
       title: monthYear(month.first),
@@ -169,19 +169,19 @@ export function CalendarRoom() {
         updateDisplay({ monthOffset: 0 });
       },
     },
+    // The day is written over the columns (DayCaption); "People" names the room.
     people: {
       title: "People",
       homeLabel: "Today",
-      atHome: true,
-      home: () => undefined,
+      atHome: focusDay === today,
+      home: backToToday,
     },
+    // Always today and the six days after: nothing to page, so no arrows (BoardControls).
     today: {
       title: "Today",
-      homeLabel: "This Week",
+      homeLabel: "Today",
       atHome: true,
-      home: () => {
-        updateDisplay({ view: "week" });
-      },
+      home: () => undefined,
     },
   }[view];
   // Someone who has since left the household may still be in a remembered filter.
@@ -197,6 +197,7 @@ export function CalendarRoom() {
           pages.rest();
           updateDisplay({ view: next });
         }}
+        paging={view !== "today"}
         homeLabel={header.homeLabel}
         atHome={header.atHome}
         onPage={page}
@@ -273,6 +274,7 @@ export function CalendarRoom() {
             />
           ) : view === "people" ? (
             <PeopleView
+              day={focusDay}
               today={today}
               now={now}
               occurrences={occurrences}
