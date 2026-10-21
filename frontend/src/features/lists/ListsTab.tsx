@@ -1,10 +1,13 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, ListChecks, ListX, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { errorMessage } from "../../api/client";
+import { qk } from "../../api/keys";
 import { zonedParts } from "../../lib/dates";
 import { useMembers } from "../../lib/household";
+import { fetchSession } from "../../lib/session";
 import { useMinute } from "../../lib/time";
 import { showToast } from "../../lib/toast";
 import { Button } from "../../ui/Button";
@@ -24,11 +27,16 @@ export function ListsTab({ path }: { path: string[] }) {
 }
 
 /** The lists, each row a link with a chevron; swiped left, Remove (asked first when the list
- * still has things on it, in Change List; ADR 0036). */
+ * still has things on it, in Change List; ADR 0036). Only where Remove can work: a parent's
+ * phone, or the list's own maker's (a phone has no PIN pad to unlock the rest). */
 function PhoneLists() {
   const { data: lists, isSuccess } = useLists();
   const { data: members = [] } = useMembers();
+  const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
   const { removeList } = useListChanges();
+  const mayRemove = (list: ListInfo) =>
+    (session?.is_parent ?? false) ||
+    (list.created_by_member_id !== null && list.created_by_member_id === session?.member?.id);
   const today = zonedParts(useMinute()).day;
   const [making, setMaking] = useState(false);
   const [asking, setAsking] = useState<{ list: ListInfo; open: boolean } | null>(null);
@@ -74,6 +82,7 @@ function PhoneLists() {
               <SwipeRow
                 action="Remove"
                 label={`Remove ${list.name}`}
+                disabled={!mayRemove(list)}
                 onAction={() => {
                   remove(list);
                 }}

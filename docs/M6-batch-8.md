@@ -533,7 +533,9 @@ row's hidden Remove is `aria-hidden` as well as `inert` (Playwright's role queri
 on the list of lists the row is a link, and a link starts Chromium's own drag-and-drop under a
 mouse, so the swipe never moved. `motion`'s drag and the rows' `layout` didn't fight. The phone
 cases in `lists.spec.ts` run on `phone-chromium` (the spec's `beforeEach` now admits it, and each
-case says which it's for).
+case says which it's for). Found in T4 and fixed in its own commit: on a phone `asParent` waits
+for a PIN pad that only the wall mounts, so a list's swipe on a child's phone would have hung on
+a list someone else made; a list row now swipes only on a parent's phone or for its maker.
 
 ### T4 Tasks: rows that open, a swipe on phones, All Tasks, and finished tasks that leave
 
