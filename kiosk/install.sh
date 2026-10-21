@@ -36,7 +36,7 @@
 set -euo pipefail
 set -o errtrace
 
-KIOSK_VERSION="0.12.0" # Sunroom's VERSION (`just bump` sets it), written into every file it creates
+KIOSK_VERSION="0.12.1" # Sunroom's VERSION (`just bump` sets it), written into every file it creates
 SUNROOM_REPO="ScopeXL/assistant-calendar"
 SUNROOM_IMAGE="scopexl/sunroom"
 UV_VERSION="0.12.23" # the uv installer it fetches when uv is missing (astral.sh/uv/<version>)

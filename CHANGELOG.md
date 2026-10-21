@@ -29,10 +29,15 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Changed
 
-- The kitchen screen's keyboard shows letters only; 123 switches to numbers and symbols.
 - The kitchen screen installer no longer needs Sunroom's address: without `--url`, the screen
   finds Sunroom on the home network after the restart, or takes the address on the screen. Run
   the installer again on a Pi set up before to switch it to Sunroom Screen; its pairing is kept.
+
+## [0.12.1] - 2026-10-21
+
+### Changed
+
+- The kitchen screen's keyboard shows letters only; 123 switches to numbers and symbols.
 
 ### Fixed
 
@@ -600,5 +605,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.11.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.10.0...v0.11.0
 
-[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.0...HEAD
 [0.12.0]: https://github.com/ScopeXL/assistant-calendar/compare/v0.11.0...v0.12.0
+
+[Unreleased]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/ScopeXL/assistant-calendar/compare/v0.12.0...v0.12.1
