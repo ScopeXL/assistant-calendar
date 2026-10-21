@@ -10,7 +10,7 @@ and the stars back together. Rewards live in rewards.py and routines in routines
 from __future__ import annotations
 
 import json
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Iterable, Sequence
 from datetime import date, timedelta
 
 from sqlalchemy import select
@@ -18,7 +18,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sunroom.auth.deps import Actor, parent_refusal
 from sunroom.core.errors import AppError
-from sunroom.domain.chores import ANY, FIXED, ROTATE, STREAK_DAYS, Due, Schedule, due_days, tally
+from sunroom.domain.chores import (
+    ANY,
+    FIXED,
+    ROTATE,
+    STREAK_DAYS,
+    Completion,
+    Due,
+    Schedule,
+    due_days,
+    last_due,
+    next_due,
+    tally,
+)
 from sunroom.domain.recurrence import RecurrenceError, Timing, describe, validate_rrule
 from sunroom.plugins.chores import rewards, routines
 from sunroom.plugins.chores.common import (
@@ -37,6 +49,7 @@ from sunroom.plugins.chores.common import (
     load_book,
     member_ids,
     now_of,
+    on_chores,
     possessive,
     rule_of,
     stars_of,
@@ -66,6 +79,7 @@ from sunroom.plugins.chores.schemas import (
 from sunroom.plugins.context import MemberView, PluginContext
 
 REMOVED_KEPT = timedelta(days=7)  # Recently removed
+FINISHED_LEAVE = timedelta(hours=24)  # a finished task left this long untouched is tidied away
 WAITING = timedelta(days=14)  # completions a parent hasn't answered, still shown
 COUNTING = (CompletionStatus.DONE, CompletionStatus.PENDING)
 
@@ -90,7 +104,7 @@ def repeat_text(chore: Chore) -> str:
         return "Repeats on a custom schedule"
 
 
-def chore_out(chore: Chore) -> ChoreOut:
+def chore_out(chore: Chore, next_day: date | None) -> ChoreOut:
     return ChoreOut.model_validate(
         {
             "id": chore.id,
@@ -107,17 +121,56 @@ def chore_out(chore: Chore) -> ChoreOut:
             "rotation_index": chore.rotation_index,
             "requires_approval": chore.requires_approval,
             "active": chore.active,
+            "next_due": next_day,
         }
     )
 
 
+async def next_days(
+    session: AsyncSession, chores: Sequence[Chore], today: date, active: Collection[str]
+) -> dict[str, date | None]:
+    """Each chore's next day (domain ``next_due``, ADR 0036), reading the one thing it needs from
+    the database: the completions of a one-day chore's own day."""
+    one_day = [chore.id for chore in chores if not chore.rrule]
+    completions: list[Completion] = []
+    if one_day:
+        rows = await session.execute(
+            select(
+                ChoreCompletion.chore_id,
+                ChoreCompletion.due_date,
+                ChoreCompletion.member_id,
+                ChoreCompletion.status,
+            ).where(ChoreCompletion.chore_id.in_(one_day))
+        )
+        completions = [
+            Completion(chore_id, due_date, member_id, due_date, status)
+            for chore_id, due_date, member_id, status in rows
+        ]
+    return {chore.id: next_due(rule_of(chore, active), completions, today) for chore in chores}
+
+
+async def _out(
+    session: AsyncSession, chore: Chore, today: date, active: Collection[str]
+) -> ChoreOut:
+    return chore_out(chore, (await next_days(session, [chore], today, active))[chore.id])
+
+
 async def list_chores(ctx: PluginContext, *, include_inactive: bool) -> list[ChoreOut]:
+    """Every task, soonest first (All Tasks, ADR 0036): by its next day, the finished ones (no
+    next day) last, then by title."""
+    now = await now_of(ctx)
+    active = await _active_ids(ctx)
     query = select(Chore).where(Chore.deleted_at.is_(None))
     if not include_inactive:
         query = query.where(Chore.active.is_(True))
     async with ctx.read() as session:
-        chores = await session.scalars(query.order_by(Chore.created_at, Chore.id))
-        return [chore_out(chore) for chore in chores]
+        chores = list(await session.scalars(query.order_by(Chore.created_at, Chore.id)))
+        days = await next_days(session, chores, now.today, active)
+    found = [chore_out(chore, days[chore.id]) for chore in chores]
+    return sorted(
+        found,
+        key=lambda c: (c.next_due is None, c.next_due or date.max, c.title.casefold()),
+    )
 
 
 async def removed(ctx: PluginContext) -> list[RemovedChoreOut]:
@@ -199,7 +252,7 @@ async def add_chore(ctx: PluginContext, actor: Actor, body: ChoreIn) -> ChoreOut
         tx.session.add(chore)
         await tx.session.flush()
         tx.publish("chores.changed", {"chore_id": chore.id})
-        return chore_out(chore)
+        return await _out(tx.session, chore, now.today, people)
 
 
 async def _chore(session: AsyncSession, chore_id: str) -> Chore:
@@ -213,6 +266,7 @@ async def change_chore(ctx: PluginContext, chore_id: str, body: ChorePatch) -> C
     """Only what's sent changes. A description sent empty, or an icon sent as null, is taken
     off; the rule, the time and the approval have their own clear switches."""
     sent = body.model_fields_set
+    now = await now_of(ctx)
     active = await _active_ids(ctx)
     if body.assignee_member_ids is not None:
         _all_known(body.assignee_member_ids, active)
@@ -253,9 +307,9 @@ async def change_chore(ctx: PluginContext, chore_id: str, body: ChorePatch) -> C
             chore.requires_approval = body.requires_approval
         if body.active is not None:
             chore.active = body.active
-        chore.updated_at = ctx.now()
+        chore.updated_at = now.utc
         tx.publish("chores.changed", {"chore_id": chore.id})
-        return chore_out(chore)
+        return await _out(tx.session, chore, now.today, active)
 
 
 async def remove_chore(ctx: PluginContext, chore_id: str) -> None:
@@ -267,20 +321,26 @@ async def remove_chore(ctx: PluginContext, chore_id: str) -> None:
 
 
 async def restore_chore(ctx: PluginContext, chore_id: str) -> ChoreOut:
+    """Put back. A finished task put back stays a day before the tidy takes it again (its
+    ``updated_at``), unless its day changes."""
+    now = await now_of(ctx)
+    active = await _active_ids(ctx)
     async with ctx.write() as tx:
         chore = await tx.session.get(Chore, chore_id)
         if chore is None:
             raise gone("task")
         if chore.deleted_at is not None:
             chore.deleted_at = None
-            chore.updated_at = ctx.now()
+            chore.updated_at = now.utc
             tx.publish("chores.changed", {"chore_id": chore.id})
-        return chore_out(chore)
+        return await _out(tx.session, chore, now.today, active)
 
 
 async def skip(ctx: PluginContext, chore_id: str, day: date, *, skipped: bool) -> ChoreOut:
     """ "Skip today", and putting it back. A one-day chore has one day, so skipping it from any
     day it shows on skips that day."""
+    now = await now_of(ctx)
+    active = await _active_ids(ctx)
     async with ctx.write() as tx:
         chore = await _chore(tx.session, chore_id)
         days = set(dates(chore.skipped_dates_json))
@@ -289,10 +349,10 @@ async def skip(ctx: PluginContext, chore_id: str, day: date, *, skipped: bool) -
             if day < chore.start_date:
                 if skipped:
                     raise not_due()
-                return chore_out(chore)
+                return await _out(tx.session, chore, now.today, active)
             target = chore.start_date
         if skipped == (target in days):
-            return chore_out(chore)
+            return await _out(tx.session, chore, now.today, active)
         if skipped:
             if not due_days(rule_of(chore, ()), target, target + DAY):
                 raise not_due()
@@ -300,34 +360,37 @@ async def skip(ctx: PluginContext, chore_id: str, day: date, *, skipped: bool) -
         else:
             days.discard(target)
         chore.skipped_dates_json = dates_json(days)
-        chore.updated_at = ctx.now()
+        chore.updated_at = now.utc
         tx.publish("chores.changed", {"chore_id": chore.id, "date": target.isoformat()})
-        return chore_out(chore)
+        return await _out(tx.session, chore, now.today, active)
 
 
 # ---- the day and the week ----------------------------------------------------------------------
 
 
 def _column_ids(
-    chores: Sequence[Chore],
+    book: Book,
     shelf: routines.Shelf | None,
     members: Sequence[MemberView],
     days: Sequence[date],
+    boxes: Iterable[Due],
+    today: date,
 ) -> list[str | None]:
-    """People with a chore of their own, or a routine on one of these days, in household order;
-    then Anyone, when there are chores for anyone or taking turns."""
-    fixed = {
-        member_id
-        for chore in chores
-        if chore.assignee_mode == FIXED
-        for member_id in member_ids(chore.assignee_member_ids_json)
-    }
+    """People with a task still ahead of them (it has a next day, ADR 0036) or a box on one of
+    these days, or a routine on one of them, in household order; then Anyone, likewise. A
+    finished task keeps nobody's column, so once every task is done the room is empty."""
+    ahead = [rule for rule in book.rules if next_due(rule, book.completions, today) is not None]
+    shown = list(boxes)
+    theirs = {member_id for rule in ahead if rule.mode == FIXED for member_id in rule.assignees}
+    theirs |= {box.owner_id for box in shown if box.owner_id is not None}
     found: list[str | None] = [
         member.id
         for member in members
-        if member.id in fixed or (shelf is not None and shelf.any_on(days, member))
+        if member.id in theirs or (shelf is not None and shelf.any_on(days, member))
     ]
-    if any(chore.assignee_mode in (ROTATE, ANY) for chore in chores):
+    if any(rule.mode in (ROTATE, ANY) for rule in ahead) or any(
+        box.owner_id is None for box in shown
+    ):
         found.append(None)
     return found
 
@@ -380,14 +443,14 @@ async def day_view(ctx: PluginContext, day: date | None) -> DayOut:
             max(when, now.today) + DAY,
         )
         shelf = await routines.load_shelf(session) if flags.routines else None
-        people = _column_ids(book.chores, shelf, members, [when])
+        boxes = Schedule(book.rules, book.completions, when, when + DAY, now.today).due_on(when)
+        people = _column_ids(book, shelf, members, [when], boxes, now.today)
         kids_and_more = [by_id[member_id] for member_id in people if member_id is not None]
         runs = (
             await routines.runs_for(session, now, shelf, when, kids_and_more)
             if shelf is not None
             else []
         )
-        boxes = Schedule(book.rules, book.completions, when, when + DAY, now.today).due_on(when)
         chores = {chore.id: chore for chore in book.chores}
         columns: list[ColumnOut] = []
         for member_id in people:
@@ -435,7 +498,8 @@ async def week_view(ctx: PluginContext, start: date | None) -> WeekOut:
     schedule = Schedule(book.rules, book.completions, first, first + WEEK, now.today)
     boxes = {day: schedule.due_on(day) for day in days}
     columns: list[WeekColumnOut] = []
-    for member_id in _column_ids(book.chores, shelf, members, days):
+    shown = [box for day in days for box in boxes[day]]
+    for member_id in _column_ids(book, shelf, members, days, shown, now.today):
         cells: list[WeekCellOut] = []
         for day in days:
             count = tally(boxes[day], member_id)
@@ -621,7 +685,28 @@ async def adjust(ctx: PluginContext, actor: Actor, body: AdjustIn) -> PointsOut:
 # ---- housekeeping --------------------------------------------------------------------------------
 
 
+async def tidy(ctx: PluginContext) -> None:
+    """A finished task leaves for Recently removed the day after its last day, as a past
+    countdown does (ADR 0036): a one-day task that's done, or a repeating one whose rule has
+    ended, untouched for a day (so one just added, changed or put back stays a while). Its
+    completions, stars and streaks stay: they're history. Paused tasks are left alone."""
+    now = await now_of(ctx)
+    active = await _active_ids(ctx)
+    async with ctx.write() as tx:
+        chores = await on_chores(tx.session)
+        days = await next_days(tx.session, chores, now.today, active)
+        for chore in chores:
+            if days[chore.id] is not None or chore.updated_at > now.utc - FINISHED_LEAVE:
+                continue
+            last = last_due(rule_of(chore, active))
+            if last is None or last >= now.today:
+                continue
+            chore.deleted_at = chore.updated_at = now.utc
+            tx.publish("chores.changed", {"chore_id": chore.id})
+
+
 async def prune(ctx: PluginContext) -> None:
-    """Hourly. Old routine checks go; chores, completions and asks are history (balances count
-    them) and stay."""
+    """Hourly. Finished tasks leave (``tidy``) and old routine checks go; chores, completions
+    and asks are history (balances count them) and stay."""
+    await tidy(ctx)
     await routines.prune(ctx)

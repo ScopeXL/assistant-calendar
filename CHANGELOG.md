@@ -10,12 +10,20 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 - The Week view's header has a Rolling week switch, so a screen can keep today in the same
   column for itself; Settings → Display → Rolling week still sets every screen.
+- Tasks → All Tasks lists every task, due this week or next month, with its rule and its next
+  day; tap one to change or remove it.
 
 ### Changed
 
 - Every item on a list ends in a chevron, so it's plain that a tap opens it to change its day,
   who it's for, or remove it; on a phone, a row swiped to the left shows Remove, for an item or
   a whole list.
+- Every task row ends in a chevron, and a task's sheet says what it is in words; on the wall,
+  Change asks for the PIN before its form, and Skip Today shows only when the task is due today.
+  On a parent's phone a task row swiped to the left shows Remove.
+- A task that's finished (done on its day, or past its last repeat) leaves for Recently Removed
+  the next day, where Put Back keeps it; a person whose tasks are all finished no longer keeps an
+  empty column.
 
 ### Fixed
 

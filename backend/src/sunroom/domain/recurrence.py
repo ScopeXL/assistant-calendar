@@ -834,6 +834,15 @@ def count_before(series: Series, rid: str) -> int:
     return _Walk(_parse(series.rrule), anchor).count_before(day, at)
 
 
+def last_day(series: Series) -> date | None:
+    """The local day the rule's last occurrence starts on (its UNTIL or COUNT; EXDATEs and
+    RDATEs aside), the first day for a series without a rule, or None when it never ends."""
+    anchor = _anchor(series.timing, series.tzid)
+    if not series.rrule:
+        return anchor.first
+    return _Walk(_parse(series.rrule), anchor).last()
+
+
 def split(series: Series, rid: str) -> tuple[str, str]:
     """Rules for "this and the ones after" at occurrence ``rid`` (never the first): one that
     ends the series just before it, and one for a new series that starts at it."""

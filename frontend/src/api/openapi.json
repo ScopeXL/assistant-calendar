@@ -1061,6 +1061,18 @@
             "title": "Id",
             "type": "string"
           },
+          "next_due": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due"
+          },
           "points": {
             "title": "Points",
             "type": "integer"
@@ -1119,7 +1131,8 @@
           "assignee_member_ids",
           "rotation_index",
           "requires_approval",
-          "active"
+          "active",
+          "next_due"
         ],
         "title": "ChoreOut",
         "type": "object"

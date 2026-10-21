@@ -17,6 +17,8 @@ from sunroom.domain.chores import (
     Schedule,
     due_days,
     due_on,
+    last_due,
+    next_due,
     streak,
     tally,
     turn_on,
@@ -145,3 +147,52 @@ def test_a_long_streak_is_quick() -> None:
     started = perf_counter()
     streak(rules, history, MIA, TODAY)
     assert perf_counter() - started < 2.0
+
+
+def test_a_chore_s_next_day_is_the_first_it_s_due_from_today() -> None:
+    # All Tasks (ADR 0036): every chore with the day it's next due, today included.
+    assert next_due(Rule("bed", MON, "FREQ=DAILY", FIXED, (MIA,)), [], TODAY) == TODAY
+    saturday = date(2026, 10, 10)
+    trash = Rule("trash", date(2026, 10, 3), "FREQ=WEEKLY;BYDAY=SA", FIXED, (SAM,))
+    assert next_due(trash, [], TODAY) == saturday
+    # A rule starting later: its first day. A skipped next day: the one after.
+    later = Rule("rake", date(2026, 11, 14), "FREQ=WEEKLY;BYDAY=SA", ANY)
+    assert next_due(later, [], TODAY) == date(2026, 11, 14)
+    skipped = Rule(
+        "trash", date(2026, 10, 3), "FREQ=WEEKLY;BYDAY=SA", skipped=frozenset({saturday})
+    )
+    assert next_due(skipped, [], TODAY) == date(2026, 10, 17)
+    # A yearly rule is found too, months ahead.
+    yearly = Rule("filter", date(2026, 3, 1), "FREQ=YEARLY", ANY)
+    assert next_due(yearly, [], TODAY) == date(2027, 3, 1)
+    # Ended: nothing ahead.
+    ended = Rule("swim", date(2026, 9, 1), "FREQ=DAILY;UNTIL=20261001", FIXED, (LEO,))
+    assert next_due(ended, [], TODAY) is None
+
+
+def test_a_one_day_chore_is_next_due_on_its_day_or_today_until_it_s_done() -> None:
+    nov = Rule("dentist", date(2026, 11, 6), None, FIXED, (MIA,))
+    assert next_due(nov, [], TODAY) == date(2026, 11, 6)
+    assert next_due(Rule("today", TODAY, None, ANY), [], TODAY) == TODAY
+    # From last week, not done: carried over, so it's due today.
+    shoes = Rule("shoes", date(2026, 9, 30), None, FIXED, (MIA, LEO))
+    assert next_due(shoes, [], TODAY) == TODAY
+    # A fixed one is finished when every person's box is; any other when one is.
+    mia_only = [done("shoes", date(2026, 9, 30), MIA)]
+    assert next_due(shoes, mia_only, TODAY) == TODAY
+    both = [*mia_only, done("shoes", date(2026, 9, 30), LEO, on=TUE)]
+    assert next_due(shoes, both, TODAY) is None
+    anyone = Rule("hall", MON, None, ANY)
+    assert next_due(anyone, [done("hall", MON, SAM)], TODAY) is None
+    # A completion a parent turned down doesn't finish it; a skipped day has nothing to do.
+    assert next_due(anyone, [done("hall", MON, SAM, status="rejected")], TODAY) == TODAY
+    assert next_due(Rule("hall", MON, None, ANY, skipped=frozenset({MON})), [], TODAY) is None
+
+
+def test_a_chore_s_last_day_is_its_day_its_until_or_its_count() -> None:
+    assert last_due(Rule("dentist", date(2026, 11, 6))) == date(2026, 11, 6)
+    assert last_due(Rule("swim", date(2026, 9, 1), "FREQ=DAILY;UNTIL=20261001")) == date(
+        2026, 10, 1
+    )
+    assert last_due(Rule("lessons", MON, "FREQ=WEEKLY;COUNT=3")) == date(2026, 10, 19)
+    assert last_due(Rule("bed", MON, "FREQ=DAILY")) is None

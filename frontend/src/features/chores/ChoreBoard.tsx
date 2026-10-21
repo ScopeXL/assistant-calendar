@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Check, Star } from "lucide-react";
+import { Check, ChevronRight, Star } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -8,20 +8,25 @@ import { createPortal } from "react-dom";
 import { errorMessage } from "../../api/client";
 import { qk } from "../../api/keys";
 import { playDone } from "../../lib/done";
+import { zonedParts } from "../../lib/dates";
 import { flyPoints } from "../../lib/fly";
 import { useMembers, useSettings, type Member } from "../../lib/household";
 import { GLIDE, useChangeCount } from "../../lib/motion";
+import { askForPin } from "../../lib/parent";
 import { fetchSession } from "../../lib/session";
+import { useMinute } from "../../lib/time";
 import { showToast } from "../../lib/toast";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { celebrate } from "../../ui/Celebration";
 import { useShell } from "../../ui/shell";
 import { SidePanel } from "../../ui/SidePanel";
+import { SwipeRow } from "../../ui/SwipeRow";
 import { TickBox } from "../../ui/TickBox";
 import { WhoPicker } from "../../ui/WhoPicker";
 import { ChoreEditor } from "./ChoreEditor";
 import {
+  PARENT_CHANGE,
   useChoreChanges,
   useChores,
   type Box,
@@ -38,6 +43,7 @@ import {
   countText,
   doneLine,
   routineTitle,
+  ruleLine,
 } from "./words";
 
 const TURN_WAIT_MS = 2000;
@@ -213,7 +219,8 @@ export function ChoreColumn({
  * with one tap; an Anyone chore asks "Who did it?" beside it, with the person whose turn it is
  * picked for 2 seconds so someone else can claim it. Ticking a done box takes it back.
  * `readOnly` (another day than today) draws no box: a check mark before a done row's line,
- * the due line otherwise; the title still opens the task.
+ * the due line otherwise; the title still opens the task. The title ends in a chevron, since
+ * it opens the task (ADR 0036); on a phone that may remove tasks, a swipe left shows Remove.
  */
 export function ChoreRow({
   box,
@@ -348,53 +355,76 @@ export function ChoreRow({
       data-person={(doer ?? owner)?.color ?? "everyone"}
       className="relative flex flex-col border-b border-line"
     >
-      <div className="flex items-stretch gap-2">
-        {readOnly ? null : (
-          <div ref={tick} className="flex">
-            <TickBox
-              checked={done}
-              waiting={waiting}
-              person={(doer ?? owner)?.color}
-              label={label}
-              onToggle={toggle}
-            />
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => {
-            setEditing(true);
-          }}
-          className={`press-row flex min-w-0 flex-1 flex-col justify-center rounded-button py-2 pr-2 text-left ${
-            display ? "min-h-[72px]" : "min-h-20"
-          } ${readOnly ? "pl-2" : ""}`}
-        >
-          <span
-            className={`font-semibold break-words hyphens-auto ${display ? "text-d-body" : "text-body"} ${
-              done ? "text-ink-soft" : ""
-            }`}
+      <SwipeRow
+        action="Remove"
+        label={`Remove ${box.title}`}
+        // Removing is a parent's: a child's phone has no PIN pad to unlock it (lib/parent).
+        disabled={!viewer.answers}
+        onAction={() => {
+          changes.removeChore.mutate(
+            { chore: { id: box.chore_id, title: box.title } },
+            {
+              onError: (error) => {
+                showToast(errorMessage(error));
+              },
+            },
+          );
+        }}
+      >
+        <div className="flex items-stretch gap-2">
+          {readOnly ? null : (
+            <div ref={tick} className="flex">
+              <TickBox
+                checked={done}
+                waiting={waiting}
+                person={(doer ?? owner)?.color}
+                label={label}
+                onToggle={toggle}
+              />
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(true);
+            }}
+            className={`press-row flex min-w-0 flex-1 items-center gap-3 rounded-button py-2 pr-2 text-left ${
+              display ? "min-h-[72px]" : "min-h-20"
+            } ${readOnly ? "pl-2" : ""}`}
           >
-            {box.title}
-          </span>
-          <span className="sr-only">, </span>
-          {line ? (
-            <span
-              className={`${display ? "text-d-secondary" : "text-secondary"} text-ink-soft ${
-                readOnly && done ? "inline-flex items-center gap-1" : ""
-              }`}
-            >
-              {readOnly && done ? (
-                <Check
-                  aria-hidden="true"
-                  className={`shrink-0 text-p-text ${display ? "size-6" : "size-5"}`}
-                />
+            <span className="flex min-w-0 flex-1 flex-col justify-center">
+              <span
+                className={`font-semibold break-words hyphens-auto ${display ? "text-d-body" : "text-body"} ${
+                  done ? "text-ink-soft" : ""
+                }`}
+              >
+                {box.title}
+              </span>
+              <span className="sr-only">, </span>
+              {line ? (
+                <span
+                  className={`${display ? "text-d-secondary" : "text-secondary"} text-ink-soft ${
+                    readOnly && done ? "inline-flex items-center gap-1" : ""
+                  }`}
+                >
+                  {readOnly && done ? (
+                    <Check
+                      aria-hidden="true"
+                      className={`shrink-0 text-p-text ${display ? "size-6" : "size-5"}`}
+                    />
+                  ) : null}
+                  {line}
+                </span>
               ) : null}
-              {line}
             </span>
-          ) : null}
-        </button>
-        {floating ? <FloatingStars key={floating} points={box.points} /> : null}
-      </div>
+            <ChevronRight
+              aria-hidden="true"
+              className={`shrink-0 text-ink-soft ${display ? "size-6" : "size-5"}`}
+            />
+          </button>
+          {floating ? <FloatingStars key={floating} points={box.points} /> : null}
+        </div>
+      </SwipeRow>
       {asking ? (
         <WhoDidIt
           turn={box.turn_id}
@@ -408,7 +438,8 @@ export function ChoreRow({
       {createPortal(
         <ChoreSheet
           open={editing}
-          box={box}
+          task={{ chore_id: box.chore_id, title: box.title }}
+          starsOn={starsOn}
           onClose={() => {
             setEditing(false);
           }}
@@ -600,26 +631,47 @@ export function Strip({ title, children }: { title: string; children: ReactNode 
   );
 }
 
-/** Tapping a chore's title (UX §4): Change, Skip today (with Undo), Remove. */
-function ChoreSheet({ open, box, onClose }: { open: boolean; box: Box; onClose: () => void }) {
+/**
+ * A task, opened from its row (UX §4, ADR 0036): what it is in words ("Every week on Sat · Sat,
+ * Nov 14 · by 5:00 PM · ★2"), then **Change** (on the wall the PIN is asked before the form
+ * opens, as an event's Change does), **Skip Today** while it repeats and is due today (with
+ * Undo), and **Remove** (with Undo). From All Tasks as from a box.
+ */
+export function ChoreSheet({
+  open,
+  task,
+  starsOn,
+  onClose,
+}: {
+  open: boolean;
+  task: { chore_id: string; title: string };
+  starsOn: boolean;
+  onClose: () => void;
+}) {
   const display = useShell() === "display";
   const { data: chores = [] } = useChores();
+  const { data: members = [] } = useMembers();
+  const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
+  const today = zonedParts(useMinute()).day;
   const changes = useChoreChanges();
   const [changing, setChanging] = useState(false);
-  const chore = chores.find((c) => c.id === box.chore_id);
+  const chore = chores.find((c) => c.id === task.chore_id);
+  // Changing a task is a parent's: on the wall, the PIN before the form, not after it.
+  const guarded =
+    display && session?.device_kind === "kiosk" && !session.is_parent && session.has_pin;
   const close = () => {
     setChanging(false);
     onClose();
   };
   return (
-    <SidePanel open={open} title={changing ? `Change ${box.title}` : box.title} onClose={close}>
+    <SidePanel open={open} title={changing ? `Change ${task.title}` : task.title} onClose={close}>
       {changing && chore ? (
         <ChoreEditor chore={chore} onDone={close} />
       ) : (
         <div className={`flex flex-col ${display ? "gap-4" : "gap-3"}`}>
           {chore ? (
             <p className={display ? "text-d-body text-ink-soft" : "text-body text-ink-soft"}>
-              {chore.repeat_text}
+              {ruleLine(chore, members, starsOn, today)}
             </p>
           ) : null}
           <Button
@@ -627,19 +679,22 @@ function ChoreSheet({ open, box, onClose }: { open: boolean; box: Box; onClose: 
             variant="secondary"
             disabled={!chore}
             onClick={() => {
-              setChanging(true);
+              void (async () => {
+                if (guarded && !(await askForPin(PARENT_CHANGE))) return;
+                setChanging(true);
+              })();
             }}
           >
             Change
           </Button>
-          {chore?.rrule ? (
+          {chore?.rrule && chore.next_due === today ? (
             <Button
               block
               variant="secondary"
               pending={changes.skip.isPending}
               onClick={() => {
                 changes.skip.mutate(
-                  { choreId: box.chore_id, day: box.due_date, title: box.title },
+                  { choreId: task.chore_id, day: today, title: task.title },
                   { onSuccess: close },
                 );
               }}
@@ -653,12 +708,12 @@ function ChoreSheet({ open, box, onClose }: { open: boolean; box: Box; onClose: 
             pending={changes.removeChore.isPending}
             onClick={() => {
               changes.removeChore.mutate(
-                { chore: { id: box.chore_id, title: box.title } },
+                { chore: { id: task.chore_id, title: task.title } },
                 { onSuccess: close },
               );
             }}
           >
-            Remove {box.title}
+            Remove {task.title}
           </Button>
           {changes.skip.isError || changes.removeChore.isError ? (
             <p role="alert" className="font-semibold text-alert">

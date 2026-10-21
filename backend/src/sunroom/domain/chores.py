@@ -14,6 +14,9 @@ Pure: the service passes in the rules, the completions and ``today``; nothing he
 - A day counts toward someone's streak when every box that was theirs that day (their fixed
   chores and the rotating ones on their turn) got done. Days with nothing of theirs neither
   count nor break it, and today only counts once it's finished.
+- A chore's next day (All Tasks, ADR 0036) is the first day from today it's due; a chore with
+  none (a one-day chore that's done, a rule that has ended) is finished, and once its last day
+  has passed the service tidies it away.
 """
 
 from __future__ import annotations
@@ -22,13 +25,14 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 
-from sunroom.domain.recurrence import Series, Timing, Window, count_before, expand
+from sunroom.domain.recurrence import Series, Timing, Window, count_before, expand, last_day
 from sunroom.domain.timeparts import rid_date
 
 FIXED = "fixed"
 ROTATE = "rotate"
 ANY = "any"
 STREAK_DAYS = 400  # how far back a streak looks
+NEXT_SEARCH = (7, 62, 366)  # days ahead a chore's next day is looked for, nearest first
 _DAY = timedelta(days=1)
 
 
@@ -124,6 +128,40 @@ def due_days(rule: Rule, start: date, end: date) -> list[date]:
     """The days in [start, end) a chore is due by its rule, skipped days left out. A chore
     without a rule is due on its first day only here (``Schedule`` carries it over)."""
     return [day for day in _rule_days(rule, start, end) if day not in rule.skipped]
+
+
+def next_due(rule: Rule, completions: Iterable[Completion], today: date) -> date | None:
+    """The next day a chore is due, from ``today`` on (All Tasks, ADR 0036). A repeating chore:
+    the first day its rule makes, skipped days left out; None when the rule has ended or makes
+    nothing within a year. A one-day chore: its day while that's today or later; after it,
+    today while it's carried over (as ``Schedule.due_on`` carries it: a fixed chore until every
+    person's box is done, any other until one is); None once done, or when its day was skipped."""
+    if rule.rrule:
+        for ahead in NEXT_SEARCH:
+            days = due_days(rule, today, today + timedelta(days=ahead))
+            if days:
+                return days[0]
+        return None
+    first = rule.start_date
+    if first in rule.skipped:
+        return None
+    if first >= today:
+        return first
+    done = {
+        c.member_id
+        for c in completions
+        if c.chore_id == rule.id and c.due_date == first and c.counts
+    }
+    finished = (
+        all(member in done for member in rule.assignees) if rule.mode == FIXED else bool(done)
+    )
+    return None if finished else today
+
+
+def last_due(rule: Rule) -> date | None:
+    """A chore's last day: a one-day chore's day, a repeating one's last by its UNTIL or COUNT,
+    or None for one that never ends."""
+    return last_day(_series(rule))
 
 
 def turn_on(rule: Rule, due_date: date) -> str | None:

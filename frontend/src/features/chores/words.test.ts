@@ -9,7 +9,9 @@ import {
   customPoints,
   doneLine,
   namesText,
+  nextWord,
   routineTitle,
+  ruleLine,
   starsLine,
   starsToast,
 } from "./words";
@@ -94,5 +96,60 @@ describe("stars for several children (ADR 0034)", () => {
   it("turns Custom… into stars to give or take", () => {
     expect(customPoints("give", 7)).toBe(7);
     expect(customPoints("take", 3)).toBe(-3);
+  });
+});
+
+describe("a task's rule and next day (All Tasks, ADR 0036)", () => {
+  const today = "2026-10-07";
+  const chore = {
+    rrule: "FREQ=WEEKLY;BYDAY=SA",
+    repeat_text: "Every week on Sat",
+    next_due: "2026-11-14",
+    due_time: "17:00",
+    points: 2,
+    assignee_mode: "fixed",
+    assignee_member_ids: ["mia"],
+  };
+
+  it("names the next day: today, tomorrow, a date, or finished", () => {
+    expect(nextWord(today, today)).toBe("Today");
+    expect(nextWord("2026-10-08", today)).toBe("Tomorrow");
+    expect(nextWord("2026-11-14", today)).toBe("Sat, Nov 14");
+    expect(nextWord(null, today)).toBe("Finished");
+  });
+
+  it("says the rule, the day, by when, the stars and whose", () => {
+    expect(ruleLine(chore, people, true, today)).toBe(
+      "Every week on Sat · Sat, Nov 14 · by 5:00 PM · ★2",
+    );
+    expect(ruleLine(chore, people, false, today)).toBe(
+      "Every week on Sat · Sat, Nov 14 · by 5:00 PM",
+    );
+    const once = {
+      ...chore,
+      rrule: null,
+      repeat_text: "Doesn't repeat",
+      next_due: "2026-10-08",
+      due_time: null,
+      points: 0,
+    };
+    expect(ruleLine(once, people, true, today)).toBe("Once · Tomorrow");
+    const turns = {
+      ...chore,
+      rrule: "FREQ=DAILY",
+      repeat_text: "Every day",
+      next_due: today,
+      due_time: null,
+      points: 0,
+      assignee_mode: "rotate",
+      assignee_member_ids: ["mia", "leo"],
+    };
+    expect(ruleLine(turns, people, true, today)).toBe("Every day · Today · Mia and Leo take turns");
+    expect(ruleLine({ ...turns, assignee_mode: "fixed" }, people, true, today)).toBe(
+      "Every day · Today · Mia and Leo each",
+    );
+    expect(
+      ruleLine({ ...turns, assignee_mode: "any", assignee_member_ids: [] }, people, true, today),
+    ).toBe("Every day · Today · Anyone");
   });
 });

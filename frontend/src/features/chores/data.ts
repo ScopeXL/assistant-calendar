@@ -35,7 +35,7 @@ export type Routine = components["schemas"]["RoutineOut"];
 export type RoutineIn = components["schemas"]["RoutineIn"];
 export type StepIn = components["schemas"]["StepIn"];
 
-const PARENT_CHANGE = "Changing tasks on this screen asks for the parent PIN.";
+export const PARENT_CHANGE = "Changing tasks on this screen asks for the parent PIN.";
 const PARENT_ANSWER = "Only a parent can say yes or no. Enter the parent PIN.";
 
 export function useChoresDay(day: string) {

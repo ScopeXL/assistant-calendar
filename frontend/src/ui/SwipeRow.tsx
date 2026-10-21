@@ -1,4 +1,4 @@
-import { animate, motion, useMotionValue } from "motion/react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
 import { SETTLE, useMotionReduced } from "../lib/motion";
@@ -71,6 +71,8 @@ function Swipe({
   const open = useStore(openRow) === id;
   const reduced = useMotionReduced();
   const x = useMotionValue(0);
+  // At rest the action isn't drawn at all: its edges, under the row's, would show as a hairline.
+  const shown = useTransform(x, (value) => (value < 0 ? 1 : 0));
   const box = useRef<HTMLDivElement>(null);
   // How far the finger has gone since it went down: past TAP_SLOP it's a swipe, not a tap.
   const travel = useRef(0);
@@ -115,7 +117,7 @@ function Swipe({
 
   return (
     <div ref={box} className="relative overflow-x-clip">
-      <button
+      <motion.button
         type="button"
         aria-label={label}
         // Hidden three ways while the row is closed: no tab stop, no tap, nothing to hear.
@@ -126,10 +128,11 @@ function Swipe({
           settle(false);
           onAction();
         }}
+        style={{ opacity: shown }}
         className="absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-alert text-body font-bold text-on-alert"
       >
         {action}
-      </button>
+      </motion.button>
       <motion.div
         drag="x"
         dragDirectionLock

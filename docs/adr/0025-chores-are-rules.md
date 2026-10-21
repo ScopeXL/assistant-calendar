@@ -1,6 +1,8 @@
 # ADR 0025: Chores are rules: due days, turns, credit and streaks are computed
 
-- **Status:** Accepted
+- **Status:** Accepted; a task's next day (`next_due`, All Tasks) and finished tasks that leave
+  for Recently Removed the day after their last day were added by ADR 0036 (their completions,
+  stars and streaks stay)
 - **Date:** 2026-10-08
 
 ## Context

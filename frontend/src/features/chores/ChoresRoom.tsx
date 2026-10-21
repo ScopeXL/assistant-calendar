@@ -11,6 +11,7 @@ import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
 import { Segmented } from "../../ui/Segmented";
+import { AllTasksColumns } from "./AllTasks";
 import { ChoreColumn, personOf, WaitingStrip } from "./ChoreBoard";
 import { useChoresDay, useChoresWeek, type Day, type Week } from "./data";
 import { RewardsPage } from "./RewardsPage";
@@ -19,8 +20,8 @@ import { countText } from "./words";
 
 const MOST_COLUMNS = 5;
 
-/** The Chores room on the wall screen (UX §4): today in columns, the week, Stars & rewards,
- * and the routine runner. */
+/** The Chores room on the wall screen (UX §4): today in columns, the week, every task (All
+ * Tasks, ADR 0036), Stars & rewards, and the routine runner. */
 export function ChoresRoom({ path }: { path: string[] }) {
   const [page, ...rest] = path;
   if (page === "rewards") return <RewardsPage />;
@@ -36,7 +37,7 @@ export function ChoresRoom({ path }: { path: string[] }) {
 function ChoresBoard() {
   const today = zonedParts(useMinute()).day;
   const { data: day, isSuccess } = useChoresDay(today);
-  const [mode, setMode] = useState<"today" | "week">("today");
+  const [mode, setMode] = useState<"today" | "week" | "all">("today");
   const add = () => {
     updateDisplay({ panel: { kind: "add", day: null, hour: null, type: "chore" } });
   };
@@ -52,6 +53,7 @@ function ChoresBoard() {
               options={[
                 { value: "today", label: "Today" },
                 { value: "week", label: "This Week" },
+                { value: "all", label: "All Tasks" },
               ]}
               onChange={setMode}
             />
@@ -84,6 +86,8 @@ function ChoresBoard() {
         </div>
       ) : mode === "today" && day ? (
         <TodayColumns day={day} />
+      ) : mode === "all" && day ? (
+        <AllTasksColumns starsOn={day.stars_on} />
       ) : day ? (
         <WeekColumns today={today} />
       ) : null}

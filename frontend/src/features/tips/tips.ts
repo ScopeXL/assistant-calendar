@@ -61,6 +61,16 @@ export const TIPS: readonly Tip[] = [
   },
   { id: "chores", text: "Tasks: one tap on the box marks it done.", needs: ["chores"] },
   {
+    id: "all-tasks",
+    text: "Tasks: All Tasks lists every task, even next month's. Tap one to change or remove it.",
+    needs: ["chores"],
+  },
+  {
+    id: "task-sheet",
+    text: "Tap a task's name to change it, skip it today, or remove it.",
+    needs: ["chores"],
+  },
+  {
     id: "routines",
     text: "Routines walk a child through a morning or bedtime list, one step at a time.",
     needs: ["chores"],

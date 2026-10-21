@@ -42,6 +42,11 @@ size limit.
 - A swipe on a phone's list of lists did nothing in Chromium, while an item's row swiped: the
   row is a link, and a link (or an image) starts the browser's own drag-and-drop. `ui/SwipeRow`
   cancels `dragstart` inside itself.
+- A swiped row's red Remove showed as a hairline round every row at rest: its edges sat under
+  the row's at fractional pixels. `ui/SwipeRow` draws it only while the row is off its rest.
+- On a phone with a PIN set, `asParent` waits for ever on a parent-only refusal: the PIN pad is
+  mounted only in the display shell. Offer a parent-only action on a phone only with a parent's
+  rights (`session.is_parent`), as the swipes do.
 
 ## Backup, restore and the service worker
 
@@ -72,6 +77,8 @@ size limit.
   `shutil.disk_usage` and know that's what it is.
 - A Protocol over SQLAlchemy `Mapped[...]` fields didn't satisfy pyright: pass a small dataclass
   (`calendar.people.Person`).
+- A test's "done on its day" was done late: a completion's day is the household day the clock
+  says when it's made, whatever its due date. Set the clock to that day before completing.
 - `boot.reexec` runs `sys.orig_argv[1:]` again with `sys.executable`: for the console script
   that's `[python, …/bin/sunroom, serve, …]`, for `-m` it's `[python, -m, sunroom, serve]`.
 

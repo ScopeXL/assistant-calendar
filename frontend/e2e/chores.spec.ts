@@ -5,7 +5,7 @@
  * wall behind the PIN. The server's clock reads Wednesday, October 7, 2026 in New York; the
  * Sample Family's chores come from the seed. Synthetic data only.
  */
-import type { Locator, Page } from "@playwright/test";
+import type { APIRequestContext, Locator, Page } from "@playwright/test";
 
 import { expect, pairWall, PASSWORD, phone, PIN, seed, signInPhone, test } from "./fixtures";
 
@@ -37,14 +37,52 @@ async function bursting(page: Page): Promise<boolean> {
 }
 
 test.beforeEach(async ({ request }, testInfo) => {
-  test.skip(testInfo.project.name !== "display-1080p", "the wall screen at 1080p");
+  test.skip(
+    testInfo.project.name !== "display-1080p" && testInfo.project.name !== "phone-chromium",
+    "the wall screen at 1080p, and a phone",
+  );
   await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
 });
+
+function onTheWall(): void {
+  test.skip(test.info().project.name !== "display-1080p", "the wall screen at 1080p");
+}
+
+function onAPhone(): void {
+  test.skip(test.info().project.name !== "phone-chromium", "a phone");
+}
+
+/** A finger's swipe to the left across a row (a press, three moves, a release). */
+async function swipeLeft(page: Page, row: Locator): Promise<void> {
+  const box = await row.boundingBox();
+  if (!box) throw new Error("no row to swipe");
+  const x = box.x + box.width * 0.75;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (const step of [40, 80, 120]) await page.mouse.move(x - step, y);
+  await page.mouse.up();
+}
+
+/** Signs `request` in as a parent's phone, and answers the Sample Family's ids by name. */
+async function asParent(request: APIRequestContext): Promise<Record<string, string>> {
+  const parent = await request.post("/api/auth/login", {
+    headers: CSRF,
+    data: { password: PASSWORD },
+  });
+  expect(parent.ok()).toBe(true);
+  const members = (await (await request.get("/api/members")).json()) as {
+    id: string;
+    name: string;
+  }[];
+  return Object.fromEntries(members.map((member) => [member.name, member.id]));
+}
 
 test("a chore done on the wall stamps, bursts and pops the count; Undo takes it all back", async ({
   page,
   request,
 }) => {
+  onTheWall();
   await seed(request);
   await choresRoom(page);
   const mia = page.getByRole("region", { name: "Mia", exact: true });
@@ -88,6 +126,7 @@ test("with Reduce Motion the moment still reads as done, without a burst", async
   page,
   request,
 }) => {
+  onTheWall();
   await seed(request);
   const parent = await request.post("/api/auth/login", {
     headers: CSRF,
@@ -114,6 +153,7 @@ test("an empty Tasks room says what goes there, with one big Add Task", async ({
   page,
   request,
 }) => {
+  onTheWall();
   await seed(request);
   const parent = await request.post("/api/auth/login", {
     headers: CSRF,
@@ -146,6 +186,7 @@ test("an empty Tasks room says what goes there, with one big Add Task", async ({
 });
 
 test("an Anyone chore asks who did it, and credits them", async ({ page, request }) => {
+  onTheWall();
   await seed(request);
   await choresRoom(page);
   const anyone = page.getByRole("region", { name: "Anyone", exact: true });
@@ -157,6 +198,7 @@ test("an Anyone chore asks who did it, and credits them", async ({ page, request
 });
 
 test("Leo runs his bedtime routine to its finish", async ({ page, request }) => {
+  onTheWall();
   await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_745PM } });
   await seed(request);
   await choresRoom(page);
@@ -182,6 +224,7 @@ test("a reward asked for on the wall shows on a parent's phone; Approve on the w
   browser,
   watch,
 }) => {
+  onTheWall();
   await seed(request, { pin: PIN });
   await choresRoom(page);
   await page.getByRole("link", { name: "Stars & Rewards" }).click();
@@ -216,6 +259,7 @@ test("stars: a parent takes a custom amount from two children at once (ADR 0034)
   page,
   request,
 }) => {
+  onTheWall();
   await seed(request, { pin: PIN });
   await pairWall(page);
   const balances = async (): Promise<Record<string, number>> => {
@@ -272,6 +316,7 @@ test("a task every two weeks on two days, with all five people on one line of Wh
   page,
   request,
 }) => {
+  onTheWall();
   await seed(request);
   // A fifth person, added by a parent's phone: the owner's household has five.
   const parent = await request.post("/api/auth/login", {
@@ -377,4 +422,92 @@ test("a task every two weeks on two days, with all five people on one line of Wh
   expect(await dueOn("2026-10-15")).toBe(false);
   expect(await dueOn("2026-10-20")).toBe(true);
   expect(await dueOn("2026-10-22")).toBe(true);
+});
+
+test("a task due next month shows under All Tasks, and can be removed with Undo (ADR 0036)", async ({
+  page,
+  request,
+}) => {
+  onTheWall();
+  await seed(request, { pin: PIN });
+  // A one-off for Mia 30 days after the clock's Wednesday: Friday, November 6.
+  const people = await asParent(request);
+  const added = await request.post("/api/chores", {
+    headers: CSRF,
+    data: { title: "Dentist forms", start_date: "2026-11-06", assignee_member_ids: [people.Mia] },
+  });
+  expect(added.status()).toBe(201);
+  await choresRoom(page);
+  await page.getByRole("banner").getByRole("button", { name: "All Tasks" }).click();
+  const mia = page.getByRole("region", { name: "Mia", exact: true });
+  const row = mia.getByRole("button", { name: /^Dentist forms/ });
+  await expect(row).toContainText("Once · Fri, Nov 6");
+  // No boxes here: a box completes, and that belongs to Today.
+  await expect(mia.getByRole("checkbox")).toHaveCount(0);
+  await row.click();
+  const sheet = page.getByRole("dialog", { name: "Dentist forms" });
+  await expect(sheet).toContainText("Once · Fri, Nov 6");
+  await expect(sheet.getByRole("button", { name: "Skip Today" })).toHaveCount(0);
+  await sheet.getByRole("button", { name: "Remove Dentist forms" }).click();
+  const pin = page.getByRole("dialog", { name: "Parent PIN" });
+  await expect(pin).toBeVisible();
+  for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
+  await expect(row).toHaveCount(0);
+  await toast(page, "Removed Dentist forms").getByRole("button", { name: "Undo" }).click();
+  await expect(mia.getByRole("button", { name: /^Dentist forms/ })).toBeVisible();
+});
+
+test("a task's sheet says what it is, and Change asks the PIN before its form (ADR 0036)", async ({
+  page,
+  request,
+}) => {
+  onTheWall();
+  await seed(request, { pin: PIN });
+  await choresRoom(page);
+  const mia = page.getByRole("region", { name: "Mia", exact: true });
+  // The row says it opens: a chevron after its words.
+  const title = mia.getByRole("button", { name: /^Feed the dog/ });
+  await expect(title.locator("svg")).toHaveCount(1);
+  await title.click();
+  const sheet = page.getByRole("dialog", { name: "Feed the dog" });
+  await expect(sheet).toContainText("Every day · Today · by 5:00 PM · ★2");
+  // Due today and it repeats: Skip Today is there.
+  await expect(sheet.getByRole("button", { name: "Skip Today" })).toBeVisible();
+  await sheet.getByRole("button", { name: "Change", exact: true }).click();
+  const pin = page.getByRole("dialog", { name: "Parent PIN" });
+  await expect(pin).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Change Feed the dog" })).toHaveCount(0);
+  for (const digit of PIN) await pin.getByRole("button", { name: digit, exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Change Feed the dog" })).toBeVisible();
+});
+
+test("a phone: All Tasks in sections, and a swiped row shows Remove (ADR 0036)", async ({
+  page,
+  request,
+}) => {
+  onAPhone();
+  await seed(request);
+  await signInPhone(page, "Ana");
+  await page.getByRole("link", { name: "Tasks" }).click();
+  await page.getByRole("button", { name: "All Tasks" }).click();
+  // Ana has no tasks of her own: the first section (Sam's) is open, and Anyone's.
+  const sam = page.getByRole("button", { name: /^Sam · \d+ tasks?$/ });
+  await expect(sam).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("button", { name: /^Anyone · / })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: /^Mia · / })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  const trash = page.getByRole("button", { name: /^Take out the trash/ });
+  await expect(trash).toContainText(/Every .* · /);
+  await swipeLeft(page, trash);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Remove Take out the trash" }).click();
+  await expect(
+    toast(page, "Removed Take out the trash").getByRole("button", { name: "Undo" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Take out the trash/ })).toHaveCount(0);
 });

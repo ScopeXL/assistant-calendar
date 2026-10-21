@@ -37,6 +37,8 @@ class ChoreOut(BaseModel):
     rotation_index: int
     requires_approval: bool | None  # None: the plugin's setting
     active: bool
+    # The next day it's due, today or later (ADR 0036); None: finished, nothing ahead.
+    next_due: date | None
 
 
 class ChoreIn(BaseModel):

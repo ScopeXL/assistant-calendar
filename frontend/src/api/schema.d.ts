@@ -2900,6 +2900,8 @@ export interface components {
             icon: string | null;
             /** Id */
             id: string;
+            /** Next Due */
+            next_due: string | null;
             /** Points */
             points: number;
             /** Repeat Text */

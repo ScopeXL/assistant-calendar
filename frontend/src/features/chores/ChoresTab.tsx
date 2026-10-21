@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, ListTodo, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { weekOf, zonedParts } from "../../lib/dates";
 import type { BoardPanel } from "../../lib/displayState";
@@ -11,14 +11,16 @@ import { EmptyState } from "../../ui/EmptyState";
 import { Screen } from "../../ui/Screen";
 import { Segmented } from "../../ui/Segmented";
 import { AddPanel } from "../calendar/AddPanel";
+import { taskColumns, TaskRuleRow, tasksCount } from "./AllTasks";
 import { ChoreColumn, personOf, useViewer, WaitingStrip } from "./ChoreBoard";
-import { useChoresDay, useChoresWeek, useRewards, type Column, type Day } from "./data";
+import { useChores, useChoresDay, useChoresWeek, useRewards, type Column, type Day } from "./data";
 import { AskedStrip, RewardsPage } from "./RewardsPage";
 import { RoutineRunner } from "./RoutineRunner";
 import { WeekRows } from "./ChoresRoom";
 import { allDoneText, countText } from "./words";
 
-/** Chores on a phone (UX §5): Today or This week, Stars & rewards, and the routine runner. */
+/** Chores on a phone (UX §5): Today, This Week or All Tasks (ADR 0036), Stars & rewards, and
+ * the routine runner. */
 export function ChoresTab({ path }: { path: string[] }) {
   const [page, ...rest] = path;
   if (page === "rewards") return <RewardsPage />;
@@ -36,7 +38,7 @@ function PhoneChores() {
   const { data: day, isSuccess } = useChoresDay(today);
   const viewer = useViewer();
   const { data: rewards } = useRewards({ enabled: viewer.answers });
-  const [mode, setMode] = useState<"today" | "week">("today");
+  const [mode, setMode] = useState<"today" | "week" | "all">("today");
   const [panel, setPanel] = useState<BoardPanel>(null);
   const mine = day?.stars.find((s) => s.member_id === viewer.memberId);
   const { data: members = [] } = useMembers();
@@ -66,6 +68,7 @@ function PhoneChores() {
           options={[
             { value: "today", label: "Today" },
             { value: "week", label: "This Week" },
+            { value: "all", label: "All Tasks" },
           ]}
           onChange={setMode}
         />
@@ -81,6 +84,8 @@ function PhoneChores() {
           />
         ) : day && mode === "today" ? (
           <Sections day={day} first={viewer.memberId} />
+        ) : day && mode === "all" ? (
+          <PhoneAllTasks first={viewer.memberId} starsOn={day.stars_on} />
         ) : day ? (
           <PhoneWeek day={day} today={today} />
         ) : null}
@@ -140,7 +145,6 @@ function Section({
   open: boolean;
 }) {
   const { data: members = [] } = useMembers();
-  const [open, setOpen] = useState(initiallyOpen);
   const person = personOf(members, column.member_id);
   const name = person ? person.name : "Anyone";
   const allDone = column.total > 0 && column.done === column.total;
@@ -149,6 +153,61 @@ function Section({
     : column.total > 0
       ? countText(column.done, column.total)
       : "nothing today";
+  return (
+    <Folding title={`${name} · ${status}`} open={initiallyOpen}>
+      <ChoreColumn
+        column={column}
+        day={day}
+        starsOn={day.stars_on}
+        stars={day.stars.find((s) => s.member_id === column.member_id)?.balance}
+        header={false}
+      />
+    </Folding>
+  );
+}
+
+/** All Tasks on a phone (ADR 0036): a section per person, the phone's person first and open (and
+ * Anyone's), the rest folded with how many tasks; rows a swipe can remove, on a parent's phone. */
+function PhoneAllTasks({ first, starsOn }: { first: string | null; starsOn: boolean }) {
+  const { data: chores } = useChores();
+  const { data: members = [] } = useMembers();
+  if (!chores) return null;
+  const columns = taskColumns(chores, members);
+  const ordered = [
+    ...columns.filter((c) => c.memberId === first && first !== null),
+    ...columns.filter((c) => c.memberId !== first || first === null),
+  ];
+  return (
+    <div className="flex flex-col gap-3">
+      {ordered.map(({ memberId, tasks }, index) => (
+        <Folding
+          key={memberId ?? "anyone"}
+          title={`${personOf(members, memberId)?.name ?? "Anyone"} · ${tasksCount(tasks.length)}`}
+          open={index === 0 || memberId === null}
+        >
+          <ul className="flex flex-col">
+            {tasks.map((chore) => (
+              <TaskRuleRow key={chore.id} chore={chore} starsOn={starsOn} />
+            ))}
+          </ul>
+        </Folding>
+      ))}
+    </div>
+  );
+}
+
+/** A person's part of the phone's list: a button with their name and how they're doing,
+ * folding what's under it. */
+function Folding({
+  title,
+  open: initiallyOpen,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(initiallyOpen);
   return (
     <section className="rounded-chip border border-line bg-surface px-3 py-2">
       <button
@@ -164,17 +223,9 @@ function Section({
         ) : (
           <ChevronRight aria-hidden="true" className="size-5" />
         )}
-        {`${name} · ${status}`}
+        {title}
       </button>
-      {open ? (
-        <ChoreColumn
-          column={column}
-          day={day}
-          starsOn={day.stars_on}
-          stars={day.stars.find((s) => s.member_id === column.member_id)?.balance}
-          header={false}
-        />
-      ) : null}
+      {open ? children : null}
     </section>
   );
 }

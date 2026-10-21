@@ -435,7 +435,8 @@ async def test_a_one_day_chore_carries_over_until_it_is_done(
         (MON.isoformat(), family.mia)
     ]
     clock.advance(days=1)
-    assert column(await day(parent), family.mia)["boxes"] == []
+    # Finished, and it was Mia's only task: she has no column now (ADR 0036).
+    assert [c["member_id"] for c in (await day(parent))["columns"]] == []
 
 
 async def test_skip_a_day_and_put_it_back(

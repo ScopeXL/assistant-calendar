@@ -539,7 +539,7 @@ a list someone else made; a list row now swipes only on a parent's phone or for 
 
 ### T4 Tasks: rows that open, a swipe on phones, All Tasks, and finished tasks that leave
 
-- [ ] Done (commit: )
+- [x] Done (commit: "chores: All Tasks, a task's next day, rows that open, and finished tasks that leave")
 
 **Owner's note.** As T3, and: "Also, if a task is scheduled for next month, there is no way to
 see it from the Tasks page. Design a way to view all tasks and easily make changes to or remove
@@ -669,6 +669,27 @@ Recently Removed". ADR 0025: an annotation.
 its rule and its next day; tap one to change or remove it." (Changed.) "Every task row ends in
 a chevron; on a phone a row swiped to the left shows Remove. A task that's finished (done on its
 day, or past its last repeat) leaves for Recently Removed the next day, where Put Back keeps it."
+
+**As built.** As planned, with these differences, each in ADR 0036:
+- *The columns* count a person with a task still ahead **or a box on the days shown**, not only
+  the first: `day_view` draws only the boxes whose owner has a column, so a one-off done late
+  (finished, but stamped today) would have vanished from today's board, and the week would have
+  lost the columns its past days had.
+- *"Finished"*: a task with no next day reads "Finished" in its line instead of nothing (the
+  plan's `""`), so a row never looks as if its day went missing.
+- *The sheet* takes `{ chore_id, title }`, with no `due_date`: Skip Today shows only while the
+  task repeats and is due today, so it always skips today.
+- *The swipe on tasks* is offered only with a parent's rights (`viewer.answers`): on a phone with
+  a PIN set, `asParent` waits for a PIN pad that only the wall mounts, so a child's swipe would
+  have hung rather than shown "the server's plain refusal". (The sheet's own Remove on a child's
+  phone still does: the follow-up below.)
+- *`last_due`* needed the rule's last day: `domain.recurrence.last_day` exposes the walk's own.
+- *The first tip* was 94 characters, over the list's 90: "Tasks: All Tasks lists every task,
+  even next month's. Tap one to change or remove it."
+- The phone's Today sections fold with the same `Folding` as All Tasks'.
+- The hidden Remove drew a red hairline round every row at rest (fractional pixels); it's drawn
+  only while a row is off its rest.
+- Tested also: a one-off done late keeps its column that day; a paused task isn't tidied.
 
 ### T5 Photo libraries: the backend, with Immich as the first
 

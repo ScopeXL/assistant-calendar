@@ -66,7 +66,9 @@ describe("a task's row (UX §4)", () => {
     expect(screen.queryByRole("checkbox")).toBeNull();
     const title = screen.getByRole("button", { name: /^Feed the dog/ });
     expect(title.textContent).toContain("by 5:00 PM");
-    expect(title.querySelector("svg")).toBeNull();
+    // The chevron says it opens (ADR 0036); no check mark while it isn't done.
+    expect(title.querySelector("svg.lucide-chevron-right")).not.toBeNull();
+    expect(title.querySelector("svg.lucide-check")).toBeNull();
   });
 
   it("says a done one is done, with a check mark and who did it", () => {
@@ -88,6 +90,6 @@ describe("a task's row (UX §4)", () => {
     expect(screen.queryByRole("checkbox")).toBeNull();
     const title = screen.getByRole("button", { name: /^Feed the dog/ });
     expect(title.textContent).toMatch(/Done by Mia · /);
-    expect(title.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    expect(title.querySelector("svg.lucide-check")?.getAttribute("aria-hidden")).toBe("true");
   });
 });

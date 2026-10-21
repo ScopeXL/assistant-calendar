@@ -3,7 +3,7 @@
  * 7:42 AM", "2 of 3", "★ 42 · +12 this week · 6 days in a row". Stars are always the star glyph
  * with a number.
  */
-import { formatTime, formatWallTime, shortWeekday } from "../../lib/dates";
+import { addDays, formatTime, formatWallTime, shortDate, shortWeekday } from "../../lib/dates";
 
 export interface Named {
   id: string;
@@ -58,6 +58,44 @@ export function boxLine(
   if (stars && box.points > 0) parts.push(`★${String(box.points)}`);
   const turn = nameOf(people, box.turn_id);
   if (turn && !box.completion) parts.push(`${turn}'s turn`);
+  return parts.join(" · ");
+}
+
+/** A task's next day (All Tasks, ADR 0036): "Today", "Tomorrow", "Sat, Nov 14"; "Finished" when
+ * it has none (a one-off that's done, a rule that has ended: it leaves the next day). */
+export function nextWord(nextDue: string | null, today: string): string {
+  if (nextDue === null) return "Finished";
+  if (nextDue === today) return "Today";
+  if (nextDue === addDays(today, 1)) return "Tomorrow";
+  return shortDate(nextDue);
+}
+
+/** The line under a task in All Tasks and its sheet (ADR 0036): its rule, its next day, when
+ * it's due by, its stars and whose it is. "Every week on Sat · Sat, Nov 14 · by 5:00 PM · ★2",
+ * "Once · Tomorrow", "Every day · Today · Mia and Leo take turns". */
+export function ruleLine(
+  chore: {
+    rrule: string | null;
+    repeat_text: string;
+    next_due: string | null;
+    due_time: string | null;
+    points: number;
+    assignee_mode: string;
+    assignee_member_ids: readonly string[];
+  },
+  people: Named[],
+  stars: boolean,
+  today: string,
+): string {
+  const parts = [chore.rrule ? chore.repeat_text : "Once", nextWord(chore.next_due, today)];
+  if (chore.due_time) parts.push(`by ${clockText(chore.due_time)}`);
+  if (stars && chore.points > 0) parts.push(`★${String(chore.points)}`);
+  const names = chore.assignee_member_ids.flatMap((id) => nameOf(people, id) ?? []);
+  if (chore.assignee_mode === "rotate" && names.length)
+    parts.push(`${namesText(names)} take turns`);
+  else if (chore.assignee_mode === "fixed" && names.length > 1) {
+    parts.push(`${namesText(names)} each`);
+  } else if (chore.assignee_mode === "any") parts.push("Anyone");
   return parts.join(" · ");
 }
 
