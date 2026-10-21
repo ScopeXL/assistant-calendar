@@ -790,6 +790,11 @@ test("the wall's lists and chores", async ({ page }, testInfo) => {
     await page.getByRole("button", { name: "Cancel" }).click();
     await page.getByRole("button", { name: "This Week", exact: true }).click();
     await shot(page, `chores-week-${theme}`);
+    await page.getByRole("banner").getByRole("button", { name: "All Tasks" }).click();
+    await expect(
+      page.getByRole("region", { name: "Mia", exact: true }).getByText(/^\d+ tasks?$/),
+    ).toBeVisible();
+    await shot(page, `chores-all-${theme}`);
     await page.getByRole("link", { name: "Stars & Rewards" }).click();
     await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
     await shot(page, `chores-rewards-${theme}`);
@@ -1016,6 +1021,9 @@ test("a phone's lists and chores", async ({ page, isMobile }) => {
     await page.getByRole("link", { name: "Tasks" }).click();
     await expect(page.getByRole("heading", { name: "Tasks", level: 1 })).toBeVisible();
     await shot(page, `chores-${scheme}`);
+    await page.getByRole("button", { name: "All Tasks" }).click();
+    await expect(page.getByRole("button", { name: /^Mia · \d+ tasks?$/ })).toBeVisible();
+    await shot(page, `chores-all-${scheme}`);
     await page.getByRole("link", { name: "Stars & Rewards" }).click();
     await expect(page.getByRole("heading", { name: "Stars & Rewards", level: 1 })).toBeVisible();
     await shot(page, `chores-rewards-${scheme}`);

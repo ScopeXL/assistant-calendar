@@ -1154,7 +1154,7 @@ Library**, **Remove Library**, **What to Show**, **Keep up to**. `PLAN.md:402` (
 
 ### T7 Wrap up the batch
 
-- [ ] Done (commit: )
+- [x] Done (commit: "docs: M6 batch 8 wrapped up")
 
 1. **The full gate.** `just check`; the whole `just e2e`; `just screenshots`. Fix what fails;
    a failure is traced by running the failing spec at each task's commit. Review, against UX §10
@@ -1198,6 +1198,37 @@ Library**, **Remove Library**, **What to Show**, **Keep up to**. `PLAN.md:402` (
    (the address and key are the owner's to type, after the deploy, never in a session); the
    Immich spec tag the client was checked against. The owner deploys.
 
+**As built.** The full gate, and what it found. `just check` was green at once (1,236 backend,
+764 frontend and 170 Sunroom Screen tests, API types, the migration checks, release metadata;
+its one warning, a blocked `getaddrinfo` in `test_manager.py`, is in 0.13.0's run too). The
+whole `just e2e` failed 1 of 155: `calendar.spec`'s "the views, the event sheet and Recently
+Removed", traced to T1 (`7f94f8a`, the test run there in a scratch worktree). Since T1, People
+shares the Day view's day, so after the test's Month cell opened Friday, People opened on Friday
+too, not on Wednesday's Vet. T1's run was filtered to its two new cases (`-g "People|Today
+view"`), and the plan's reading ("nothing in e2e taps an arrow on People") missed the Month
+step. The test now expects Friday there and taps Today back to Wednesday. `just screenshots`
+(the list above, plus `chores-all-*` on the walls and phones, added here) was reviewed against
+0.13.0's set, kept as `.screenshots/before-0.14.0/` (`before-0.13.0` is M7's, older). It found
+two things, both fixed:
+- In portrait, People's five columns leave a task row about 192 px, and T4's chevron (36 px with
+  its gap) broke the titles mid-word ("Em pty", "Tak e"). A row under 13rem now leaves the
+  chevron out (the row is a container), so People reads as it did in 0.13.0, and the Tasks
+  room's rows (about 238 px in portrait) keep theirs.
+- A library's row in Settings said its count twice ("Checked 4:10 PM · 12 photos", then "12
+  photos" again at the right, without its comma). It is the plan's row now: the name, the line
+  and a chevron.
+
+The UX read-through found three lines promising phone swipes wider than built (a list swipes on
+a parent's phone or its maker's, a task only on a parent's): UX §4 and §5 and the CHANGELOG say
+so now. Not a regression, though it looked like one: the first run's portrait People shot showed
+tonight's Tacos under Sam and 1080p's didn't, as in 0.13.0's set; run alone, neither does, so it
+comes from what earlier tests leave on the shared test server. After the fixes, the whole `just
+e2e` again: 155 passed; `just check` again: green. Docs: ADR 0036 accepted, with what wasn't
+built (its README row and the notes in ADR 0025, 0026, 0031 and 0033 were written with their
+tasks); PLAN §15 and §11.1's photos row (the 409 and `source_key`); UX §3, §4, §5 and §8 read
+again; CLAUDE.md's status line (14.9 KB, so this batch's gotchas are in GOTCHAS.md, which gained
+four more here); the CHANGELOG as one list. `just scan` clean.
+
 ## Follow-ups noticed but not in this batch
 
 - **Settings → Network**: the allowlist has an API and no page; the tick writes rows now, but a
@@ -1215,6 +1246,9 @@ Library**, **Remove Library**, **What to Show**, **Keep up to**. `PLAN.md:402` (
   already) and keep the flat ones for 2.x.
 - **Paused tasks**: `active` exists in the API; a Pause in the task's sheet and a Paused group in
   All Tasks.
+- **A repeat done today** reads "Every day · Today" in All Tasks: its next day is its first from
+  today, done or not, as T4 planned. Once today's boxes are all done, "Tomorrow" may read better
+  (`next_due` would read the day's completions).
 - **Undo after adding a task** asks the PIN on the wall (`DELETE chores/{id}` is parent-only;
   found by the lists and tasks read): a creator's own undo within a minute could be allowed.
 - **A child's phone and `asParent`**: `PinDialog` is mounted only in the display shell, so a

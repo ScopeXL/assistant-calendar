@@ -18,10 +18,11 @@ recurrence engine, ADR 0023); synced calendars (ADR 0024, docs/SYNC.md); lists a
 M6 batch 1 (the owner's notes: docs/M6.md, ADR 0028) is built in 0.7.0, batch 2
 (docs/M6-batch-2.md, ADR 0029) in 0.8.0, batch 3 (docs/M6-batch-3.md, ADR 0030) in 0.9.0,
 batch 4 (docs/M6-batch-4.md, ADR 0032) in 0.10.0, batch 5 (docs/M6-batch-5.md, ADR 0033) in
-0.11.0, and batch 6 (docs/M6-batch-6.md, ADR 0034) for 0.12.0; more M6 comes from use.
+0.11.0, batch 6 (docs/M6-batch-6.md, ADR 0034) in 0.12.0, and batch 8 (docs/M6-batch-8.md,
+ADR 0036) for 0.14.0; more M6 comes from use.
 M7 (docs/M7.md, ADR 0035) is Sunroom Screen: batch 0 (two wall fixes) released as 0.12.1;
 batch 1 (the agent, This Screen, discovery, the installer, GitHub Releases) and batch 2 (Windows,
-macOS, Run It on This Screen, the Sunroom OS image, docs/SUNROOM-OS.md) built, for 0.13.0.
+macOS, Run It on This Screen, the Sunroom OS image, docs/SUNROOM-OS.md) released as 0.13.0.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so

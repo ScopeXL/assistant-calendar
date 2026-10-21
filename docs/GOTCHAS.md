@@ -86,6 +86,9 @@ size limit.
   Work that may fail on its own (a photo library's pass) catches its errors and records them.
 - A test's "done on its day" was done late: a completion's day is the household day the clock
   says when it's made, whatever its due date. Set the clock to that day before completing.
+- `just db-revision`'s autogenerate wrote the app's own column type
+  (`sunroom.db.types.UTCDateTime()`) into the migration, which must not lean on app code that can
+  change. Write `sa.DateTime()`, as every migration does.
 - `boot.reexec` runs `sys.orig_argv[1:]` again with `sys.executable`: for the console script
   that's `[python, …/bin/sunroom, serve, …]`, for `-m` it's `[python, -m, sunroom, serve]`.
 
@@ -121,6 +124,8 @@ size limit.
   scroller is `scrollbar-width: none`.
 - `motion` still fades under Reduce Motion, and an endless CSS animation at 0.01 ms flickers:
   leave `exit` out (`useMotionReduced`), and give the loop `animation: none`.
+- A task row's chevron broke its title mid-word ("Em pty") in portrait's People view, whose five
+  columns leave a row about 192 px. The row is a container, and under 13rem the chevron goes.
 
 ## Sunroom Screen (the agent beside a wall's browser)
 
@@ -202,6 +207,10 @@ size limit.
 - A click just after a dnd-kit drop did nothing: dnd-kit swallows clicks for 50 ms after a drop.
   Tests wait 100 ms.
 - A heading locator matched twice in Settings: the Today panel shows beside it. Use `exact`.
+- `getByLabel("Address")` also found the home-network switch, whose label wraps its hint ("an
+  address like 192.168…"). Label and name locators match parts of words: use `exact`.
+- A task's e2e run filtered its spec (`-g`) and missed an older case in it that the change broke
+  (People shares the Day view's day, and an earlier step set it). Run the task's whole spec.
 - The e2e job on GitHub failed every release from 0.5.0 to 0.9.1, unseen: the two accessibility
   journeys (about forty axe scans each) passed in under 30 s on the Mac and took longer on the
   4-CPU runner, Playwright's default limit. The base is 60 s and they're `test.slow()`; the

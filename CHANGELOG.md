@@ -22,8 +22,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 ### Changed
 
 - Every item on a list ends in a chevron, so it's plain that a tap opens it to change its day,
-  who it's for, or remove it; on a phone, a row swiped to the left shows Remove, for an item or
-  a whole list.
+  who it's for, or remove it; on a phone, a row swiped to the left shows Remove, for any item,
+  and for a whole list on a parent's phone or its maker's.
 - Every task row ends in a chevron, and a task's sheet says what it is in words; on the wall,
   Change asks for the PIN before its form, and Skip Today shows only when the task is due today.
   On a parent's phone a task row swiped to the left shows Remove.
@@ -33,11 +33,13 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Fixed
 
-- A calendar server or a photo library on the home network can be allowed from its own sheet:
-  the "This server is on your home network" tick now does what it says.
 - On the People view, the arrows go to the day before or after, Today brings it back, and the
   day is written over the columns; a person's tasks on another day show without boxes. The
   Today view no longer shows arrows that did nothing.
+- A calendar server or a photo library on the home network can be allowed from its own sheet:
+  the "This server is on your home network" tick now does what it says.
+- Behind the scenes: a photo library's key never goes along when a server sends Sunroom on to
+  another one, and the log never shows it.
 
 ## [0.13.0] - 2026-10-21
 

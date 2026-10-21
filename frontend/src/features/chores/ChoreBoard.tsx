@@ -371,7 +371,7 @@ export function ChoreRow({
           );
         }}
       >
-        <div className="flex items-stretch gap-2">
+        <div className="@container flex items-stretch gap-2">
           {readOnly ? null : (
             <div ref={tick} className="flex">
               <TickBox
@@ -417,9 +417,11 @@ export function ChoreRow({
                 </span>
               ) : null}
             </span>
+            {/* A row too narrow for its words (People's columns in portrait) keeps the room for
+                them: the title still opens the task. */}
             <ChevronRight
               aria-hidden="true"
-              className={`shrink-0 text-ink-soft ${display ? "size-6" : "size-5"}`}
+              className={`shrink-0 text-ink-soft @max-[13rem]:hidden ${display ? "size-6" : "size-5"}`}
             />
           </button>
           {floating ? <FloatingStars key={floating} points={box.points} /> : null}

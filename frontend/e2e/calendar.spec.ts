@@ -172,9 +172,13 @@ test("the views, the event sheet and Recently Removed", async ({ page }) => {
   await month.getByRole("button", { name: /^Fri 9: .*Pajama day/ }).click();
   await expect(page.getByRole("region", { name: "Fri, Oct 9" })).toContainText("Pajama day");
 
-  // People: a column per person, Everyone first. Nothing to filter there.
+  // People: a column per person, Everyone first, on the day the Day view was showing (the two
+  // share it, ADR 0036); Today comes back to Wednesday. Nothing to filter there.
   await page.getByRole("button", { name: "People", exact: true }).click();
   const people = page.getByRole("region", { name: "People" });
+  await expect(people.getByText("Friday, October 9", { exact: true })).toBeVisible();
+  await page.getByRole("banner").getByRole("button", { name: "Today", exact: true }).click();
+  await expect(people.getByText("Wednesday, October 7", { exact: true })).toBeVisible();
   await expect(page.getByRole("banner").getByRole("button", { name: /^Filter/ })).toHaveCount(0);
   await expect(people.getByRole("region", { name: "Ana" })).toContainText("Vet");
   await expect(people.getByRole("region", { name: "Leo" })).toContainText("Piano lesson");

@@ -113,7 +113,6 @@ function LibraryRow({ library, onOpen }: { library: PhotoLibrary; onOpen: () => 
           line.text
         )
       }
-      value={photosCount(library.photo_count)}
       onClick={onOpen}
     />
   );
