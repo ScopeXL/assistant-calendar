@@ -1,9 +1,9 @@
-import { ChevronLeft, ChevronRight, Clock3, List } from "lucide-react";
+import { CalendarRange, ChevronLeft, ChevronRight, Clock3, List } from "lucide-react";
 
 import type { BoardView, WeekLayout } from "../../lib/displayState";
 import type { Member } from "../../lib/household";
 import { Button } from "../../ui/Button";
-import { IconSegmented, type IconSegmentOption } from "../../ui/Segmented";
+import { IconSegmented, IconToggle, type IconSegmentOption } from "../../ui/Segmented";
 import { FilterButton } from "./FilterButton";
 import { ViewSwitch, type SwitchableView } from "./ViewSwitch";
 
@@ -15,7 +15,8 @@ const LAYOUTS: IconSegmentOption<WeekLayout>[] = [
 /**
  * The Calendar room's part of the wall's header (UX §3, ADR 0030). After today: the arrows
  * around "This Week" (or Today on the Day and People views, This Month) and, on the Week view,
- * its layout as two icons (Agenda · Hours), beside the arrows because it changes the same board
+ * its layout as two icons (Agenda · Hours) and then Rolling week, one icon that's on or off
+ * (this screen's own choice, ADR 0036), beside the arrows because they change the same board
  * they page. At the right: Filter (the people), then the view switch. No month and no span: the
  * day heads carry the dates, and the Month, Day and People views name their own. People and
  * Today don't filter; the Today view has no switch, and no arrows (`paging`): it is always today
@@ -31,6 +32,8 @@ export function BoardControls({
   onHome,
   layout,
   onLayout,
+  rolling,
+  onRolling,
   members,
   people,
   onPeople,
@@ -45,6 +48,8 @@ export function BoardControls({
   onHome: () => void;
   layout: WeekLayout;
   onLayout: (layout: WeekLayout) => void;
+  rolling: boolean;
+  onRolling: (rolling: boolean) => void;
   members: Member[];
   people: string[];
   onPeople: (people: string[]) => void;
@@ -81,7 +86,16 @@ export function BoardControls({
         </div>
       ) : null}
       {view === "week" ? (
-        <IconSegmented label="Week layout" value={layout} onChange={onLayout} options={LAYOUTS} />
+        // 8 px apart, as the icon cells are: the header has 64 px for the cell, not 72 (ADR 0036).
+        <div className="flex items-center gap-2">
+          <IconSegmented label="Week layout" value={layout} onChange={onLayout} options={LAYOUTS} />
+          <IconToggle
+            label="Rolling week"
+            icon={CalendarRange}
+            pressed={rolling}
+            onToggle={onRolling}
+          />
+        </div>
       ) : null}
       <div className="ml-auto flex items-center gap-4">
         {view !== "people" && view !== "today" ? (

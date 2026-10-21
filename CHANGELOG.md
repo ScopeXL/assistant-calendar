@@ -6,6 +6,11 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The Week view's header has a Rolling week switch, so a screen can keep today in the same
+  column for itself; Settings → Display → Rolling week still sets every screen.
+
 ### Fixed
 
 - On the People view, the arrows go to the day before or after, Today brings it back, and the

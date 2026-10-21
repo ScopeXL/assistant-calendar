@@ -516,6 +516,74 @@ test("a rolling week keeps today in the same column, and still pages by seven da
   await expect(days.nth(1)).toHaveAttribute("aria-current", "date");
 });
 
+test("a screen switches Rolling week for itself, and Settings → Display wins (ADR 0036)", async ({
+  page,
+  request,
+}) => {
+  // The Friday of the case above: the calendar week (Oct 4–10) and the rolling one differ.
+  const friday = await request.post("/api/_test/clock", {
+    headers: CSRF,
+    data: { set: "2026-10-09T14:00:00Z" },
+  });
+  expect(friday.status()).toBe(204);
+  await pairWall(page);
+  await page.goto("/display");
+  const board = page.getByRole("region", { name: "This Week" });
+  const days = board.locator("[data-day]");
+  const toggle = page.getByRole("banner").getByRole("button", { name: "Rolling week" });
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-04");
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+  // A tap rolls this screen's week at once; the household's setting stays as it was.
+  await toggle.click();
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-08");
+  await expect(days.nth(1)).toHaveAttribute("aria-current", "date");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  const parent = await request.post("/api/auth/login", {
+    headers: CSRF,
+    data: { password: PASSWORD },
+  });
+  expect(parent.ok()).toBe(true);
+  const settings = (await (await request.get("/api/settings")).json()) as {
+    display_rolling_week: boolean;
+  };
+  expect(settings.display_rolling_week).toBe(false);
+
+  // Remembered across a reload, like the layout (ADR 0030).
+  await page.reload();
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-08");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+
+  // A change in Settings → Display wins (ADR 0031): on, then off, and the board follows both.
+  const kept = () =>
+    page.evaluate(
+      () =>
+        (
+          JSON.parse(localStorage.getItem("sunroom.display.view") ?? "{}") as Record<
+            string,
+            unknown
+          >
+        ).rollingWeek,
+    );
+  const on = await request.patch("/api/settings", {
+    headers: CSRF,
+    data: { display_rolling_week: true },
+  });
+  expect(on.ok()).toBe(true);
+  // The screen's own choice gave way to the household's, which also rolls.
+  await expect.poll(kept).toBeNull();
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-08");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  const off = await request.patch("/api/settings", {
+    headers: CSRF,
+    data: { display_rolling_week: false },
+  });
+  expect(off.ok()).toBe(true);
+  await expect(days.first()).toHaveAttribute("data-day", "2026-10-04", { timeout: 5_000 });
+  await expect(days.nth(5)).toHaveAttribute("aria-current", "date");
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+});
+
 test("remind: the household's Default reminder brings the Vet up 10 minutes before (ADR 0034)", async ({
   page,
 }) => {

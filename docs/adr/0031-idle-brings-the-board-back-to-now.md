@@ -1,7 +1,9 @@
 # ADR 0031: Idle brings the board back to now, and what a screen chose for itself stays
 
 - **Status:** Accepted; Settings' own 2-minute return narrowed by ADR 0034 (Settings leaves with
-  Return to the calendar after, and stays with Never; its parent grant still locks after 2)
+  Return to the calendar after, and stays with Never; its parent grant still locks after 2);
+  Rolling week joined a screen's own choices in ADR 0036 (kept through the idle return, and the
+  household's change wins)
 - **Date:** 2026-10-14
 
 ## Context

@@ -1,6 +1,8 @@
 # ADR 0033: The owner's fifth notes (M6, batch 5)
 
-- **Status:** Accepted
+- **Status:** Accepted; Rolling week is also each screen's own choice since ADR 0036 (a cell in
+  the Week view's header, by 0031's `HouseholdChoices`; Settings → Display stays the household's
+  and wins when it changes)
 - **Date:** 2026-10-15
 
 ## Context

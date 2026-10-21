@@ -64,9 +64,9 @@ export function CalendarRoom() {
   );
 
   // The calendar week, or with Rolling week on a window that keeps today in one column (ADR
-  // 0033). One array per week, not per render: the Hours grid follows now while `days` holds
-  // still.
-  const rolling = settings?.display_rolling_week ?? false;
+  // 0033): this screen's own choice from the header, else the household's (ADR 0036). One array
+  // per week, not per render: the Hours grid follows now while `days` holds still.
+  const rolling = state.rollingWeek ?? settings?.display_rolling_week ?? false;
   const week = useMemo(() => {
     const anchor = addDays(today, state.weekOffset * 7);
     return rolling ? rollingWeek(anchor) : weekOf(anchor, weekStartsOn);
@@ -205,6 +205,10 @@ export function CalendarRoom() {
         layout={layout}
         onLayout={(weekLayout) => {
           updateDisplay({ weekLayout });
+        }}
+        rolling={rolling}
+        onRolling={(rollingWeek) => {
+          updateDisplay({ rollingWeek });
         }}
         members={members}
         people={people}

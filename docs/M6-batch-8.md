@@ -329,7 +329,7 @@ that did nothing."
 
 ### T2 Rolling week, on the Week view itself
 
-- [ ] Done (commit: )
+- [x] Done (commit: "calendar: Rolling week, this screen's own switch in the Week view's header")
 
 **Owner's note.** "Add the Rolling Week setting to the main view as something they can toggle on
 or off if they are currently on the Week view in the calendar."
@@ -409,6 +409,18 @@ annotations: a line pointing at ADR 0036. GOTCHAS if anything cost time.
 
 **CHANGELOG** (Added). "The Week view's header has a Rolling week switch, so a screen can keep
 today in the same column for itself; Settings → Display → Rolling week still sets every screen."
+
+**As built.** As planned, with the cell **8 px after Agenda · Hours** in one group with them
+(the plan's "a cell costs 64 px"; its "the same `gap-x-4` … separates them" read the other way
+would have cost 72 px and the one-person case below). Measured with a throwaway spec (not
+committed) at 1920×1080 Standard, both panels open, the clock set before the seed: on the widest
+date and time (Wed, Sep 30, 12:30 PM, 61°) the Calendar's part is one row with nobody filtered
+(44 px to spare) and with one person (4 px), and takes a second row with two, three or four
+(the header 141 px instead of 80); on an ordinary morning (Wed, Oct 7, 9:40 AM) it is one row
+with up to three people filtered (8 px to spare) and two rows with four. So the wrap comes with
+two people on the widest dates, not three as "Answers" C guessed; accepted as planned (the
+header's designed overflow, for at most two idle minutes), and written in UX §3 and ADR 0036.
+The e2e header test (`shell.spec`, an ordinary day, nobody filtered) still sees one row.
 
 ### T3 Lists: rows that say they open, and a swipe on phones
 
