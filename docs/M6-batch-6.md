@@ -864,7 +864,7 @@ underline">` (`MealsRoom.tsx:349-356`, `AddAccount.tsx:568-575`), and on a kiosk
 show plain text, because the kiosk's Chromium runs `--kiosk` and a new tab would be a full-screen
 dead end (`kiosk/sunroom-kiosk:231-249`). CSP: `connect-src 'self'` and `form-action 'self'`
 (`web/headers.py:19-24`), so no fetch to GitHub and no form posting there; a link navigates freely;
-`Referrer-Policy: same-origin`. The repository is `ScopeXL/assistant-calendar`
+`Referrer-Policy: same-origin`. The repository is `ScopeXL/sunroom`
 (`core/updates.py:24`); the version and install kind come from `GET /api/admin/update` /
 diagnostics (`UpdateOut`, `SUNROOM_INSTALL_KIND`). `designRules.test.ts:155-168, 237-258` checks
 Title Case on `title: "…"` in `pages.ts`, on `<Group title>` and `<Sheet title>` literals, on h1–h3
@@ -883,7 +883,7 @@ UX §2 bans emoji in the app's copy; the owner asked for one here.
 owner; an empty value hides its row"):
 
 ```ts
-export const REPO_URL = "https://github.com/ScopeXL/assistant-calendar";
+export const REPO_URL = "https://github.com/ScopeXL/sunroom";
 export const PATREON_URL = "";
 export const ADDRESSES: readonly { name: string; address: string }[] = [
   // { name: "Bitcoin", address: "" },

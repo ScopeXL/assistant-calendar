@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
 log = logs.get("updater")
 
-REPO = "ScopeXL/assistant-calendar"
+REPO = "ScopeXL/sunroom"
 TAGS_URL = f"https://api.github.com/repos/{REPO}/tags?per_page=100"
 DOWNLOAD = f"https://github.com/{REPO}/releases/download"
 APPLY_UNIT = "sunroom-kiosk-update"

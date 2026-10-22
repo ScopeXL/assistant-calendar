@@ -2,7 +2,7 @@
 # screen for the person signed in to it, with no administrator rights and no service
 # (docs/KIOSK.md, docs/M7.md T14).
 #
-#   powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.ps1 | iex"
+#   powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 | iex"
 #
 # Options need a copy of this file:
 #   powershell -ExecutionPolicy Bypass -File install.ps1 [-Url https://calendar.example.com]
@@ -46,7 +46,7 @@ $Options = [pscustomobject]@{
     $ProgressPreference = "SilentlyContinue" # Invoke-WebRequest's progress bar is very slow on 5.1
 
     $KioskVersion = "0.14.0" # Sunroom's VERSION (`just bump` sets it), as in install.sh
-    $SunroomRepo = "ScopeXL/assistant-calendar"
+    $SunroomRepo = "ScopeXL/sunroom"
     $UvVersion = "0.12.23" # the uv installer it fetches when there's no uv (astral.sh/uv/<version>)
     $AgentPort = 7800
 

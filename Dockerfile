@@ -41,7 +41,7 @@ LABEL org.opencontainers.image.title="Sunroom" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${REVISION}" \
       org.opencontainers.image.created="${CREATED}" \
-      org.opencontainers.image.source="https://github.com/ScopeXL/assistant-calendar" \
+      org.opencontainers.image.source="https://github.com/ScopeXL/sunroom" \
       org.opencontainers.image.url="https://hub.docker.com/r/scopexl/sunroom" \
       org.opencontainers.image.licenses="MIT"
 RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin sunroom \

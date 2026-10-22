@@ -6,7 +6,7 @@
  */
 
 /** The project's page on GitHub, where Send Feedback opens a new issue. */
-export const REPO_URL = "https://github.com/ScopeXL/assistant-calendar";
+export const REPO_URL = "https://github.com/ScopeXL/sunroom";
 
 /** The Patreon page; empty hides the row. (`as string`: it's the owner's to fill in.) */
 export const PATREON_URL = "" as string;

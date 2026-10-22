@@ -31,7 +31,7 @@ root; it asks for `sudo` itself.
 
 | You want | Command |
 |---|---|
-| Sunroom and the screen on this Pi | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh \| bash` |
+| Sunroom and the screen on this Pi | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
 | Only the screen; Sunroom runs elsewhere | the same, then `\| bash -s -- --display-only` |
 | Only Sunroom, no screen (Pi OS Lite) | the same with `--server-only` |
 
@@ -129,7 +129,7 @@ On a Linux computer that isn't a Raspberry Pi, the installer sets up the screen 
 changes nothing else:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --display-only
 ```
 
 It needs systemd and Chromium, Google Chrome or Microsoft Edge, and installs no packages. It
@@ -145,7 +145,7 @@ Screen**, which closes it until the next sign-in.
 On Windows 10 or 11, sign in as the person the screen runs for, and in PowerShell run:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 | iex"
 ```
 
 It needs no administrator and installs no service. It installs uv and Sunroom Screen (the same
@@ -170,7 +170,7 @@ On a Mac with Google Chrome (or Chromium, or Microsoft Edge) in Applications, si
 person the screen runs for, and in Terminal run:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
 ```
 
 It needs no administrator. It installs uv and Sunroom Screen (the same release and checks as

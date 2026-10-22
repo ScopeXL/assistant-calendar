@@ -2,7 +2,7 @@
 """Raspberry Pi Imager's repository file for one Sunroom OS release (docs/SUNROOM-OS.md).
 
 Imager → App Options → Content Repository → Use custom URL, with
-https://github.com/ScopeXL/assistant-calendar/releases/latest/download/imager.json, then lists
+https://github.com/ScopeXL/sunroom/releases/latest/download/imager.json, then lists
 Sunroom OS: this release's image, its sizes, and the sha256 Imager checks as it writes the card.
 Standard library only; the workflow runs it on the image it just built.
 
@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-REPO = "ScopeXL/assistant-calendar"
+REPO = "ScopeXL/sunroom"
 ICON = f"https://raw.githubusercontent.com/{REPO}/main/frontend/public/icons/icon-192.png"
 DESCRIPTION = (
     "The Sunroom kitchen screen: plug it in, join Wi-Fi, and find your family's Sunroom, "

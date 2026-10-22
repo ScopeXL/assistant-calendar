@@ -38,7 +38,7 @@ on the screen choose **Run It on This Screen**. No terminal at all;
 2. Start the Pi, open a terminal on it (or `ssh` in), and run:
 
    ```sh
-   curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
    ```
 
    It takes 10 to 20 minutes and ends by printing an address and a QR code.
@@ -74,7 +74,7 @@ name with `APP_ALLOWED_HOSTS`.
 Then set up the Pi with the same installer, as the screen only:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --display-only
 ```
 
 After the restart the screen looks for Sunroom on your network: tap **Use This Sunroom**, or type
@@ -95,11 +95,11 @@ tablet works as one (Android: Fully Kiosk Browser; iPad: Safari with Guided Acce
 
 | On | Command |
 |---|---|
-| A Pi: Sunroom and the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh \| bash` |
+| A Pi: Sunroom and the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
 | A Pi or a Linux computer: only the screen | the same, then `\| bash -s -- --display-only` (add `--url <address>` to skip the search) |
 | A Pi: only Sunroom, no screen | the same with `--server-only` |
-| A Mac: only the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh \| bash` |
-| Windows: only the screen | `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.ps1 \| iex"` |
+| A Mac: only the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
+| Windows: only the screen | `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 \| iex"` |
 
 `--dry-run` (`-DryRun` on Windows) says what it would do first. [docs/KIOSK.md](docs/KIOSK.md)
 has every option.

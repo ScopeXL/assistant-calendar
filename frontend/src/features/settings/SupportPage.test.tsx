@@ -85,7 +85,7 @@ describe("Settings → Support Sunroom (ADR 0034)", () => {
       target: { value: "At night the tiles glare." },
     });
     const url = new URL(open.getAttribute("href") ?? "");
-    expect(url.pathname).toBe("/ScopeXL/assistant-calendar/issues/new");
+    expect(url.pathname).toBe("/ScopeXL/sunroom/issues/new");
     expect(url.searchParams.get("title")).toBe("Idea: Dark tiles");
     expect(url.searchParams.get("body")).toBe(
       "At night the tiles glare.\n\n---\nSunroom 0.12.0, a Raspberry Pi",

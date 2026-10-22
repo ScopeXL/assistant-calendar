@@ -76,10 +76,10 @@ A release pushes without a terminal, so git must reach GitHub without asking for
 Preflight checks this with a dry-run push before anything is tagged.
 
 - This repo's remote uses SSH: `git remote get-url origin` shows
-  `git@github.com:ScopeXL/assistant-calendar.git`, and `ssh -T git@github.com` answers
+  `git@github.com:ScopeXL/sunroom.git`, and `ssh -T git@github.com` answers
   "Hi <your GitHub name>!".
 - To switch a clone that uses HTTPS, run
-  `git remote set-url origin git@github.com:ScopeXL/assistant-calendar.git`.
+  `git remote set-url origin git@github.com:ScopeXL/sunroom.git`.
 - An HTTPS remote works only with a saved login whose token has the `workflow` scope, because
   releases include `.github/workflows/`.
 - If a release's push fails anyway, the release commit and tag stay on this Mac. Fix access, then

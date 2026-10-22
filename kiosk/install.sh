@@ -9,7 +9,7 @@
 #   c. only Sunroom, no screen (Raspberry Pi OS Lite)            --server-only
 # Another Linux computer or a Mac is always b. Without --url, the screen finds its Sunroom itself.
 #
-#   curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
 #   bash kiosk/install.sh --display-only --url https://calendar.example.com
 #
 # The kitchen screen is Sunroom Screen, a program installed with uv from this version's GitHub
@@ -37,7 +37,7 @@ set -euo pipefail
 set -o errtrace
 
 KIOSK_VERSION="0.14.0" # Sunroom's VERSION (`just bump` sets it), written into every file it creates
-SUNROOM_REPO="ScopeXL/assistant-calendar"
+SUNROOM_REPO="ScopeXL/sunroom"
 SUNROOM_IMAGE="scopexl/sunroom"
 UV_VERSION="0.12.23" # the uv installer it fetches when uv is missing (astral.sh/uv/<version>)
 WINDOWS_COMMAND="powershell -ExecutionPolicy Bypass -c \"irm https://raw.githubusercontent.com/$SUNROOM_REPO/main/kiosk/install.ps1 | iex\""

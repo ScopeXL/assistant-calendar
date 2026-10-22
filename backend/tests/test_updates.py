@@ -128,7 +128,7 @@ async def test_once_on_it_asks_once_a_day_and_says_a_newer_one_is_out(
     sent = github.requests[0]
     # Pinned to the address the guard checked, with GitHub's name in the Host header.
     assert sent.headers["host"] == "api.github.com"
-    assert sent.url.path == "/repos/ScopeXL/assistant-calendar/tags"
+    assert sent.url.path == "/repos/ScopeXL/sunroom/tags"
     assert sent.url.params["per_page"] == "100"
     assert sent.headers["user-agent"] == f"Sunroom/{build_info().version}"
     body = await status(phone)

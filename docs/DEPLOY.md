@@ -23,7 +23,7 @@ On a plain home network you can skip the proxy entirely: leave every variable em
 
    ```sh
    sudo mkdir -p /opt/sunroom && cd /opt/sunroom
-   sudo curl -fsSLo docker-compose.yml https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/docker-compose.example.yml
+   sudo curl -fsSLo docker-compose.yml https://raw.githubusercontent.com/ScopeXL/sunroom/main/docker-compose.example.yml
    ```
 
    Any folder works, for example one named after the repo, next to your other apps.
@@ -116,7 +116,7 @@ On the Raspberry Pi (Raspberry Pi OS 64-bit with desktop), or another Linux comp
 Chromium, Google Chrome or Microsoft Edge:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/assistant-calendar/main/kiosk/install.sh | bash -s -- --display-only
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --display-only
 ```
 
 After the restart the screen looks for Sunroom on its network and lists what it finds; a Sunroom

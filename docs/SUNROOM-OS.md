@@ -17,13 +17,13 @@ No terminal, no installer, no keyboard. The design is in [M7](M7.md) and
 ## Writing the card
 
 1. Download `sunroom-os-X.Y.Z-pi-arm64.img.xz` from the newest
-   [release on GitHub](https://github.com/ScopeXL/assistant-calendar/releases/latest) (and its
+   [release on GitHub](https://github.com/ScopeXL/sunroom/releases/latest) (and its
    `.sha256`, to check it if you like).
 2. In Imager: **Choose Device** (your Pi), **Choose OS → Use custom** → the file you downloaded,
    **Choose Storage** → the card, **Next**.
 
 Or let Imager list it: **App Options → Content Repository → Use custom URL**, with
-`https://github.com/ScopeXL/assistant-calendar/releases/latest/download/imager.json`. Sunroom OS
+`https://github.com/ScopeXL/sunroom/releases/latest/download/imager.json`. Sunroom OS
 then shows in **Choose OS**, always the newest, and Imager checks the download as it writes.
 
 Imager may offer its own settings (Wi-Fi, the name on the network, the time zone, a user and

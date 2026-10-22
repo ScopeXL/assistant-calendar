@@ -21,7 +21,7 @@ from sunroom.core.config import InstallKind
 from sunroom.core.http import GuardedHttp, OutboundError
 
 # A hundred is every tag for years; the highest version among them is the newest release.
-TAGS_URL = "https://api.github.com/repos/ScopeXL/assistant-calendar/tags?per_page=100"
+TAGS_URL = "https://api.github.com/repos/ScopeXL/sunroom/tags?per_page=100"
 CHECK_EVERY = timedelta(hours=24)
 TICK_S = 3600
 _VERSION = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")

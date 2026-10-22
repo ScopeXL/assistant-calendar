@@ -184,7 +184,7 @@ def test_imagers_repository_file_describes_the_image(tmp_path: Path) -> None:
     image.write_bytes(lzma.compress(raw))
     (entry,) = imager.describe("0.14.0", image, dt.date(2026, 10, 20))["os_list"]
     assert entry["url"] == (
-        "https://github.com/ScopeXL/assistant-calendar/releases/download/v0.14.0/"
+        "https://github.com/ScopeXL/sunroom/releases/download/v0.14.0/"
         "sunroom-os-0.14.0-pi-arm64.img.xz"
     )
     assert entry["extract_size"] == len(raw)

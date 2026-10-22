@@ -52,7 +52,7 @@ RELEASE_FILES = {
     "kiosk/agent/pyproject.toml",
     "kiosk/agent/uv.lock",
 }
-GITHUB = "https://github.com/ScopeXL/assistant-calendar"
+GITHUB = "https://github.com/ScopeXL/sunroom"
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 

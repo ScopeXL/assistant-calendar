@@ -85,7 +85,7 @@ rule already covers) and over one window for both kinds (which would hide a trip
 within range). It's a plugin setting (`plugin_state`), so no migration: T7.
 
 **Why Check now says GitHub's answer couldn't be read.** `core/updates.py:21` asks
-`https://api.github.com/repos/ScopeXL/assistant-calendar/releases/latest`. That repository is
+`https://api.github.com/repos/ScopeXL/sunroom/releases/latest`. That repository is
 public and has every tag (v0.1.0 … v0.9.1), but **no GitHub Releases**: the deploy skill tags
 and pushes the image, and never publishes a Release (`docs/RELEASING.md`,
 `scripts/release.py:129-153`). GitHub answers 404; a 404 is "not ok" (`core/http.py:44-46`), so
@@ -730,7 +730,7 @@ walls, a phone and a laptop.
 `meta/updates.py:73-91` (the routes; Check now is parent-only, 409 when off, 429 within a
 minute); `settings/AboutPage.tsx:93-172`; `backend/tests/test_updates.py:138-156`; PLAN §13.6.
 
-**Build.** `TAGS_URL = "https://api.github.com/repos/ScopeXL/assistant-calendar/tags?per_page=100"`;
+**Build.** `TAGS_URL = "https://api.github.com/repos/ScopeXL/sunroom/tags?per_page=100"`;
 `_latest_of(content)`: the highest `parse`-able `name` in the list (`0.10.0` sorts above `0.9.1`
 as tuples); `check()`: not ok → "GitHub couldn't find Sunroom's versions. It will try again
 tomorrow."; ok but unreadable or empty → the existing line; the docstring and PLAN §13.6 say
