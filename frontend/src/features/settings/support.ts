@@ -32,6 +32,8 @@ export function installWords(kind: string | null | undefined): string | null {
       return "Portainer";
     case "ha":
       return "Home Assistant";
+    case "computer":
+      return "a computer";
     default:
       return null;
   }

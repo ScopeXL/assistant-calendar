@@ -20,6 +20,7 @@ import json
 import os
 import shutil
 import sqlite3
+import sys
 import zipfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -305,11 +306,13 @@ def stage_dir(settings: Settings) -> Path:
 def _write_json(path: Path, data: dict[str, Any]) -> None:
     """Written whole or not at all, and on the disk before this returns."""
     partial = path.with_name(path.name + ".partial")
-    with partial.open("w") as handle:
+    with partial.open("w", encoding="utf-8") as handle:
         json.dump(data, handle)
         handle.flush()
         os.fsync(handle.fileno())
     os.replace(partial, path)
+    if sys.platform == "win32":  # a folder can't be opened to sync there; NTFS logs the rename
+        return
     folder = os.open(path.parent, os.O_RDONLY)
     try:
         os.fsync(folder)
@@ -319,7 +322,7 @@ def _write_json(path: Path, data: dict[str, Any]) -> None:
 
 def _read_json(path: Path) -> dict[str, Any] | None:
     try:
-        loaded: object = json.loads(path.read_text())
+        loaded: object = json.loads(path.read_text(encoding="utf-8"))
     except OSError, ValueError:
         return None
     return loaded if isinstance(loaded, dict) else None  # pyright: ignore[reportUnknownVariableType]

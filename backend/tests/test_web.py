@@ -16,6 +16,7 @@ from sunroom.core.clock import FakeClock
 from sunroom.web.forwarded import ForwardedHeaders
 from sunroom.web.headers import DEFAULT_CSP
 from sunroom.web.hosts import HostRule, host_name
+from sunroom.web.spa import packaged_static
 from tests.support import BASE_URL, make_settings, run_setup
 
 INDEX = '<!doctype html><meta name="csp-nonce" content="__SUNROOM_CSP_NONCE__"><div id=root></div>'
@@ -95,6 +96,17 @@ async def test_a_wall_run_by_sunroom_screen_may_reach_its_agent(
         assert "connect-src 'self';" in response.headers["content-security-policy"], plain
     api = await spa_client.get("/api/version?screen=7800")
     assert api.headers["content-security-policy"] == DEFAULT_CSP
+
+
+def test_a_program_brings_its_own_app_and_a_checkout_has_none(tmp_path: Path) -> None:
+    # The wheel's copy (ADR 0038): sunroom/static beside the package's modules.
+    package = tmp_path / "sunroom"
+    (package / "static").mkdir(parents=True)
+    assert packaged_static(package) is None
+    (package / "static" / "index.html").write_text(INDEX)
+    assert packaged_static(package) == package / "static"
+    # This checkout's package has none: `just server-build` puts it only in the wheel it builds.
+    assert packaged_static() is None
 
 
 async def test_unknown_api_paths_are_json_404s(spa_client: httpx.AsyncClient) -> None:

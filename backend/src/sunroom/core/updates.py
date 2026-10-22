@@ -6,7 +6,8 @@ GitHub the server's address, so nothing goes out until someone asks for it. Tags
 every release is a tag (the deploy skill pushes one), and none is published as a GitHub Release,
 so the releases API answered 404 (ADR 0032). The answer lives in memory (one process
 serves the API); after a restart the next hourly tick asks again. How to update is worded by
-``SUNROOM_INSTALL_KIND``: the Pi's script, Compose, Portainer.
+``SUNROOM_INSTALL_KIND``: the Pi's script, Compose, Portainer, or the screen that runs Sunroom as
+a program (ADR 0038).
 """
 
 from __future__ import annotations
@@ -33,6 +34,9 @@ HOW: dict[InstallKind, str] = {
     ),
     InstallKind.PORTAINER: "In Portainer, pull Sunroom's newest image and redeploy its stack",
     InstallKind.HA: "Update it in Home Assistant, under Settings, then Add-ons",
+    InstallKind.COMPUTER: (
+        "On the screen that runs it, open Settings, then This Screen, then Update Sunroom Too"
+    ),
 }
 
 

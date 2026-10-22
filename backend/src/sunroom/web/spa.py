@@ -12,6 +12,11 @@
 * a wall screen run by Sunroom Screen opens ``/display?screen=<port>``: that one document's
   ``connect-src`` also allows ``http://127.0.0.1:<port>``, so Settings → This Screen can call the
   agent (ADR 0035). Any other path or port (1024 to 65535 only) gets the plain policy.
+
+The app is ``SUNROOM_STATIC_DIR`` (the image's /app/static, the e2e server's frontend/dist), or,
+when that isn't set, the copy inside the installed package that Sunroom run as a program brings
+with it (``sunroom/static``, ADR 0038). A checkout has no such copy: `just server-build` makes it
+only in the wheel it builds.
 """
 
 from __future__ import annotations
@@ -71,6 +76,12 @@ def render_index(template: str, agent_port: int | None = None) -> HTMLResponse:
     )
 
 
+def packaged_static(package: Path | None = None) -> Path | None:
+    """The built app inside the installed package, when this package carries one."""
+    packaged = (package or Path(__file__).resolve().parent.parent) / "static"
+    return packaged if (packaged / "index.html").is_file() else None
+
+
 def mount_spa(app: FastAPI, static_dir: Path | None) -> None:
     if static_dir is None or not (static_dir / "index.html").is_file():
 
@@ -87,7 +98,7 @@ def mount_spa(app: FastAPI, static_dir: Path | None) -> None:
         return
 
     root = static_dir.resolve()
-    template = (root / "index.html").read_text()
+    template = (root / "index.html").read_text(encoding="utf-8")
     if NONCE_PLACEHOLDER not in template:
         log.warning("spa.no_nonce_placeholder", effect="animations that add styles will be blocked")
     if (root / "assets").is_dir():

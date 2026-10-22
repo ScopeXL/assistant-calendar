@@ -36,6 +36,7 @@ EXIT_DATA_DIR = 73
 EXIT_DISK = 74
 EXIT_UNKNOWN_REVISION = 65
 EXIT_MIGRATION = 70
+EXIT_RESTART = 75  # Windows: start me again (reexec), for whatever runs Sunroom there
 
 NETWORK_FILESYSTEMS = ("nfs", "nfs4", "cifs", "smb3", "smbfs", "9p", "fuse")
 MIN_FREE_EXTRA = 64 * 1024 * 1024
@@ -86,8 +87,9 @@ def check_data_dir(settings: Settings, mounts: list[MountEntry] | None = None) -
                 f"{data} is on a {entry.fstype} filesystem; SQLite's WAL mode needs a local disk. "
                 "Use a local named volume, or set DATA_DIR_UNSAFE_FS_OK=1 to accept the risk.",
             )
-    else:
-        data.mkdir(parents=True, exist_ok=True)
+    elif not data.exists():
+        # Sunroom run as a program (ADR 0038): the family's data is for this computer's user only.
+        data.mkdir(mode=0o700, parents=True)
     probe = data / ".write-probe"
     try:
         with probe.open("wb") as handle:
@@ -96,6 +98,8 @@ def check_data_dir(settings: Settings, mounts: list[MountEntry] | None = None) -
             os.fsync(handle.fileno())
         probe.unlink()
     except OSError:
+        if sys.platform == "win32":  # no uids: the folder's own permissions decide
+            raise BootError(EXIT_DATA_DIR, f"{data} isn't writable by this user.") from None
         stat = data.stat()
         raise BootError(
             EXIT_DATA_DIR,
@@ -249,7 +253,14 @@ def reexec() -> NoReturn:
     """Run this same command line again in this process (a restore from the app, ADR 0034). The
     PID and the container stay, so Docker sees no exit; the kernel closes the listening socket,
     the database files and the instance lock (all close-on-exec), and the new program runs this
-    module's sequence from the start, the armed restore first."""
+    module's sequence from the start, the armed restore first.
+
+    Windows has no such exec (its C library starts a new process and ends this one, which still
+    holds the port and the lock while the new one starts), so there Sunroom exits with
+    ``EXIT_RESTART`` and Sunroom Screen, which runs it (ADR 0038), starts it again at once."""
+    if sys.platform == "win32":
+        log.info("boot.restart_by_exit", code=EXIT_RESTART)
+        os._exit(EXIT_RESTART)
     argv = [sys.executable, *sys.orig_argv[1:]]
     log.info("boot.reexec", argv=argv)
     sys.stdout.flush()

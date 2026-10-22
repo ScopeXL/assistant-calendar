@@ -53,6 +53,7 @@ describe("Send Feedback's link (ADR 0034)", () => {
     expect(installWords("docker")).toBe("Docker");
     expect(installWords("pi")).toBe("a Raspberry Pi");
     expect(installWords("portainer")).toBe("Portainer");
+    expect(installWords("computer")).toBe("a computer");
     expect(installWords("ha")).toBe("Home Assistant");
     expect(installWords(undefined)).toBeNull();
   });

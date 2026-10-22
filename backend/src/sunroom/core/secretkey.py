@@ -30,7 +30,7 @@ def resolve(settings: Settings) -> str:
 
 def load_or_create(path: Path) -> str:
     try:
-        existing = path.read_text().strip()
+        existing = path.read_text(encoding="utf-8").strip()
     except FileNotFoundError:
         existing = ""
     except OSError as exc:
@@ -42,7 +42,7 @@ def load_or_create(path: Path) -> str:
     key = secrets.token_urlsafe(KEY_BYTES)
     # O_EXCL: if two processes raced (they can't, the instance lock is held), one would fail.
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    with os.fdopen(fd, "w") as handle:
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
         handle.write(key + "\n")
         handle.flush()
         os.fsync(handle.fileno())

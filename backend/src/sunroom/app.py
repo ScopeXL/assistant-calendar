@@ -63,7 +63,7 @@ from sunroom.web.forwarded import ForwardedHeaders
 from sunroom.web.headers import SecurityHeaders
 from sunroom.web.hosts import HostGuard, HostRule
 from sunroom.web.photos import router as photo_files_router
-from sunroom.web.spa import mount_spa
+from sunroom.web.spa import mount_spa, packaged_static
 
 log = get_logger(__name__)
 BACKUP_CHECK_INTERVAL_S = 600
@@ -317,7 +317,7 @@ def create_app(
         app.include_router(testing_router)
     mount_plugin_routes(app, registry)
     app.include_router(photo_files_router)
-    mount_spa(app, settings.sunroom_static_dir)
+    mount_spa(app, settings.sunroom_static_dir or packaged_static())
 
     def note_host(host: str) -> None:
         state: AppState | None = getattr(app.state, "sunroom", None)

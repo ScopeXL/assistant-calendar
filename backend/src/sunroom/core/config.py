@@ -30,6 +30,7 @@ class InstallKind(StrEnum):
     PI = "pi"
     PORTAINER = "portainer"
     HA = "ha"
+    COMPUTER = "computer"  # run as a program for a computer's user by Sunroom Screen (ADR 0038)
 
 
 class ConfigError(Exception):

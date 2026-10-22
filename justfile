@@ -84,6 +84,12 @@ kiosk-build:
     cd frontend && pnpm exec vite build --config vite.screen.config.ts
     cd kiosk/agent && rm -rf dist && uv build --wheel --out-dir dist
 
+# Sunroom as a program (ADR 0038): the server wheel, with the built app inside and VERSION stamped
+# in, and its constraints from backend/uv.lock, in backend/dist
+server-build:
+    cd frontend && pnpm exec vite build
+    {{py}} scripts/server_wheel.py
+
 # Try this checkout's installers on another computer or a virtual machine on this network before a
 # release: Sunroom Screen's wheel, then the installers served with it and each system's one line
 kiosk-serve PORT="8765": kiosk-build

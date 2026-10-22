@@ -96,7 +96,8 @@ def configure_logging(
     renderer: Any = (
         structlog.processors.JSONRenderer()
         if use_json
-        else structlog.dev.ConsoleRenderer(colors=sys.stdout.isatty())
+        # Colors on Windows need colorama, which Sunroom doesn't ship (ADR 0038).
+        else structlog.dev.ConsoleRenderer(colors=sys.stdout.isatty() and sys.platform != "win32")
     )
     formatter = structlog.stdlib.ProcessorFormatter(
         foreign_pre_chain=shared,

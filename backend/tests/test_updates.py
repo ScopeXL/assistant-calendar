@@ -248,3 +248,11 @@ async def test_the_test_server_makes_up_its_answer_and_sends_nothing(
     assert (body["latest"], body["available"]) == (made_up(build_info().version), True)
     assert made_up("0.6.0") == "0.7.0"
     assert made_up("not a version") is None
+
+
+def test_every_install_kind_says_how_to_update() -> None:
+    # Sunroom run as a program (ADR 0038) is updated from the screen that runs it.
+    from sunroom.core.updates import HOW
+
+    assert set(HOW) == set(InstallKind)
+    assert "Update Sunroom Too" in HOW[InstallKind.COMPUTER]
