@@ -34,7 +34,8 @@
   backend gains a `computer` install kind and portable pieces for Windows (the instance lock, the
   restore's fsync, the restart after a restore, its messages and text files).
 - A computer running Sunroom must stay on and reachable: the screen says so before it's chosen,
-  and the program keeps the computer from sleeping while it runs. On Windows and macOS the first
+  and Sunroom Screen keeps the computer from sleeping while it runs (on Linux where the desktop
+  allows it; else its log says to turn off automatic suspend). On Windows and macOS the first
   start may ask to let Sunroom accept connections; Setting Up Sunroom says to choose Allow.
 - The backend's tests run in CI on Ubuntu only; Windows and macOS are checked by the owner's
   machines until CI runs them (a follow-up).

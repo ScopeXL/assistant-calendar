@@ -298,7 +298,9 @@ If it stops, the page says why, with **Try Again**.
   LaunchAgent `~/Library/LaunchAgents/app.sunroom.server.plist`, from sign-in (its log:
   `~/Library/Logs/sunroom.log`); on Windows Sunroom Screen starts it at sign-in and again whenever
   it stops answering (its log: `%LOCALAPPDATA%\Sunroom\sunroom.log`). Each keeps the computer
-  from going to sleep while Sunroom runs; the screen still sleeps on its schedule.
+  from going to sleep while Sunroom runs, and the screen still sleeps on its schedule. A Linux
+  desktop may refuse (Sunroom Screen's log says so): then turn off automatic suspend in its power
+  settings, so phones reach Sunroom at night.
 - **Phones:** Sunroom answers on port 8080 (or the next free one), at `http://<computer>.local:8080`
   on a Mac and on Linux with avahi, else at the computer's numbered address; the setup page's QR
   code has it. Sunroom Screen announces it on the network, so other screens find it too. On a Mac

@@ -340,6 +340,31 @@ async def test_windows_starts_it_with_no_window_and_stops_its_whole_tree(tmp_pat
     assert not where.pid.exists()
 
 
+async def test_a_mac_tries_again_while_launchd_lets_the_old_one_go(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(local_module.asyncio, "sleep", _no_wait)
+    tries: list[int] = []
+
+    class Busy(Shell):
+        async def __call__(
+            self, argv: Any, *, limit: float = 20.0, stdin: str | None = None
+        ) -> Any:
+            await super().__call__(argv, limit=limit, stdin=stdin)
+            if argv[1] == "bootstrap":
+                tries.append(1)
+                return CommandResult(5 if len(tries) < 3 else 0, "Input/output error")
+            return ok()
+
+    service = LaunchdService(Busy(), places(tmp_path, "darwin"), uid=501)
+    await service.install(["sunroom", "serve"], {})
+    assert len(tries) == 3
+
+
+async def _no_wait(seconds: float) -> None:
+    return None
+
+
 # ---------------------------------------------------------------------- a run, an update, removal
 
 
@@ -401,6 +426,37 @@ async def test_an_update_that_doesnt_answer_puts_the_last_one_back(
     answers[0] = True
     assert await here.update(RELEASE)
     assert here.remembered()["release"] == RELEASE
+
+
+async def test_windows_starts_it_again_after_an_update_from_what_it_remembered(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Sunroom Screen started again since the run: its service knows no command until primed.
+    started = Started()
+    shell = Shell()
+    where = places(tmp_path, "win32")
+    here = LocalSunroom(
+        runner=shell,
+        http=github({}),
+        places=where,
+        system="win32",
+        machine="AMD64",
+        release=RELEASE,
+        uv="uv.exe",
+        service=WindowsService(shell, where, popen=started),
+    )
+    where.wheels.mkdir(parents=True)
+    (where.wheels / server_wheel(RELEASE)).write_bytes(WHEEL)
+    here._remember(port=8081, advertised="http://192.168.1.30:8081", release="0.14.0")  # pyright: ignore[reportPrivateUsage]
+
+    async def answers_as(release: str, within_s: float = 0) -> bool:
+        return True
+
+    monkeypatch.setattr(here, "answers_as", answers_as)
+    assert await here.update(RELEASE)
+    ((argv, options),) = started.calls
+    assert argv == [str(where.bin / "sunroom.exe"), "serve", "--host", EVERYWHERE]
+    assert options["env"]["PORT"] == "8081"
 
 
 async def test_removing_it_keeps_the_familys_data_unless_asked(tmp_path: Path) -> None:

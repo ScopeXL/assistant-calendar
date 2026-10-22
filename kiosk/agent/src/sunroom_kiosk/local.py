@@ -77,6 +77,7 @@ CREATE_NEW_PROCESS_GROUP = 0x00000200
 CREATE_BREAKAWAY_FROM_JOB = 0x01000000
 ES_CONTINUOUS = 0x80000000
 ES_SYSTEM_REQUIRED = 0x00000001
+BOOTSTRAP_TRIES = 3
 
 DIDNT_DOWNLOAD = (
     "Sunroom didn't download. Check this computer's internet connection, then try again."
@@ -283,12 +284,16 @@ class LaunchdService:
         _trim(self.places.log)
         self.places.launch_agent.write_bytes(launch_agent_plist(command, environment, self.places))
         await self.run(["launchctl", "bootout", f"{self.domain}/{LABEL}"])  # not loaded: fine
-        result = await self.run(
-            ["launchctl", "bootstrap", self.domain, str(self.places.launch_agent)]
-        )
-        if not result.ok:
+        for attempt in range(BOOTSTRAP_TRIES):  # launchd may still be letting the old one go
+            result = await self.run(
+                ["launchctl", "bootstrap", self.domain, str(self.places.launch_agent)]
+            )
+            if result.ok:
+                return
             log.info("launchctl bootstrap didn't work: %s", result.first_line())
-            raise PlatformError("Sunroom didn't start. Restart this Mac, then try again.")
+            if attempt + 1 < BOOTSTRAP_TRIES:
+                await asyncio.sleep(1)
+        raise PlatformError("Sunroom didn't start. Restart this Mac, then try again.")
 
     async def restart(self) -> None:
         await self.run(["launchctl", "kickstart", "-k", f"{self.domain}/{LABEL}"])
@@ -532,6 +537,7 @@ class LocalSunroom:
     ) -> None:
         digest = hashlib.sha256()
         chunks: list[bytes] = []
+        received = 0
         said = -1
         async with client.stream("GET", f"{DOWNLOAD}/v{release}/{name}") as response:
             response.raise_for_status()
@@ -539,8 +545,9 @@ class LocalSunroom:
             async for chunk in response.aiter_bytes():
                 digest.update(chunk)
                 chunks.append(chunk)
+                received += len(chunk)
                 if progress is not None and total:
-                    percent = 5 + 50 * sum(len(part) for part in chunks) // total
+                    percent = 5 + 50 * received // total
                     if percent != said:
                         said = percent
                         await progress(percent, "Downloading Sunroom…")
@@ -639,7 +646,19 @@ class LocalSunroom:
                 await self._swap(kept, again if again.is_file() else None)
         return False
 
+    def _prime(self) -> None:
+        """Windows: what the service starts, from what was remembered (Sunroom Screen may have
+        started again since the run that set it)."""
+        settings = self.remembered()
+        port, address = settings.get("port"), settings.get("advertised")
+        if isinstance(self.service, WindowsService) and isinstance(port, int):
+            self.service.command = self.command()
+            self.service.environment = self.environment(
+                port, address if isinstance(address, str) else f"http://localhost:{port}"
+            )
+
     async def _swap(self, wheel: Path, constraints: Path | None) -> bool:
+        self._prime()
         if self.system == "win32":
             await self.service.stop()
         try:
@@ -654,11 +673,8 @@ class LocalSunroom:
     async def ensure_running(self) -> None:
         """Windows: start it again when it stopped (nothing else keeps it running there)."""
         if self.system == "win32" and self.installed() and isinstance(self.service, WindowsService):
-            settings = self.remembered()
-            port, address = settings.get("port"), settings.get("advertised")
-            if isinstance(port, int) and isinstance(address, str):
-                self.service.command = self.command()
-                self.service.environment = self.environment(port, address)
+            self._prime()
+            if self.service.command:
                 log.info("Starting Sunroom on this computer again.")
                 await self.service.restart()
 
@@ -689,6 +705,14 @@ class LocalSunroom:
                 stdin=asyncio.subprocess.DEVNULL,
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL,
+            )
+        await asyncio.sleep(1)
+        if self._awake is not None and self._awake.returncode is not None:
+            # The desktop said no (its policy for a service that isn't a signed-in session).
+            self._awake = None
+            log.info(
+                "This computer may go to sleep while Sunroom runs here: turn off automatic "
+                "suspend in its power settings, so phones can reach Sunroom at night."
             )
 
     async def announce(self) -> None:
