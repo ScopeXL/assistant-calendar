@@ -4,7 +4,9 @@
 #
 #   powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 | iex"
 #
-# Options need a copy of this file:
+# With options (iex takes none; a script block made from the same download does):
+#   powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1))) -Url https://calendar.example.com"
+# or with a copy of this file:
 #   powershell -ExecutionPolicy Bypass -File install.ps1 [-Url https://calendar.example.com]
 #       [-DryRun] [-AgentWheel FILE] [-Uninstall] [-Yes]
 #
@@ -59,6 +61,7 @@ $Options = [pscustomobject]@{
     $Shortcut = Join-Path ([Environment]::GetFolderPath("Startup")) "Sunroom Screen.lnk"
     $ReleaseBase = "https://github.com/$SunroomRepo/releases/download/v$KioskVersion"
     $WheelName = "sunroom_kiosk-$KioskVersion-py3-none-any.whl"
+    $InstallerUrl = "https://raw.githubusercontent.com/$SunroomRepo/main/kiosk/install.ps1"
 
     # ---------------------------------------------------------------------------- messages
 
@@ -133,6 +136,15 @@ $Options = [pscustomobject]@{
         $local = Join-Path $BinDir "uv.exe"
         if (Test-Path -LiteralPath $local) { return $local }
         return $null
+    }
+
+    # This installer again with options: its own file when it ran from one, else the same download
+    # as a script block (piped into iex, there's no file to point at).
+    function Get-InstallerCommand([string]$Arguments) {
+        if ($PSCommandPath) {
+            return "powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" $Arguments"
+        }
+        return "powershell -ExecutionPolicy Bypass -c `"& ([scriptblock]::Create((irm $InstallerUrl))) $Arguments`""
     }
 
     function Test-ScreenRunning {
@@ -351,7 +363,7 @@ $Options = [pscustomobject]@{
         Write-Host "The kitchen screen is set up. When it starts, it shows a six-character code: on a phone"
         Write-Host "signed in to Sunroom, open More, then Pair a display, and type that code."
         Open-SunroomScreen
-        Write-Host "Remove it later with:  powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall"
+        Write-Host "Remove it later with:  $(Get-InstallerCommand '-Uninstall')"
         Write-Host "This install's log:  $LogFile"
     }
 

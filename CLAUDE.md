@@ -102,7 +102,7 @@ Keep this file under 15 KB; detail belongs in `docs/`.
 | `just scan` | gitleaks plus the private-terms scan (tree and history) |
 | `just smoke-image [REF]` | Build the image from git, boot it with no settings, set it up through the API, probe it |
 | `just smoke-caldav` | The CalDAV client against Radicale in Docker, with the ICS fixtures (opt-in; network) |
-| `just kiosk-test` / `kiosk-dev` / `kiosk-build` | Sunroom Screen: its tests; its pages on 5174 with a pretend agent; its wheel |
+| `just kiosk-test` / `kiosk-dev` / `kiosk-build` / `kiosk-serve` | Sunroom Screen: its tests; its pages on 5174 with a pretend agent; its wheel; the installers for a VM |
 | `just preflight` | The full release gate. The deploy skill runs it |
 
 ## Architecture map

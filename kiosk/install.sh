@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# Sunroom installer: Sunroom and its kitchen screen on a Raspberry Pi (Raspberry Pi OS 64-bit,
-# Bookworm or Trixie), or the kitchen screen alone on another Linux computer or a Mac. See
-# docs/PLAN.md §13 and docs/KIOSK.md. (Windows has its own, install.ps1.)
+# Sunroom installer: a Sunroom kitchen screen on a Raspberry Pi (Raspberry Pi OS 64-bit,
+# Bookworm or Trixie), another Linux computer with a desktop or a Mac, and on a Pi, Sunroom
+# itself too. See docs/PLAN.md §13, docs/KIOSK.md and ADR 0037. (Windows has its own,
+# install.ps1.)
 #
+# With no option it sets up the kitchen screen, which finds Sunroom on the network by itself.
 # On a Pi, three ways to use it:
-#   a. Sunroom and the kitchen screen, both on this Pi          (no option)
-#   b. only the kitchen screen; Sunroom runs on another computer --display-only [--url URL]
+#   a. only the kitchen screen; Sunroom runs on another computer (no option) [--url URL]
+#   b. Sunroom and the kitchen screen, both on this Pi          --with-sunroom
 #   c. only Sunroom, no screen (Raspberry Pi OS Lite)            --server-only
-# Another Linux computer or a Mac is always b. Without --url, the screen finds its Sunroom itself.
+# A Pi set up as b or c stays that way when the installer runs again with no option. Another
+# Linux computer or a Mac is always a. Whatever the screen needs is installed, the browser too:
+# on Linux the system's Chromium, or Google Chrome where that's a snap (Ubuntu); on a Mac,
+# Google Chrome.
 #
 #   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
-#   bash kiosk/install.sh --display-only --url https://calendar.example.com
+#   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --with-sunroom
 #
 # The kitchen screen is Sunroom Screen, a program installed with uv from this version's GitHub
 # Release (its wheel checked against the Release's SHA256SUMS first), which runs the browser,
@@ -40,6 +45,11 @@ KIOSK_VERSION="0.14.0" # Sunroom's VERSION (`just bump` sets it), written into e
 SUNROOM_REPO="ScopeXL/sunroom"
 SUNROOM_IMAGE="scopexl/sunroom"
 UV_VERSION="0.12.23" # the uv installer it fetches when uv is missing (astral.sh/uv/<version>)
+# Google Chrome, when a computer has no browser the screen can use (Google's own downloads).
+CHROME_LINUX_BASE="https://dl.google.com/linux/direct"
+CHROME_MAC_DMG="https://dl.google.com/chrome/mac/universal/stable/GGRO/googlechrome.dmg"
+# Google's Developer ID: the Mac's copy of Chrome must be signed by it before it's installed.
+CHROME_MAC_REQUIREMENT='anchor apple generic and certificate leaf[subject.OU] = "EQHXZ8M8AV"'
 WINDOWS_COMMAND="powershell -ExecutionPolicy Bypass -c \"irm https://raw.githubusercontent.com/$SUNROOM_REPO/main/kiosk/install.ps1 | iex\""
 
 SCRIPT_PATH="${BASH_SOURCE[0]:-}" # empty when the script is piped into bash
@@ -74,9 +84,11 @@ BLOCK_END="# <<< sunroom-kiosk <<<"
 HEALTH_TIMEOUT=300
 
 # Options
-MODE="all" # all | display | server
+MODE="display" # display | all | server
 WANT_DISPLAY_ONLY=0
+WANT_WITH_SUNROOM=0
 WANT_SERVER_ONLY=0
+KEPT_MODE=0 # a Pi that runs Sunroom from an earlier install keeps it (no option given)
 URL=""
 VERSION=""
 PORT=8080
@@ -99,6 +111,8 @@ ORIGINAL_ARGS=()
 # Worked out while running
 PLATFORM="" # pi | linux | macos | windows
 MACHINE="this Pi" # "this computer" off a Pi, in the messages both share
+BROWSER=""          # off a Pi: the browser the screen uses; empty until one is installed
+MOUNTED_DMG=""      # a Mac: Google Chrome's disk image while it's attached
 UV=""               # the uv that installs Sunroom Screen
 AGENT_WHEEL_PATH="" # Sunroom Screen's checked wheel, under $WHEELS_DIR
 SRC_DIR=""
@@ -237,25 +251,27 @@ ask_yes_no() {
 
 usage() {
 	cat <<EOF
-Sunroom installer $KIOSK_VERSION for Raspberry Pi OS (64-bit, Bookworm or Trixie), and for the
-kitchen screen alone on another Linux computer or a Mac
+Sunroom installer $KIOSK_VERSION: this computer becomes a Sunroom kitchen screen, with
+everything it needs (a browser too). A Raspberry Pi (Raspberry Pi OS 64-bit with desktop,
+Bookworm or Trixie), another Linux computer with a desktop, or a Mac. Windows has install.ps1.
 
 Usage: bash install.sh [options]
 
-What to set up (on a Pi the default is everything; elsewhere it's the screen):
-  (no option)               Sunroom and the kitchen screen, both on this Pi
-  --display-only [--url URL]
-                            Only the kitchen screen; Sunroom runs on another computer.
-                            URL is that computer's address, for example
-                            http://192.168.1.20:8080 or https://calendar.example.com;
-                            without it, the screen finds Sunroom on the network itself,
-                            or asks for the address on the screen
-  --server-only             Only Sunroom, no screen (Raspberry Pi OS Lite)
+What to set up (with no option: the kitchen screen, which finds Sunroom on your network
+itself, or asks for its address on the screen):
+  --url URL                 The address of your Sunroom, so the screen doesn't look for it:
+                            the one you open on a phone, for example http://192.168.1.20:8080
+                            or https://calendar.example.com
+  --with-sunroom            A Pi only: Sunroom on this Pi too, shown on its screen
+  --server-only             A Pi only: Sunroom alone, no screen (Raspberry Pi OS Lite)
+  --display-only            Only the kitchen screen, also on a Pi that runs Sunroom (a Pi
+                            set up with --with-sunroom or --server-only keeps it when the
+                            installer runs again with no option)
 
 Options:
-  --version X.Y.Z           Run this Sunroom version on the Pi instead of the newest (the
-                            kitchen screen's own software is always this installer's version)
-  --port N                  The port phones use to reach Sunroom on this Pi (default 8080)
+  --version X.Y.Z           With Sunroom on this Pi: run this version instead of the newest
+                            (the kitchen screen's own software is always this installer's)
+  --port N                  With Sunroom on this Pi: the port phones use (default 8080)
   --output NAME             The screen's connector, for example HDMI-A-1
                             (default: the one with a screen plugged in)
   --rotate 0|90|180|270     Turn the picture for a screen mounted on its side
@@ -271,7 +287,7 @@ Options:
                             the page goes black or dim instead (for monitors whose touch
                             stops working while the screen is off)
   --x11                     Use the older X11 desktop instead of labwc (Wayland)
-  --no-reboot               Don't offer to restart at the end
+  --no-reboot               Don't offer to restart the Pi at the end
   --dry-run                 Say what it would do on this computer, and change nothing
   --agent-wheel FILE        Install Sunroom Screen from this wheel (just kiosk-build) instead
                             of the one in this version's GitHub Release (for testing)
@@ -282,8 +298,8 @@ Options:
 
 Examples:
   curl -fsSL https://raw.githubusercontent.com/$SUNROOM_REPO/main/kiosk/install.sh | bash
-  curl -fsSL https://raw.githubusercontent.com/$SUNROOM_REPO/main/kiosk/install.sh | bash -s -- --display-only --url http://192.168.1.20:8080
-  bash kiosk/install.sh --display-only --url https://calendar.example.com --rotate 90
+  curl -fsSL https://raw.githubusercontent.com/$SUNROOM_REPO/main/kiosk/install.sh | bash -s -- --with-sunroom
+  bash kiosk/install.sh --url https://calendar.example.com --rotate 90
 EOF
 }
 
@@ -313,6 +329,7 @@ parse_args() {
 	while (($#)); do
 		case $1 in
 		--display-only) WANT_DISPLAY_ONLY=1 ;;
+		--with-sunroom) WANT_WITH_SUNROOM=1 ;;
 		--server-only) WANT_SERVER_ONLY=1 ;;
 		--url)
 			need_value "$@"
@@ -412,30 +429,42 @@ parse_args() {
 }
 
 validate_args() {
+	local previous
 	if ((${#UNINSTALL_ARGS[@]})); then
 		usage_error "--purge and --yes only go with --uninstall, for example: bash install.sh --uninstall --purge"
 	fi
-	if ((WANT_DISPLAY_ONLY && WANT_SERVER_ONLY)); then
-		usage_error "--display-only and --server-only can't be used together." \
-			"Leave both out to put Sunroom and the kitchen screen on this Pi."
+	if ((WANT_DISPLAY_ONLY + WANT_WITH_SUNROOM + WANT_SERVER_ONLY > 1)); then
+		usage_error "Choose one of --with-sunroom, --server-only and --display-only." \
+			"With none of them, the installer sets up the kitchen screen alone."
 	fi
-	if ((WANT_SERVER_ONLY)) && [[ -n $URL ]]; then
-		usage_error "--url goes with --display-only (the screen shows Sunroom from another computer)."
+	if [[ $PLATFORM != pi ]] && ((WANT_WITH_SUNROOM || WANT_SERVER_ONLY)); then
+		usage_error "--with-sunroom and --server-only are for a Raspberry Pi; here the installer sets up the kitchen screen." \
+			"To run Sunroom on this computer, use Docker (docs/DEPLOY.md)."
 	fi
-	if ((WANT_DISPLAY_ONLY)) || [[ $PLATFORM != pi ]]; then
-		MODE="display"
-	fi
-	if [[ $PLATFORM != pi ]] && ((WANT_SERVER_ONLY)); then
-		usage_error "--server-only is for a Raspberry Pi. Elsewhere, run Sunroom with Docker (docs/DEPLOY.md)."
+	if ((WANT_WITH_SUNROOM || WANT_SERVER_ONLY)) && [[ -n $URL ]]; then
+		usage_error "--url is the address of Sunroom on another computer, so it doesn't go with --with-sunroom or --server-only."
 	fi
 	if [[ -n $AGENT_WHEEL && ! -f $AGENT_WHEEL ]]; then
 		usage_error "--agent-wheel: there's no file at $AGENT_WHEEL."
 	fi
-	if [[ -n $URL ]]; then
-		MODE="display"
-		if ((!WANT_DISPLAY_ONLY)) && [[ $PLATFORM == pi ]]; then
-			say "Note: --url given, so this Pi will only be the kitchen screen (as with --display-only)."
+	if ((WANT_SERVER_ONLY)); then
+		MODE="server"
+	elif ((WANT_WITH_SUNROOM)); then
+		MODE="all"
+	elif [[ $PLATFORM == pi ]] && ((!WANT_DISPLAY_ONLY)); then
+		# A Pi that runs Sunroom from an earlier install keeps it (before ADR 0037, no option
+		# meant Sunroom and the screen), unless --url points the screen at another one.
+		previous=$(previous_mode)
+		if [[ $previous == all || $previous == server ]]; then
+			if [[ -n $URL ]]; then
+				say "Note: --url given, so this Pi will only be the kitchen screen (as with --display-only)."
+			else
+				MODE=$previous
+				KEPT_MODE=1
+			fi
 		fi
+	fi
+	if [[ -n $URL ]]; then
 		URL="${URL%/}"
 		URL="${URL%/display}"
 		URL=$(lower "$URL")
@@ -443,9 +472,6 @@ validate_args() {
 			usage_error "\"$URL\" doesn't look like the address of Sunroom." \
 				"Use the address you open on a phone, for example http://192.168.1.20:8080 or https://calendar.example.com"
 		fi
-	fi
-	if ((WANT_SERVER_ONLY)); then
-		MODE="server"
 	fi
 	if [[ -n $VERSION ]]; then
 		VERSION=${VERSION#v}
@@ -469,13 +495,13 @@ validate_args() {
 		usage_error "--force-hdmi wants a screen size like 1920x1080 (got \"$FORCE_HDMI\")."
 	fi
 	if [[ $MODE == server ]] && ((SCREEN_OPTIONS_GIVEN)); then
-		say "Note: --server-only sets up no screen, so the screen options are ignored."
+		say "Note: Sunroom alone (--server-only) sets up no screen, so the screen options are ignored."
 	fi
 	if [[ $MODE == display ]] && ((PORT_GIVEN)); then
-		say "Note: --port is ignored with --display-only; the port is part of --url."
+		say "Note: --port is for Sunroom on a Pi (--with-sunroom); the kitchen screen alone ignores it (the port is part of --url)."
 	fi
 	if [[ $MODE == display && -n $VERSION ]]; then
-		say "Note: --version picks the Sunroom that runs on a Pi; the kitchen screen alone ignores it."
+		say "Note: --version picks the Sunroom that runs on a Pi (--with-sunroom); the kitchen screen alone ignores it."
 	fi
 	if [[ $PLATFORM != pi ]] && { ((OUTPUT_GIVEN || FORCE_X11)) || [[ $ROTATE != 0 || -n $FORCE_HDMI ]]; }; then
 		say "Note: --output, --rotate, --force-hdmi and --x11 are for a Raspberry Pi; on $MACHINE, its own display settings do that."
@@ -514,6 +540,9 @@ cleanup() {
 	if [[ -n $SUDO_KEEPALIVE_PID ]]; then
 		kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 	fi
+	if [[ -n $MOUNTED_DMG ]]; then
+		hdiutil detach "$MOUNTED_DMG" -force -quiet 2>/dev/null || true
+	fi
 	if [[ -n $TMP_DIR && -d $TMP_DIR ]]; then
 		rm -rf "$TMP_DIR"
 	fi
@@ -524,14 +553,22 @@ cleanup() {
 	fi
 }
 
+# On a Pi, for the whole run; on another Linux computer, to install a browser.
 start_sudo() {
+	local fix="Your account needs to be allowed to use sudo (the first account on a Pi is)."
+	if [[ $PLATFORM != pi ]]; then
+		fix="Your account needs to be allowed to use sudo; or install Chromium yourself, then run this again."
+	fi
 	if ! command -v sudo >/dev/null 2>&1; then
-		die "This needs sudo, which isn't installed. Raspberry Pi OS includes it; is this Raspberry Pi OS?"
+		if [[ $PLATFORM == pi ]]; then
+			die "This needs sudo, which isn't installed. Raspberry Pi OS includes it; is this Raspberry Pi OS?"
+		fi
+		die "Installing a browser needs sudo, which isn't installed here." \
+			"Install Chromium yourself (as root), then run this again."
 	fi
 	if ! sudo -n true 2>/dev/null; then
 		note "Some steps need administrator rights, so sudo may ask for your password."
-		sudo -v || die "sudo didn't accept the password, so the installer can't continue." \
-			"Your account needs to be allowed to use sudo (the first account on a Pi is)."
+		sudo -v || die "sudo didn't accept the password, so the installer can't continue." "$fix"
 	fi
 	# Keep sudo's timestamp fresh during long downloads; quiet, and gone when we are.
 	(
@@ -619,6 +656,15 @@ pi_ip() {
 	printf '%s' "$ip"
 }
 
+# What an earlier run set up (its STATE_MODE: display, all or server), empty without one. Read
+# in a child bash, as existing_setting reads the screen's settings, so nothing else reaches this
+# run before validate_args has decided.
+previous_mode() {
+	[[ -r $STATE_FILE ]] || return 0
+	# shellcheck disable=SC2016 # expanded by the child bash, not this one
+	bash -c 'set +u; . "$1" >/dev/null 2>&1; printf "%s" "${STATE_MODE:-}"' _ "$STATE_FILE" 2>/dev/null || true
+}
+
 load_previous_state() {
 	if [[ -r $STATE_FILE ]]; then
 		# shellcheck source=/dev/null
@@ -656,8 +702,8 @@ save_state() {
 
 # ---------------------------------------------------------------------------- step 0: checks
 
-# Which kind of computer this is: a Raspberry Pi (with Raspberry Pi OS: everything), another
-# Linux computer (the screen only), a Mac, or Windows (install.ps1).
+# Which kind of computer this is: a Raspberry Pi (with Raspberry Pi OS: the screen, Sunroom or
+# both), another Linux computer (the screen only), a Mac, or Windows (install.ps1).
 detect_platform() {
 	MACHINE="this computer"
 	case $(uname -s) in
@@ -941,7 +987,7 @@ wait_for_apt() {
 	if ! apt_busy; then
 		return 0
 	fi
-	note "This Pi is installing its own updates (normal right after the first start). Waiting for it to finish..."
+	note "$(capitalized "$MACHINE") is installing its own updates (normal right after the first start). Waiting for it to finish..."
 	while apt_busy; do
 		sleep 5
 		waited=$((waited + 5))
@@ -949,11 +995,11 @@ wait_for_apt() {
 			note "Still waiting ($((waited / 60)) min)..."
 		fi
 		if ((waited >= 1800)); then
-			die "The Pi's own software update has been running for 30 minutes." \
-				"Restart the Pi (sudo reboot), wait five minutes, then run the installer again."
+			die "$(capitalized "$MACHINE")'s own software update has been running for 30 minutes." \
+				"Restart $MACHINE (sudo reboot), wait five minutes, then run the installer again."
 		fi
 	done
-	note "The Pi's own update finished."
+	note "Its own update finished."
 }
 
 # ---------------------------------------------------------------------------- the kiosk folder
@@ -1019,10 +1065,11 @@ pkg_installed() {
 	[[ $(dpkg-query -W -f='${Status}' "$1" 2>/dev/null || true) == "install ok installed" ]]
 }
 
+# Offered by apt, as itself: Ubuntu's chromium-browser (1snap1) only installs the snap.
 pkg_available() {
 	local candidate
 	candidate=$(apt-cache policy "$1" 2>/dev/null | awk '$1 == "Candidate:" {print $2; exit}')
-	[[ -n $candidate && $candidate != "(none)" ]]
+	[[ -n $candidate && $candidate != "(none)" && $candidate != *snap* ]]
 }
 
 # Callers run wait_for_apt first (so its messages show); the lock timeout is a backstop.
@@ -1857,6 +1904,9 @@ summary() {
 		else
 			say "The kitchen screen is set up. When it starts, it looks for Sunroom on your network:"
 			say "pick yours there, or type the address you open on a phone."
+			if [[ $PLATFORM == pi ]]; then
+				say "No Sunroom yet? Run the installer again with --with-sunroom to put it on this Pi too."
+			fi
 		fi
 		say ""
 		say "Next:"
@@ -1954,11 +2004,24 @@ run_uninstall() {
 
 # ---------------------------------------------------------------------------- another Linux computer
 
+# A browser command here that Sunroom Screen can use. A snap's can't open the profile under
+# ~/.config or read the policy in /etc, so it doesn't count: Ubuntu's Chromium is one, and its
+# /usr/bin/chromium-browser is a script that runs the snap. browser.py skips them the same way.
+usable_browser() {
+	local path start
+	path=$(command -v "$1" 2>/dev/null) || return 1
+	if [[ $path == /snap/* || $(readlink -f "$path" 2>/dev/null || true) == /snap/* ]]; then
+		return 1
+	fi
+	start=$(head -c 4096 "$path" 2>/dev/null | tr -d '\0' || true)
+	[[ $start != '#!'*/snap/* ]]
+}
+
 # Chromium, Google Chrome or Microsoft Edge: the names Sunroom Screen looks for (browser.py).
 linux_browser() {
 	local name
 	for name in chromium chromium-browser google-chrome google-chrome-stable microsoft-edge microsoft-edge-stable; do
-		if command -v "$name" >/dev/null 2>&1; then
+		if usable_browser "$name"; then
 			printf '%s' "$name"
 			return 0
 		fi
@@ -1968,15 +2031,104 @@ linux_browser() {
 
 # The policy folders of the browsers installed here (policy.py's LINUX_DIRS).
 linux_policy_dirs() {
-	if command -v chromium >/dev/null 2>&1 || command -v chromium-browser >/dev/null 2>&1; then
+	if usable_browser chromium || usable_browser chromium-browser; then
 		printf '%s\n' /etc/chromium/policies/managed
 	fi
-	if command -v google-chrome >/dev/null 2>&1 || command -v google-chrome-stable >/dev/null 2>&1; then
+	if usable_browser google-chrome || usable_browser google-chrome-stable; then
 		printf '%s\n' /etc/opt/chrome/policies/managed
 	fi
-	if command -v microsoft-edge >/dev/null 2>&1 || command -v microsoft-edge-stable >/dev/null 2>&1; then
+	if usable_browser microsoft-edge || usable_browser microsoft-edge-stable; then
 		printf '%s\n' /etc/opt/edge/policies/managed
 	fi
+}
+
+# Which browser comes when there's none: the system's own Chromium where its package is the
+# browser itself (Debian, Fedora, openSUSE, Arch), else Google Chrome from Google (Ubuntu, whose
+# Chromium is a snap). Empty when the installer doesn't know this system's packages.
+linux_browser_plan() {
+	if command -v apt-get >/dev/null 2>&1; then
+		if pkg_available chromium; then
+			printf 'Chromium, with apt'
+		else
+			printf 'Google Chrome, from Google (apt has no Chromium of its own here; Ubuntu'"'"'s is a snap)'
+		fi
+	elif command -v dnf >/dev/null 2>&1; then
+		printf 'Chromium, with dnf (or Google Chrome, from Google, when dnf has none)'
+	elif command -v zypper >/dev/null 2>&1; then
+		printf 'Chromium, with zypper'
+	elif command -v pacman >/dev/null 2>&1; then
+		printf 'Chromium, with pacman'
+	fi
+}
+
+# Google Chrome's own package, for this computer's processor (64-bit Intel or ARM). Installing it
+# adds Google's software source, so the system keeps Chrome up to date with everything else.
+install_google_chrome() {
+	local kind=$1 arch file
+	if [[ $kind == deb ]]; then
+		arch=$(dpkg --print-architecture 2>/dev/null || uname -m)
+	else
+		arch=$(uname -m)
+	fi
+	case $kind:$arch in
+	deb:amd64 | deb:arm64 | rpm:x86_64 | rpm:aarch64) ;;
+	*)
+		die "There's no Chromium to install here, and Google Chrome isn't made for this computer ($arch)." \
+			"Install Chromium, Google Chrome or Microsoft Edge yourself, then run this again."
+		;;
+	esac
+	file="google-chrome-stable_current_$arch.$kind"
+	note "Downloading Google Chrome from Google..."
+	curl -fsSL --retry 3 --connect-timeout 15 -o "$TMP_DIR/$file" "$CHROME_LINUX_BASE/$file" 2>>"$LOG_FILE" ||
+		die "Couldn't download Google Chrome. Check the internet connection, then run this again."
+	note "Installing Google Chrome (this takes a few minutes)..."
+	if [[ $kind == deb ]]; then
+		wait_for_apt
+		quietly apt_get install -y "$TMP_DIR/$file" ||
+			die "Couldn't install Google Chrome; its last messages are above. Running the installer again is safe."
+	else
+		quietly sudo dnf install -y "$TMP_DIR/$file" ||
+			die "Couldn't install Google Chrome; its last messages are above. Running the installer again is safe."
+	fi
+}
+
+# A browser for the screen when this computer has none it can use (linux_browser_plan says which).
+install_linux_browser() {
+	start_sudo
+	if command -v apt-get >/dev/null 2>&1; then
+		wait_for_apt
+		note "Refreshing the list of available software..."
+		quietly apt_get update || die "Couldn't refresh the list of available software." \
+			"Check the internet connection and that the date and time are right (type: date), then run this again."
+		if pkg_available chromium; then
+			note "Installing Chromium (this takes a few minutes)..."
+			quietly apt_get install -y chromium ||
+				die "Couldn't install Chromium; its last messages are above. Running the installer again is safe."
+		else
+			install_google_chrome deb
+		fi
+	elif command -v dnf >/dev/null 2>&1; then
+		note "Installing Chromium (this takes a few minutes)..."
+		if ! quietly sudo dnf install -y chromium; then
+			note "There's no Chromium to install here, so Google Chrome it is."
+			install_google_chrome rpm
+		fi
+	elif command -v zypper >/dev/null 2>&1; then
+		note "Installing Chromium (this takes a few minutes)..."
+		quietly sudo zypper --non-interactive install chromium ||
+			die "Couldn't install Chromium; its last messages are above." "Install it yourself, then run this again."
+	elif command -v pacman >/dev/null 2>&1; then
+		note "Installing Chromium (this takes a few minutes)..."
+		quietly sudo pacman -S --needed --noconfirm chromium ||
+			die "Couldn't install Chromium; its last messages are above." \
+				"Install it yourself (sudo pacman -Syu chromium), then run this again."
+	else
+		die "Sunroom Screen needs Chromium, Google Chrome or Microsoft Edge, and none is installed." \
+			"The installer doesn't know how to install software here: install Chromium, then run this again."
+	fi
+	BROWSER=$(linux_browser) || die "The browser was installed, but the installer can't find it." \
+		"Open a new terminal and run the installer again."
+	note "The browser: $BROWSER."
 }
 
 os_name() {
@@ -1985,17 +2137,20 @@ os_name() {
 }
 
 check_linux() {
-	local browser name
+	local name
 	command -v curl >/dev/null 2>&1 || die "The installer needs curl, which isn't installed." \
 		"Install it (for example: sudo apt install curl), then run this again."
 	if ! command -v systemctl >/dev/null 2>&1 || ! user_systemctl show-environment >/dev/null 2>&1; then
 		die "Sunroom Screen needs systemd's user services, which this computer doesn't have." \
 			"Put the kitchen screen on a Raspberry Pi instead (docs/KIOSK.md)."
 	fi
-	browser=$(linux_browser) || die "Sunroom Screen needs Chromium, Google Chrome or Microsoft Edge, and none is installed." \
-		"Install one (for example: sudo apt install chromium), then run this again."
 	name=$(os_name)
-	note "${name:-Linux} ($(uname -m)); the browser: $browser."
+	if BROWSER=$(linux_browser); then
+		note "${name:-Linux} ($(uname -m)); the browser: $BROWSER."
+	else
+		BROWSER=""
+		note "${name:-Linux} ($(uname -m)); no browser the screen can use yet, so it installs one."
+	fi
 	case ${XDG_SESSION_TYPE:-} in
 	wayland | x11) SESSION=$XDG_SESSION_TYPE ;;
 	*) SESSION="" ;; # Sunroom Screen works it out when the desktop starts it
@@ -2031,45 +2186,98 @@ write_linux_policy() {
 	fi
 }
 
-# Start the kitchen screen now when this runs on the desktop it will fill; else at the next
-# sign-in.
-offer_start() {
+# Start the kitchen screen now when this computer's desktop is signed in: the one this runs on,
+# or the one systemd's user manager knows (the desktop fills in its address at sign-in, so this
+# works over ssh too). Else it starts at the next sign-in.
+start_screen() {
+	local environment
 	say ""
-	if [[ -z ${WAYLAND_DISPLAY:-}${DISPLAY:-} ]]; then
+	if user_systemctl is-active --quiet sunroom-kiosk.service; then
+		say "Sunroom Screen is running, on this version."
+		return 0
+	fi
+	if [[ -n ${WAYLAND_DISPLAY:-}${DISPLAY:-} ]]; then
+		user_systemctl import-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || true
+	fi
+	environment=$'\n'$(user_systemctl show-environment 2>/dev/null || true)
+	if [[ $environment != *$'\n'WAYLAND_DISPLAY=* && $environment != *$'\n'DISPLAY=* ]]; then
 		say "The kitchen screen starts the next time you sign in to this computer's desktop."
 		return 0
 	fi
-	if ask_yes_no "Start the kitchen screen now? It fills the whole screen." n n; then
-		user_systemctl import-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || true
-		user_systemctl --no-block restart sunroom-kiosk.service ||
-			die "Sunroom Screen didn't start. Its log: journalctl --user -u sunroom-kiosk"
-		say "Starting it. To close it: Settings → This Screen → Quit Sunroom Screen, on the screen."
-	else
-		say "OK. It starts the next time you sign in."
+	if ! user_systemctl --no-block restart sunroom-kiosk.service; then
+		warn "Sunroom Screen didn't start just now (journalctl --user -u sunroom-kiosk says why); it starts at the next sign-in."
+		return 0
 	fi
+	say "Starting the kitchen screen now; it fills the whole screen."
+	say "To close it: Settings → This Screen → Quit Sunroom Screen, on the screen, or in a terminal:"
+	say "  systemctl --user stop sunroom-kiosk   (either way, it starts again at the next sign-in)"
 }
 
 # ---------------------------------------------------------------------------- a Mac
 
-# Google Chrome, Chromium or Microsoft Edge in Applications: where Sunroom Screen looks for them
-# (browser.py).
+# Google Chrome, Chromium or Microsoft Edge in /Applications or ~/Applications: where Sunroom
+# Screen looks for them (browser.py).
 mac_browser() {
-	local app
+	local app dir
 	for app in "Google Chrome" "Chromium" "Microsoft Edge"; do
-		if [[ -d "/Applications/$app.app" ]]; then
-			printf '%s' "$app"
-			return 0
-		fi
+		for dir in /Applications "$HOME/Applications"; do
+			if [[ -d "$dir/$app.app" ]]; then
+				printf '%s' "$app"
+				return 0
+			fi
+		done
 	done
 	return 1
 }
 
+# Where Google Chrome goes when the installer brings it: /Applications when this account may write
+# there (an administrator's may, with no password), else ~/Applications.
+mac_apps_dir() {
+	if [[ -w /Applications ]]; then
+		printf '/Applications'
+	else
+		printf '%s/Applications' "$HOME"
+	fi
+}
+
 check_macos() {
-	local browser
-	browser=$(mac_browser) || die "Sunroom Screen needs Google Chrome, Chromium or Microsoft Edge in Applications, and none is there." \
-		"Install Google Chrome first (from google.com/chrome), then run this again."
-	note "macOS $(sw_vers -productVersion 2>/dev/null || true) ($(uname -m)); the browser: $browser."
+	local system
+	system="macOS $(sw_vers -productVersion 2>/dev/null || true) ($(uname -m))"
+	if BROWSER=$(mac_browser); then
+		note "$system; the browser: $BROWSER."
+	else
+		BROWSER=""
+		note "$system; no browser the screen can use yet, so it installs Google Chrome."
+	fi
 	SESSION=""
+}
+
+# Google Chrome from Google's disk image. The copy is made without extended attributes (the image's
+# empty Finder information would fail the strict check) and checked for Google's own signature
+# before it goes into Applications.
+install_chrome_mac() {
+	local dmg="$TMP_DIR/googlechrome.dmg" mount="$TMP_DIR/googlechrome" staged="$TMP_DIR/staged" dest
+	dest=$(mac_apps_dir)
+	note "Downloading Google Chrome from Google..."
+	curl -fsSL --retry 3 --connect-timeout 15 -o "$dmg" "$CHROME_MAC_DMG" 2>>"$LOG_FILE" ||
+		die "Couldn't download Google Chrome. Check the internet connection, then run this again."
+	mkdir -p "$mount" "$staged"
+	quietly hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$mount" "$dmg" ||
+		die "Couldn't open Google Chrome's download; it may be damaged. Run the installer again."
+	MOUNTED_DMG=$mount
+	ditto --noextattr --norsrc "$mount/Google Chrome.app" "$staged/Google Chrome.app" 2>>"$LOG_FILE" ||
+		die "Couldn't copy Google Chrome out of its download. Running the installer again is safe."
+	hdiutil detach "$mount" -quiet 2>>"$LOG_FILE" || true
+	MOUNTED_DMG=""
+	if ! codesign --verify --deep --strict -R="$CHROME_MAC_REQUIREMENT" "$staged/Google Chrome.app" 2>>"$LOG_FILE"; then
+		die "The Google Chrome download isn't signed by Google, so it wasn't installed." \
+			"Run the installer again; if it happens again, install Google Chrome from google.com/chrome, then run this again."
+	fi
+	mkdir -p "$dest"
+	mv "$staged/Google Chrome.app" "$dest/" ||
+		die "Couldn't put Google Chrome in $(tidy "$dest"). Running the installer again is safe."
+	BROWSER="Google Chrome"
+	note "Installed Google Chrome in $(tidy "$dest"), checked for Google's signature."
 }
 
 launch_agent_loaded() {
@@ -2097,7 +2305,7 @@ install_launch_agent() {
 }
 
 # Start the kitchen screen now when this Mac's desktop is signed in; else at the next sign-in.
-offer_start_mac() {
+start_screen_mac() {
 	say ""
 	if ((LAUNCHED)); then
 		say "Sunroom Screen started again, on this version."
@@ -2107,13 +2315,13 @@ offer_start_mac() {
 		say "The kitchen screen starts the next time you sign in to this Mac."
 		return 0
 	fi
-	if ask_yes_no "Start the kitchen screen now? It fills the whole screen." n n; then
-		launchctl bootstrap "gui/$(id -u)" "$LAUNCH_AGENT" ||
-			die "Sunroom Screen didn't start. Its log: ~/Library/Logs/sunroom-kiosk.log"
-		say "Starting it. To close it: Settings → This Screen → Quit Sunroom Screen, on the screen."
-	else
-		say "OK. It starts the next time you sign in."
+	if ! launchctl bootstrap "gui/$(id -u)" "$LAUNCH_AGENT" 2>>"$LOG_FILE"; then
+		warn "Sunroom Screen didn't start just now (~/Library/Logs/sunroom-kiosk.log says why); it starts at the next sign-in."
+		return 0
 	fi
+	say "Starting the kitchen screen now; it fills the whole screen."
+	say "To close it: Settings → This Screen → Quit Sunroom Screen, on the screen, or in Terminal:"
+	say "  launchctl bootout gui/$(id -u)/$LAUNCH_AGENT_LABEL   (either way, it starts again at the next sign-in)"
 }
 
 # ---------------------------------------------------------------------------- --dry-run
@@ -2160,14 +2368,20 @@ dry_run_screen() {
 		if browser=$(mac_browser); then
 			say "  - check for the internet, and use $browser"
 		else
-			say "  - stop: it needs Google Chrome, Chromium or Microsoft Edge in Applications"
-			return 0
+			say "  - check for the internet, then download Google Chrome from Google, check Google's"
+			say "    signature on it, and put it in $(tidy "$(mac_apps_dir)")"
 		fi
 	elif browser=$(linux_browser); then
 		say "  - check for the internet, and use $browser"
 	else
-		say "  - stop: it needs Chromium, Google Chrome or Microsoft Edge, and none is installed"
-		return 0
+		browser=$(linux_browser_plan)
+		if [[ -z $browser ]]; then
+			say "  - stop: it needs Chromium, Google Chrome or Microsoft Edge, and doesn't know how to"
+			say "    install software here"
+			return 0
+		fi
+		say "  - check for the internet, then install a browser with sudo, as there's none it can use:"
+		say "    $browser"
 	fi
 	if [[ -n $URL ]]; then
 		say "  - check that Sunroom answers at $URL"
@@ -2214,13 +2428,14 @@ dry_run_screen() {
 	elif [[ $PLATFORM == macos ]]; then
 		say "  - start Sunroom Screen when you sign in (a LaunchAgent,"
 		say "    $(tidy "$LAUNCH_AGENT"))"
-		say "  - offer to start the kitchen screen now"
+		say "  - start the kitchen screen now when this Mac's desktop is signed in (it fills the screen)"
 		say "Nothing else is installed, nothing needs an administrator, and no other settings change."
 	else
 		say "  - start Sunroom Screen when you sign in ($(tidy "$XDG_AUTOSTART_FILE"),"
 		say "    sunroom-kiosk.service)"
 		say "  - set the browser's policy, with sudo, so it doesn't ask for sign-in or passwords"
-		say "  - offer to start the kitchen screen now"
+		say "  - start the kitchen screen now when this computer's desktop is signed in (it fills"
+		say "    the screen)"
 		say "Nothing else is installed, and no other settings on this computer change."
 	fi
 }
@@ -2239,6 +2454,12 @@ print_plan() {
 	display) say "This sets up the kitchen screen on $MACHINE$shows. It takes a few minutes." ;;
 	server) say "This sets up Sunroom on this Pi, without a screen. It takes about 10 minutes." ;;
 	esac
+	if ((KEPT_MODE)) && [[ $MODE == all ]]; then
+		say "(This Pi runs Sunroom from an earlier install, so it keeps it. --display-only would set up"
+		say "the kitchen screen alone.)"
+	elif ((KEPT_MODE)); then
+		say "(This Pi runs Sunroom without a screen from an earlier install, so it stays that way.)"
+	fi
 }
 
 begin_run() {
@@ -2292,8 +2513,9 @@ install_on_pi() {
 	offer_reboot
 }
 
-# A Mac: Sunroom Screen alone, started at sign-in by a LaunchAgent. No administrator, no other
-# settings; Sunroom Screen writes the browser's policy itself (defaults, as this user).
+# A Mac: Sunroom Screen alone, started at sign-in by a LaunchAgent, and Google Chrome when there's
+# no browser. No administrator, no other settings; Sunroom Screen writes the browser's policy
+# itself (defaults, as this user).
 install_on_macos() {
 	begin_run
 	step "Checking this Mac" "checking this Mac"
@@ -2304,6 +2526,11 @@ install_on_macos() {
 	fi
 	get_kiosk_files
 
+	if [[ -z $BROWSER ]]; then
+		step "Installing Google Chrome" "installing Google Chrome"
+		install_chrome_mac
+	fi
+
 	step "Setting up the kitchen screen" "setting up the kitchen screen"
 	install_helper_copies
 	install_agent
@@ -2313,11 +2540,11 @@ install_on_macos() {
 
 	step "All done" "finishing"
 	summary
-	offer_start_mac
+	start_screen_mac
 }
 
-# Another Linux computer: Sunroom Screen alone, started at sign-in. No packages, no system
-# settings; root only for the browser's policy.
+# Another Linux computer: Sunroom Screen alone, started at sign-in, and a browser when there's
+# none. No other packages, no system settings; root only for the browser and its policy.
 install_on_linux() {
 	begin_run
 	step "Checking this computer" "checking this computer"
@@ -2327,6 +2554,11 @@ install_on_linux() {
 		check_remote_server
 	fi
 	get_kiosk_files
+
+	if [[ -z $BROWSER ]]; then
+		step "Installing a browser" "installing a browser"
+		install_linux_browser
+	fi
 
 	step "Setting up the kitchen screen" "setting up the kitchen screen"
 	install_helper_copies
@@ -2339,7 +2571,7 @@ install_on_linux() {
 
 	step "All done" "finishing"
 	summary
-	offer_start
+	start_screen
 }
 
 main() {

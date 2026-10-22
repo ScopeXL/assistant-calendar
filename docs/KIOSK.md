@@ -21,8 +21,8 @@ Restart and Shut Down).
   but taps do nothing).
 - The official power supply. Don't power a portable monitor from the Pi's USB ports.
 
-Another Linux computer with a desktop (systemd, and Chromium, Google Chrome or Microsoft Edge),
-a Windows computer or a Mac can be the screen too; see their sections below.
+Another Linux computer with a desktop (and systemd), a Windows computer or a Mac can be the
+screen too, with one command and nothing to install first; see their sections below.
 
 ## Install
 
@@ -31,17 +31,22 @@ root; it asks for `sudo` itself.
 
 | You want | Command |
 |---|---|
-| Sunroom and the screen on this Pi | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
-| Only the screen; Sunroom runs elsewhere | the same, then `\| bash -s -- --display-only` |
-| Only Sunroom, no screen (Pi OS Lite) | the same with `--server-only` |
+| The screen on this Pi; Sunroom runs elsewhere | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
+| Sunroom and the screen, both on this Pi | the same, ending `\| bash -s -- --with-sunroom` |
+| Only Sunroom, no screen (Pi OS Lite) | the same, ending `\| bash -s -- --server-only` |
 
-The installer finishes by printing the phone address (and a QR code), then offers to restart.
+The installer finishes by saying what's next (with Sunroom on the Pi, the phone address and a QR
+code), then offers to restart.
 
-With `--display-only`, the screen looks for Sunroom on your network after the restart and lists
-what it finds: tap **Use This Sunroom**, or type the address you open on a phone and tap **Check
-Address**. `--url https://calendar.example.com` (or `http://192.168.1.20:8080`) gives it the
-address and skips the search. Then the screen shows a six-character code: on a phone signed in to
-Sunroom, open **More → Pair a display** and type it.
+The screen looks for Sunroom on your network after the restart and lists what it finds: tap
+**Use This Sunroom**, or type the address you open on a phone and tap **Check Address**.
+`--url https://calendar.example.com` (or `http://192.168.1.20:8080`) gives it the address and
+skips the search. Then the screen shows a six-character code: on a phone signed in to Sunroom,
+open **More → Pair a display** and type it.
+
+Earlier installers put Sunroom and the screen on a Pi when run with no option (ADR 0037 changed
+that). A Pi set up that way, or with `--server-only`, keeps Sunroom when the installer runs again
+with no option (it says so); `--display-only` makes it the screen alone.
 
 Other options (`--help` lists them all):
 
@@ -56,8 +61,8 @@ Other options (`--help` lists them all):
   and dimming" below); `auto` is right for most screens.
 - `--no-screen-helper` leaves the screen itself on all night; the page still goes black or dim.
   It's for monitors whose touch stops working while the screen is off.
-- `--version X.Y.Z` runs that Sunroom version on the Pi instead of the newest. The screen's own
-  software is always the installer's version.
+- `--version X.Y.Z` runs that Sunroom version on the Pi (with `--with-sunroom`) instead of the
+  newest. The screen's own software is always the installer's version.
 - `--x11` uses the older X11 desktop instead of labwc.
 
 Running the installer again is safe: it keeps what is already right (the address the screen
@@ -125,20 +130,28 @@ alone doesn't do this: it updates Sunroom, not the Pi's screen setup.
 
 ## Another Linux computer
 
-On a Linux computer that isn't a Raspberry Pi, the installer sets up the screen only, and
-changes nothing else:
+On a Linux computer that isn't a Raspberry Pi, sign in to its desktop as the person the screen
+runs for, and in a terminal run the same command:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --display-only
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
 ```
 
-It needs systemd and Chromium, Google Chrome or Microsoft Edge, and installs no packages. It
-installs uv and Sunroom Screen as above, the user service, and
-`~/.config/autostart/sunroom-kiosk.desktop`, which starts it when you sign in. It asks for
-`sudo` once, only to write the browser's policy (without it, the browser asks once on the screen
-to let Sunroom reach Sunroom Screen). Run on the desktop itself, it offers to start the screen at
-once. The computer's own settings turn and dim its screen; This Screen has **Quit Sunroom
-Screen**, which closes it until the next sign-in.
+It sets up the screen only, and needs systemd and a desktop. **The browser:** it uses Chromium,
+Google Chrome or Microsoft Edge when one is installed, and otherwise installs one with `sudo`:
+the system's own Chromium (Debian with apt, Fedora with dnf, openSUSE with zypper, Arch with
+pacman), or Google Chrome from Google where the system's Chromium is a snap (Ubuntu). Google's
+package adds Google's software source, so the system's own updates keep Chrome up to date. A
+snap's browser is never used: its sandbox can't open the screen's profile or read its policy.
+
+Then it installs uv and Sunroom Screen as above, the user service, and
+`~/.config/autostart/sunroom-kiosk.desktop`, which starts it when you sign in, and writes the
+browser's policy with `sudo` (without it, the browser asks once on the screen to let Sunroom
+reach Sunroom Screen). Nothing else on the computer changes. When the desktop is signed in, the
+one it ran on or, over `ssh`, the one this user is signed in to, it starts the screen at once.
+The computer's own settings turn and dim its screen; This Screen has **Quit Sunroom Screen**,
+which closes it until the next sign-in. Before the screen is paired, `systemctl --user stop
+sunroom-kiosk` in a terminal does the same.
 
 ## Windows
 
@@ -159,29 +172,40 @@ joins Wi-Fi, turns the picture and sets the brightness itself, so This Screen ha
 Settings** instead of Wi-Fi, no Rotation, and the page dims itself in the evening. **Quit Sunroom
 Screen** closes it until the next sign-in. Updates work as on a Pi.
 
-With options, save the file first and run it:
-`powershell -ExecutionPolicy Bypass -File install.ps1 [-Url https://calendar.example.com]
-[-DryRun] [-AgentWheel FILE]`. `-Uninstall` takes it off again, asking before it deletes the
-pairing; uv stays.
+With options (`-Url https://calendar.example.com`, `-DryRun`, `-AgentWheel FILE`, `-Uninstall`),
+run the same download as a script block:
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1))) -Url https://calendar.example.com"
+```
+
+or save the file and run `powershell -ExecutionPolicy Bypass -File install.ps1 -Url …`.
+`-Uninstall` takes it off again, asking before it deletes the pairing; uv stays. The installer
+ends by printing the exact command that removes it.
 
 ## A Mac
 
-On a Mac with Google Chrome (or Chromium, or Microsoft Edge) in Applications, sign in as the
-person the screen runs for, and in Terminal run:
+On a Mac, sign in as the person the screen runs for, and in Terminal run the same command:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
 ```
 
-It needs no administrator. It installs uv and Sunroom Screen (the same release and checks as
-above) for this user, and a LaunchAgent, `~/Library/LaunchAgents/app.sunroom.kiosk.plist`, which
-starts it at sign-in and again if it fails, then offers to start it now. Sunroom Screen sets the
-browser's policy in its own preferences (`defaults`, this user only), keeps the display awake
+It needs no administrator. With no Google Chrome, Chromium or Microsoft Edge in `/Applications`
+or `~/Applications`, it downloads Google Chrome from Google, checks Google's signature on it,
+and puts it in `/Applications` (in `~/Applications` for an account that can't write there).
+Then it installs uv and Sunroom Screen (the same release and checks as above) for this user, and
+a LaunchAgent, `~/Library/LaunchAgents/app.sunroom.kiosk.plist`, which starts it at sign-in and
+again if it fails, and starts it now when the Mac is signed in (before the screen is paired,
+`launchctl bootout gui/$(id -u)/app.sunroom.kiosk` in Terminal closes it until the next
+sign-in). Sunroom Screen sets the browser's policy in its own preferences (`defaults`, this user
+only), keeps the display awake
 while the household's times say on (`caffeinate`) and lets it sleep at night (`pmset
 displaysleepnow`); the page dims itself in the evening. The first Restart or Shut Down asks once
 whether Sunroom Screen may control System Events. **Quit Sunroom Screen** in This Screen closes
 it until the next sign-in. Its log: `~/Library/Logs/sunroom-kiosk.log`. `--url`, `--dry-run` and
-`--agent-wheel` work as on Linux; `bash ~/.local/share/sunroom-kiosk/uninstall.sh` takes it off.
+`--agent-wheel` work as on Linux; `bash ~/.local/share/sunroom-kiosk/uninstall.sh` takes it off
+(Google Chrome stays).
 
 ## Sleep and dimming
 
@@ -295,14 +319,20 @@ screen instead.
   restarts), or **Restart** in This Screen, which restarts the whole Pi.
 - **Remove the screen setup:** `bash ~/.local/share/sunroom-kiosk/uninstall.sh`. It asks before
   deleting the browser profile (and with it the pairing). `--purge` also deletes Sunroom and all
-  its data from the Pi.
+  its data from the Pi. The packages the installer added, the browser among them, stay.
 
 ## Trying a change before a release
 
-From a checkout, `just kiosk-build` makes Sunroom Screen's wheel in `kiosk/agent/dist/`. Copy the
-`kiosk` folder and that wheel to the Pi, then run the installer from the copy with `--agent-wheel
-<the wheel>`: it uses the files next to it and that wheel instead of the release's (which isn't
-checked against a release, so use it only for testing). `--dry-run` shows the plan first.
+From a checkout, `just kiosk-serve` builds Sunroom Screen's wheel and serves this checkout's
+installers with it on port 8765, then prints one line for a Linux computer or a Mac (`curl -fsSL
+http://<this computer>:8765/install.sh | bash`) and one for Windows (`irm … | iex`). Run that
+line on the computer or virtual machine to try: it installs from this checkout and that wheel,
+taking nothing from GitHub. Options go after `bash -s --`, as with the real one. Ctrl+C stops it.
+
+By hand: `just kiosk-build` makes the wheel in `kiosk/agent/dist/`. Copy the `kiosk` folder and
+that wheel to the Pi, then run the installer from the copy with `--agent-wheel <the wheel>`: it
+uses the files next to it and that wheel instead of the release's. Either way the wheel isn't
+checked against a release, so use it only for testing. `--dry-run` shows the plan first.
 
 ## When something looks wrong
 

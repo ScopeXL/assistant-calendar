@@ -91,6 +91,9 @@ size limit.
   change. Write `sa.DateTime()`, as every migration does.
 - `boot.reexec` runs `sys.orig_argv[1:]` again with `sys.executable`: for the console script
   that's `[python, …/bin/sunroom, serve, …]`, for `-m` it's `[python, -m, sunroom, serve]`.
+- After the repo's folder was renamed, `uv run pytest` said "Failed to spawn: pytest": a venv's
+  scripts keep the old folder's absolute path in their `#!` lines. `uv sync --locked --reinstall`
+  in `backend/` and in `kiosk/agent/` writes them again.
 
 ## Layout and CSS
 
@@ -149,6 +152,11 @@ size limit.
   in the host's `/dev`. `kiosk/os/build.sh` passes `--volume /dev:/dev` (`PIGEN_DOCKER_OPTS`).
 - A read of a missing file printed its error despite `2>/dev/null`: in `tr </missing 2>/dev/null`
   the `<` fails before the later redirection applies. Wrap it: `{ tr </missing; } 2>/dev/null`.
+- Google Chrome copied out of its disk image failed `codesign --strict` ("resource fork, Finder
+  information, or similar detritus not allowed"): the image's HFS+ volume reports empty Finder
+  information on every file, and a copy keeps it. `ditto --noextattr --norsrc` copies it clean.
+- A test that loaded `install.sh`'s functions with `. <(sed '$d' kiosk/install.sh)` defined
+  nothing on macOS: bash 3.2 can't source a process substitution. Write them to a file first.
 
 ## The board
 

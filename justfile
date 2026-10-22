@@ -84,6 +84,11 @@ kiosk-build:
     cd frontend && pnpm exec vite build --config vite.screen.config.ts
     cd kiosk/agent && rm -rf dist && uv build --wheel --out-dir dist
 
+# Try this checkout's installers on another computer or a virtual machine on this network before a
+# release: Sunroom Screen's wheel, then the installers served with it and each system's one line
+kiosk-serve PORT="8765": kiosk-build
+    {{py}} scripts/kiosk_serve.py {{PORT}}
+
 # Sunroom OS's image, built here (docs/SUNROOM-OS.md): pi-gen in Docker (OrbStack is arm64: no
 # emulation) into kiosk/os/deploy/. About an hour and 20 GB; CI builds it for each release.
 kiosk-image: kiosk-build

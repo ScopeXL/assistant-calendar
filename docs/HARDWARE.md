@@ -163,7 +163,7 @@ screen. Rows 13 to 23 need no Sunroom OS; its rows, and macOS and Windows, follo
 | # | Setup or test | It passes when | Result |
 |---|---|---|---|
 | 13 | A Pi set up before 0.13.0, the installer run again with its first options | Sunroom Screen replaces the launcher and the screen helper (the log says so); the screen comes back paired, on its board; `sunroom-kiosk status` answers | Not tested yet |
-| 14 | A fresh Pi, `--display-only` with no `--url` | After the restart, Where Is Your Sunroom? lists the server under On Your Network, and Use This Sunroom opens it at its pair code | Not tested yet |
+| 14 | A fresh Pi, the installer with no option | After the restart, Where Is Your Sunroom? lists the server under On Your Network, and Use This Sunroom opens it at its pair code | Not tested yet |
 | 15 | A typed address (Somewhere Else, on the wall's keyboard) | Check Address says whose Sunroom it is, or why not; Use This Sunroom opens it | Not tested yet |
 | 16 | Chrome's Local Network Access | Settings → This Screen shows on the wall with no prompt on the screen | Not tested yet |
 | 17 | This Screen's Restart and Shut Down | Restart: the screen is back on its board in about a minute; Shut Down asks first, then the Pi powers off | Not tested yet |
@@ -172,7 +172,7 @@ screen. Rows 13 to 23 need no Sunroom OS; its rows, and macOS and Windows, follo
 | 20 | Update Now from a real older version | The Software row shows the percent and the screen comes back on the new version; Updates on Install overnight does the same in the sleep hours | Not tested yet |
 | 21 | The server's address changed | A Sunroom found on the network is found at its new address within a few minutes; a typed one shows Can't Reach | Not tested yet |
 | 22 | Sunroom stopped for five minutes | Can't Reach shows after about two minutes, and the board comes back by itself when Sunroom answers | Not tested yet |
-| 23 | A Linux desktop (Debian or Ubuntu with Chromium or Chrome), `--display-only` | It starts at sign-in, full screen, and pairs; This Screen has Quit Sunroom Screen, which closes it until the next sign-in | Not tested yet |
+| 23 | A Linux desktop (Debian or Ubuntu), the installer with no option | With no browser it installs Chromium (Debian) or Google Chrome (Ubuntu) first; the screen starts at once and at each sign-in, full screen, and pairs; This Screen has Quit Sunroom Screen, which closes it until the next sign-in | Not tested yet |
 
 Sunroom OS, Run It on This Screen, macOS and Windows (0.13.0, [M7](M7.md) T13). Write the
 Raspberry Pi Imager version with each Sunroom OS result.
@@ -189,5 +189,13 @@ Raspberry Pi Imager version with each Sunroom OS result.
 | 31 | The server's address changed (as row 21), on Sunroom OS | The screen finds its Sunroom at the new address by itself | Not tested yet |
 | 32 | Run It on This Screen, on a fresh card | "Downloading Sunroom…" counts up, then Sunroom's own Welcome with its QR code; a phone sets it up and pairs the screen | Not tested yet |
 | 33 | Overnight on Sunroom OS | Security updates install in the night; the screen restarts only inside the sleep hours, and only when an update needs it | Not tested yet |
-| 34 | A Mac with Google Chrome, `install.sh --display-only` | It starts at sign-in, full screen, and pairs; This Screen's Quit closes it until the next sign-in | Not tested yet |
+| 34 | A Mac, `install.sh` with no option | With no browser it installs Google Chrome first; the screen starts at once and at each sign-in, full screen, and pairs; This Screen's Quit closes it until the next sign-in | Not tested yet |
 | 35 | A Windows computer, `install.ps1` | It starts at sign-in with no console window, in Edge, full screen, and pairs; This Screen's Quit closes it; `-Uninstall` takes it off | Not tested yet |
+
+The one-command installer ([ADR 0037](adr/0037-one-command-sets-up-a-screen.md)): the kitchen screen
+alone is the default everywhere, and Sunroom on a Pi takes `--with-sunroom`.
+
+| # | Setup or test | It passes when | Result |
+|---|---|---|---|
+| 36 | A Pi that runs Sunroom from an earlier installer, run again with no option | It says the Pi keeps Sunroom; Sunroom and the screen come back as they were | Not tested yet |
+| 37 | A fresh Pi, `--with-sunroom` | The phone address and QR code as before; after the restart, the screen shows its pair code | Not tested yet |

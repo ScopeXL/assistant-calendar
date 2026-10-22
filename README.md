@@ -38,7 +38,7 @@ on the screen choose **Run It on This Screen**. No terminal at all;
 2. Start the Pi, open a terminal on it (or `ssh` in), and run:
 
    ```sh
-   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --with-sunroom
    ```
 
    It takes 10 to 20 minutes and ends by printing an address and a QR code.
@@ -71,15 +71,15 @@ nothing to configure first. Your own HTTPS proxy, Tailscale or Cloudflare work w
 set; [docs/REMOTE-ACCESS.md](docs/REMOTE-ACCESS.md) shows each way, and when to lock Sunroom to a
 name with `APP_ALLOWED_HOSTS`.
 
-Then set up the Pi with the same installer, as the screen only:
+Then set up the screen with one command. On the Pi (or another Linux computer, or a Mac):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --display-only
+curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
 ```
 
-After the restart the screen looks for Sunroom on your network: tap **Use This Sunroom**, or type
-the address you open on a phone (an `https://` name works too). Then pair the screen (step 4
-above).
+It installs what the screen needs, a browser too, and then the screen looks for Sunroom on your
+network (on a Pi, after its restart): tap **Use This Sunroom**, or type the address you open on a
+phone (an `https://` name works too). Then pair the screen (step 4 above).
 
 ### c. Any computer, no Pi
 
@@ -95,14 +95,15 @@ tablet works as one (Android: Fully Kiosk Browser; iPad: Safari with Guided Acce
 
 | On | Command |
 |---|---|
-| A Pi: Sunroom and the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
-| A Pi or a Linux computer: only the screen | the same, then `\| bash -s -- --display-only` (add `--url <address>` to skip the search) |
-| A Pi: only Sunroom, no screen | the same with `--server-only` |
-| A Mac: only the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
-| Windows: only the screen | `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 \| iex"` |
+| A Pi, a Linux computer or a Mac: the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
+| Windows: the screen | `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 \| iex"` |
+| A Pi: Sunroom and the screen | the first, ending `\| bash -s -- --with-sunroom` |
+| A Pi: only Sunroom, no screen | the first, ending `\| bash -s -- --server-only` |
 
-`--dry-run` (`-DryRun` on Windows) says what it would do first. [docs/KIOSK.md](docs/KIOSK.md)
-has every option.
+Each installs what the screen needs (a browser too, when there's none) and starts it, and the
+screen finds Sunroom on your network by itself. `--url <address>` skips the search, and
+`--dry-run` (`-DryRun` on Windows) says what it would do first.
+[docs/KIOSK.md](docs/KIOSK.md) has every option.
 
 ## Lost the household password?
 

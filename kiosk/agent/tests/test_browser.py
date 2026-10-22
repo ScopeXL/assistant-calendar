@@ -32,19 +32,61 @@ def test_linux_prefers_chromium_then_chrome_then_edge() -> None:
         "google-chrome": "/usr/bin/google-chrome",
         "microsoft-edge": "/usr/bin/microsoft-edge",
     }
-    found = find_browser("linux", which=installed.get)
+    found = find_browser("linux", which=installed.get, snap=lambda path: False)
     assert found == Browser("chrome", "/usr/bin/google-chrome", "Google Chrome")
     installed["chromium-browser"] = "/usr/bin/chromium-browser"
-    assert find_browser("linux", which=installed.get) == Browser(
+    assert find_browser("linux", which=installed.get, snap=lambda path: False) == Browser(
         "chromium", "/usr/bin/chromium-browser", "Chromium"
     )
     assert find_browser("linux", which=lambda name: None) is None
 
 
+def test_linux_passes_over_a_snaps_browser() -> None:
+    installed = {
+        "chromium": "/snap/bin/chromium",
+        "chromium-browser": "/usr/bin/chromium-browser",  # Ubuntu's script that runs the snap
+        "google-chrome": "/usr/bin/google-chrome",
+    }
+    snaps = {"/snap/bin/chromium", "/usr/bin/chromium-browser"}
+    assert find_browser("linux", which=installed.get, snap=snaps.__contains__) == Browser(
+        "chrome", "/usr/bin/google-chrome", "Google Chrome"
+    )
+    del installed["google-chrome"]
+    assert find_browser("linux", which=installed.get, snap=snaps.__contains__) is None
+
+
+def test_a_snap_is_known_by_its_path_or_by_the_script_that_runs_it(tmp_path: Path) -> None:
+    wrapper = tmp_path / "chromium-browser"
+    wrapper.write_text('#!/bin/sh\nexec /snap/bin/chromium "$@"\n')
+    plain = tmp_path / "chromium"
+    plain.write_text('#!/bin/sh\nexec /usr/lib/chromium/chromium "$@"\n')
+    program = tmp_path / "chrome"
+    program.write_bytes(b"\x7fELF\x02\x01\x01\x00/snap/")
+    assert browser_module.is_snap("/snap/bin/chromium")
+    assert browser_module.is_snap(str(wrapper))
+    assert not browser_module.is_snap(str(plain))
+    assert not browser_module.is_snap(str(program))
+    assert not browser_module.is_snap(str(tmp_path / "missing"))
+
+
 def test_macos_looks_in_applications() -> None:
     edge = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
-    assert find_browser("darwin", exists=lambda path: path == edge) == Browser(
+    assert find_browser("darwin", exists=lambda path: path == edge, home="/Users/ana") == Browser(
         "edge", edge, "Microsoft Edge"
+    )
+
+
+def test_macos_looks_in_the_accounts_own_applications_too() -> None:
+    mine = "/Users/ana/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    shared = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    edge = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+    installed = {mine, edge}
+    assert find_browser("darwin", exists=installed.__contains__, home="/Users/ana") == Browser(
+        "chrome", mine, "Google Chrome"
+    )
+    installed.add(shared)
+    assert find_browser("darwin", exists=installed.__contains__, home="/Users/ana") == Browser(
+        "chrome", shared, "Google Chrome"
     )
 
 

@@ -6,6 +6,22 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- One command sets up a kitchen screen on a Raspberry Pi, another Linux computer or a Mac, with
+  nothing to install first and no options: it installs what the screen needs, a browser too when
+  there's none (Chromium, or Google Chrome from Google on Ubuntu and on a Mac), and starts the
+  screen, which finds Sunroom on your network. To put Sunroom itself on a Pi as well, add
+  `--with-sunroom` (no option used to mean Sunroom and the screen); a Pi that already runs
+  Sunroom keeps it when the installer runs again.
+- On Windows, options can go on the installer's one line too, and its last line says how to
+  remove it with a command that works without a copy of the script.
+
+### Fixed
+
+- A Linux computer with Chromium from a snap (Ubuntu's) no longer tries to run the kitchen screen
+  in it, where it couldn't open its own settings; it gets Google Chrome instead.
+
 ## [0.14.0] - 2026-10-21
 
 ### Added

@@ -1,8 +1,9 @@
 """The wall's browser: find it, start it full screen on the right page, keep it running, and
 look at what it shows (docs/M7.md T6; what ``kiosk/sunroom-kiosk`` did in bash until 0.13.0).
 
-* **Which browser.** Chromium, then Google Chrome, then Microsoft Edge on Linux; Chrome,
-  Chromium, then Edge on macOS; Edge, then Chrome, on Windows (batch 2).
+* **Which browser.** Chromium, then Google Chrome, then Microsoft Edge on Linux, never a
+  snap's; Chrome, Chromium, then Edge on macOS, in /Applications or ~/Applications; Edge, then
+  Chrome, on Windows (batch 2). The installer brings one when there's none (ADR 0037).
 * **Its profile.** ``~/.config/sunroom-kiosk/profile`` keeps the screen's pairing cookie, so
   never ``--incognito``; and never ``--disable-gpu``, which makes the board crawl. Before each
   start the last exit is marked clean, so a power cut never shows "Restore pages?".
@@ -66,10 +67,34 @@ LINUX: tuple[tuple[BrowserKind, str, str], ...] = (
     ("edge", "microsoft-edge-stable", "Microsoft Edge"),
 )
 MACOS: tuple[tuple[BrowserKind, str, str], ...] = (
-    ("chrome", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "Google Chrome"),
-    ("chromium", "/Applications/Chromium.app/Contents/MacOS/Chromium", "Chromium"),
-    ("edge", "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge", "Microsoft Edge"),
+    ("chrome", "Google Chrome.app/Contents/MacOS/Google Chrome", "Google Chrome"),
+    ("chromium", "Chromium.app/Contents/MacOS/Chromium", "Chromium"),
+    ("edge", "Microsoft Edge.app/Contents/MacOS/Microsoft Edge", "Microsoft Edge"),
 )
+
+
+def _mac_paths(home: str) -> tuple[tuple[BrowserKind, str, str], ...]:
+    """Each browser in /Applications, then in ~/Applications, where the installer puts Google
+    Chrome for an account that may not write to /Applications."""
+    return tuple(
+        (kind, f"{folder}/{app}", name)
+        for kind, app, name in MACOS
+        for folder in ("/Applications", f"{home}/Applications")
+    )
+
+
+def is_snap(path: str) -> bool:
+    """A snap's browser can't open the profile under ``~/.config`` or read the policy in /etc
+    (its sandbox hides both), so it isn't used: Ubuntu's Chromium is one, and its
+    ``/usr/bin/chromium-browser`` is a script that runs the snap. The installer skips them too."""
+    if path.startswith("/snap/") or os.path.realpath(path).startswith("/snap/"):
+        return True
+    try:
+        with open(path, "rb") as file:
+            start = file.read(4096)
+    except OSError:
+        return False
+    return start.startswith(b"#!") and b"/snap/" in start
 
 
 def _windows_paths() -> tuple[tuple[BrowserKind, str, str], ...]:
@@ -103,9 +128,11 @@ def find_browser(
     *,
     which: Callable[[str], str | None] = shutil.which,
     exists: Callable[[str], bool] = os.path.exists,
+    snap: Callable[[str], bool] = is_snap,
+    home: str | None = None,
 ) -> Browser | None:
     if system == "darwin":
-        for kind, path, name in MACOS:
+        for kind, path, name in _mac_paths(home or os.path.expanduser("~")):
             if exists(path):
                 return Browser(kind, path, name)
         return None
@@ -116,7 +143,7 @@ def find_browser(
         return None
     for kind, command, name in LINUX:
         path = which(command)
-        if path:
+        if path and not snap(path):
             return Browser(kind, path, name)
     return None
 
