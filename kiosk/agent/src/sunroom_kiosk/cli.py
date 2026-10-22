@@ -111,6 +111,13 @@ def _parser() -> argparse.ArgumentParser:
     update.add_argument("--apply", type=Path, default=None, help=argparse.SUPPRESS)
     update.add_argument("--previous", type=Path, default=None, help=argparse.SUPPRESS)
     update.add_argument("--port", type=int, default=DEFAULT_PORT)
+
+    here = commands.add_parser("sunroom", help="Sunroom run on this computer (ADR 0038)")
+    here_commands = here.add_subparsers(dest="action", required=True)
+    remove = here_commands.add_parser("remove", help="take it off (the uninstallers run this)")
+    remove.add_argument(
+        "--delete-data", action="store_true", help="delete the family's data too (kept otherwise)"
+    )
     return parser
 
 
@@ -144,6 +151,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     from sunroom_kiosk.browser import NoBrowser, Supervisor, find_browser, flags
     from sunroom_kiosk.discovery import Discovery, FakeDiscovery
     from sunroom_kiosk.events import EventHub
+    from sunroom_kiosk.local import LocalSunroom
     from sunroom_kiosk.platform import detect
     from sunroom_kiosk.platform.fake import FakePlatform
     from sunroom_kiosk.state import Agent, BrowserLike
@@ -199,6 +207,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         # The pretend screen's Sunrooms are on this machine: an address that doesn't answer
         # says so at once, rather than after the real five seconds.
         http=_quick_client if fake else None,
+        local=LocalSunroom() if not fake and installed_as_tool() else None,
     )
     holder["agent"] = agent
     app = create_app(agent, static=None if args.dev else STATIC, test_routes=bool(fake))
@@ -333,6 +342,16 @@ def cmd_config(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sunroom(args: argparse.Namespace) -> int:
+    """``sunroom remove``: Sunroom run on this computer, taken off (its data kept unless asked)."""
+    from sunroom_kiosk.local import LocalSunroom
+
+    said = asyncio.run(LocalSunroom().remove(delete_data=bool(args.delete_data)))
+    for line in said or ["Sunroom wasn't set up on this computer."]:
+        print(line)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     given = sys.argv[1:] if argv is None else argv
     # No command, or only run's options: run (the old launcher's units start it bare).
@@ -347,5 +366,6 @@ def main(argv: list[str] | None = None) -> int:
         "update": cmd_update,
         "policy": cmd_policy,
         "config": cmd_config,
+        "sunroom": cmd_sunroom,
     }
     return handlers[cast(str, args.command)](args)

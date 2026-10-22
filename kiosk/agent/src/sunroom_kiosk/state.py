@@ -27,6 +27,7 @@ from sunroom_kiosk.browser import Browser, PageLook
 from sunroom_kiosk.config import Config
 from sunroom_kiosk.discovery import Discovery, Found, found_out, origin_of
 from sunroom_kiosk.events import EventHub
+from sunroom_kiosk.local import LocalSunroom
 from sunroom_kiosk.platform.base import Platform, PlatformError
 from sunroom_kiosk.schemas import (
     ScreenAboutOut,
@@ -54,6 +55,7 @@ ABOUT_EVERY_S = 600.0
 ACTION_DELAY_S = 1.5  # a restart waits this long, so its toast shows first
 RUN_SUNROOM_TRIES = 150  # a new Sunroom answering, 2 s apart: five minutes
 RUN_SUNROOM_PAUSE_S = 2.0
+LOCAL_DOWN_BEFORE_START_S = 20.0  # Windows: Sunroom run here, started again
 
 
 def _rotation(degrees: int) -> ScreenRotation:
@@ -97,6 +99,7 @@ class Agent:
         screen_root: Path = Path("/"),
         fake: bool = False,
         dev_origins: tuple[str, ...] = (),
+        local: LocalSunroom | None = None,
     ) -> None:
         self.port = port
         self.config_path = config_path
@@ -110,6 +113,9 @@ class Agent:
         self.http = http or (lambda: httpx.AsyncClient(timeout=HEALTH_TIMEOUT_S))
         self.fake = fake
         self.dev_origins = dev_origins  # just kiosk-dev: Vite's page, in front of the agent
+        # Sunroom run on this computer as a program (ADR 0038); None where it can't be (a
+        # checkout, --fake) or where the platform runs it its own way (Sunroom OS: Docker).
+        self.local = local if not platform.sunroom_os else None
         self.reachable = False
         self.running_sunroom = False  # one run at a time (POST /run-sunroom)
         self.known = Known()
@@ -212,6 +218,11 @@ class Agent:
 
     def capabilities(self) -> list[ScreenCapability]:
         have = list(self.platform.capabilities())
+        if self.local is not None:
+            if self.local.supported() and "run_sunroom" not in have:
+                have.append("run_sunroom")
+            if self.local.installed() and "update_sunroom" not in have:
+                have.append("update_sunroom")
         if "update_sunroom" in have and not self.sunroom_here():
             have.remove("update_sunroom")
         if "brightness" in have and self._method() == "none" and not self.fake:
@@ -252,6 +263,8 @@ class Agent:
         self.spawn(self._watch_loop())
         self.spawn(self._network_loop())
         self.spawn(self.updater.run(self))
+        if self.local is not None and self.local.installed():
+            self.spawn(self.look_after_local())
         log.info(
             "Sunroom Screen %s is running on %s; it shows %s.",
             version(),
@@ -278,6 +291,8 @@ class Agent:
                 await task
         if self.screen is not None:
             await asyncio.to_thread(self.screen.stop)
+        if self.local is not None:
+            await self.local.stop_helpers()
         await self.browser.stop()
         self.hub.close()
 
@@ -348,6 +363,13 @@ class Agent:
                 await self.ask_sunroom()
             return
         self._down_since = self._down_since or now
+        if (
+            self.local is not None
+            and self.sunroom_here()
+            and now - self._down_since >= LOCAL_DOWN_BEFORE_START_S
+            and self.local.installed()
+        ):
+            await self.local.ensure_running()  # Windows only: nothing else restarts it there
         if (
             now - self._down_since >= DOWN_BEFORE_REFIND_S
             and self.config.found == "discovered"
@@ -439,7 +461,10 @@ class Agent:
         self.running_sunroom = True
         try:
             try:
-                url = await self.platform.run_sunroom(progress)
+                if self.local is not None:
+                    url = await self.local.run_here(progress)
+                else:
+                    url = await self.platform.run_sunroom(progress)
             except PlatformError as error:
                 await progress(100, "Stopped", str(error))
                 return
@@ -456,6 +481,9 @@ class Agent:
                 )
                 return
             await progress(100, "Sunroom is running.")
+            if self.local is not None:
+                await self.local.keep_awake()
+                await self.local.announce()
             found = Found(url=url, id=None, name=None, version=None, setup_complete=False)
             try:
                 found = await self.discovery.check(url)
@@ -512,6 +540,24 @@ class Agent:
 
     # ------------------------------------------------------------------ the machine
 
+    async def look_after_local(self) -> None:
+        """Sunroom run here, as Sunroom Screen starts: the computer kept awake, Sunroom
+        announced, started again on Windows, and brought to Sunroom Screen's own version (which
+        an update of Sunroom Screen changed)."""
+        local = self.local
+        if local is None:
+            return
+        await local.keep_awake()
+        await local.announce()
+        if self.sunroom_here() and not self.reachable:
+            await local.ensure_running()
+        own = version()
+        if self.known.version is not None and newer(own, self.known.version):
+            log.info("Bringing Sunroom on this computer up to %s.", own)
+            if await local.update(own):
+                await self.ask_sunroom()
+                self.publish_state()
+
     async def later(self, action: Callable[[], Awaitable[None]]) -> None:
         """Run ``action`` a moment from now, after the answer (and its toast) went out."""
 
@@ -526,9 +572,15 @@ class Agent:
         self.spawn(go())
 
     async def update_sunroom(self) -> None:
-        """An all-in-one Pi's Sunroom, through update.sh (minutes: it pulls the new image)."""
+        """The Sunroom on this machine: run here as a program, to the newest version (ADR 0038),
+        or an all-in-one Pi's through update.sh (minutes either way)."""
         log.info("Updating the Sunroom on this screen.")
-        if await self.platform.update_sunroom():
+        if self.local is not None and self.local.installed():
+            latest = self.updater.status(self.update_check()).get("latest")
+            updated = await self.local.update(latest if isinstance(latest, str) else version())
+        else:
+            updated = await self.platform.update_sunroom()
+        if updated:
             await self.ask_sunroom()
             self.toast("Sunroom is up to date.")
         else:
