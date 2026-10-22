@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 
 from sunroom_kiosk.platform.base import CommandResult, PlatformError
-from sunroom_kiosk.platform.linux import LinuxPlatform, split_terse, wifi_from
-from sunroom_kiosk.platform.pi import LOCAL_SUNROOM, ROOT_HELPER, PiPlatform, PullProgress, is_pi
+from sunroom_kiosk.platform.linux import ROOT_HELPER, LinuxPlatform, split_terse, wifi_from
+from sunroom_kiosk.platform.pi import LOCAL_SUNROOM, PiPlatform, PullProgress, is_pi
 from tests.support import Shell, ok
 
 WIFI_LIST = "\n".join(
@@ -122,6 +122,26 @@ async def test_the_network_is_wired_wifi_or_none() -> None:
     assert (wifi.kind, wifi.ssid, wifi.strength) == ("wifi", "HomeNet", 82)
     shell.answers = {"nmcli -t -f TYPE,STATE": ok("wifi:disconnected")}
     assert (await linux(shell, "nmcli").network()).kind == "none"
+
+
+async def test_a_desktops_policy_follows_the_address_through_the_root_helper(
+    tmp_path: Path,
+) -> None:
+    helper = tmp_path / ROOT_HELPER.lstrip("/")
+    helper.parent.mkdir(parents=True)
+    helper.write_text("#!/bin/sh\n")
+    shell = Shell()
+    platform = LinuxPlatform(shell, tmp_path, which=tools("google-chrome"))
+    allowed = {"LocalNetworkAccessAllowedForUrls": ["http://192.168.1.20:8080"]}
+    assert await platform.write_policy("chrome", allowed)
+    argv, stdin = shell.calls[0]
+    policy = "/etc/opt/chrome/policies/managed/sunroom-kiosk.json"
+    assert argv == ["sudo", "-n", ROOT_HELPER, "write-policy", policy]
+    assert json.loads(stdin or "") == allowed
+    # Set up before ADR 0038, a desktop has no helper: nothing is tried, and Chrome asks once.
+    bare = Shell()
+    assert not await LinuxPlatform(bare, tmp_path / "old").write_policy("chrome", allowed)
+    assert bare.calls == []
 
 
 def test_a_desktop_can_quit_and_joins_wifi_only_with_networkmanager() -> None:

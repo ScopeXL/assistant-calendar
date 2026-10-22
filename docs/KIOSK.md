@@ -91,10 +91,10 @@ found, its pairing, its Updates choice) and replaces only its own files. Its log
   `http://127.0.0.1:7800`, which only this computer can open. Its settings are in
   `~/.config/sunroom-kiosk/config`; the browser profile, which holds the screen's pairing, is in
   `~/.config/sunroom-kiosk/profile`.
-- On a Pi, one root helper, `/usr/local/sbin/sunroom-kiosk-root`, which
-  `/etc/sudoers.d/sunroom-kiosk` lets your user run without a password, and nothing else: it
-  writes the browser's policy, installs the Pi's own updates, and runs `/opt/sunroom/update.sh`.
-  It checks what it's asked.
+- One root helper, `/usr/local/sbin/sunroom-kiosk-root`, which `/etc/sudoers.d/sunroom-kiosk`
+  lets your user run without a password, and nothing else: it writes the browser's policy (on
+  any Linux screen since ADR 0038), and on a Pi installs the Pi's own updates and runs
+  `/opt/sunroom/update.sh`. It checks what it's asked.
 - The browser's policy, `/etc/chromium/policies/managed/sunroom-kiosk.json` (Google Chrome's is
   under `/etc/opt/chrome`, Edge's under `/etc/opt/edge`): no sign-in, password, translation or
   default-browser prompts, and Sunroom's page may reach Sunroom Screen on this computer without a
@@ -145,9 +145,11 @@ package adds Google's software source, so the system's own updates keep Chrome u
 snap's browser is never used: its sandbox can't open the screen's profile or read its policy.
 
 Then it installs uv and Sunroom Screen as above, the user service, and
-`~/.config/autostart/sunroom-kiosk.desktop`, which starts it when you sign in, and writes the
-browser's policy with `sudo` (without it, the browser asks once on the screen to let Sunroom
-reach Sunroom Screen). Nothing else on the computer changes. When the desktop is signed in, the
+`~/.config/autostart/sunroom-kiosk.desktop`, which starts it when you sign in. With `sudo` it
+writes the browser's policy and puts in the root helper (below), which lets Sunroom Screen
+rewrite that policy whenever the screen's address changes, so the browser never asks on the
+screen to let Sunroom reach Sunroom Screen (without `sudo`, it asks once). Nothing else on the
+computer changes. When the desktop is signed in, the
 one it ran on or, over `ssh`, the one this user is signed in to, it starts the screen at once.
 The computer's own settings turn and dim its screen; This Screen has **Quit Sunroom Screen**,
 which closes it until the next sign-in. Before the screen is paired, `systemctl --user stop

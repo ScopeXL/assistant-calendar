@@ -14,15 +14,13 @@
 
 from __future__ import annotations
 
-import json
 import re
 import shutil
 import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any
 
-from sunroom_kiosk import logs, policy
+from sunroom_kiosk import logs
 from sunroom_kiosk.platform.base import (
     PlatformError,
     Progress,
@@ -33,12 +31,11 @@ from sunroom_kiosk.platform.base import (
     stream_command,
     user_id,
 )
-from sunroom_kiosk.platform.linux import LinuxPlatform
+from sunroom_kiosk.platform.linux import ROOT_HELPER, LinuxPlatform
 from sunroom_kiosk.schemas import ScreenCapability, ScreenPlatform
 
 log = logs.get("platform")
 
-ROOT_HELPER = "/usr/local/sbin/sunroom-kiosk-root"
 SUNROOM_OS_MARK = "etc/sunroom-os"
 LABWC_RULE = Path.home() / ".local" / "share" / "sunroom-kiosk" / "labwc-rule.py"
 X11_TURNS = {0: "normal", 90: "left", 180: "inverted", 270: "right"}
@@ -102,9 +99,6 @@ class PiPlatform(LinuxPlatform):
     @property
     def sunroom_os(self) -> bool:
         return (self.root / SUNROOM_OS_MARK).exists()
-
-    def _root_helper(self) -> bool:
-        return (self.root / ROOT_HELPER.lstrip("/")).exists()
 
     def can_rotate(self) -> bool:
         tool = "xrandr" if self.session == "x11" else "wlr-randr"
@@ -194,21 +188,7 @@ class PiPlatform(LinuxPlatform):
                 log.info("%s", error)
 
     # ------------------------------------------------------------------ root's part
-
-    async def _as_root(self, *args: str, stdin: str | None = None, limit: float = 60.0) -> bool:
-        if not self._root_helper():
-            return False
-        result = await self.run(["sudo", "-n", ROOT_HELPER, *args], stdin=stdin, limit=limit)
-        if not result.ok:
-            log.info("The root helper's %s didn't work: %s", args[0], result.first_line())
-        return result.ok
-
-    async def write_policy(self, kind: policy.BrowserKind, document: dict[str, Any]) -> bool:
-        return await self._as_root(
-            "write-policy",
-            policy.linux_path(kind).as_posix(),
-            stdin=json.dumps(document, sort_keys=True),
-        )
+    # (the browser's policy goes through the root helper as on any Linux screen)
 
     async def update_system(self) -> bool:
         return await self._as_root("apt-upgrade", limit=3600.0)

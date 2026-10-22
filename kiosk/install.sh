@@ -1394,8 +1394,8 @@ install_agent() {
 	note "Installed Sunroom Screen $KIOSK_VERSION."
 }
 
-# A Pi: one root helper for the few root tasks (the browser's policy, the system's updates,
-# update.sh), allowed by sudoers for this user only, and checked by visudo first.
+# One root helper for the few root tasks (the browser's policy; on a Pi, the system's updates and
+# update.sh too), allowed by sudoers for this user only, and checked by visudo first.
 install_root_helper() {
 	local sudoers="$TMP_DIR/sudoers"
 	install_template "$SRC_DIR/files/sunroom-kiosk-root" "$ROOT_HELPER" 0755 root
@@ -1406,7 +1406,11 @@ install_root_helper() {
 	sudo visudo -cqf "$sudoers" >/dev/null 2>&1 ||
 		die "The sudoers file for Sunroom Screen didn't check out (visudo); nothing was changed there."
 	sudo install -m 0440 -o root -g root "$sudoers" "$SUDOERS_FILE"
-	note "Sunroom Screen may update this Pi and set the browser's settings (and nothing else as root)."
+	if [[ $PLATFORM == pi ]]; then
+		note "Sunroom Screen may update this Pi and set the browser's settings (and nothing else as root)."
+	else
+		note "Sunroom Screen may set the browser's settings when its address changes (and nothing else as root)."
+	fi
 }
 
 # Before 0.13.0 the screen helper and the 04:00 browser restart had units of their own; Sunroom
@@ -2157,12 +2161,12 @@ check_linux() {
 	esac
 }
 
-# The browser's policy (policy.py): quiet, and when the address is known, the Sunroom page may
-# reach Sunroom Screen here without asking. It's root's to write and nothing else here needs
-# root, so sudo is asked for this alone. Without it, or for an address the screen finds later
-# (there's no root helper here to rewrite it), the browser asks once, on the screen.
+# The browser's policy (policy.py): quiet, and the Sunroom page may reach Sunroom Screen here
+# without asking (Chrome's Local Network Access). It's root's to write, so sudo is asked for it and
+# for the root helper that lets Sunroom Screen rewrite it whenever the screen's address changes,
+# one it finds itself too (ADR 0038). Without sudo the browser asks once, on the screen.
 write_linux_policy() {
-	local tmp="$TMP_DIR/policy.json" dir dirs wrote=0
+	local tmp="$TMP_DIR/policy.json" dir dirs wrote=0 helper=0
 	dirs=$(linux_policy_dirs)
 	[[ -n $dirs ]] || return 0
 	if ! "$BIN_DIR/sunroom-kiosk" policy ${URL:+--url "$URL"} >"$tmp" 2>>"$LOG_FILE"; then
@@ -2174,6 +2178,12 @@ write_linux_policy() {
 		warn "without sudo the browser may ask once, on the screen, to reach Sunroom Screen."
 		return 0
 	fi
+	if [[ -x /usr/bin/python3 ]]; then
+		install_root_helper
+		helper=1
+	else
+		warn "there's no /usr/bin/python3 for Sunroom Screen's root helper, so the browser may ask once, on the screen."
+	fi
 	for dir in $dirs; do
 		if sudo install -d -m 0755 "$dir" && sudo install -m 0644 -o root -g root "$tmp" "$dir/sunroom-kiosk.json"; then
 			wrote=1
@@ -2181,8 +2191,10 @@ write_linux_policy() {
 			warn "couldn't write $dir/sunroom-kiosk.json; the browser may ask once, on the screen."
 		fi
 	done
-	if ((wrote)); then
-		note "The browser won't ask for sign-in, passwords or translations${URL:+, and Sunroom may reach Sunroom Screen}."
+	if ((wrote)) && { ((helper)) || [[ -n $URL ]]; }; then
+		note "The browser won't ask for sign-in, passwords or translations, and Sunroom may reach Sunroom Screen."
+	elif ((wrote)); then
+		note "The browser won't ask for sign-in, passwords or translations."
 	fi
 }
 
@@ -2433,7 +2445,9 @@ dry_run_screen() {
 	else
 		say "  - start Sunroom Screen when you sign in ($(tidy "$XDG_AUTOSTART_FILE"),"
 		say "    sunroom-kiosk.service)"
-		say "  - set the browser's policy, with sudo, so it doesn't ask for sign-in or passwords"
+		say "  - set the browser's policy with sudo, and let Sunroom Screen keep it in step with the"
+		say "    address it shows through one root helper ($ROOT_HELPER, allowed by"
+		say "    $SUDOERS_FILE)"
 		say "  - start the kitchen screen now when this computer's desktop is signed in (it fills"
 		say "    the screen)"
 		say "Nothing else is installed, and no other settings on this computer change."

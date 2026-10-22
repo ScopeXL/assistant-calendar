@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-"""sunroom-kiosk-root: the few things Sunroom Screen does as root on a Raspberry Pi.
+"""sunroom-kiosk-root: the few things Sunroom Screen does as root on a Raspberry Pi, and on
+another Linux computer the browser's policy alone (ADR 0038).
 
 Allowed by /etc/sudoers.d/sunroom-kiosk for the screen's user, with no password, and nothing
 else; it checks everything it's given (docs/KIOSK.md, docs/M7.md T7):

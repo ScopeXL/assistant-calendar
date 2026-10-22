@@ -19,6 +19,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ### Fixed
 
+- A Linux screen that finds its Sunroom by itself no longer asks on the screen to let Sunroom
+  reach it: Sunroom Screen keeps the browser's settings in step with the screen's address, as on
+  a Pi.
 - A Linux computer with Chromium from a snap (Ubuntu's) no longer tries to run the kitchen screen
   in it, where it couldn't open its own settings; it gets Google Chrome instead.
 

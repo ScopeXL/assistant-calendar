@@ -9,20 +9,27 @@
   (a Wayland socket or an X display), and up to a minute for the clock; on X11, switch off the
   screensaver and blanking (``xset s off``, ``xset dpms 0 0 0``, never ``xset -dpms``) and hide
   the pointer with ``unclutter``.
+* **The root helper** ``/usr/local/sbin/sunroom-kiosk-root`` (kiosk/files, allowed by
+  ``/etc/sudoers.d/sunroom-kiosk`` for this user only), which the installer puts on every Linux
+  screen since ADR 0038: the browser's policy follows the address the screen shows, one it found
+  itself too, so Chrome's Local Network Access never asks on the screen.
 
 A desktop that isn't a Pi can Quit (Sunroom Screen stops until the next sign-in); it doesn't turn
-its picture (its own display settings do) and has no root helper (its system updates aren't ours).
+its picture (its own display settings do), and the root helper does nothing else for it (its
+system updates aren't ours).
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import shutil
 from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import Any
 
-from sunroom_kiosk import logs
+from sunroom_kiosk import logs, policy
 from sunroom_kiosk.platform.base import (
     CommandResult,
     NetworkStatus,
@@ -38,6 +45,7 @@ from sunroom_kiosk.schemas import ScreenCapability, ScreenSession
 
 log = logs.get("platform")
 
+ROOT_HELPER = "/usr/local/sbin/sunroom-kiosk-root"
 DESKTOP_WAIT_S = 2.0
 CLOCK_TRIES = 30  # 2 s apart: a minute
 
@@ -154,12 +162,34 @@ class LinuxPlatform(Platform):
     def has_wifi(self) -> bool:
         return self.which("nmcli") is not None
 
+    def _root_helper(self) -> bool:
+        return (self.root / ROOT_HELPER.lstrip("/")).exists()
+
     def capabilities(self) -> list[ScreenCapability]:
         have: list[ScreenCapability] = ["restart", "shutdown", "update"]
         if self.has_wifi():
             have.append("wifi")
         have.append("quit")
         return have
+
+    # ------------------------------------------------------------------ root's part
+
+    async def _as_root(self, *args: str, stdin: str | None = None, limit: float = 60.0) -> bool:
+        """The root helper, when the installer put it here (a screen set up before ADR 0038
+        has none, and its browser asks once instead)."""
+        if not self._root_helper():
+            return False
+        result = await self.run(["sudo", "-n", ROOT_HELPER, *args], stdin=stdin, limit=limit)
+        if not result.ok:
+            log.info("The root helper's %s didn't work: %s", args[0], result.first_line())
+        return result.ok
+
+    async def write_policy(self, kind: policy.BrowserKind, document: dict[str, Any]) -> bool:
+        return await self._as_root(
+            "write-policy",
+            policy.linux_path(kind).as_posix(),
+            stdin=json.dumps(document, sort_keys=True),
+        )
 
     # ------------------------------------------------------------------ the machine
 

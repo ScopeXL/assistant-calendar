@@ -1,4 +1,4 @@
-# Sunroom Screen's few root tasks on this Pi, through one helper that checks what it's asked
+# Sunroom Screen's few root tasks on this computer, through one helper that checks what it's asked
 # (/usr/local/sbin/sunroom-kiosk-root: the browser's policy, the system's updates, Sunroom's
 # update.sh). For the screen's user only, without a password, and nothing else.
 @USER@ ALL=(root) NOPASSWD: /usr/local/sbin/sunroom-kiosk-root
