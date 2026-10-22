@@ -54,13 +54,23 @@ jobs:
         run: |
           (cd frontend && pnpm install --frozen-lockfile && pnpm exec vite build --config vite.screen.config.ts)
           (cd kiosk/agent && uv build --wheel --out-dir dist)
+      # Sunroom run as a program on a computer (ADR 0038): the server wheel with the built app
+      # inside and this version stamped in, and its constraints from backend/uv.lock.
+      - name: Build Sunroom's server wheel
+        run: |
+          (cd frontend && pnpm exec vite build)
+          uv run --quiet --no-project --python 3.14 scripts/server_wheel.py
       - name: Collect the files and their checksums
         run: |
-          wheel="kiosk/agent/dist/sunroom_kiosk-$(cat VERSION)-py3-none-any.whl"
+          version=$(cat VERSION)
+          wheel="kiosk/agent/dist/sunroom_kiosk-$version-py3-none-any.whl"
           unzip -l "$wheel" | grep -q 'sunroom_kiosk/static/screen.html' ||
             { echo "The wheel has no screen pages in it."; exit 1; }
+          server="backend/dist/sunroom-$version-py3-none-any.whl"
+          unzip -l "$server" | grep -q 'sunroom/static/index.html' ||
+            { echo "The server wheel has no app in it."; exit 1; }
           mkdir assets
-          cp "$wheel" kiosk/install.sh assets/
+          cp "$wheel" "$server" "backend/dist/sunroom-$version-constraints.txt" kiosk/install.sh assets/
           if [ -f kiosk/install.ps1 ]; then cp kiosk/install.ps1 assets/; fi
           (cd assets && sha256sum -- * >SHA256SUMS && cat SHA256SUMS)
       - name: Wait for the Release, or make a draft

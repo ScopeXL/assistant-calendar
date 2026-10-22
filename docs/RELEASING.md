@@ -14,10 +14,13 @@ does the rest. This page explains the pieces, and how to release without Claude.
 - An annotated git tag `vX.Y.Z` that is never moved.
 - A GitHub Release `vX.Y.Z` with that section as its notes, and its files, which
   `.github/workflows/release-assets.yml` builds on GitHub when the tag is pushed: Sunroom
-  Screen's wheel (`sunroom_kiosk-X.Y.Z-py3-none-any.whl`, its pages built in), `install.sh`
-  and `install.ps1`, and `SHA256SUMS`, uploaded last. The installers and Sunroom
-  Screen's own updates take the wheel from there and check it against `SHA256SUMS`; nothing is
-  uploaded from the Mac. Sunroom's own update check stays on tags (ADR 0032).
+  Screen's wheel (`sunroom_kiosk-X.Y.Z-py3-none-any.whl`, its pages built in), Sunroom's server
+  wheel (`sunroom-X.Y.Z-py3-none-any.whl`, the app built in and the version stamped in by
+  `scripts/server_wheel.py`, as `just server-build` does) with its constraints
+  (`sunroom-X.Y.Z-constraints.txt`, from `backend/uv.lock`) for Sunroom run as a program on a
+  computer (ADR 0038), `install.sh` and `install.ps1`, and `SHA256SUMS`, uploaded last. The
+  installers and Sunroom Screen's own updates take the wheels from there and check them against
+  `SHA256SUMS`; nothing is uploaded from the Mac. Sunroom's own update check stays on tags (ADR 0032).
 - Sunroom OS's card image, `sunroom-os-X.Y.Z-pi-arm64.img.xz` with its `.sha256` and Imager's
   `imager.json`, built by `.github/workflows/sunroom-os.yml` on GitHub's arm64 runner (about an
   hour; [SUNROOM-OS.md](SUNROOM-OS.md)) and added to the same Release.
