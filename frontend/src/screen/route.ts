@@ -1,12 +1,23 @@
 /**
- * The screen's own pages have six addresses and no links between machines, so their router is
+ * The screen's own pages have seven addresses and no links between machines, so their router is
  * a store of the path and the history API (no router library to load). The agent opens `/`
  * (nothing chosen yet), `/opening`, `/cant-reach`, `/find` and `/settings`.
  */
 import { createStore } from "../lib/store";
 
-export const PATHS = ["/", "/wifi", "/find", "/opening", "/cant-reach", "/settings"] as const;
+export const PATHS = [
+  "/",
+  "/here",
+  "/wifi",
+  "/find",
+  "/opening",
+  "/cant-reach",
+  "/settings",
+] as const;
 export type ScreenPath = (typeof PATHS)[number];
+
+/** Where Connect to Wi-Fi goes once the screen is on a network: the way chosen on Welcome. */
+export const afterWifi = createStore<"/here" | "/find">("/find");
 
 function isPath(path: string): path is ScreenPath {
   return (PATHS as readonly string[]).includes(path);

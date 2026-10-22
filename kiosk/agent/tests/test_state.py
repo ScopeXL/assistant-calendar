@@ -173,9 +173,10 @@ async def test_run_it_here_waits_for_the_new_sunroom_then_shows_it(
     assert (saved.url, saved.found) == (LOCAL, "local")
     steps = [data for kind, data in said if kind == "run.progress"]
     assert steps[-2:] == [
-        {"percent": 92, "step": "Starting Sunroom…"},
-        {"percent": 100, "step": "Sunroom is running."},
+        {"percent": 92, "step": "Starting Sunroom…", "message": None},
+        {"percent": 100, "step": "Sunroom is running.", "message": None},
     ]
+    assert not agent.running_sunroom
 
 
 async def test_run_it_here_says_so_when_sunroom_never_answers(
@@ -191,8 +192,25 @@ async def test_run_it_here_says_so_when_sunroom_never_answers(
     said: list[tuple[str, object]] = []
     agent.hub.publish = lambda kind, data: said.append((kind, data))  # type: ignore[method-assign]
     await agent.run_sunroom()
-    assert (
-        "toast",
-        {"message": "Sunroom didn't start. Restart this screen, then try again."},
-    ) in said
+    # The page shows why, with Try Again: the run's last progress carries it.
+    steps = [data for kind, data in said if kind == "run.progress"]
+    assert steps[-1] == {
+        "percent": 100,
+        "step": "Stopped",
+        "message": "Sunroom didn't start. Restart this screen, then try again.",
+    }
     assert settings_file.load(config_path).url is None
+    assert not agent.running_sunroom
+
+
+async def test_a_second_tap_joins_the_run_already_going(
+    make_agent: Callable[..., Agent], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    agent = make_agent()
+    started: list[object] = []
+    monkeypatch.setattr(agent, "spawn", started.append)
+    agent.start_run()
+    agent.start_run()
+    assert len(started) == 1 and agent.running_sunroom
+    for work in started:  # never awaited here; close it so Python doesn't warn
+        work.close()  # type: ignore[attr-defined]

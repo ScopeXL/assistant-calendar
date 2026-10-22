@@ -3,11 +3,14 @@
 Three Wi-Fi networks, a power button that only records what it was asked, a screen that turns,
 and no files outside the agent's own folder. ``kind`` is ``pi`` (Sunroom OS on a Raspberry Pi,
 every capability) or ``desktop`` (a computer: Quit, and the system's own network settings).
-Names are synthetic, like every fixture (CLAUDE.md, hard rule 1).
+Either can run Sunroom here (ADR 0038): the run "starts" the first ``--fake-sunroom`` (the e2e
+server), or holds part way, or stops, as a test asks. Names are synthetic, like every fixture
+(CLAUDE.md, hard rule 1).
 """
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import replace
 from typing import Any, Literal
 
@@ -22,6 +25,7 @@ from sunroom_kiosk.policy import BrowserKind
 from sunroom_kiosk.schemas import ScreenCapability, ScreenPlatform, ScreenSession
 
 type FakeKind = Literal["pi", "desktop"]
+type FakeRun = Literal["ok", "hold", "fail"]
 
 TURNED_DOWN = "wrong-password"  # the one Wi-Fi password the fake turns down
 
@@ -35,7 +39,7 @@ def _networks() -> list[WifiNetwork]:
 
 
 class FakePlatform(Platform):
-    def __init__(self, kind: FakeKind = "pi") -> None:
+    def __init__(self, kind: FakeKind = "pi", local_url: str = "http://localhost:8080") -> None:
         super().__init__()
         self.kind: FakeKind = kind
         self.calls: list[str] = []  # what it was asked to do, in order
@@ -43,6 +47,9 @@ class FakePlatform(Platform):
         self.wired = False
         self.rotation = 0
         self.policies: dict[BrowserKind, dict[str, Any]] = {}
+        self.local_url = local_url  # where Sunroom "runs here"
+        self.run: FakeRun = "ok"
+        self._release = asyncio.Event()
 
     def reset(self, kind: FakeKind = "pi") -> None:
         """As it started: the test server's reset calls this before each test."""
@@ -52,6 +59,9 @@ class FakePlatform(Platform):
         self.wired = False
         self.rotation = 0
         self.policies.clear()
+        self.run = "ok"
+        self._release.set()  # a held run stops, so it saves nothing into the next test
+        self._release = asyncio.Event()
 
     @property
     def name(self) -> ScreenPlatform:
@@ -88,7 +98,15 @@ class FakePlatform(Platform):
                 "run_sunroom",
                 "update_sunroom",
             ]
-        return ["restart", "shutdown", "update", "quit", "open_network_settings"]
+        return [
+            "restart",
+            "shutdown",
+            "update",
+            "quit",
+            "open_network_settings",
+            "run_sunroom",
+            "update_sunroom",
+        ]
 
     async def restart(self) -> None:
         self.calls.append("restart")
@@ -151,11 +169,16 @@ class FakePlatform(Platform):
 
     async def run_sunroom(self, progress: Progress) -> str:
         self.calls.append("run_sunroom")
-        steps = (
-            (10, "Downloading Sunroom…"),
-            (60, "Downloading Sunroom…"),
-            (90, "Downloading Sunroom…"),
-        )
-        for percent, step in steps:
+        await progress(10, "Downloading Sunroom…")
+        if self.run == "fail":
+            raise PlatformError(
+                "Sunroom didn't download. Check this computer's internet connection, "
+                "then try again."
+            )
+        if self.run == "hold":
+            await progress(40, "Downloading Sunroom…")
+            await self._release.wait()
+            raise PlatformError("Stopped.")
+        for percent, step in ((60, "Installing Sunroom…"), (90, "Installing Sunroom…")):
             await progress(percent, step)
-        return "http://localhost:8080"
+        return self.local_url

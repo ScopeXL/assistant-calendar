@@ -3,15 +3,12 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 import { qk } from "../../api/keys";
 import {
-  runProgress,
   screenClient,
   sunroomName,
   type ScreenFound,
   type ScreenState,
 } from "../../lib/screenAgent";
-import { useStore } from "../../lib/store";
 import { Button } from "../../ui/Button";
-import { Digits } from "../../ui/Digits";
 import { TextField } from "../../ui/TextField";
 import { go } from "../route";
 
@@ -152,45 +149,6 @@ function OnYourNetwork() {
   );
 }
 
-function RunItHere() {
-  const progress = useStore(runProgress);
-  const run = useMutation({
-    mutationFn: async () => {
-      const { error } = await agent().POST("/api/screen/run-sunroom");
-      if (error !== undefined) throw new Error(said(error));
-    },
-  });
-  return (
-    <Card heading="Run It on This Screen">
-      <p className="text-d-body">
-        Sunroom runs on this screen, and the whole family uses it from their phones.
-      </p>
-      {progress ? (
-        <p className="text-d-body font-semibold" role="status">
-          {progress.step.replace(/…$/, "")}… <Digits value={`${String(progress.percent)}%`} />
-        </p>
-      ) : (
-        <div>
-          <Button
-            variant="secondary"
-            pending={run.isPending}
-            onClick={() => {
-              run.mutate();
-            }}
-          >
-            Run Sunroom Here
-          </Button>
-        </div>
-      )}
-      {run.isError ? (
-        <p role="alert" className="text-d-body font-semibold text-alert">
-          {run.error.message}
-        </p>
-      ) : null}
-    </Card>
-  );
-}
-
 function SomewhereElse() {
   const [typed, setTyped] = useState("https://");
   const choose = useChoose();
@@ -263,22 +221,19 @@ function SomewhereElse() {
   );
 }
 
-/** Where Is Your Sunroom? On the network, on this screen, or at an address someone was given. */
+/** Where Is Your Sunroom? On the network, or at an address someone was given (On Another
+ * Computer, on Welcome; running it here is Welcome's other way, ADR 0038). */
 export function FindPage({ state }: { state: ScreenState }) {
-  const local = state.capabilities.includes("run_sunroom");
   const chosen = state.sunroom !== null;
   useEffect(() => {
-    // Sunroom started here (Run It on This Screen) or chosen elsewhere: open it.
+    // Chosen here, or in another of this screen's pages meanwhile: open it.
     if (chosen) go("/opening", true);
   }, [chosen]);
   return (
     <div className="flex w-full max-w-[110rem] flex-col gap-8">
       <h1 className="text-d-glance font-bold">Where Is Your Sunroom?</h1>
-      <div
-        className={`grid gap-6 portrait:grid-cols-1 ${local ? "landscape:grid-cols-3" : "landscape:grid-cols-2"}`}
-      >
+      <div className="grid gap-6 portrait:grid-cols-1 landscape:grid-cols-2">
         <OnYourNetwork />
-        {local ? <RunItHere /> : null}
         <SomewhereElse />
       </div>
       <div>

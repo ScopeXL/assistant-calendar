@@ -938,8 +938,12 @@ test("the screen's own pages (Sunroom Screen, ADR 0035)", async ({ page }, testI
     const reset = await page.request.post(`${agent}/api/screen/_test/reset`, { headers: change });
     expect(reset.status()).toBe(204);
     await page.goto(`${agent}/`);
-    await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Run Sunroom Here" })).toBeVisible();
     await shot(page, `screen-welcome-${theme}`);
+    await fake({ run: "hold" });
+    await page.goto(`${agent}/here`);
+    await expect(page.getByRole("main").getByRole("status")).toContainText("Downloading Sunroom…");
+    await shot(page, `screen-here-${theme}`);
     await page.goto(`${agent}/find`);
     await expect(page.getByText("A Sunroom", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Look Again" })).toBeVisible();

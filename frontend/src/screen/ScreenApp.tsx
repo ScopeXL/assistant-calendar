@@ -14,6 +14,7 @@ import { ShellContext } from "../ui/shell";
 import { ToastRegion } from "../ui/ToastRegion";
 import { CantReachPage } from "./pages/CantReachPage";
 import { FindPage } from "./pages/FindPage";
+import { HerePage } from "./pages/HerePage";
 import { OpeningPage } from "./pages/OpeningPage";
 import { ScreenSettingsPage } from "./pages/ScreenSettingsPage";
 import { WelcomePage } from "./pages/WelcomePage";
@@ -73,6 +74,8 @@ function ScreenFrame({ children }: { children: ReactNode }) {
 
 function Page({ path, state }: { path: ScreenPath; state: ScreenState }) {
   switch (path) {
+    case "/here":
+      return <HerePage state={state} />;
     case "/wifi":
       return <WifiPage state={state} />;
     case "/find":

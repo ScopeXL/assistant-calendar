@@ -4,13 +4,19 @@ import type { ReactNode } from "react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { qk } from "../api/keys";
-import { forgetScreenAgent, noteOwnScreenAgent, type ScreenState } from "../lib/screenAgent";
+import {
+  forgetScreenAgent,
+  noteOwnScreenAgent,
+  runProgress,
+  type ScreenState,
+} from "../lib/screenAgent";
 import { ShellContext } from "../ui/shell";
 import { CantReachPage } from "./pages/CantReachPage";
 import { FindPage } from "./pages/FindPage";
+import { HerePage } from "./pages/HerePage";
 import { OpeningPage } from "./pages/OpeningPage";
 import { needsWifi, WelcomePage } from "./pages/WelcomePage";
-import { go, route } from "./route";
+import { afterWifi, go, route } from "./route";
 
 vi.mock("./route", async (original) => ({
   ...(await original<typeof import("./route")>()),
@@ -112,7 +118,7 @@ function draw(page: ReactNode, cache: (client: QueryClient) => void = () => unde
   );
 }
 
-describe("the screen's own pages (ADR 0035)", () => {
+describe("the screen's own pages (ADR 0035, ADR 0038)", () => {
   it("joins Wi-Fi first only on Sunroom OS with no network at all", () => {
     expect(
       needsWifi(state({ network: { kind: "none", ssid: null, ip: null, strength: null } })),
@@ -128,13 +134,77 @@ describe("the screen's own pages (ADR 0035)", () => {
     ).toBe(false);
   });
 
-  it("welcomes a fresh screen, and Start goes on to finding its Sunroom", () => {
+  it("welcomes a fresh screen with two ways on, each saying what it is (ADR 0038)", () => {
     draw(<WelcomePage state={state()} />);
     expect(screen.getByRole("heading", { name: "Sunroom", level: 1 })).toBeTruthy();
-    expect(screen.getByText("Let’s get this screen set up.")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(screen.getByText("Where will your family’s Sunroom run?")).toBeTruthy();
+    const here = screen.getByRole("region", { name: "On This Computer" });
+    expect(within(here).getByText("Sunroom runs right here.")).toBeTruthy();
+    expect(within(here).getByText(/Choose this if your family is new to Sunroom/)).toBeTruthy();
+    const elsewhere = screen.getByRole("region", { name: "On Another Computer" });
+    expect(within(elsewhere).getByText("Your family already has a Sunroom.")).toBeTruthy();
+    fireEvent.click(within(elsewhere).getByRole("button", { name: "Find Your Sunroom" }));
     expect(route.get()).toBe("/find");
     expect(window.location.pathname).toBe("/find");
+    fireEvent.click(within(here).getByRole("button", { name: "Run Sunroom Here" }));
+    expect(route.get()).toBe("/here");
+  });
+
+  it("offers only another computer where Sunroom can't run on this one", () => {
+    draw(<WelcomePage state={state({ capabilities: ["restart", "shutdown", "update"] })} />);
+    expect(screen.queryByRole("region", { name: "On This Computer" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Find Your Sunroom" })).toBeTruthy();
+  });
+
+  it("joins Wi-Fi first when offline, then goes on the way chosen", () => {
+    afterWifi.set("/find");
+    const offline = state({ network: { kind: "none", ssid: null, ip: null, strength: null } });
+    draw(<WelcomePage state={offline} />);
+    fireEvent.click(screen.getByRole("button", { name: "Run Sunroom Here" }));
+    expect(route.get()).toBe("/wifi");
+    expect(afterWifi.get()).toBe("/here");
+  });
+
+  it("sets Sunroom up on this computer as its page opens, and says how far it is", async () => {
+    runProgress.set(null);
+    draw(<HerePage state={state({ platform: "macos" })} />);
+    expect(screen.getByRole("heading", { name: "Setting Up Sunroom" })).toBeTruthy();
+    await waitFor(() => {
+      expect(calls.filter((call) => call.path === "/api/screen/run-sunroom")).toHaveLength(1);
+    });
+    expect(screen.getByRole("status").textContent).toBe("Getting ready…");
+    act(() => {
+      runProgress.set({ percent: 40, step: "Downloading Sunroom…", message: null });
+    });
+    const status = screen.getByRole("status");
+    expect(status.textContent).toMatch(/^Downloading Sunroom… /);
+    expect(within(status).getByText("40%")).toBeTruthy(); // what a screen reader hears
+    expect(screen.getByText(/choose Allow, so your family’s phones can reach it/)).toBeTruthy();
+  });
+
+  it("says why setting Sunroom up stopped, and Try Again runs it again", async () => {
+    runProgress.set(null);
+    draw(<HerePage state={state()} />);
+    await waitFor(() => {
+      expect(calls.filter((call) => call.path === "/api/screen/run-sunroom")).toHaveLength(1);
+    });
+    expect(screen.queryByText(/choose Allow/)).toBeNull();
+    act(() => {
+      runProgress.set({
+        percent: 100,
+        step: "Stopped",
+        message: "Sunroom didn't start. Restart this screen, then try again.",
+      });
+    });
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Sunroom didn't start. Restart this screen, then try again.",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    await waitFor(() => {
+      expect(calls.filter((call) => call.path === "/api/screen/run-sunroom")).toHaveLength(2);
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(route.get()).toBe("/");
   });
 
   it("lists what it found, a new Sunroom by name and an older one by version", async () => {
@@ -165,7 +235,8 @@ describe("the screen's own pages (ADR 0035)", () => {
     expect(await within(network).findByText("The Sample Family’s Sunroom")).toBeTruthy();
     expect(within(network).getByText(`${SUNROOM} · version 0.13.0`)).toBeTruthy();
     expect(within(network).getByText("A Sunroom")).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Run It on This Screen" })).toBeTruthy();
+    // Running it here is Welcome's other way now (ADR 0038), not a card here.
+    expect(screen.queryByRole("region", { name: "Run It on This Screen" })).toBeNull();
     const [first] = within(network).getAllByRole("button", { name: "Use This Sunroom" });
     if (!first) throw new Error("nothing to use");
     fireEvent.click(first);
@@ -187,7 +258,6 @@ describe("the screen's own pages (ADR 0035)", () => {
       message: "That address isn't a Sunroom. Check it and try again.",
     };
     draw(<FindPage state={state({ capabilities: ["restart"] })} />);
-    expect(screen.queryByRole("region", { name: "Run It on This Screen" })).toBeNull();
     const elsewhere = screen.getByRole("region", { name: "Somewhere Else" });
     const field = within(elsewhere).getByLabelText("Type the address you were given.");
     expect((field as HTMLInputElement).value).toBe("https://");

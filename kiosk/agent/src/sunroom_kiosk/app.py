@@ -329,7 +329,7 @@ async def forget_sunroom(agent: AgentDep) -> ScreenStateOut:
 @router.post("/run-sunroom", status_code=202)
 async def run_sunroom(agent: AgentDep) -> ScreenAcceptedOut:
     need(agent, "run_sunroom", "Running Sunroom here")
-    agent.spawn(agent.run_sunroom())
+    agent.start_run()
     return ScreenAcceptedOut()
 
 

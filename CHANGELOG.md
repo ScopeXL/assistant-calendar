@@ -14,6 +14,10 @@ Everything that changes in Sunroom, written in plain English. The format follows
   screen, which finds Sunroom on your network. To put Sunroom itself on a Pi as well, add
   `--with-sunroom` (no option used to mean Sunroom and the screen); a Pi that already runs
   Sunroom keeps it when the installer runs again.
+- A new screen's first page asks where your family's Sunroom will run: **On This Computer** sets
+  Sunroom up right there (Setting Up Sunroom shows how far it is, and why it stopped with Try
+  Again), and **On Another Computer** finds the one you already have or takes its address. Each
+  says what it is and when to choose it.
 - On Windows, options can go on the installer's one line too, and its last line says how to
   remove it with a command that works without a copy of the script.
 

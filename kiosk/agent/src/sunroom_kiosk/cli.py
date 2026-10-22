@@ -145,6 +145,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     from sunroom_kiosk.discovery import Discovery, FakeDiscovery
     from sunroom_kiosk.events import EventHub
     from sunroom_kiosk.platform import detect
+    from sunroom_kiosk.platform.fake import FakePlatform
     from sunroom_kiosk.state import Agent, BrowserLike
     from sunroom_kiosk.updater import FakeUpdater, NoUpdates, Updater, UpdaterLike
 
@@ -154,12 +155,11 @@ def cmd_run(args: argparse.Namespace) -> int:
     path = cast(Path | None, args.config) or settings_file.config_file()
     fake = cast(str | None, args.fake)
     platform = detect("pi" if fake == "pi" else "desktop" if fake == "desktop" else None)
+    fake_sunrooms = cast(list[str], args.fake_sunroom)
+    if isinstance(platform, FakePlatform) and fake_sunrooms:
+        platform.local_url = fake_sunrooms[0]  # Run Sunroom Here "starts" the e2e server
     hub = EventHub()
-    discovery = (
-        FakeDiscovery(hub.publish, cast(list[str], args.fake_sunroom))
-        if fake
-        else Discovery(hub.publish)
-    )
+    discovery = FakeDiscovery(hub.publish, fake_sunrooms) if fake else Discovery(hub.publish)
     updater: UpdaterLike = (
         FakeUpdater() if fake else Updater(port=port) if installed_as_tool() else NoUpdates()
     )

@@ -111,6 +111,7 @@ class Agent:
         self.fake = fake
         self.dev_origins = dev_origins  # just kiosk-dev: Vite's page, in front of the agent
         self.reachable = False
+        self.running_sunroom = False  # one run at a time (POST /run-sunroom)
         self.known = Known()
         self.started = time.monotonic()
         self.screen_root = screen_root
@@ -420,35 +421,49 @@ class Agent:
         found = await self.discovery.scan()
         log.info("Found %d Sunroom%s.", len(found), "" if len(found) == 1 else "s")
 
+    def start_run(self) -> None:
+        """Run Sunroom here, unless a run is already going: a second tap joins it."""
+        if self.running_sunroom:
+            return
+        self.running_sunroom = True
+        self.spawn(self.run_sunroom())
+
     async def run_sunroom(self) -> None:
-        """Sunroom OS: start Sunroom on this screen (batch 2, T16), then show it."""
+        """Sunroom on this computer (ADR 0038; Sunroom OS's Run It on This Screen before it): set
+        it up and start it, then show it. One run at a time, and a run that stops says why in its
+        last progress, which the page shows with Try Again."""
 
-        async def progress(percent: int, step: str) -> None:
-            self.hub.publish("run.progress", {"percent": percent, "step": step})
+        async def progress(percent: int, step: str, message: str | None = None) -> None:
+            self.hub.publish("run.progress", {"percent": percent, "step": step, "message": message})
 
+        self.running_sunroom = True
         try:
-            url = await self.platform.run_sunroom(progress)
-        except PlatformError as error:
-            self.toast(str(error))
-            await progress(100, "Stopped")
-            return
-        # Its first start migrates an empty database: up to five minutes, as the installer waits.
-        await progress(92, "Starting Sunroom…")
-        for _ in range(RUN_SUNROOM_TRIES):
-            if await self.healthy(url):
-                break
-            await asyncio.sleep(RUN_SUNROOM_PAUSE_S)
-        else:
-            self.toast("Sunroom didn't start. Restart this screen, then try again.")
-            await progress(100, "Stopped")
-            return
-        await progress(100, "Sunroom is running.")
-        found = Found(url=url, id=None, name=None, version=None, setup_complete=False)
-        try:
-            found = await self.discovery.check(url)
-        except Exception as error:  # it answered once; the screen still uses it
-            log.info("The new Sunroom didn't answer its first check: %r", error)
-        await self.use(found, "local")
+            try:
+                url = await self.platform.run_sunroom(progress)
+            except PlatformError as error:
+                await progress(100, "Stopped", str(error))
+                return
+            # Its first start migrates an empty database: up to five minutes, as the installer
+            # waits.
+            await progress(92, "Starting Sunroom…")
+            for _ in range(RUN_SUNROOM_TRIES):
+                if await self.healthy(url):
+                    break
+                await asyncio.sleep(RUN_SUNROOM_PAUSE_S)
+            else:
+                await progress(
+                    100, "Stopped", "Sunroom didn't start. Restart this screen, then try again."
+                )
+                return
+            await progress(100, "Sunroom is running.")
+            found = Found(url=url, id=None, name=None, version=None, setup_complete=False)
+            try:
+                found = await self.discovery.check(url)
+            except Exception as error:  # it answered once; the screen still uses it
+                log.info("The new Sunroom didn't answer its first check: %r", error)
+            await self.use(found, "local")
+        finally:
+            self.running_sunroom = False
 
     async def use(self, found: Found, how: str, *, moved: bool = False) -> None:
         """Show ``found`` on this screen from now on: save it, rewrite the browser's policy,
@@ -572,6 +587,7 @@ class Agent:
         wired: bool | None = None,
         offline: bool | None = None,
         sunroom: str | None = None,
+        run: str | None = None,
     ) -> None:
         from sunroom_kiosk.platform.fake import FakePlatform
 
@@ -579,6 +595,8 @@ class Agent:
             return
         if kind == "pi" or kind == "desktop":
             self.platform.kind = kind
+        if run == "ok" or run == "hold" or run == "fail":
+            self.platform.run = run
         if wired is not None:
             self.platform.wired = wired
         if offline:

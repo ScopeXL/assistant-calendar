@@ -186,3 +186,4 @@ class ScreenProgressOut(BaseModel):
 
     percent: int
     step: str
+    message: str | None = None  # why a run stopped, in the family's words (run.progress only)

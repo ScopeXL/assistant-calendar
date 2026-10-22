@@ -1,9 +1,10 @@
 /**
- * The screen's own pages (ADR 0035, docs/M7.md T5), served by Sunroom Screen's agent in --fake
- * mode on 127.0.0.1:4174 (scripts/e2e-server.sh): a pretend screen with three Wi-Fi networks,
- * which "finds" this test server and a made-up older Sunroom. Setting up a fresh screen, a typed
- * address, the Wi-Fi step, Can't Reach going back by itself, and This Screen's twin; axe, tap
- * targets and the CSP guard on every page. Synthetic data only.
+ * The screen's own pages (ADR 0035, docs/M7.md T5; Welcome's two ways on, ADR 0038), served by
+ * Sunroom Screen's agent in --fake mode on 127.0.0.1:4174 (scripts/e2e-server.sh): a pretend
+ * screen with three Wi-Fi networks, which "finds" this test server and a made-up older Sunroom,
+ * and whose Run Sunroom Here "starts" this test server. Setting up a fresh screen both ways, a
+ * typed address, the Wi-Fi step, Can't Reach going back by itself, and This Screen's twin; axe,
+ * tap targets and the CSP guard on every page. Synthetic data only.
  */
 import type { APIRequestContext, Page } from "@playwright/test";
 
@@ -42,9 +43,12 @@ test("a fresh screen finds the Sunroom on its network and opens it", async ({ pa
   await seed(request);
   await page.goto(`${AGENT}/`);
   await expect(page.getByRole("heading", { name: "Sunroom", level: 1 })).toBeVisible();
-  await expect(page.getByText("Let’s get this screen set up.")).toBeVisible();
+  await expect(page.getByText("Where will your family’s Sunroom run?")).toBeVisible();
+  await expect(page.getByRole("region", { name: "On This Computer" })).toBeVisible();
+  const elsewhere = page.getByRole("region", { name: "On Another Computer" });
+  await expect(elsewhere.getByText("Your family already has a Sunroom.")).toBeVisible();
   await check(page, "Welcome");
-  await page.getByRole("button", { name: "Start" }).click();
+  await elsewhere.getByRole("button", { name: "Find Your Sunroom" }).click();
 
   await expect(page.getByRole("heading", { name: "Where Is Your Sunroom?" })).toBeVisible();
   const network = page.getByRole("region", { name: "On Your Network" });
@@ -54,10 +58,7 @@ test("a fresh screen finds the Sunroom on its network and opens it", async ({ pa
   await expect(network.getByText("A Sunroom", { exact: true })).toBeVisible();
   await expect(network.getByText("http://198.51.100.21:8080 · version 0.11.0")).toBeVisible();
   await expect(network.getByRole("button", { name: "Look Again" })).toBeVisible();
-  const local = test.info().project.name !== "desktop";
-  await expect(page.getByRole("region", { name: "Run It on This Screen" })).toHaveCount(
-    local ? 1 : 0,
-  );
+  await expect(page.getByRole("region", { name: "Somewhere Else" })).toBeVisible();
   await check(page, "Where Is Your Sunroom?");
 
   await network.getByRole("button", { name: "Use This Sunroom" }).first().click();
@@ -73,6 +74,41 @@ test("a fresh screen finds the Sunroom on its network and opens it", async ({ pa
     sunroom: { url: string; found: string };
   };
   expect(saved.sunroom).toMatchObject({ url: SUNROOM, found: "discovered" });
+});
+
+test("a fresh screen runs Sunroom on this computer and opens it", async ({ page, request }) => {
+  await seed(request);
+  await fake(request, { run: "hold" });
+  await page.goto(`${AGENT}/`);
+  await page
+    .getByRole("region", { name: "On This Computer" })
+    .getByRole("button", { name: "Run Sunroom Here" })
+    .click();
+  await expect(page.getByRole("heading", { name: "Setting Up Sunroom" })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("status")).toContainText("Downloading Sunroom…");
+  await check(page, "Setting Up Sunroom");
+
+  // It stops: the page says why, and Try Again runs it once more, through to Sunroom.
+  await request.post(`${AGENT}/api/screen/_test/reset`, { headers: CHANGE });
+  if (test.info().project.name === "desktop") await fake(request, { kind: "desktop" });
+  await fake(request, { run: "fail" });
+  await page.goto(`${AGENT}/here`);
+  await expect(page.getByRole("alert")).toHaveText(
+    "Sunroom didn't download. Check this computer's internet connection, then try again.",
+  );
+  await fake(request, { run: "ok" });
+  await page.getByRole("button", { name: "Try Again" }).click();
+  await page.waitForURL(
+    (url) =>
+      url.origin === SUNROOM &&
+      url.pathname === "/display" &&
+      url.searchParams.get("screen") === "4174",
+  );
+  await expect(page.getByRole("heading", { name: "Pair This Screen" })).toBeVisible();
+  const saved = (await (await request.get(`${AGENT}/api/screen`)).json()) as {
+    sunroom: { url: string; found: string };
+  };
+  expect(saved.sunroom).toMatchObject({ url: SUNROOM, found: "local" });
 });
 
 test("a typed address is checked, and said plainly when it isn't a Sunroom", async ({
@@ -112,7 +148,7 @@ test("a screen with no network starts by joining Wi-Fi on the wall's keyboard", 
   test.skip(test.info().project.name === "desktop", "a computer joins Wi-Fi itself");
   await fake(request, { offline: true });
   await page.goto(`${AGENT}/`);
-  await page.getByRole("button", { name: "Start" }).click();
+  await page.getByRole("button", { name: "Find Your Sunroom" }).click();
   await expect(page.getByRole("heading", { name: "Connect to Wi-Fi" })).toBeVisible();
   await check(page, "Connect to Wi-Fi");
   await page.getByRole("button", { name: /^SampleStreet-5G, fair signal/ }).click();

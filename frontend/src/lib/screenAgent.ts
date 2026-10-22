@@ -112,8 +112,12 @@ export function screenReloadUrl(dimmer: string): string | null {
 /** An update's progress, from the agent's event stream (`update.progress`). */
 export const screenProgress = createStore<{ percent: number; step: string } | null>(null);
 
-/** Sunroom starting on this screen (`run.progress`, Sunroom OS's Run It on This Screen). */
-export const runProgress = createStore<{ percent: number; step: string } | null>(null);
+/** Sunroom starting on this computer (`run.progress`, ADR 0038): a run that stopped says why. */
+export const runProgress = createStore<{
+  percent: number;
+  step: string;
+  message?: string | null;
+} | null>(null);
 
 /** The agent's state; throws when there is no agent here or it doesn't answer. */
 export async function fetchScreenState(): Promise<ScreenState> {
@@ -166,7 +170,7 @@ export function listen(source: EventSource, queryClient: QueryClient): () => voi
       screenProgress.set(progress.percent >= 100 ? null : progress);
     },
     "run.progress": (data) => {
-      runProgress.set(data as { percent: number; step: string });
+      runProgress.set(data as { percent: number; step: string; message?: string | null });
     },
     "discovery.started": () => {
       queryClient.setQueryData<ScreenScan>(qk.screen.sunrooms(), { scanning: true, found: [] });
