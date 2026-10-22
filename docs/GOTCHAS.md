@@ -160,6 +160,8 @@ size limit.
 
 ## The board
 
+- A plugin's setting reached the wall minutes late: `plugins.changed` refreshed only the plugin
+  list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
 - People's arrows did nothing (0.13.0): they stepped `weekOffset`, which that view never read,
   and the page turn still slid the columns. Every view's arrows must change what that view
   reads, and `BoardControls` names the step by the view ("Next day" on Day and People).
@@ -175,6 +177,8 @@ size limit.
 
 ## End-to-end tests
 
+- The test server keeps plugin settings between tests (`/api/_test/reset` leaves
+  `plugin_state`): a test that changes one puts it back in `finally`.
 - Tap-target checks flagged the page behind an open sheet: a modal `<dialog>` makes the rest
   inert with no `inert` attribute. The check looks only inside `dialog:modal`.
 - An a11y check failed only in the evening: the unpaired wall flips from the browser's clock to

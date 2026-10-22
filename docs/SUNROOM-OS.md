@@ -35,16 +35,16 @@ applies them to an image that isn't Raspberry Pi's own is checked per Imager ver
 
 It shows the Sunroom mark, then Sunroom Screen's **Welcome** (in about a minute and a half):
 
-1. **Start**.
-2. **Connect to Wi-Fi**, only when there's no network yet: pick yours and type its password on
-   the screen's keyboard. A network cable skips this.
-3. **Where Is Your Sunroom?**
-   - **On Your Network** lists each Sunroom it finds: tap **Use This Sunroom**.
-   - **Run It on This Screen**: Sunroom runs on this Pi, and the family uses it from their phones.
-     It downloads Sunroom (a few minutes), starts it, and shows Sunroom's own setup with a QR code
-     for a phone.
-   - **Somewhere Else**: type the address you were given, **Check Address**.
-4. The screen shows a six-character code: on a phone signed in to Sunroom, open **More → Pair a
+1. **Where will your family's Sunroom run?** Two ways, each explained (ADR 0038). With no
+   network yet, either one first asks to **Connect to Wi-Fi**: pick yours and type its password on
+   the screen's keyboard (a network cable skips this).
+   - **On This Computer** → **Run Sunroom Here**: Sunroom runs on this Pi, and the family uses it
+     from their phones. It downloads Sunroom (a few minutes), starts it, and shows Sunroom's own
+     setup with a QR code for a phone.
+   - **On Another Computer** → **Find Your Sunroom**: **On Your Network** lists each Sunroom it
+     finds (tap **Use This Sunroom**), or **Somewhere Else** takes the address you were given
+     (**Check Address**).
+2. The screen shows a six-character code: on a phone signed in to Sunroom, open **More → Pair a
    display** and type it.
 
 From then on the screen looks after itself: it sleeps and dims on the household's times, comes
@@ -59,9 +59,9 @@ it, changes its Wi-Fi or address, turns it, and updates it.
   `kiosk/install.sh` installs), with a managed policy: no sign-in, password or translation
   prompts, and Sunroom's page may reach Sunroom Screen without asking.
 - Sunroom Screen's one root helper (`/usr/local/sbin/sunroom-kiosk-root`) and the sudoers rule
-  that allows only it: the browser's policy, the system's updates, and Run It on This Screen.
-- Docker and `/opt/sunroom` (Sunroom's compose file, `.env` and `update.sh`), idle until Run It
-  on This Screen starts it; avahi, which announces a Sunroom running here to other screens.
+  that allows only it: the browser's policy, the system's updates, and Run Sunroom Here.
+- Docker and `/opt/sunroom` (Sunroom's compose file, `.env` and `update.sh`), idle until On This
+  Computer starts it; avahi, which announces a Sunroom running here to other screens.
 - `unattended-upgrades` for the system's own updates; Sunroom Screen updates itself overnight
   (This Screen → Updates says Install overnight) and restarts the screen in the night only when an
   update needs it.

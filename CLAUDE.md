@@ -6,7 +6,8 @@ screen, one Docker container, no accounts anywhere.
 - **Frontend:** React, TypeScript, Vite, Tailwind and TanStack; one app with two shells (the
   wall display and the phone), and the screen's own pages.
 - **Packaging:** one Docker image (`scopexl/sunroom`), plus `kiosk/`: the installer and Sunroom
-  Screen, the program that runs a wall screen (`kiosk/agent`).
+  Screen, the program that runs a wall screen (`kiosk/agent`); and the server as a wheel, which
+  Sunroom Screen runs on its own computer (ADR 0038).
 
 It is built and maintained entirely by AI sessions, and copied from Dinner Bell's engineering
 (ADR 0001). Its users are a whole family, children and grandparents included, mostly at arm's
@@ -23,6 +24,7 @@ ADR 0036) for 0.14.0; more M6 comes from use.
 M7 (docs/M7.md, ADR 0035) is Sunroom Screen: batch 0 (two wall fixes) released as 0.12.1;
 batch 1 (the agent, This Screen, discovery, the installer, GitHub Releases) and batch 2 (Windows,
 macOS, Run It on This Screen, the Sunroom OS image, docs/SUNROOM-OS.md) released as 0.13.0.
+M8 (docs/M8.md, ADR 0038), Sunroom on this computer, is built for the next release.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
@@ -103,6 +105,7 @@ Keep this file under 15 KB; detail belongs in `docs/`.
 | `just smoke-image [REF]` | Build the image from git, boot it with no settings, set it up through the API, probe it |
 | `just smoke-caldav` | The CalDAV client against Radicale in Docker, with the ICS fixtures (opt-in; network) |
 | `just kiosk-test` / `kiosk-dev` / `kiosk-build` / `kiosk-serve` | Sunroom Screen: its tests; its pages on 5174 with a pretend agent; its wheel; the installers for a VM |
+| `just server-build` | The server wheel and its constraints, for Sunroom on a computer |
 | `just preflight` | The full release gate. The deploy skill runs it |
 
 ## Architecture map
@@ -133,7 +136,7 @@ frontend/src/
 kiosk/           install.sh (Pi, Linux, macOS; --dry-run), install.ps1, files/, labwc-rule.py,
                  update.sh, uninstall.sh; os/: Sunroom OS (pi-gen stage, build.sh, imager.py)
   agent/         Sunroom Screen (`sunroom-kiosk`): API on 127.0.0.1:7800, browser, screen sleep,
-                 discovery, policy, updates; platform/ adapters (pi, linux, fake)
+                 discovery, policy, updates, Sunroom run here (local.py); platform/ adapters
 ```
 
 ## Conventions
@@ -214,9 +217,5 @@ part your task touches, and move lines there when this file nears its limit.
   routers, not their routes. Walk `app.openapi()["paths"]` instead, and assert a count.
 - The first migration after a release failed its migration test: the release had no fixture
   database. A release's `tests/fixtures/db/<revision>.sql` must exist before the next migration.
-- A plugin's setting reached the wall minutes late: `plugins.changed` refreshed only the plugin
-  list. A new plugin adds its query keys to `PLUGIN_KEYS` (`lib/eventRouter`).
-- The test server keeps plugin settings between tests (`/api/_test/reset` leaves
-  `plugin_state`): a test that changes one puts it back in `finally`.
 - An in-app restart can't `exec` under `uvicorn --reload`: the worker is a spawned child with
   multiprocessing's argv. The dev server writes a watched file instead (`devserver.reload`).

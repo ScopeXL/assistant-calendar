@@ -8,7 +8,8 @@ computer at home, with no account anywhere and no subscription.
 - **Every phone** adds and changes things, and the screen follows within a second.
 - **Made for a family:** one household password, a parent PIN for Settings on the shared screen,
   children with their own colors, and nothing that needs a technical grown-up every week.
-- **Your data stays home,** in one Docker container with nightly backups.
+- **Your data stays home,** on the kitchen computer itself or in one Docker container, with
+  nightly backups.
 
 **Status:** working, and still growing toward 1.0. It has the calendar (with Apple, Google and
 other calendars synced in), lists, tasks with stars and routines, meals, countdowns, a photo
@@ -19,38 +20,48 @@ adds, and [CHANGELOG.md](CHANGELOG.md) what each release did.
 
 **Do you already run Docker somewhere at home** (a NAS, a mini PC, Portainer, Unraid)?
 
-- No: put everything on one Raspberry Pi, [path a](#a-all-on-a-raspberry-pi).
+- No: put everything on the kitchen computer (a Raspberry Pi, or a Linux, Mac or Windows
+  computer by the kitchen), [path a](#a-all-on-the-kitchen-computer).
 - Yes: run Sunroom there and use a Pi only as the screen, [path b](#b-sunroom-on-your-server-the-pi-is-the-screen).
 - Only trying it out: [path c](#c-any-computer-no-pi).
 
-### a. All on a Raspberry Pi
+### a. All on the kitchen computer
 
-You need a Raspberry Pi 4 or 5, a touch screen (HDMI plus its USB touch cable) and the official
-power supply. [docs/HARDWARE.md](docs/HARDWARE.md) helps you choose them.
+The screen and Sunroom on one computer: a Raspberry Pi 4 or 5 with a touch screen (HDMI plus its
+USB touch cable, and the official power supply; [docs/HARDWARE.md](docs/HARDWARE.md) helps you
+choose), or a Linux computer, a Mac with Apple silicon or a Windows computer by the kitchen.
 
-**The simplest way: write Sunroom OS** to the card with Raspberry Pi Imager, start the Pi, and
-on the screen choose **Run It on This Screen**. No terminal at all;
-[docs/SUNROOM-OS.md](docs/SUNROOM-OS.md) shows each step. Or, on Raspberry Pi OS:
+**The simplest way on a Pi: write Sunroom OS** to the card with Raspberry Pi Imager, start the
+Pi, and on the screen choose **On This Computer**. No terminal at all;
+[docs/SUNROOM-OS.md](docs/SUNROOM-OS.md) shows each step. Or:
 
-1. With [Raspberry Pi Imager](https://www.raspberrypi.com/software/), write **Raspberry Pi OS
-   (64-bit)**, the one with the desktop. In Imager's settings, set the hostname to `sunroom`,
-   your user name and password, your Wi-Fi, your time zone, and turn on SSH.
-2. Start the Pi, open a terminal on it (or `ssh` in), and run:
+1. **A Pi:** with [Raspberry Pi Imager](https://www.raspberrypi.com/software/), write
+   **Raspberry Pi OS (64-bit)**, the one with the desktop. In Imager's settings, set the hostname
+   to `sunroom`, your user name and password, your Wi-Fi, your time zone, and turn on SSH.
+   **Another computer:** sign in to its desktop as the person the screen is for.
+2. Open a terminal (on a Pi you can `ssh` in), and run the one command for it:
 
    ```sh
-   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash -s -- --with-sunroom
+   curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
    ```
 
-   It takes 10 to 20 minutes and ends by printing an address and a QR code.
-3. **Set up the household on your phone:** scan the QR code, or open `http://sunroom.local:8080`.
-   Choose a household password, add the people who live here, and set a parent PIN. Then add
-   Sunroom to your home screen (Safari: Share → Add to Home Screen).
-4. **Pair the kitchen screen:** after the Pi restarts, the screen shows a six-character code.
-   On your phone, open **More → Pair a display** and type it.
+   On Windows, in PowerShell:
+   `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 | iex"`.
+   It installs what the screen needs and starts it (a Pi restarts first).
+3. **The screen asks where your family's Sunroom will run:** choose **On This Computer**.
+   Setting Up Sunroom takes a few minutes, then the screen shows a QR code. (On a Mac or Windows,
+   if the computer asks whether Sunroom may accept connections, choose Allow.)
+4. **Set up the household on your phone:** scan the QR code. Choose a household password, add
+   the people who live here, and set a parent PIN. Then add Sunroom to your home screen (Safari:
+   Share → Add to Home Screen).
+5. **Pair the kitchen screen:** it shows a six-character code. On your phone, open **More → Pair
+   a display** and type it.
 
-If `sunroom.local` doesn't open, use the numbered address the installer printed: phones on a VPN
-or on mobile data can't see `.local` names. [docs/KIOSK.md](docs/KIOSK.md) covers rotation,
-screens that stay blank, updates and removal.
+Keep that computer on and connected: phones open Sunroom from it. On a Pi,
+`… | bash -s -- --with-sunroom` instead runs Sunroom in Docker, set up by the installer, which
+prints the address and QR code at the end. If a `.local` address doesn't open, use the numbered
+one: phones on a VPN or on mobile data can't see `.local` names. [docs/KIOSK.md](docs/KIOSK.md)
+covers rotation, screens that stay blank, updates and removal.
 
 ### b. Sunroom on your server, the Pi is the screen
 
@@ -77,9 +88,10 @@ Then set up the screen with one command. On the Pi (or another Linux computer, o
 curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh | bash
 ```
 
-It installs what the screen needs, a browser too, and then the screen looks for Sunroom on your
-network (on a Pi, after its restart): tap **Use This Sunroom**, or type the address you open on a
-phone (an `https://` name works too). Then pair the screen (step 4 above).
+It installs what the screen needs, a browser too, and starts it (a Pi restarts first). On the
+screen, choose **On Another Computer**: it looks for Sunroom on your network, so tap **Use This
+Sunroom**, or type the address you open on a phone (an `https://` name works too). Then pair the
+screen (step 5 above).
 
 ### c. Any computer, no Pi
 
@@ -97,11 +109,12 @@ tablet works as one (Android: Fully Kiosk Browser; iPad: Safari with Guided Acce
 |---|---|
 | A Pi, a Linux computer or a Mac: the screen | `curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.sh \| bash` |
 | Windows: the screen | `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 \| iex"` |
-| A Pi: Sunroom and the screen | the first, ending `\| bash -s -- --with-sunroom` |
+| A Pi: Sunroom (in Docker) and the screen | the first, ending `\| bash -s -- --with-sunroom` |
 | A Pi: only Sunroom, no screen | the first, ending `\| bash -s -- --server-only` |
 
-Each installs what the screen needs (a browser too, when there's none) and starts it, and the
-screen finds Sunroom on your network by itself. `--url <address>` skips the search, and
+Each installs what the screen needs (a browser too, when there's none) and starts it. The screen
+then asks where your family's Sunroom will run: **On This Computer** sets it up right there, and
+**On Another Computer** finds the one you have on your network by itself. `--url <address>` skips the search, and
 `--dry-run` (`-DryRun` on Windows) says what it would do first.
 [docs/KIOSK.md](docs/KIOSK.md) has every option.
 

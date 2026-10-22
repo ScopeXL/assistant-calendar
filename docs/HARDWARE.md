@@ -199,3 +199,13 @@ alone is the default everywhere, and Sunroom on a Pi takes `--with-sunroom`.
 |---|---|---|---|
 | 36 | A Pi that runs Sunroom from an earlier installer, run again with no option | It says the Pi keeps Sunroom; Sunroom and the screen come back as they were | Not tested yet |
 | 37 | A fresh Pi, `--with-sunroom` | The phone address and QR code as before; after the restart, the screen shows its pair code | Not tested yet |
+
+On This Computer, Sunroom run as a program by Sunroom Screen ([ADR 0038](adr/0038-sunroom-on-this-computer.md)).
+Each from a fresh install with no option, then **On This Computer** → **Run Sunroom Here**.
+
+| # | Setup or test | It passes when | Result |
+|---|---|---|---|
+| 38 | A Pi with 64-bit Raspberry Pi OS | Setting Up Sunroom counts up, Sunroom's setup QR code opens on a phone, the screen pairs; after a power cut Sunroom and the screen come back by themselves | Not tested yet |
+| 39 | A Linux desktop (Debian or Ubuntu) | As row 38; `systemctl --user status sunroom` is active, and Sunroom answers phones after a restart before anyone signs in | Not tested yet |
+| 40 | A Mac with Apple silicon | As row 38; macOS asks once to let Sunroom accept connections (Allow), and the Mac doesn't sleep while Sunroom runs | Not tested yet |
+| 41 | A Windows computer (x64, and ARM) | As row 38; Windows asks once to let Sunroom through its firewall (Allow), Sunroom starts again at sign-in and after a restore, and `-Uninstall` stops it and keeps its data | Not tested yet |

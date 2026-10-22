@@ -274,14 +274,44 @@ Screen off: sleep time.
 Screen on: tapped awake for 2 minutes.
 ```
 
-## Run It on This Screen (Sunroom OS)
+## Sunroom on this computer
 
-A screen flashed with Sunroom OS can be the Sunroom too, like an all-in-one Pi: on **Where Is
-Your Sunroom?**, **Run It on This Screen** → **Run Sunroom Here**. It downloads Sunroom
-("Downloading Sunroom… 40%"; the first time takes a few minutes), starts it, waits for it to
-answer, tells other screens on the network where it is, and opens Sunroom's own setup, whose QR
-code a phone scans to finish. The card shows only on Sunroom OS, and only while the screen has
-no Sunroom yet. Updates afterwards: This Screen's **Update Sunroom Too**, as on an all-in-one Pi.
+The screen's first page asks **Where will your family's Sunroom run?** (ADR 0038). **On This
+Computer** → **Run Sunroom Here** sets Sunroom up on the computer the screen runs on, so it is the
+family's Sunroom as well as its kitchen screen. **Setting Up Sunroom** shows how far it is
+("Downloading Sunroom… 40%", "Installing Sunroom…", "Starting Sunroom…"; the first time takes a
+few minutes), then the screen opens Sunroom's own setup, whose QR code a phone scans to finish.
+If it stops, the page says why, with **Try Again**.
+
+- **What it is:** Sunroom as a program for the screen's user, not Docker: Sunroom Screen installs
+  this release's `sunroom` wheel with uv, as it installs itself, held to the release's versions
+  of everything Sunroom uses (its constraints file), checked against `SHA256SUMS`. A Pi on Sunroom
+  OS is the exception: there it starts the Docker setup the card carries, as before.
+- **Which computers:** a Raspberry Pi with 64-bit Raspberry Pi OS, other 64-bit Linux computers,
+  Macs with Apple silicon, and Windows (on ARM, through an x64 Python). An Intel Mac shows only
+  **On Another Computer**: a library Sunroom needs no longer ships for it.
+- **Where the family's data is:** `~/.local/share/sunroom` on Linux, `~/Library/Application
+  Support/Sunroom` on a Mac, `%LOCALAPPDATA%\Sunroom` on Windows; for that user only. Backups go
+  into its `backups` folder every night, as on any Sunroom; Settings → Backup downloads a copy.
+- **What keeps it running:** on Linux the user service `sunroom.service`, which also runs from the
+  computer's start with nobody signed in (its log: `journalctl --user -u sunroom`); on a Mac the
+  LaunchAgent `~/Library/LaunchAgents/app.sunroom.server.plist`, from sign-in (its log:
+  `~/Library/Logs/sunroom.log`); on Windows Sunroom Screen starts it at sign-in and again whenever
+  it stops answering (its log: `%LOCALAPPDATA%\Sunroom\sunroom.log`). Each keeps the computer
+  from going to sleep while Sunroom runs; the screen still sleeps on its schedule.
+- **Phones:** Sunroom answers on port 8080 (or the next free one), at `http://<computer>.local:8080`
+  on a Mac and on Linux with avahi, else at the computer's numbered address; the setup page's QR
+  code has it. Sunroom Screen announces it on the network, so other screens find it too. On a Mac
+  or Windows the first start may ask whether Sunroom may accept connections: choose Allow, or
+  phones can't reach it.
+- **Updates:** it stays at Sunroom Screen's version: when Sunroom Screen updates itself, Sunroom
+  follows. This Screen's **Update Sunroom Too** installs the newest; a version that doesn't
+  answer within five minutes is put back.
+- **The household password, lost:** `DATA_DIR=~/.local/share/sunroom ~/.local/bin/sunroom
+  reset-password` (the data folder above for a Mac or Windows).
+- **Removing it:** the screen's uninstaller leaves Sunroom running, with the family's data, unless
+  you add `--purge` (it asks first); on Windows `-Uninstall` stops and removes it, and keeps its
+  data folder.
 
 ## Letting screens find a Sunroom on a NAS or server
 
@@ -325,15 +355,16 @@ screen instead.
 
 ## Trying a change before a release
 
-From a checkout, `just kiosk-serve` builds Sunroom Screen's wheel and serves this checkout's
-installers with it on port 8765, then prints one line for a Linux computer or a Mac (`curl -fsSL
+From a checkout, `just kiosk-serve` builds Sunroom Screen's wheel and Sunroom's own (`just
+server-build`) and serves this checkout's installers with them on port 8765, then prints one line for a Linux computer or a Mac (`curl -fsSL
 http://<this computer>:8765/install.sh | bash`) and one for Windows (`irm … | iex`). Run that
-line on the computer or virtual machine to try: it installs from this checkout and that wheel,
-taking nothing from GitHub. Options go after `bash -s --`, as with the real one. Ctrl+C stops it.
+line on the computer or virtual machine to try: it installs from this checkout and those
+wheels (On This Computer uses the server wheel it was given), taking nothing from GitHub. Options go after `bash -s --`, as with the real one. Ctrl+C stops it.
 
 By hand: `just kiosk-build` makes the wheel in `kiosk/agent/dist/`. Copy the `kiosk` folder and
-that wheel to the Pi, then run the installer from the copy with `--agent-wheel <the wheel>`: it
-uses the files next to it and that wheel instead of the release's. Either way the wheel isn't
+that wheel to the Pi, then run the installer from the copy with `--agent-wheel <the wheel>` (and
+`--server-wheel` for Sunroom's own, from `just server-build`): it uses the files next to it and
+those wheels instead of the release's. Either way the wheel isn't
 checked against a release, so use it only for testing. `--dry-run` shows the plan first.
 
 ## When something looks wrong

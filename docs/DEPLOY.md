@@ -112,6 +112,10 @@ phone used.
 
 ## 5. The kitchen screen
 
+No server at home? The kitchen computer can run Sunroom itself, with no Docker: install the
+screen and choose **On This Computer** on it ([KIOSK.md](KIOSK.md#sunroom-on-this-computer)). This
+section is for a screen that shows the Sunroom you run here.
+
 On the Raspberry Pi (Raspberry Pi OS 64-bit with desktop), another Linux computer with a desktop,
 or a Mac (Windows: [KIOSK.md](KIOSK.md#windows)), one command sets up the screen, a browser
 included:

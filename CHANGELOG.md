@@ -6,6 +6,14 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Sunroom can run on the kitchen computer itself, on a Linux computer, a Mac with Apple silicon or
+  Windows as well as a Pi, with no Docker: choose **On This Computer** on the screen, and Sunroom
+  Screen sets it up, starts it with the computer, keeps the computer awake for it and keeps it up
+  to date. The family's data stays in a folder for that computer's user, with nightly backups as
+  always.
+
 ### Changed
 
 - One command sets up a kitchen screen on a Raspberry Pi, another Linux computer or a Mac, with
