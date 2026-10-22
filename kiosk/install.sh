@@ -104,6 +104,7 @@ NO_REBOOT=0
 FORCE_X11=0
 DRY_RUN=0
 AGENT_WHEEL="" # --agent-wheel: a local wheel instead of the Release's (testing before a release)
+SERVER_WHEEL="" # --server-wheel: Sunroom's own, for On This Computer (testing before a release)
 UNINSTALL=0
 UNINSTALL_ARGS=()
 ORIGINAL_ARGS=()
@@ -291,6 +292,8 @@ Options:
   --dry-run                 Say what it would do on this computer, and change nothing
   --agent-wheel FILE        Install Sunroom Screen from this wheel (just kiosk-build) instead
                             of the one in this version's GitHub Release (for testing)
+  --server-wheel FILE       Keep Sunroom's own wheel (just server-build) for On This Computer
+                            on the screen, instead of the Release's (for testing)
   --uninstall [--purge] [--yes]
                             Remove the kitchen screen setup; --purge also deletes Sunroom
                             and all its data from this Pi, --yes answers every question
@@ -321,6 +324,7 @@ example_for() {
 	--brightness) printf 'auto' ;;
 	--force-hdmi) printf '1920x1080' ;;
 	--agent-wheel) printf 'sunroom_kiosk-%s-py3-none-any.whl' "$KIOSK_VERSION" ;;
+	--server-wheel) printf 'sunroom-%s-py3-none-any.whl' "$KIOSK_VERSION" ;;
 	*) printf 'VALUE' ;;
 	esac
 }
@@ -407,6 +411,12 @@ parse_args() {
 			shift
 			;;
 		--agent-wheel=*) AGENT_WHEEL=${1#*=} ;;
+		--server-wheel)
+			need_value "$@"
+			SERVER_WHEEL=$2
+			shift
+			;;
+		--server-wheel=*) SERVER_WHEEL=${1#*=} ;;
 		--x11)
 			FORCE_X11=1
 			SCREEN_OPTIONS_GIVEN=1
@@ -446,6 +456,11 @@ validate_args() {
 	fi
 	if [[ -n $AGENT_WHEEL && ! -f $AGENT_WHEEL ]]; then
 		usage_error "--agent-wheel: there's no file at $AGENT_WHEEL."
+	fi
+	if [[ -n $SERVER_WHEEL ]]; then
+		[[ -f $SERVER_WHEEL ]] || usage_error "--server-wheel: there's no file at $SERVER_WHEEL."
+		[[ $(basename "$SERVER_WHEEL") == "sunroom-$KIOSK_VERSION-py3-none-any.whl" ]] ||
+			usage_error "--server-wheel wants sunroom-$KIOSK_VERSION-py3-none-any.whl (just server-build makes it)."
 	fi
 	if ((WANT_SERVER_ONLY)); then
 		MODE="server"
@@ -1379,9 +1394,24 @@ fetch_agent_wheel() {
 	note "Downloaded Sunroom Screen $KIOSK_VERSION and checked it."
 }
 
+# --server-wheel: Sunroom's own wheel, and its constraints from beside it, where Sunroom Screen
+# looks first when On This Computer is chosen (agent local.py; not checked against a release).
+keep_server_wheel() {
+	local constraints
+	[[ -n $SERVER_WHEEL ]] || return 0
+	mkdir -p "$WHEELS_DIR"
+	cp "$SERVER_WHEEL" "$WHEELS_DIR/"
+	constraints="$(dirname "$SERVER_WHEEL")/sunroom-$KIOSK_VERSION-constraints.txt"
+	if [[ -f $constraints ]]; then
+		cp "$constraints" "$WHEELS_DIR/"
+	fi
+	note "Kept Sunroom from $(tidy "$SERVER_WHEEL") for On This Computer (--server-wheel: not checked against a release)."
+}
+
 install_agent() {
 	install_uv
 	fetch_agent_wheel
+	keep_server_wheel
 	# The bash launcher from before 0.13.0 sat where uv puts Sunroom Screen.
 	if [[ -f $BIN_DIR/sunroom-kiosk && ! -L $BIN_DIR/sunroom-kiosk ]]; then
 		rm -f "$BIN_DIR/sunroom-kiosk"
@@ -2412,6 +2442,9 @@ dry_run_screen() {
 	fi
 	say "  - install uv $UV_VERSION in $(tidy "$BIN_DIR") when there's no uv, and with it Sunroom Screen"
 	say "    $KIOSK_VERSION ($wheel)"
+	if [[ -n $SERVER_WHEEL ]]; then
+		say "  - keep Sunroom's own wheel from $SERVER_WHEEL for On This Computer"
+	fi
 	if [[ $PLATFORM == pi ]]; then
 		say "  - let Sunroom Screen update this Pi and set the browser's policy through one root helper"
 		say "    ($ROOT_HELPER, allowed by $SUDOERS_FILE)"

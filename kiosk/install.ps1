@@ -8,7 +8,7 @@
 #   powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1))) -Url https://calendar.example.com"
 # or with a copy of this file:
 #   powershell -ExecutionPolicy Bypass -File install.ps1 [-Url https://calendar.example.com]
-#       [-DryRun] [-AgentWheel FILE] [-Uninstall] [-Yes]
+#       [-DryRun] [-AgentWheel FILE] [-ServerWheel FILE] [-Uninstall] [-Yes]
 #
 # It installs uv (a pinned version, into %USERPROFILE%\.local\bin, only when there's no uv), then
 # Sunroom Screen with uv from this version's GitHub Release, its wheel checked against the
@@ -17,7 +17,8 @@
 # (or Google Chrome) full screen, and writes the browser's policy itself, for this user only.
 #
 # Running it again is safe: it keeps the screen's settings and its pairing. -Uninstall takes it
-# off again, and asks before it deletes the pairing. Windows PowerShell 5.1 runs it, and so does
+# off again, and asks before it deletes the pairing; Sunroom run on this computer (ADR 0038) is
+# stopped and uninstalled too, its data kept. Windows PowerShell 5.1 runs it, and so does
 # PowerShell 7. It never asks for a password, and keeps every file inside this user's folders.
 #
 # Keep it ASCII (Windows PowerShell 5.1 reads a file without a byte-order mark as ANSI).
@@ -26,6 +27,7 @@ param(
     [string]$Url = "",
     [switch]$DryRun,
     [string]$AgentWheel = "",
+    [string]$ServerWheel = "",
     [switch]$Uninstall,
     [switch]$Yes
 )
@@ -36,6 +38,7 @@ $Options = [pscustomobject]@{
     Url = $Url
     DryRun = $DryRun.IsPresent
     AgentWheel = $AgentWheel
+    ServerWheel = $ServerWheel
     Uninstall = $Uninstall.IsPresent
     Yes = $Yes.IsPresent
 }
@@ -238,6 +241,19 @@ $Options = [pscustomobject]@{
         return $kept
     }
 
+    # -ServerWheel: Sunroom's own wheel, and its constraints from beside it, where Sunroom Screen
+    # looks first when On This Computer is chosen (agent local.py; not checked against a release).
+    function Save-ServerWheel {
+        if (-not $Options.ServerWheel) { return }
+        $null = New-Item -ItemType Directory -Force -Path $WheelsDir
+        Copy-Item -LiteralPath $Options.ServerWheel -Destination $WheelsDir -Force
+        $constraints = Join-Path (Split-Path -Parent $Options.ServerWheel) "sunroom-$KioskVersion-constraints.txt"
+        if (Test-Path -LiteralPath $constraints) {
+            Copy-Item -LiteralPath $constraints -Destination $WheelsDir -Force
+        }
+        Write-Note "Kept Sunroom from $($Options.ServerWheel) for On This Computer (-ServerWheel: not checked against a release)."
+    }
+
     # A running Sunroom Screen holds its own files open, so it quits before uv replaces them (the
     # same Quit as This Screen's); the shortcut or this installer starts it again.
     function Close-RunningScreen {
@@ -313,7 +329,8 @@ $Options = [pscustomobject]@{
         Write-Host "This computer: Windows $([Environment]::OSVersion.Version)."
         if ($Options.Uninstall) {
             Write-Host "A real run would close Sunroom Screen, take it out of the Startup folder and the"
-            Write-Host "browser's policy, uninstall it with uv, and ask before deleting its settings and pairing."
+            Write-Host "browser's policy, stop and uninstall Sunroom if it runs on this computer (its data"
+            Write-Host "kept), uninstall Sunroom Screen with uv, and ask before deleting its settings and pairing."
             return
         }
         if ($Options.Url) { $shows = $Options.Url } else { $shows = "the Sunroom it finds on the network (or an address typed on it)" }
@@ -327,6 +344,9 @@ $Options = [pscustomobject]@{
         }
         Write-Host "  - install uv $UvVersion in $BinDir when there's no uv, and with it Sunroom Screen"
         Write-Host "    $KioskVersion ($from)"
+        if ($Options.ServerWheel) {
+            Write-Host "  - keep Sunroom's own wheel from $($Options.ServerWheel) for On This Computer"
+        }
         Write-Host "  - save the screen's settings in $DataDir, where it shows"
         Write-Host "    $shows"
         Write-Host "  - start Sunroom Screen when you sign in ($Shortcut), and start it now"
@@ -350,10 +370,14 @@ $Options = [pscustomobject]@{
         if ($Options.AgentWheel -and -not (Test-Path -LiteralPath $Options.AgentWheel)) {
             Exit-Install @("-AgentWheel: there's no file at $($Options.AgentWheel).")
         }
+        if ($Options.ServerWheel -and -not (Test-Path -LiteralPath $Options.ServerWheel)) {
+            Exit-Install @("-ServerWheel: there's no file at $($Options.ServerWheel).")
+        }
 
         Write-Step "Setting up the kitchen screen"
         $uv = Install-Uv
         $wheel = Get-AgentWheel
+        Save-ServerWheel
         Close-RunningScreen
         Install-Agent -Uv $uv -Wheel $wheel
         Write-ScreenSetting
@@ -377,6 +401,12 @@ $Options = [pscustomobject]@{
         if (Test-Path -LiteralPath $Agent) {
             $null = Invoke-Native $Agent @("policy", "--remove")
             Write-Note "Took Sunroom Screen's settings out of the browser's policy."
+            # Sunroom run on this computer: nothing but Sunroom Screen runs it here, so it goes
+            # too; the family's data stays (its folder is said).
+            $ran = Invoke-Native $Agent @("sunroom", "remove")
+            if ($ran.Code -eq 0 -and $ran.Output -notmatch "wasn't set up") {
+                foreach ($line in ($ran.Output -split "`r?`n")) { if ($line) { Write-Note $line } }
+            }
         }
         $uv = Find-Uv
         if ($uv) {

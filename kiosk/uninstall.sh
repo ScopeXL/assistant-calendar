@@ -16,7 +16,9 @@
 # options it added, and systemd-time-wait-sync if the installer turned it on. It asks before
 # deleting the browser profile, which holds the screen's pairing. Docker and Sunroom with its
 # data stay unless you add --purge, which runs "docker compose down -v" in /opt/sunroom and
-# deletes that folder. uv, desktop autologin, "no screen blanking", installed packages
+# deletes that folder; Sunroom run on this computer as a program (ADR 0038) stays too, with its
+# data, unless --purge, which stops it, uninstalls it and deletes its data, after asking.
+# uv, desktop autologin, "no screen blanking", installed packages
 # (ddcutil, wlopm) and group memberships (video, i2c) are left as they are.
 #
 # Like the installer: run it as your normal user (it uses sudo itself), questions are read
@@ -39,6 +41,16 @@ XDG_AUTOSTART_FILE="$HOME/.config/autostart/sunroom-kiosk.desktop"
 LAUNCH_AGENT_LABEL="app.sunroom.kiosk"
 LAUNCH_AGENT="$HOME/Library/LaunchAgents/$LAUNCH_AGENT_LABEL.plist"
 SERVER_DIR="/opt/sunroom"
+# Sunroom run on this computer as a program (agent local.py, ADR 0038).
+LOCAL_UNIT="$UNIT_DIR/sunroom.service"
+LOCAL_LAUNCH_AGENT_LABEL="app.sunroom.server"
+LOCAL_LAUNCH_AGENT="$HOME/Library/LaunchAgents/$LOCAL_LAUNCH_AGENT_LABEL.plist"
+LOCAL_STATE="$STATE_DIR/sunroom.json"
+if [[ $(uname -s) == Darwin ]]; then
+	LOCAL_DATA="$HOME/Library/Application Support/Sunroom"
+else
+	LOCAL_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/sunroom"
+fi
 AVAHI_SERVICE="/etc/avahi/services/sunroom.service"
 NM_DROPIN="/etc/NetworkManager/conf.d/zz-sunroom-kiosk-wifi.conf"
 BACKLIGHT_RULE="/etc/udev/rules.d/90-sunroom-kiosk-backlight.rules"
@@ -91,7 +103,8 @@ Remove the Sunroom kitchen screen setup from this computer.
 Usage: bash uninstall.sh [--purge] [--yes]
 
   --purge   Also stop Sunroom and delete it and ALL its data (calendars, lists, photos)
-            from this Pi: docker compose down -v in /opt/sunroom, then that folder.
+            from this computer: docker compose down -v in /opt/sunroom, then that folder,
+            and Sunroom run here as a program, with its data folder.
   --yes     Answer yes to every question, including deleting the screen's pairing.
   --help    Show this help
 
@@ -461,11 +474,43 @@ purge_server() {
 	note "Deleted Sunroom, its data and $SERVER_DIR. Docker itself is still installed."
 }
 
+# Sunroom run on this computer as a program: here while its service or Sunroom Screen's note is.
+local_sunroom_here() {
+	[[ -e $LOCAL_UNIT || -e $LOCAL_LAUNCH_AGENT || -e $LOCAL_STATE ]]
+}
+
+purge_local_sunroom() {
+	local uv
+	local_sunroom_here || return 0
+	say ""
+	if ! ask_yes_no "Delete Sunroom, which runs on this computer, and ALL its data (calendars, lists, photos)? This can't be undone." n; then
+		note "Kept Sunroom and its data."
+		PURGE=0
+		return 0
+	fi
+	if [[ -e $LOCAL_UNIT ]]; then
+		user_systemctl disable --now sunroom.service >/dev/null 2>&1 || true
+		rm -f "$LOCAL_UNIT"
+		user_systemctl daemon-reload >/dev/null 2>&1 || true
+	fi
+	if [[ -e $LOCAL_LAUNCH_AGENT ]]; then
+		launchctl bootout "gui/$(id -u)/$LOCAL_LAUNCH_AGENT_LABEL" >/dev/null 2>&1 || true
+		rm -f "$LOCAL_LAUNCH_AGENT"
+	fi
+	if uv=$(find_uv) && "$uv" tool list 2>/dev/null | grep -q '^sunroom '; then
+		"$uv" tool uninstall sunroom >/dev/null 2>&1 || warn "uv couldn't uninstall Sunroom; see: uv tool list"
+	fi
+	rm -rf "$LOCAL_DATA"
+	rm -f "$LOCAL_STATE"
+	note "Deleted Sunroom, which ran on this computer, and its data ($(tidy "$LOCAL_DATA"))."
+}
+
 finish() {
 	local keep_uninstaller=0
 	rm -f "$STATE_FILE" "$LABWC_STATE" "$STATE_DIR/update.json"
-	# While Sunroom's server stays, keep this script so --purge still works later.
-	if ((!PURGE)) && [[ -d $SERVER_DIR ]] && [[ -f $SHARE_DIR/uninstall.sh ]]; then
+	# While Sunroom stays (the Pi's server, or the program run here), keep this script so --purge
+	# still works later.
+	if ((!PURGE)) && { [[ -d $SERVER_DIR ]] || local_sunroom_here; } && [[ -f $SHARE_DIR/uninstall.sh ]]; then
 		keep_uninstaller=1
 		find "$SHARE_DIR" -mindepth 1 ! -name uninstall.sh -exec rm -rf {} + 2>/dev/null || true
 	else
@@ -479,8 +524,13 @@ finish() {
 	else
 		say "Left as it is: uv, which installed Sunroom Screen."
 	fi
-	if ((!PURGE)) && [[ -d $SERVER_DIR ]]; then
-		say "Sunroom itself still runs on this Pi, with your family's data. To delete it as well:"
+	if ((!PURGE)) && { [[ -d $SERVER_DIR ]] || local_sunroom_here; }; then
+		if [[ -d $SERVER_DIR ]]; then
+			say "Sunroom itself still runs on this Pi, with your family's data. To delete it as well:"
+		else
+			say "Sunroom itself still runs on this computer, with your family's data ($(tidy "$LOCAL_DATA"))."
+			say "To delete it as well:"
+		fi
 		if ((keep_uninstaller)); then
 			say "  bash ~/.local/share/sunroom-kiosk/uninstall.sh --purge"
 		else
@@ -510,6 +560,7 @@ main() {
 	remove_config
 	if ((PURGE)); then
 		purge_server
+		purge_local_sunroom
 	fi
 	finish
 }
