@@ -91,8 +91,8 @@ server-build:
     {{py}} scripts/server_wheel.py
 
 # Try this checkout's installers on another computer or a virtual machine on this network before a
-# release: Sunroom Screen's wheel, then the installers served with it and each system's one line
-kiosk-serve PORT="8765": kiosk-build
+# release: both wheels, then the installers served with them and each system's one line
+kiosk-serve PORT="8765": kiosk-build server-build
     {{py}} scripts/kiosk_serve.py {{PORT}}
 
 # Sunroom OS's image, built here (docs/SUNROOM-OS.md): pi-gen in Docker (OrbStack is arm64: no
