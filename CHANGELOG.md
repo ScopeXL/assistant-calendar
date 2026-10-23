@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-23
+
 ### Added
 
 - The kitchen screen can set Sunroom up by itself: before setup it offers **Set Up Here** beside
@@ -18,6 +20,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 - On a kitchen screen run by Sunroom Screen, Settings opens on **This Screen**: it comes first,
   in a box of its own, and says its settings (the network, updates and power) are for that screen
   only, apart from the family's Sunroom below it.
+- Behind the scenes: the install steps for each kind of computer, in the README and the kitchen
+  screen's guide, are kept up to date whenever the installer changes.
 
 ### Fixed
 
@@ -709,5 +713,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.14.0]: https://github.com/ScopeXL/sunroom/compare/v0.13.0...v0.14.0
 
-[Unreleased]: https://github.com/ScopeXL/sunroom/compare/v0.15.0...HEAD
 [0.15.0]: https://github.com/ScopeXL/sunroom/compare/v0.14.0...v0.15.0
+
+[Unreleased]: https://github.com/ScopeXL/sunroom/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/ScopeXL/sunroom/compare/v0.15.0...v0.16.0
