@@ -6,6 +6,8 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-22
+
 ### Added
 
 - Sunroom can run on the kitchen computer itself, on a Linux computer, a Mac with Apple silicon or
@@ -13,6 +15,9 @@ Everything that changes in Sunroom, written in plain English. The format follows
   Screen sets it up, starts it with the computer, keeps the computer awake for it and keeps it up
   to date. The family's data stays in a folder for that computer's user, with nightly backups as
   always.
+- Behind the scenes: each release on GitHub also carries Sunroom itself, ready to run on a
+  computer with the exact versions of everything it was tested with; Sunroom now runs on Windows
+  too; and the installers can be tried on another computer before a release.
 
 ### Changed
 
@@ -680,5 +685,7 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 [0.13.0]: https://github.com/ScopeXL/sunroom/compare/v0.12.1...v0.13.0
 
-[Unreleased]: https://github.com/ScopeXL/sunroom/compare/v0.14.0...HEAD
 [0.14.0]: https://github.com/ScopeXL/sunroom/compare/v0.13.0...v0.14.0
+
+[Unreleased]: https://github.com/ScopeXL/sunroom/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/ScopeXL/sunroom/compare/v0.14.0...v0.15.0
