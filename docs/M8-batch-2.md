@@ -54,7 +54,7 @@ ADR 0039 keeps the decisions. Work through the tasks in order; each ends with th
 
 ### T2 This Screen first
 
-- [ ] Done (commit: "settings: This Screen first on a wall run by Sunroom Screen")
+- [x] Done (commit: "settings: This Screen first on a wall run by Sunroom Screen")
 - `pages.ts` (This Screen first), `SettingsScreens.tsx` (the box, the rule, the caption, the
   page's lead; `/settings` opens the first page); `this-screen.spec`; UX §4; CHANGELOG.
 

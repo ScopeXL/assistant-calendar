@@ -225,7 +225,7 @@ const settingsRoute = createRoute({
   getParentRoute: () => signedRoute,
   path: "/settings",
   component: function Settings() {
-    return useShell() === "display" ? <SettingsPageScreen page="family" /> : <SettingsIndex />;
+    return useShell() === "display" ? <SettingsPageScreen /> : <SettingsIndex />;
   },
 });
 const settingsPageRoute = createRoute({

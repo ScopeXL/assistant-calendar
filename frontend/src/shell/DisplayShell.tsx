@@ -310,7 +310,8 @@ export function DisplayShell({ home, children }: { home: "/display" | "/"; child
       return;
     }
     if (!session?.is_parent && !(await askForPin())) return;
-    await navigate({ to: "/settings/$page", params: { page: "family" } });
+    // Settings' first page: This Screen on a wall run by Sunroom Screen, else Family (ADR 0039).
+    await navigate({ to: "/settings" });
   };
 
   // In every room, Settings included: its pages are capped at a reading width anyway.

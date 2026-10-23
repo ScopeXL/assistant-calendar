@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Lock } from "lucide-react";
-import type { ReactNode } from "react";
+import { ChevronRight, Lock, MonitorCog } from "lucide-react";
+import { useId, type ReactNode } from "react";
 
 import { api } from "../../api/client";
 import { qk } from "../../api/keys";
-import { useScreenAgent } from "../../lib/screenAgent";
+import { sunroomName, useScreenAgent } from "../../lib/screenAgent";
 import { fetchSession } from "../../lib/session";
 import { RoomHeader } from "../../shell/roomHeader";
 import { Button } from "../../ui/Button";
@@ -46,13 +46,21 @@ interface Page {
   render: () => ReactNode;
 }
 
+/** This Screen is the wall's own device, not the household's (ADR 0039): what its link and its
+ * page say, apart from the pages every phone and screen share. */
+const THIS_SCREEN = "this-screen";
+const DEVICE_HINT = "Network, updates and power";
+const DEVICE_LEAD =
+  "These settings are for this screen only: its network, updates and power. They don’t change Sunroom for anyone else.";
+
 /** Core's pages, with the enabled plugins' own (Chores) after Calendars & accounts. This Screen
- * only where the wall's own Sunroom Screen answers (ADR 0035): never on a phone. */
+ * only where the wall's own Sunroom Screen answers (ADR 0035), first there (ADR 0039): never on a
+ * phone. */
 function usePages(): { pages: Page[]; ready: boolean } {
   const { modules, ready } = usePluginModulesState();
   const screenAgent = useScreenAgent();
   const core: Page[] = SETTINGS_PAGES.filter(
-    (page) => page.key !== "this-screen" || screenAgent !== null,
+    (page) => page.key !== THIS_SCREEN || screenAgent !== null,
   ).map((page) => ({ ...page, render: PAGES[page.key] }));
   const plugins: Page[] = modules.flatMap((module) =>
     (module.settingsPages ?? []).map(({ key, title, Page }) => ({
@@ -109,12 +117,16 @@ export function SettingsIndex() {
   );
 }
 
-/** One Settings page: full screen with Back on a phone, list and detail on the wall screen. */
-export function SettingsPageScreen({ page }: { page: string }) {
+/** One Settings page: full screen with Back on a phone, list and detail on the wall screen. With
+ * none named (the wall's /settings), the first: This Screen where there is one, else Family. */
+export function SettingsPageScreen({ page }: { page?: string }) {
   const display = useShell() === "display";
   const { pages, ready } = usePages();
-  // A plugin's page waits for its plugin to load; an unknown one shows Family.
-  const current = pages.find((p) => p.key === page) ?? (ready ? pages[0] : undefined);
+  // A plugin's page waits for its plugin to load; an unknown one shows the first.
+  const current =
+    page === undefined
+      ? pages[0]
+      : (pages.find((p) => p.key === page) ?? (ready ? pages[0] : undefined));
   if (!current) return null;
   if (!display) {
     return (
@@ -128,6 +140,9 @@ export function SettingsPageScreen({ page }: { page: string }) {
 
 function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
   const flagged = useFlagged();
+  const hintId = useId();
+  const device = pages.filter((page) => page.key === THIS_SCREEN);
+  const household = pages.filter((page) => page.key !== THIS_SCREEN);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: session } = useQuery({ queryKey: qk.session(), queryFn: fetchSession });
@@ -163,9 +178,45 @@ function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
         aria-label="Settings"
         className="w-96 shrink-0 overflow-y-auto border-r border-line py-4"
       >
+        {/* This Screen in a box of its own over a rule, then the household's pages under its
+            Sunroom's name: the device apart from what every phone and screen share (ADR 0039). */}
+        {device.length ? (
+          <>
+            <ul className="flex flex-col gap-1 border-b border-line px-3 pb-4">
+              {device.map((page) => (
+                <li key={page.key}>
+                  <Link
+                    to="/settings/$page"
+                    params={{ page: page.key }}
+                    aria-label={
+                      flagged.has(page.key) ? `${page.title}, needs attention` : page.title
+                    }
+                    aria-describedby={hintId}
+                    aria-current={page.key === current.key ? "page" : undefined}
+                    className="press-row flex min-h-20 items-center gap-4 rounded-button-d border-2 border-line px-4 py-2 text-ink-soft aria-[current=page]:border-ink aria-[current=page]:bg-surface aria-[current=page]:text-ink"
+                  >
+                    <MonitorCog aria-hidden="true" className="size-9 shrink-0" />
+                    <span className="flex min-w-0 flex-col">
+                      <span className="flex items-center text-d-body font-semibold whitespace-nowrap">
+                        {page.title}
+                        <Flag on={flagged.has(page.key)} />
+                      </span>
+                      <span id={hintId} className="text-d-caption text-ink-soft">
+                        {DEVICE_HINT}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="px-7 pt-5 pb-2 text-d-secondary font-bold text-ink-soft">
+              {sunroomName(session?.household_name)}
+            </p>
+          </>
+        ) : null}
         {/* Inset from the rail: neighbouring targets keep 8 px apart (UX §1). */}
         <ul className="flex flex-col gap-1 px-3">
-          {pages.map((page) => (
+          {household.map((page) => (
             <li key={page.key}>
               <Link
                 to="/settings/$page"
@@ -187,9 +238,21 @@ function DisplaySettings({ current, pages }: { current: Page; pages: Page[] }) {
         tabIndex={0}
         className="min-w-0 flex-1 overflow-y-auto px-10 py-8"
       >
-        <h2 id="settings-page" className="mb-8 text-d-title font-bold">
-          {current.title}
-        </h2>
+        {current.key === THIS_SCREEN ? (
+          <div className="mb-8 flex items-start gap-4">
+            <MonitorCog aria-hidden="true" className="mt-0.5 size-10 shrink-0" />
+            <div className="flex max-w-4xl flex-col gap-2">
+              <h2 id="settings-page" className="text-d-title font-bold">
+                {current.title}
+              </h2>
+              <p className="text-d-secondary text-ink-soft">{DEVICE_LEAD}</p>
+            </div>
+          </div>
+        ) : (
+          <h2 id="settings-page" className="mb-8 text-d-title font-bold">
+            {current.title}
+          </h2>
+        )}
         <div className="max-w-4xl">{current.render()}</div>
       </section>
     </div>

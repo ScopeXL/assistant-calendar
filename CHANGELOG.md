@@ -13,6 +13,12 @@ Everything that changes in Sunroom, written in plain English. The format follows
   calendars) run right on the screen, on its keyboard. The screen then becomes the family's
   kitchen screen without a pairing code, and its last page has the QR code phones scan to join.
 
+### Changed
+
+- On a kitchen screen run by Sunroom Screen, Settings opens on **This Screen**: it comes first,
+  in a box of its own, and says its settings (the network, updates and power) are for that screen
+  only, apart from the family's Sunroom below it.
+
 ## [0.15.0] - 2026-10-22
 
 ### Added
