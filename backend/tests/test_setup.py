@@ -8,7 +8,17 @@ import httpx
 from fastapi import FastAPI
 
 from sunroom.app import create_app
-from tests.support import BASE_URL, CSRF, PASSWORD, make_settings, run_setup, state_of
+from tests.support import (
+    BASE_URL,
+    CSRF,
+    PASSWORD,
+    PIN,
+    add_member,
+    make_settings,
+    run_setup,
+    set_pin,
+    state_of,
+)
 
 
 async def test_status_before_setup(client: httpx.AsyncClient) -> None:
@@ -33,6 +43,27 @@ async def test_setup_signs_in_the_phone_as_a_parent(
     assert str(state_of(app).zone()) == "Europe/Lisbon"
     status = (await client.get("/api/setup/status")).json()
     assert status["setup_complete"] is True
+
+
+async def test_setup_on_the_wall_pairs_that_screen(client: httpx.AsyncClient) -> None:
+    """Run on the wall screen itself (ADR 0039), setup makes it a paired screen, not a phone."""
+    response = await run_setup(client, on_screen=True)
+    assert response.status_code == 201, response.text
+    session = response.json()
+    assert session["device_kind"] == "kiosk"
+    assert session["device_label"] == "Kitchen screen"
+    # With no PIN yet, a paired screen is a parent's: the wizard's next steps need that.
+    assert session["is_parent"] is True
+    member = await add_member(client, "Ana")
+    # It's everyone's screen: nobody is bound to it.
+    bound = await client.put("/api/auth/member", json={"member_id": member["id"]}, headers=CSRF)
+    assert bound.status_code == 409
+    # With a PIN, it's a parent's for the PIN's ten minutes, as any paired screen.
+    await set_pin(client)
+    assert (await client.get("/api/auth/session")).json()["is_parent"] is False
+    verified = await client.post("/api/auth/pin/verify", json={"pin": PIN}, headers=CSRF)
+    assert verified.status_code == 200
+    assert (await client.get("/api/auth/session")).json()["is_parent"] is True
 
 
 async def test_setup_runs_once(client: httpx.AsyncClient, other: httpx.AsyncClient) -> None:

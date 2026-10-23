@@ -2,6 +2,7 @@ import { Check, CircleCheck } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Brand } from "../../ui/Brand";
+import { useShell } from "../../ui/shell";
 
 /** The six steps of first run, in order (UX §6), as the list beside the form names them. */
 export const SETUP_STEPS = [
@@ -31,7 +32,8 @@ function useRiseIn(): boolean {
  * six steps listed at the left (done ones checked, the current one marked), the step's title,
  * lead and form at the right, both centred in the window. On a phone, one column: the brand row
  * with "2 of 6", a six-segment bar for how far along it is, then the step. The list shows the
- * way; the steps' own Back buttons walk it.
+ * way; the steps' own Back buttons walk it. On the wall screen itself (ADR 0039), the same card
+ * at the wall's sizes, above its keyboard while that's up.
  */
 export function SetupFrame({
   step,
@@ -47,12 +49,24 @@ export function SetupFrame({
 }) {
   const at = SETUP_STEPS.findIndex((one) => one.key === step);
   const rise = useRiseIn();
+  const display = useShell() === "display";
+  const type = useSetupType();
   return (
     <main className="min-h-dvh bg-wall">
-      <div className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-12 lg:grid lg:grid-cols-[20rem_1fr] lg:content-center lg:gap-12 lg:py-12">
-        <aside className="hidden lg:flex lg:flex-col lg:gap-6 lg:self-center">
+      {/* The bottom pads by the wall's keyboard while it's up (none on a phone). A wall in
+          portrait has the height for one column: the steps over the form. */}
+      <div
+        className={`mx-auto flex min-h-dvh w-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-[calc(var(--osk-h,0px)+3rem)] lg:pt-12 ${
+          display
+            ? "max-w-7xl gap-10 portrait:max-w-3xl portrait:justify-center landscape:grid landscape:grid-cols-[26rem_1fr] landscape:content-center landscape:gap-12 landscape:px-10"
+            : "max-w-5xl lg:grid lg:grid-cols-[20rem_1fr] lg:content-center lg:gap-12"
+        }`}
+      >
+        <aside
+          className={`hidden lg:flex lg:flex-col lg:gap-6 ${display ? "landscape:self-center" : "lg:self-center"}`}
+        >
           <Brand size="entry" />
-          <p className="text-secondary text-ink-soft">
+          <p className={`${type.secondary} text-ink-soft`}>
             About three minutes. Everything can be changed later in Settings.
           </p>
           <ol aria-label="Setup steps" className="flex flex-col">
@@ -63,19 +77,25 @@ export function SetupFrame({
                 <li
                   key={one.key}
                   aria-current={current ? "step" : undefined}
-                  className="flex min-h-12 items-center gap-3"
+                  className={`flex items-center gap-3 ${display ? "min-h-16" : "min-h-12"}`}
                 >
                   <span
                     aria-hidden="true"
-                    className={`grid size-8 shrink-0 place-items-center rounded-full text-secondary font-bold ${
-                      done || current ? "bg-ink text-on-ink" : "border-2 border-line text-ink-soft"
-                    }`}
+                    className={`grid shrink-0 place-items-center rounded-full font-bold ${
+                      display ? "size-10 text-d-secondary" : "size-8 text-secondary"
+                    } ${done || current ? "bg-ink text-on-ink" : "border-2 border-line text-ink-soft"}`}
                   >
-                    {done ? <Check className="size-5" strokeWidth={3} /> : index + 1}
+                    {done ? (
+                      <Check className={display ? "size-6" : "size-5"} strokeWidth={3} />
+                    ) : (
+                      index + 1
+                    )}
                   </span>
                   <span
                     className={
-                      current ? "text-body font-bold" : "text-body font-semibold text-ink-soft"
+                      current
+                        ? `${type.body} font-bold`
+                        : `${type.body} font-semibold text-ink-soft`
                     }
                   >
                     {done ? <span className="sr-only">Done: </span> : null}
@@ -109,7 +129,7 @@ export function SetupFrame({
           </div>
         </div>
         <div
-          className={`flex w-full max-w-xl flex-col gap-5 lg:self-center ${rise ? "rise-in" : ""}`}
+          className={`flex w-full flex-col gap-5 ${display ? "max-w-2xl landscape:self-center portrait:max-w-none" : "max-w-xl lg:self-center"} ${rise ? "rise-in" : ""}`}
         >
           <h1 className="text-title font-bold lg:text-d-title">{title}</h1>
           {lead ? <p className="text-body text-ink-soft lg:text-d-secondary">{lead}</p> : null}
@@ -118,6 +138,14 @@ export function SetupFrame({
       </div>
     </main>
   );
+}
+
+/** The steps' own words at the sizes this shell reads at: a phone's (a laptop's), or the wall's
+ * when it sets Sunroom up itself (ADR 0039). */
+export function useSetupType(): { body: string; secondary: string } {
+  return useShell() === "display"
+    ? { body: "text-d-body", secondary: "text-d-secondary" }
+    : { body: "text-body", secondary: "text-secondary" };
 }
 
 /** A step's buttons, in one row from 1024 px: the way back (or a quiet "Later") at the left, the
@@ -142,9 +170,14 @@ export function SetupEnd({
   done?: boolean;
   children: ReactNode;
 }) {
+  const display = useShell() === "display";
   return (
     <main className="min-h-dvh bg-wall">
-      <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-6 px-4 py-12 text-center">
+      <div
+        className={`mx-auto flex min-h-dvh w-full flex-col items-center justify-center gap-6 px-4 py-12 text-center ${
+          display ? "max-w-4xl" : "max-w-2xl"
+        }`}
+      >
         <Brand size="entry" />
         {done ? <CircleCheck aria-hidden="true" className="size-16 fill-sun text-on-sun" /> : null}
         <h1 className="text-title font-bold lg:text-d-glance">{title}</h1>

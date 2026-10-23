@@ -6,6 +6,13 @@ Everything that changes in Sunroom, written in plain English. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The kitchen screen can set Sunroom up by itself: before setup it offers **Set Up Here** beside
+  the QR code for a phone, and the first steps (the household password, the people, a parent PIN,
+  calendars) run right on the screen, on its keyboard. The screen then becomes the family's
+  kitchen screen without a pairing code, and its last page has the QR code phones scan to join.
+
 ## [0.15.0] - 2026-10-22
 
 ### Added

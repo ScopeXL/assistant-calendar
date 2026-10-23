@@ -49,13 +49,16 @@ Pi, and on the screen choose **On This Computer**. No terminal at all;
    `powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.ps1 | iex"`.
    It installs what the screen needs and starts it (a Pi restarts first).
 3. **The screen asks where your family's Sunroom will run:** choose **On This Computer**.
-   Setting Up Sunroom takes a few minutes, then the screen shows a QR code. (On a Mac or Windows,
-   if the computer asks whether Sunroom may accept connections, choose Allow.)
-4. **Set up the household on your phone:** scan the QR code. Choose a household password, add
-   the people who live here, and set a parent PIN. Then add Sunroom to your home screen (Safari:
-   Share → Add to Home Screen).
-5. **Pair the kitchen screen:** it shows a six-character code. On your phone, open **More → Pair
-   a display** and type it.
+   Setting Up Sunroom takes a few minutes. (On a Mac or Windows, if the computer asks whether
+   Sunroom may accept connections, choose Allow.)
+4. **Set up the household right on the screen:** choose **Set Up Here** and type on the keyboard
+   that opens. Choose a household password, add the people who live here, and set a parent PIN.
+   The screen becomes your kitchen screen by itself.
+5. **Add the phones:** the last page shows a QR code. Scan it with each phone and sign in with the
+   household password, then add Sunroom to the home screen (Safari: Share → Add to Home Screen).
+
+Rather set up on your phone? Scan the QR code beside **Set Up Here** instead. The screen then
+shows a six-character code: on your phone, open **More → Pair a display** and type it.
 
 Keep that computer on and connected: phones open Sunroom from it. On a Pi,
 `… | bash -s -- --with-sunroom` instead runs Sunroom in Docker, set up by the installer, which
@@ -77,8 +80,8 @@ everything in the `sunroom_data` volume.
   8080, and a volume (or folder) for `/data`. If you map a folder, it must be writable by the
   container's user (`--user 99:100` on Unraid's appdata).
 
-Open `http://<server>:8080` on your phone and set up the household (step 3 above): there is
-nothing to configure first. Your own HTTPS proxy, Tailscale or Cloudflare work with nothing to
+Open `http://<server>:8080` on your phone and set up the household: there is nothing to
+configure first. Your own HTTPS proxy, Tailscale or Cloudflare work with nothing to
 set; [docs/REMOTE-ACCESS.md](docs/REMOTE-ACCESS.md) shows each way, and when to lock Sunroom to a
 name with `APP_ALLOWED_HOSTS`.
 
@@ -91,7 +94,8 @@ curl -fsSL https://raw.githubusercontent.com/ScopeXL/sunroom/main/kiosk/install.
 It installs what the screen needs, a browser too, and starts it (a Pi restarts first). On the
 screen, choose **On Another Computer**: it looks for Sunroom on your network, so tap **Use This
 Sunroom**, or type the address you open on a phone (an `https://` name works too). Then pair the
-screen (step 5 above).
+screen: it shows a six-character code; on your phone, open **More → Pair a display** and type it.
+(Haven't set up the household yet? The screen can: choose **Set Up Here**, as in path a.)
 
 ### c. Any computer, no Pi
 

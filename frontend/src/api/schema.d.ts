@@ -5498,6 +5498,11 @@ export interface components {
         SetupIn: {
             /** Household Name */
             household_name: string;
+            /**
+             * On Screen
+             * @default false
+             */
+            on_screen: boolean;
             /** Password */
             password: string;
             /**

@@ -1,6 +1,6 @@
 # ADR 0030: The owner's third notes (M6, batch 3)
 
-- **Status:** Accepted
+- **Status:** Accepted; a wall that runs setup itself became a paired screen in ADR 0039
 - **Date:** 2026-10-13
 
 ## Context

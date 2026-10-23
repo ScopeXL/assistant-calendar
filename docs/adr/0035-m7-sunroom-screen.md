@@ -1,7 +1,8 @@
 # ADR 0035: Sunroom Screen: the agent, This Screen, discovery, Releases, and the keyboard's number row
 
 - **Status:** Accepted; the installer's default became the kitchen screen alone on every
-  computer, with a browser installed when there's none (and never a snap's), in ADR 0037
+  computer, with a browser installed when there's none (and never a snap's), in ADR 0037; This
+  Screen moved to the top of Settings in ADR 0039
 - **Date:** 2026-10-20
 
 ## Context

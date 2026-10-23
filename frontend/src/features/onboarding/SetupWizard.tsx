@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
+import { isLoopbackAddress } from "../../lib/address";
 import { useMembers } from "../../lib/household";
 import { rememberSignedIn } from "../../lib/session";
 import { previewTheme, type ThemeChoice } from "../../lib/theme";
@@ -12,11 +13,12 @@ import { Avatar } from "../../ui/Avatar";
 import { AddPersonRow, type RoleChoice } from "../settings/AddPersonRow";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { QrCode } from "../../ui/QrCode";
 import { Segmented } from "../../ui/Segmented";
 import { Select } from "../../ui/Select";
 import { TextField } from "../../ui/TextField";
 import { usePluginModules } from "../usePluginModules";
-import { SetupEnd, SetupFrame, StepActions } from "./SetupFrame";
+import { SetupEnd, SetupFrame, StepActions, useSetupType } from "./SetupFrame";
 
 export type SetupStep =
   "welcome" | "password" | "household" | "place" | "people" | "pin" | "calendars" | "done";
@@ -52,6 +54,17 @@ function zones(): string[] {
   }
 }
 
+/** The wizard on the wall screen itself (ADR 0039), which keeps its step and its ways out. */
+export interface OnScreen {
+  go: (next: SetupStep) => void;
+  /** Back from the first step, to the page before setup. */
+  leave: () => void;
+  /** You're Set's Open Sunroom: the board. */
+  open: () => void;
+  /** Where phones open Sunroom (You're Set shows it as a QR code). */
+  address: string;
+}
+
 /**
  * First run (UX §6, PLAN §12.1): on whatever device opened Sunroom first, usually a phone. The
  * password and the household are set together in one request that closes setup for good and
@@ -60,12 +73,17 @@ function zones(): string[] {
  * (ADR 0030): the screen shows its code by itself once setup is done, and it's paired from More
  * → Pair a Display, or with the household password on the screen. The household step also
  * picks the theme, previewed on this page as it's chosen (ADR 0034).
+ *
+ * On the wall screen itself (`onScreen`, ADR 0039) the same steps make that screen a paired one
+ * instead: nobody is bound to it, and the PIN it sets opens its ten minutes for the last step.
  */
-export function SetupWizard({ step }: { step: SetupStep }) {
+export function SetupWizard({ step, onScreen }: { step: SetupStep; onScreen?: OnScreen }) {
   const navigate = useNavigate();
-  const go = (next: SetupStep) => {
-    void navigate({ to: "/setup", search: { step: next } });
-  };
+  const go =
+    onScreen?.go ??
+    ((next: SetupStep) => {
+      void navigate({ to: "/setup", search: { step: next } });
+    });
   const [password, setPassword] = useState("");
   switch (step) {
     case "welcome":
@@ -88,6 +106,7 @@ export function SetupWizard({ step }: { step: SetupStep }) {
         <PasswordStep
           password={password}
           onPassword={setPassword}
+          onBack={onScreen?.leave}
           onNext={() => {
             go("household");
           }}
@@ -97,6 +116,7 @@ export function SetupWizard({ step }: { step: SetupStep }) {
       return (
         <HouseholdStep
           password={password}
+          onScreen={onScreen !== undefined}
           onBack={() => {
             go("password");
           }}
@@ -116,6 +136,7 @@ export function SetupWizard({ step }: { step: SetupStep }) {
     case "people":
       return (
         <PeopleStep
+          onScreen={onScreen !== undefined}
           onNext={() => {
             go("pin");
           }}
@@ -124,6 +145,7 @@ export function SetupWizard({ step }: { step: SetupStep }) {
     case "pin":
       return (
         <PinStep
+          onScreen={onScreen !== undefined}
           onNext={() => {
             go("calendars");
           }}
@@ -138,6 +160,7 @@ export function SetupWizard({ step }: { step: SetupStep }) {
         />
       );
     case "done":
+      if (onScreen) return <ScreenDone address={onScreen.address} onOpen={onScreen.open} />;
       return (
         <SetupEnd title="You’re Set" done>
           <p>
@@ -162,13 +185,41 @@ export function SetupWizard({ step }: { step: SetupStep }) {
   }
 }
 
+/** You're Set on the wall screen (ADR 0039): how phones join, then the board. */
+function ScreenDone({ address, onOpen }: { address: string; onOpen: () => void }) {
+  return (
+    <SetupEnd title="You’re Set" done>
+      {isLoopbackAddress(address) ? (
+        <p>
+          To add a phone, open Sunroom on it with this computer’s name or network address, then sign
+          in with the household password.
+        </p>
+      ) : (
+        <>
+          <QrCode value={address} label={`A code that opens ${address}`} className="size-56" />
+          <p>
+            To add a phone, scan this code with it, or open{" "}
+            <span className="font-bold">{address}</span>, then sign in with the household password.
+          </p>
+        </>
+      )}
+      <Button className="min-w-72" onClick={onOpen}>
+        Open Sunroom
+      </Button>
+    </SetupEnd>
+  );
+}
+
 function PasswordStep({
   password,
   onPassword,
+  onBack,
   onNext,
 }: {
   password: string;
   onPassword: (value: string) => void;
+  /** On the wall, the way back to the page before setup. */
+  onBack?: (() => void) | undefined;
   onNext: () => void;
 }) {
   const { data: status } = useQuery({
@@ -199,6 +250,7 @@ function PasswordStep({
         <TextField
           label="Household password"
           type={visible ? "text" : "password"}
+          layout="password"
           autoComplete="new-password"
           autoCapitalize="none"
           value={password}
@@ -219,7 +271,15 @@ function PasswordStep({
           {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
           {visible ? "Hide Password" : "Show Password"}
         </Button>
-        <StepActions>
+        <StepActions
+          back={
+            onBack ? (
+              <Button variant="quiet" block onClick={onBack}>
+                Back
+              </Button>
+            ) : undefined
+          }
+        >
           <Button type="submit" block disabled={password.length < least}>
             Next
           </Button>
@@ -231,14 +291,17 @@ function PasswordStep({
 
 function HouseholdStep({
   password,
+  onScreen,
   onBack,
   onDone,
 }: {
   password: string;
+  onScreen: boolean;
   onBack: () => void;
   onDone: () => void;
 }) {
   const queryClient = useQueryClient();
+  const type = useSetupType();
   const [name, setName] = useState("Home");
   const [zone, setZone] = useState(phoneZone);
   const [changingZone, setChangingZone] = useState(false);
@@ -260,11 +323,13 @@ function HouseholdStep({
             week_starts_on: Number(weekStart),
             time_format: phoneTimeFormat(),
             theme,
+            on_screen: onScreen,
           },
         }),
       ),
     onSuccess: async (session) => {
-      rememberSignedIn(true);
+      // A paired screen is never offered the offline start a phone gets (lib/session).
+      if (!onScreen) rememberSignedIn(true);
       queryClient.setQueryData(qk.session(), session);
       await queryClient.invalidateQueries({ queryKey: qk.setupStatus() });
       onDone();
@@ -273,7 +338,7 @@ function HouseholdStep({
   if (!password) {
     return (
       <SetupFrame step="household" title="Name Your Household">
-        <p className="text-body">Choose the household password first.</p>
+        <p className={type.body}>Choose the household password first.</p>
         <StepActions>
           <Button block onClick={onBack}>
             Back
@@ -314,7 +379,7 @@ function HouseholdStep({
           ))}
         </ChipRow>
         <div className="flex flex-col gap-2">
-          <span className="text-body font-semibold">Time zone</span>
+          <span className={`${type.body} font-semibold`}>Time zone</span>
           {changingZone ? (
             <Select
               aria-label="Time zone"
@@ -331,7 +396,7 @@ function HouseholdStep({
             </Select>
           ) : (
             <div className="flex items-center justify-between gap-3">
-              <span className="text-body">{zone.replaceAll("_", " ")}</span>
+              <span className={type.body}>{zone.replaceAll("_", " ")}</span>
               <Button
                 variant="quiet"
                 onClick={() => {
@@ -344,7 +409,7 @@ function HouseholdStep({
           )}
         </div>
         <div className="flex flex-col gap-2">
-          <span className="text-body font-semibold">The week starts on</span>
+          <span className={`${type.body} font-semibold`}>The week starts on</span>
           <Segmented
             label="The week starts on"
             value={weekStart}
@@ -356,7 +421,7 @@ function HouseholdStep({
           />
         </div>
         <div className="flex flex-col gap-2">
-          <span className="text-body font-semibold">Theme</span>
+          <span className={`${type.body} font-semibold`}>Theme</span>
           <Segmented
             label="Theme"
             value={theme}
@@ -367,7 +432,7 @@ function HouseholdStep({
               { value: "auto", label: "Auto" },
             ]}
           />
-          <p className="text-secondary text-ink-soft">
+          <p className={`${type.secondary} text-ink-soft`}>
             Auto is dark from sunset to sunrise once Sunroom knows where home is (the next step),
             and from 7 PM until then. On a phone, Auto follows the phone.
           </p>
@@ -393,15 +458,17 @@ function HouseholdStep({
   );
 }
 
-function PeopleStep({ onNext }: { onNext: () => void }) {
+function PeopleStep({ onScreen, onNext }: { onScreen: boolean; onNext: () => void }) {
   const queryClient = useQueryClient();
+  const type = useSetupType();
   const { data: members = [] } = useMembers();
   const first = members.length === 0;
   const add = useMutation({
     mutationFn: async ({ name, role }: { name: string; role: RoleChoice }) => {
       const member = unwrap(await api.POST("/api/members", { body: { name, role } }));
-      if (first) {
-        // The first person is whoever is setting up: this phone is theirs.
+      if (first && !onScreen) {
+        // The first person is whoever is setting up: this phone is theirs (a screen is
+        // everyone's).
         const session = unwrap(
           await api.PUT("/api/auth/member", { body: { member_id: member.id } }),
         );
@@ -428,11 +495,15 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
           {members.map((member) => (
             <li
               key={member.id}
-              className="flex items-center gap-3 rounded-button border-2 border-line bg-surface px-3 py-2"
+              className={`flex items-center gap-3 border-2 border-line bg-surface ${
+                onScreen ? "rounded-button-d px-4 py-3" : "rounded-button px-3 py-2"
+              }`}
             >
-              <Avatar member={member} size="sm" />
-              <span className="text-row font-semibold">{member.name}</span>
-              <span className="ml-auto text-secondary text-ink-soft">
+              <Avatar member={member} size={onScreen ? "md" : "sm"} />
+              <span className={`${onScreen ? "text-d-body" : "text-row"} font-semibold`}>
+                {member.name}
+              </span>
+              <span className={`ml-auto ${type.secondary} text-ink-soft`}>
                 {member.role === "kid" ? "Child" : "Parent"}
               </span>
             </li>
@@ -459,14 +530,21 @@ function PeopleStep({ onNext }: { onNext: () => void }) {
   );
 }
 
-function PinStep({ onNext }: { onNext: () => void }) {
+function PinStep({ onScreen, onNext }: { onScreen: boolean; onNext: () => void }) {
+  const queryClient = useQueryClient();
   const [pin, setPin] = useState("");
   const set = useMutation({
     mutationFn: async () => {
       const result = await api.PUT("/api/auth/pin", { body: { pin } });
       if (!result.response.ok) unwrap(result);
+      // A paired screen is a parent's only with the PIN once there is one: the PIN just set
+      // opens its ten minutes, for the calendars step (ADR 0039).
+      if (onScreen) unwrap(await api.POST("/api/auth/pin/verify", { body: { pin } }));
     },
-    onSuccess: onNext,
+    onSuccess: async () => {
+      if (onScreen) await queryClient.invalidateQueries({ queryKey: qk.session() });
+      onNext();
+    },
   });
   return (
     <SetupFrame
@@ -484,6 +562,7 @@ function PinStep({ onNext }: { onNext: () => void }) {
         <TextField
           label="PIN (4 to 6 digits)"
           type="password"
+          layout="numeric"
           inputMode="numeric"
           autoComplete="off"
           maxLength={6}

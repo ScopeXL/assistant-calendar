@@ -137,9 +137,10 @@ function PlaceSearch({
 
 /** First run's "Where's home?" (PLAN §15 M4): for the weather and the sunset. */
 export function PlaceOnboarding({ onDone }: { onDone: () => void }) {
+  const display = useShell() === "display";
   return (
     <>
-      <p className="text-body">
+      <p className={display ? "text-d-body" : "text-body"}>
         Sunroom shows your weather and turns dark at sunset. Type your city, or one nearby.
       </p>
       <PlaceSearch onPicked={onDone} />

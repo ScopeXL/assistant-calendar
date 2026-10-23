@@ -9140,6 +9140,11 @@
             "title": "Household Name",
             "type": "string"
           },
+          "on_screen": {
+            "default": false,
+            "title": "On Screen",
+            "type": "boolean"
+          },
           "password": {
             "maxLength": 256,
             "title": "Password",

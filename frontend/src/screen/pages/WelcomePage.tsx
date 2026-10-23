@@ -1,40 +1,14 @@
-import { useEffect, useId, type ReactNode } from "react";
+import { useEffect } from "react";
 
 import type { ScreenState } from "../../lib/screenAgent";
 import { Brand } from "../../ui/Brand";
 import { Button } from "../../ui/Button";
+import { Choice } from "../../ui/Choice";
 import { afterWifi, go } from "../route";
 
 /** Sunroom OS with neither a cable nor Wi-Fi from Imager: join a network before either way. */
 export function needsWifi(state: ScreenState): boolean {
   return state.sunroom_os && state.network.kind === "none" && state.capabilities.includes("wifi");
-}
-
-function Choice({
-  heading,
-  lead,
-  children,
-  action,
-}: {
-  heading: string;
-  lead: string;
-  children: ReactNode;
-  action: ReactNode;
-}) {
-  const id = useId();
-  return (
-    <section
-      aria-labelledby={id}
-      className="flex min-w-0 flex-col gap-4 rounded-panel border border-line bg-surface p-6 text-left"
-    >
-      <h2 id={id} className="text-d-title font-bold">
-        {heading}
-      </h2>
-      <p className="text-d-body font-semibold">{lead}</p>
-      {children}
-      <div className="mt-auto pt-2">{action}</div>
-    </section>
-  );
 }
 
 /**

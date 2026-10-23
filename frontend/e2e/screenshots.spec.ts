@@ -81,6 +81,14 @@ async function moveClock(page: Page, at: string): Promise<void> {
   expect(response.status()).toBe(204);
 }
 
+/** The wall's keyboard down and the room it took given back (ui/Keyboard holds it a moment). */
+async function keyboardGone(page: Page): Promise<void> {
+  await expect(page.getByRole("group", { name: "On-screen keyboard" })).toBeHidden();
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--osk-h")))
+    .toBe("0px");
+}
+
 async function change(page: Page, settings: Record<string, unknown>): Promise<void> {
   const response = await page.request.patch("/api/settings", { headers: CSRF, data: settings });
   expect(response.status()).toBe(200);
@@ -91,7 +99,7 @@ test("the wall screen", async ({ page }) => {
   test.setTimeout(240_000);
   await moveClock(page, STOPS[0]?.at ?? "");
   await page.goto("/display");
-  await expect(page.getByRole("heading", { name: "Set up Sunroom on your phone" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Set Up Sunroom", exact: true })).toBeVisible();
   await shot(page, "display-setup");
   await seed(page.request);
   await page.reload();
@@ -434,6 +442,54 @@ test("the wall screen", async ({ page }) => {
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.getByRole("dialog", { name: "Parent PIN" })).toBeVisible();
   await shot(page, "pin");
+});
+
+test("setup on the wall itself (ADR 0039)", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("display"), "the wall screen");
+  test.setTimeout(120_000);
+  for (const scheme of ["light", "dark"] as const) {
+    await resetServer(page.request);
+    await page.context().clearCookies();
+    // Before setup the wall guesses by the time of day: dark from 7 PM (DisplayEntry's Frame).
+    await moveClock(page, (scheme === "light" ? STOPS[0] : STOPS[2])?.at ?? "");
+    await page.goto("/display");
+    await expect(page.getByRole("heading", { name: "Set Up Sunroom", exact: true })).toBeVisible();
+    await shot(page, `wall-setup-${scheme}`);
+    await page.getByRole("button", { name: "Set Up Here" }).click();
+    await page.getByLabel("Household password").click();
+    await expect(page.getByRole("group", { name: "On-screen keyboard" })).toBeVisible();
+    await page.getByLabel("Household password").fill(PASSWORD);
+    await shot(page, `wall-setup-password-${scheme}`);
+    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByLabel("Household name").fill("Sample Family");
+    await page.getByRole("heading", { name: "Name your household" }).click();
+    await keyboardGone(page);
+    await shot(page, `wall-setup-household-${scheme}`);
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
+    await shot(page, `wall-setup-place-${scheme}`);
+    await page.getByRole("button", { name: "Later" }).click();
+    await page.getByLabel("Your name").fill("Ana");
+    await page.getByRole("button", { name: "Add Me" }).click();
+    await page.getByLabel("Name", { exact: true }).fill("Mia");
+    await page.getByRole("button", { name: "Child", exact: true }).click();
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.getByRole("listitem").filter({ hasText: "Mia" })).toBeVisible();
+    await page.getByRole("heading", { name: "Who lives here?" }).click();
+    await keyboardGone(page);
+    await shot(page, `wall-setup-people-${scheme}`);
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await shot(page, `wall-setup-pin-${scheme}`);
+    await page.getByRole("button", { name: "Later" }).click();
+    await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
+    await shot(page, `wall-setup-calendars-${scheme}`);
+    await page.getByRole("button", { name: "Skip for Now" }).click();
+    await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
+    await shot(page, `wall-setup-name-${scheme}`);
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByRole("heading", { name: "You’re set" })).toBeVisible();
+    await shot(page, `wall-setup-done-${scheme}`);
+  }
 });
 
 test("setup on a laptop: the steps beside the form", async ({ page }, testInfo) => {

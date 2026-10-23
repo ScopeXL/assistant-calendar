@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Button } from "../../ui/Button";
+import { useShell } from "../../ui/shell";
 import { AddAccountSheet } from "./AddAccount";
 import { useAccounts } from "./data";
 
@@ -9,16 +10,18 @@ import { useAccounts } from "./data";
 export function SetupCalendars({ onDone }: { onDone: () => void }) {
   const [open, setOpen] = useState(false);
   const { data: accounts = [] } = useAccounts();
+  // On the wall screen when it sets Sunroom up itself (ADR 0039), at its sizes.
+  const text = useShell() === "display" ? "text-d-body" : "text-body";
   return (
     <>
-      <p className="text-body text-ink-soft">
+      <p className={`${text} text-ink-soft`}>
         Apple, Google, your country's holidays, or a school or team calendar. You can add more later
         in Settings, then Calendars & Accounts.
       </p>
       {accounts.length ? (
         <ul aria-label="Added" className="flex flex-col gap-1">
           {accounts.map((account) => (
-            <li key={account.id} className="text-body font-semibold">
+            <li key={account.id} className={`${text} font-semibold`}>
               {account.label}
             </li>
           ))}

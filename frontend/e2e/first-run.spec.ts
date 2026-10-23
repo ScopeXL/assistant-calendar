@@ -1,6 +1,8 @@
 /**
  * M0's flow (PLAN §15 M0 Verify): first run on a phone, then the wall screen paired from More
  * (the wizard has no pairing step, ADR 0030), the PIN gate on the wall, sign out. One test drives both: a phone context and the wall (this project's page).
+ * First run on the wall itself (ADR 0039): Set Up Here, the steps on its keyboard, a paired
+ * screen at the end, and a phone joining after.
  * And the way back to a first run (ADR 0029): Erase everything, from a computer and never from
  * the wall. Synthetic names only.
  */
@@ -16,11 +18,12 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
 }, testInfo) => {
   test.skip(testInfo.project.name !== ONLY, WHY);
   test.setTimeout(60_000);
-  // Before setup, the wall says where to set Sunroom up.
+  // Before setup, the wall offers to set Sunroom up there or on a phone (ADR 0039).
   await page.goto("/display");
-  await expect(page.getByRole("heading", { name: "Set up Sunroom on your phone" })).toBeVisible();
-  await expect(page.getByText("http://sunroom.local:4173")).toBeVisible();
-  await expect(page.getByRole("img", { name: /A code that opens/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Set Up Sunroom", exact: true })).toBeVisible();
+  const onPhone = page.getByRole("region", { name: "On Your Phone" });
+  await expect(onPhone.getByText("http://sunroom.local:4173")).toBeVisible();
+  await expect(onPhone.getByRole("img", { name: /A code that opens/ })).toBeVisible();
 
   const { page: phonePage, context } = await phone(browser, watch);
   await phonePage.goto("/");
@@ -144,6 +147,88 @@ test("first run on a phone, the wall paired, Settings behind the PIN, then sign 
   await phonePage.getByRole("button", { name: "Sign Out of This Phone" }).click();
   await expect(phonePage).toHaveURL(/\/sign-in/);
   await context.close();
+});
+
+test("first run on the wall itself: its own keyboard, a paired screen, and a phone after", async ({
+  page,
+  browser,
+  watch,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== ONLY, WHY);
+  test.setTimeout(60_000);
+  await page.goto("/display");
+  const here = page.getByRole("region", { name: "On This Screen" });
+  await here.getByRole("button", { name: "Set Up Here" }).click();
+  // The six steps beside the form, the wall's keyboard under the field; Back goes back.
+  await expect(page.getByRole("list", { name: "Setup steps" })).toBeVisible();
+  await page.getByRole("button", { name: "Back" }).click();
+  await here.getByRole("button", { name: "Set Up Here" }).click();
+  const password = page.getByLabel("Household password");
+  await password.click();
+  const keyboard = page.getByRole("group", { name: "On-screen keyboard" });
+  await expect(keyboard).toBeVisible();
+  await keyboard.getByRole("button", { name: "e", exact: true }).click();
+  await expect(password).toHaveValue("e"); // a password: no automatic capital
+  await password.fill(PASSWORD);
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByLabel("Household name").fill("Sample Family");
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByRole("heading", { name: "Where’s home?" })).toBeVisible();
+  await page.getByRole("button", { name: "Later" }).click();
+  await page.getByLabel("Your name").fill("Ana");
+  await page.getByRole("button", { name: "Add Me" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: "Ana" })).toContainText("Parent");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  // The PIN it sets opens its ten minutes, so the calendars step is still a parent's.
+  await page.getByLabel("PIN (4 to 6 digits)").fill(PIN);
+  await page.getByRole("button", { name: "Set a PIN" }).click();
+  await expect(page.getByRole("heading", { name: "Bring in your calendars" })).toBeVisible();
+  const unlocked = (await (await page.request.get("/api/auth/session")).json()) as {
+    is_parent: boolean;
+    grant_expires_at: string | null;
+  };
+  expect(unlocked.is_parent).toBe(true);
+  expect(unlocked.grant_expires_at).not.toBeNull();
+  await page.getByRole("button", { name: "Skip for Now" }).click();
+  // It names itself, then You're Set says how phones join.
+  await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
+  await page.getByRole("button", { name: "Hallway" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByRole("heading", { name: "You’re set" })).toBeVisible();
+  await expect(page.getByRole("img", { name: /A code that opens/ })).toBeVisible();
+  await page.getByRole("button", { name: "Open Sunroom" }).click();
+  await expect(page.getByRole("region", { name: "This Week" })).toBeVisible();
+
+  // A paired screen, not a phone, and nobody's in particular.
+  const session = (await (await page.request.get("/api/auth/session")).json()) as {
+    device_kind: string;
+    device_label: string;
+    member: unknown;
+  };
+  expect(session).toMatchObject({ device_kind: "kiosk", device_label: "Hallway screen" });
+  expect(session.member).toBeNull();
+
+  // A phone joins with the password typed on the wall.
+  const { page: phonePage, context } = await phone(browser, watch);
+  await signInPhone(phonePage, "Ana");
+  await context.close();
+});
+
+test("the wall's own setup goes back to Set Up Sunroom after ten idle minutes", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== ONLY, WHY);
+  await page.clock.install();
+  await page.goto("/display");
+  await page.getByRole("button", { name: "Set Up Here" }).click();
+  await page.getByLabel("Household password").fill(PASSWORD);
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByLabel("Household name")).toBeVisible();
+  await page.clock.fastForward("10:01");
+  await expect(page.getByRole("heading", { name: "Set Up Sunroom", exact: true })).toBeVisible();
+  // What was typed is gone: the steps start again at an empty password.
+  await page.getByRole("button", { name: "Set Up Here" }).click();
+  await expect(page.getByLabel("Household password")).toHaveValue("");
 });
 
 test("a wall screen typed in with the password, and a toast that leaves under the CSP", async ({

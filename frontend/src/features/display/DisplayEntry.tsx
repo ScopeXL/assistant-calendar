@@ -21,21 +21,31 @@ import { useMinute } from "../../lib/time";
 import { DisplayShell } from "../../shell/DisplayShell";
 import { Button } from "../../ui/Button";
 import { Chip, ChipRow } from "../../ui/Chip";
+import { Choice } from "../../ui/Choice";
 import { KeyboardHost } from "../../ui/Keyboard";
 import { QrCode } from "../../ui/QrCode";
 import { ShellContext } from "../../ui/shell";
 import { Brand } from "../../ui/Brand";
+import { ToastRegion } from "../../ui/ToastRegion";
 import { TextField } from "../../ui/TextField";
 import { CalendarRoom } from "../calendar/CalendarRoom";
+import { SetupWizard, type SetupStep } from "../onboarding/SetupWizard";
 
 const NAMES = ["Kitchen", "Hallway", "Living room", "Office"] as const;
 const PASSWORD_IDLE_MS = 60_000;
+/** Ten minutes untouched leave the wall's own setup: to Set Up Sunroom while nothing is saved,
+ * to the board once the household is, whatever is left being in Settings (ADR 0039). */
+const SETUP_IDLE_MS = 10 * 60_000;
+
+/** The wall's own setup (ADR 0039): the wizard's steps from the password on, and Name This
+ * Screen before You're Set. */
+type WallStep = Exclude<SetupStep, "welcome"> | "name";
 
 /**
  * What the wall screen shows at /display (PLAN §12.3, UX §4 "Welcome and Pair this screen"):
- * where to set Sunroom up when it isn't yet; its pair code when it isn't paired; "Name this
- * screen" right after pairing; then the board. Any other browser opening /display after signing
- * in gets the display shell as a preview (ADR 0014).
+ * Set Up Sunroom when it isn't yet, here or on a phone; its pair code when it isn't paired;
+ * "Name this screen" right after pairing; then the board. Any other browser opening /display
+ * after signing in gets the display shell as a preview (ADR 0014).
  */
 export function DisplayEntry() {
   const { data: status } = useQuery({
@@ -52,12 +62,33 @@ export function DisplayEntry() {
       !(error instanceof ApiError && error.status >= 400 && error.status < 500),
   });
   const [justPaired, setJustPaired] = useState(false);
+  const [wallStep, setWallStep] = useState<WallStep | null>(null);
 
   if (!status || isPending) return <Frame>{null}</Frame>;
+  // Setting up here: until a phone finishes setup first, then as the screen it made this one.
+  if (wallStep !== null && (!status.setup_complete || session?.device_kind === "kiosk")) {
+    return (
+      <Frame bare>
+        <WallSetup
+          step={wallStep}
+          address={status.advertised_url}
+          onStep={setWallStep}
+          onLeave={() => {
+            setWallStep(null);
+          }}
+        />
+      </Frame>
+    );
+  }
   if (!status.setup_complete) {
     return (
       <Frame>
-        <Welcome address={status.advertised_url} />
+        <Welcome
+          address={status.advertised_url}
+          onSetUpHere={() => {
+            setWallStep("password");
+          }}
+        />
       </Frame>
     );
   }
@@ -66,6 +97,7 @@ export function DisplayEntry() {
       <Frame>
         <PairThisScreen
           onPaired={() => {
+            setWallStep(null);
             setJustPaired(true);
           }}
         />
@@ -97,7 +129,14 @@ export function DisplayEntry() {
  * nightly restart: ADR 0032). A screen off for a while follows the household's choices by its
  * clock, and one that never knew the household guesses: Auto, dark from 7 PM.
  */
-function Frame({ children }: { children: ReactNode }) {
+function Frame({
+  children,
+  bare = false,
+}: {
+  children: ReactNode;
+  /** The wall's own setup: its steps lay themselves out, as on a phone (SetupFrame). */
+  bare?: boolean;
+}) {
   const { hour, minute } = zonedParts(useMinute());
   const minuteOfDay = hour * 60 + minute;
   useEffect(() => {
@@ -131,39 +170,110 @@ function Frame({ children }: { children: ReactNode }) {
   return (
     <ShellContext.Provider value="display">
       <MotionProvider reduceMotion={false}>
-        <main
-          data-shell="display"
-          className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-wall px-10 py-12 pb-[calc(var(--osk-h,0px)+48px)] text-center text-ink"
-        >
-          {children}
-        </main>
+        {bare ? (
+          <div data-shell="display" className="min-h-dvh bg-wall text-ink">
+            {children}
+          </div>
+        ) : (
+          <main
+            data-shell="display"
+            className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-wall px-10 py-12 pb-[calc(var(--osk-h,0px)+48px)] text-center text-ink"
+          >
+            {children}
+          </main>
+        )}
         <KeyboardHost rail={null} />
+        <ToastRegion display railSide="left" panelShown={false} />
       </MotionProvider>
     </ShellContext.Provider>
   );
 }
 
-function Welcome({ address }: { address: string }) {
+/** Set Up Sunroom (ADR 0039): right here on the wall's keyboard, or on a phone, side by side
+ * in landscape and one above the other in portrait, like the screen's own Welcome. */
+function Welcome({ address, onSetUpHere }: { address: string; onSetUpHere: () => void }) {
   return (
-    <>
+    <div className="flex w-full max-w-[110rem] flex-col items-center gap-8">
       <Brand size="entry" />
-      <h1 className="text-d-glance font-bold">Set Up Sunroom on Your Phone</h1>
-      {isLoopbackAddress(address) ? (
-        <p className="max-w-3xl text-d-body">
-          Open Sunroom on your phone with this computer's name or network address instead of{" "}
-          <span className="font-bold">{new URL(address).hostname}</span>. Then come back here: this
-          screen will show a code to pair it.
-        </p>
-      ) : (
-        <>
-          <QrCode value={address} label={`A code that opens ${address}`} className="size-72" />
-          <p className="max-w-3xl text-d-body">
-            Open <span className="font-bold">{address}</span> on your phone. Then come back here:
-            this screen will show a code to pair it.
+      <h1 className="text-d-glance font-bold">Set Up Sunroom</h1>
+      <div className="grid w-full gap-6 portrait:grid-cols-1 landscape:grid-cols-2">
+        <Choice
+          heading="On This Screen"
+          lead="Set it up right here."
+          action={<Button onClick={onSetUpHere}>Set Up Here</Button>}
+        >
+          <p className="text-d-body">
+            Type on the keyboard that opens on this screen. It takes about three minutes, and
+            everything can be changed later.
           </p>
-        </>
-      )}
-    </>
+          <p className="text-d-body text-ink-soft">
+            This screen becomes your family’s kitchen screen, and phones join afterwards.
+          </p>
+        </Choice>
+        <Choice heading="On Your Phone" lead="Scan this code with your phone’s camera.">
+          {isLoopbackAddress(address) ? (
+            <p className="text-d-body">
+              Open Sunroom on your phone with this computer’s name or network address instead of{" "}
+              <span className="font-bold">{new URL(address).hostname}</span>. Then come back here:
+              this screen will show a code to pair it.
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-6">
+              <QrCode value={address} label={`A code that opens ${address}`} className="size-56" />
+              <p className="min-w-0 flex-1 basis-64 text-d-body">
+                Or open <span className="font-bold break-all">{address}</span> on your phone. Then
+                come back here: this screen will show a code to pair it.
+              </p>
+            </div>
+          )}
+        </Choice>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Setting Sunroom up on the wall itself (ADR 0039): the wizard's steps in the wall's frame, its
+ * keyboard under the fields. The household step makes this screen a paired one; after the
+ * calendars it names itself, then You're Set opens the board.
+ */
+function WallSetup({
+  step,
+  address,
+  onStep,
+  onLeave,
+}: {
+  step: WallStep;
+  address: string;
+  onStep: (next: WallStep) => void;
+  onLeave: () => void;
+}) {
+  useEffect(() => whenIdle(SETUP_IDLE_MS, onLeave), [onLeave]);
+  if (step === "name") {
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-8 px-10 py-12 pb-[calc(var(--osk-h,0px)+48px)] text-center">
+        <NameThisScreen
+          action="Next"
+          onDone={() => {
+            onStep("done");
+          }}
+        />
+      </main>
+    );
+  }
+  return (
+    <SetupWizard
+      step={step}
+      onScreen={{
+        // The wizard ends at You're Set; on the wall, Name This Screen comes first.
+        go: (next) => {
+          onStep(next === "done" ? "name" : next === "welcome" ? "password" : next);
+        },
+        leave: onLeave,
+        open: onLeave,
+        address,
+      }}
+    />
   );
 }
 
@@ -339,7 +449,14 @@ function PasswordPairing({ onCancel, onPaired }: { onCancel: () => void; onPaire
   );
 }
 
-function NameThisScreen({ onDone }: { onDone: () => void }) {
+function NameThisScreen({
+  onDone,
+  action = "Done",
+}: {
+  onDone: () => void;
+  /** Next while the wall sets Sunroom up, before You're Set. */
+  action?: "Done" | "Next";
+}) {
   const queryClient = useQueryClient();
   const [name, setName] = useState<string>("Kitchen");
   const [other, setOther] = useState("");
@@ -388,7 +505,7 @@ function NameThisScreen({ onDone }: { onDone: () => void }) {
         </div>
       ) : null}
       <Button type="submit" pending={rename.isPending} disabled={!label} className="min-w-64">
-        Done
+        {action}
       </Button>
       {rename.isError ? (
         <p role="alert" className="text-d-secondary font-semibold text-alert">

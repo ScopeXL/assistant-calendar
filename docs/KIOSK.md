@@ -42,7 +42,9 @@ The screen looks for Sunroom on your network after the restart and lists what it
 **Use This Sunroom**, or type the address you open on a phone and tap **Check Address**.
 `--url https://calendar.example.com` (or `http://192.168.1.20:8080`) gives it the address and
 skips the search. Then the screen shows a six-character code: on a phone signed in to Sunroom,
-open **More → Pair a display** and type it.
+open **More → Pair a display** and type it. A Sunroom that isn't set up yet shows **Set Up
+Sunroom** instead: **Set Up Here** sets the household up on the screen itself, on its keyboard,
+and the screen pairs itself (ADR 0039); or scan its QR code and set it up on a phone.
 
 Earlier installers put Sunroom and the screen on a Pi when run with no option (ADR 0037 changed
 that). A Pi set up that way, or with `--server-only`, keeps Sunroom when the installer runs again
@@ -280,8 +282,10 @@ The screen's first page asks **Where will your family's Sunroom run?** (ADR 0038
 Computer** → **Run Sunroom Here** sets Sunroom up on the computer the screen runs on, so it is the
 family's Sunroom as well as its kitchen screen. **Setting Up Sunroom** shows how far it is
 ("Downloading Sunroom… 40%", "Installing Sunroom…", "Starting Sunroom…"; the first time takes a
-few minutes), then the screen opens Sunroom's own setup, whose QR code a phone scans to finish.
-If it stops, the page says why, with **Try Again**.
+few minutes), then the screen opens Sunroom's own **Set Up Sunroom**: **Set Up Here** sets the
+household up right there, on the screen's keyboard, and the screen pairs itself; its last page
+has the QR code that phones scan to join (ADR 0039). Or scan the QR code beside it and set up on a
+phone. If Setting Up Sunroom stops, the page says why, with **Try Again**.
 
 - **What it is:** Sunroom as a program for the screen's user, not Docker: Sunroom Screen installs
   this release's `sunroom` wheel with uv, as it installs itself, held to the release's versions
@@ -302,8 +306,8 @@ If it stops, the page says why, with **Try Again**.
   desktop may refuse (Sunroom Screen's log says so): then turn off automatic suspend in its power
   settings, so phones reach Sunroom at night.
 - **Phones:** Sunroom answers on port 8080 (or the next free one), at `http://<computer>.local:8080`
-  on a Mac and on Linux with avahi, else at the computer's numbered address; the setup page's QR
-  code has it. Sunroom Screen announces it on the network, so other screens find it too. On a Mac
+  on a Mac and on Linux with avahi, else at the computer's numbered address; the QR codes on Set
+  Up Sunroom and on setup's last page have it. Sunroom Screen announces it on the network, so other screens find it too. On a Mac
   or Windows the first start may ask whether Sunroom may accept connections: choose Allow, or
   phones can't reach it.
 - **Updates:** it stays at Sunroom Screen's version: when Sunroom Screen updates itself, Sunroom

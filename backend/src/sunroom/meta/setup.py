@@ -1,11 +1,11 @@
 """First run (PLAN §12.1, §13.4; ADR 0006).
 
-Until setup is done, the app's pages send everyone to /setup, and the wall screen shows where to
-set it up instead. ``POST /api/setup`` is public only until it succeeds; after that it answers
-410 forever. In one transaction it stores the household password (scrypt), names the household,
-sets its time zone and theme, marks it onboarded and signs in the phone that ran it, as a
-parent. The rest of the wizard (people, the PIN, pairing the screen) uses the normal signed-in
-routes.
+Until setup is done, the app's pages send everyone to /setup, and the wall screen offers to set
+it up there or on a phone. ``POST /api/setup`` is public only until it succeeds; after that it
+answers 410 forever. In one transaction it stores the household password (scrypt), names the
+household, sets its time zone and theme, marks it onboarded and signs in the phone that ran it,
+as a parent; or, run on the wall screen itself (``on_screen``, ADR 0039), that screen, as a
+paired one. The rest of the wizard (people, the PIN, calendars) uses the normal signed-in routes.
 
 With APP_PASSWORD set, the wizard skips choosing a password but must be given that password, so
 an unconfigured server reachable by strangers can't be claimed by the first visitor
@@ -39,6 +39,7 @@ from sunroom.state import StateDep
 
 router = APIRouter(prefix="/api/setup", tags=["setup"])
 log = get_logger(__name__)
+SCREEN_LABEL = "Kitchen screen"  # until Name This Screen, as a screen paired with the password
 
 
 class SetupStatusOut(BaseModel):
@@ -56,6 +57,7 @@ class SetupIn(BaseModel):
     week_starts_on: Annotated[int, Field(ge=0, le=6)] = 6
     time_format: TimeFormat = "12h"
     theme: ThemeName = "auto"  # chosen on the wizard's household step (ADR 0034)
+    on_screen: bool = False  # run on a wall screen: it becomes a paired screen (ADR 0039)
 
 
 @router.get("/status")
@@ -121,9 +123,11 @@ async def run_setup(
             state,
             request,
             response,
-            kind=DeviceKind.PHONE,
+            kind=DeviceKind.KIOSK if body.on_screen else DeviceKind.PHONE,
             paired_via=PairedVia.SETUP,
-            label=device_label(request.headers.get("user-agent")),
+            label=SCREEN_LABEL
+            if body.on_screen
+            else device_label(request.headers.get("user-agent")),
             now=now,
         )
         tx.publish("settings.changed", {"area": "setup"})
@@ -132,5 +136,5 @@ async def run_setup(
     state.household.password_set = True
     state.household.zone = zone
     state.login_limiter.record_success(ip)
-    log.info("setup.done", device=device.id)
+    log.info("setup.done", device=device.id, on_screen=body.on_screen)
     return out
