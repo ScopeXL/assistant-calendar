@@ -8,7 +8,7 @@
 import type { Page, Route } from "@playwright/test";
 
 import { check } from "./checks";
-import { expect, pairWall, PIN, seed, test } from "./fixtures";
+import { expect, pairWall, PASSWORD, PIN, seed, test } from "./fixtures";
 
 const AGENT = "http://127.0.0.1:7800";
 const ORIGIN = "http://127.0.0.1:4173";
@@ -237,6 +237,21 @@ test("This Screen restarts, shuts down, joins Wi-Fi, turns and updates the scree
   const help = page.getByRole("dialog", { name: "About This Screen" });
   await expect(help.getByText("Raspberry Pi 5 Model B")).toBeVisible();
   await expect(help.getByText("Having trouble? Settings → Support Sunroom.")).toBeVisible();
+});
+
+test("a wall paired on the screen has Sunroom Screen keep the pairing at once (ADR 0040)", async ({
+  page,
+  request,
+}) => {
+  await seed(request, { pin: PIN });
+  const agent = new FakeAgent();
+  await agent.install(page);
+  await page.goto("/display?dimmer=screen&screen=7800");
+  await page.getByRole("button", { name: "Type the household password here instead" }).click();
+  await page.getByLabel("Household password").fill(PASSWORD);
+  await page.getByRole("button", { name: "Pair This Screen" }).click();
+  await expect(page.getByRole("heading", { name: "Name this screen" })).toBeVisible();
+  await expect.poll(() => agent.calls).toContain("POST /api/screen/keep-pairing");
 });
 
 test("a wall opened without ?screen= has no This Screen, and asks no agent", async ({

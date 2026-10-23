@@ -10,6 +10,7 @@ import { whenIdle, watchActivity } from "../../lib/idle";
 import { watchKeyboardFields } from "../../lib/keyboard";
 import { MotionProvider } from "../../lib/motion";
 import { watchPointer } from "../../lib/pointer";
+import { keepPairing } from "../../lib/screenAgent";
 import { fetchSession, type Session } from "../../lib/session";
 import {
   applyAppearance,
@@ -97,6 +98,7 @@ export function DisplayEntry() {
       <Frame>
         <PairThisScreen
           onPaired={() => {
+            keepPairing();
             setWallStep(null);
             setJustPaired(true);
           }}

@@ -152,3 +152,17 @@ async def test_the_policy_is_this_users_and_leaves_other_keys_alone() -> None:
     # The uninstaller takes Sunroom Screen's keys out, and only those.
     assert await platform.remove_policy("edge")
     assert registry.keys[edge] == {"HomepageLocation": ("REG_SZ", "https://example.com")}
+
+
+async def test_edge_gets_its_own_quiet_keys_and_chrome_doesnt() -> None:
+    """Edge runs without its kiosk mode (ADR 0040): no welcome page, no full-tab promotions."""
+    registry = FakeRegistry()
+    platform = windows(Shell(), registry)
+    edge, chrome = policy.WINDOWS_KEYS["edge"], policy.WINDOWS_KEYS["chrome"]
+    assert await platform.write_policy("edge", policy.document(ORIGIN))
+    assert registry.keys[edge]["HideFirstRunExperience"] == ("REG_DWORD", 1)
+    assert registry.keys[edge]["PromotionalTabsEnabled"] == ("REG_DWORD", 0)
+    assert await platform.write_policy("chrome", policy.document(ORIGIN))
+    assert "PromotionalTabsEnabled" not in registry.keys[chrome]
+    assert await platform.remove_policy("edge")
+    assert registry.keys[edge] == {}

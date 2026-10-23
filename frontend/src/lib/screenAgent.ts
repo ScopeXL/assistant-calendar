@@ -104,6 +104,17 @@ export function screenClient(): ScreenClient | null {
   return client;
 }
 
+/**
+ * Right after the wall pairs (or sets Sunroom up): Sunroom Screen has its browser write the
+ * pairing to disk now, rather than within 30 s, so a restart straight after keeps it (ADR 0040).
+ * Nothing to do without an agent, and nothing to say if it doesn't answer.
+ */
+export function keepPairing(): void {
+  const agent = screenClient();
+  if (agent === null) return;
+  agent.POST("/api/screen/keep-pairing").catch(() => undefined);
+}
+
 /** Where a fresh reload goes on a screen with an agent: the launcher's own address. */
 export function screenReloadUrl(dimmer: string): string | null {
   return port === null ? null : `/display?dimmer=${dimmer}&screen=${String(port)}`;

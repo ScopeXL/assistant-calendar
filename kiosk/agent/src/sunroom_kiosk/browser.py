@@ -5,11 +5,20 @@ look at what it shows (docs/M7.md T6; what ``kiosk/sunroom-kiosk`` did in bash u
   snap's; Chrome, Chromium, then Edge on macOS, in /Applications or ~/Applications; Edge, then
   Chrome, on Windows (batch 2). The installer brings one when there's none (ADR 0037).
 * **Its profile.** ``~/.config/sunroom-kiosk/profile`` keeps the screen's pairing cookie, so
-  never ``--incognito``; and never ``--disable-gpu``, which makes the board crawl. Before each
-  start the last exit is marked clean, so a power cut never shows "Restore pages?".
+  never ``--incognito``, nor Edge's kiosk mode, which is an InPrivate session too (ADR 0040);
+  and never ``--disable-gpu``, which makes the board crawl. Before each start the last exit is
+  marked clean, so a power cut never shows "Restore pages?".
 * **Its flags.** The launcher's (PLAN §13.2), plus ``--remote-debugging-port=0``: the port it
   picks is written to ``DevToolsActivePort`` in the profile, and the watchdog asks through it
-  whether the page is a Sunroom and whether it still answers.
+  whether the page is a Sunroom and whether it still answers. Chromium and Chrome run with
+  ``--kiosk``; Edge full screen instead, put back by the watchdog when someone leaves it.
+* **Its cookies on disk.** Chromium writes new cookies to disk every 30 s, once 512 changes are
+  waiting, and when it is closed through DevTools (``Browser.close``). A SIGTERM closes it at
+  once and writes nothing new (tried with Chrome 155), as a system shutting it down most likely
+  does too, so a pairing made just before was lost (ADR 0040). Closing asks through DevTools
+  first, then the system's way (SIGTERM; on Windows taskkill without /F), and forces it after
+  10 s; and right after a pairing the page asks for the cookies to be written now
+  (``DevTools.write_cookies_now``).
 * **Keeping it running.** Started again 3 s after any exit; restarted once a night at about
   04:00 (03:55 plus up to ten minutes), which gives back the memory Chromium gathers over days.
 """
@@ -23,6 +32,7 @@ import os
 import random
 import shutil
 import sys
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -38,6 +48,13 @@ log = logs.get("browser")
 
 RESTART_AFTER_S = 3.0
 STOP_WAIT_S = 10.0
+# After Edge starts, how long to wait for it to answer before putting its window full screen.
+FULL_SCREEN_WITHIN_S = 20.0
+# More cookie changes than Chromium lets wait before it writes them (512), on a name no page can
+# use (RFC 2606's .invalid), each gone by itself a minute later: see write_cookies_now.
+FLUSH_COOKIES = 600
+FLUSH_DOMAIN = "flush.invalid"
+FLUSH_LIFE_S = 60
 NIGHTLY = (3, 55)
 NIGHTLY_SPREAD_S = 600
 DEVTOOLS_S = 5.0
@@ -172,9 +189,14 @@ def flags(
     """The browser's command line, before the page to open (PLAN §13.2)."""
     argv = [
         f"--user-data-dir={profile}",
-        "--kiosk",
+        # Edge's kiosk mode, with or without --edge-kiosk-type, is an InPrivate session that
+        # forgets the screen's pairing, its remembered view and its offline copy whenever it
+        # closes (Microsoft's "Configure Microsoft Edge kiosk mode"; ADR 0040). Edge runs full
+        # screen on this profile instead, and the watchdog keeps it there.
+        "--start-fullscreen" if browser.kind == "edge" else "--kiosk",
         "--start-maximized",
         "--no-first-run",
+        "--no-default-browser-check",
         "--noerrdialogs",
         "--disable-infobars",
         "--hide-crash-restore-bubble",
@@ -196,12 +218,19 @@ def flags(
                 "--enable-wayland-ime",
                 "--wayland-text-input-version=3",
             ]
-    if system == "win32" and browser.kind == "edge":
-        argv.append("--edge-kiosk-type=fullscreen")
     origin = insecure_origin(sunroom_url) if sunroom_url else None
     if origin:
         argv.append(f"--unsafely-treat-insecure-origin-as-secure={origin}")
     return argv
+
+
+def close_command(pid: int, system: str = sys.platform) -> list[str] | None:
+    """How to ask the browser to close, as the system's own close does, so it writes its
+    cookies first: on Windows taskkill without /F, which sends its windows WM_CLOSE (Python's
+    terminate() is TerminateProcess there, which writes nothing); elsewhere None, for SIGTERM."""
+    if system == "win32":
+        return ["taskkill", "/PID", str(pid)]
+    return None
 
 
 def mark_clean_exit(profile: Path) -> None:
@@ -260,29 +289,34 @@ class DevTools:
     def __init__(self, profile: Path) -> None:
         self.profile = profile
 
-    async def _page_socket(self) -> str | None:
+    async def _get(self, path: str) -> Any:
         port = devtools_port(self.profile)
         if port is None:
             return None
         async with httpx.AsyncClient(timeout=DEVTOOLS_S) as client:
-            response = await client.get(f"http://127.0.0.1:{port}/json/list")
-        targets = response.json()
+            return (await client.get(f"http://127.0.0.1:{port}{path}")).json()
+
+    async def _page(self) -> tuple[str, str] | None:
+        """The first page's target id and socket."""
+        targets = await self._get("/json/list")
         if not isinstance(targets, list):
             return None
         for target in cast(list[Any], targets):
             if isinstance(target, dict):
                 fields = cast(dict[str, Any], target)
-                url = fields.get("webSocketDebuggerUrl")
+                url, target_id = fields.get("webSocketDebuggerUrl"), fields.get("id")
                 if fields.get("type") == "page" and isinstance(url, str):
-                    return url
+                    return (target_id if isinstance(target_id, str) else "", url)
         return None
 
     async def _call(self, method: str, params: dict[str, Any]) -> dict[str, Any] | None:
+        """One call on the page's own socket."""
+        page = await self._page()
+        return None if page is None else await self._send(page[1], method, params)
+
+    async def _send(self, url: str, method: str, params: dict[str, Any]) -> dict[str, Any] | None:
         from websockets.asyncio.client import connect  # here: only on a real screen
 
-        url = await self._page_socket()
-        if url is None:
-            return None
         async with asyncio.timeout(DEVTOOLS_S), connect(url, max_size=2**20) as socket:
             await socket.send(json.dumps({"id": 1, "method": method, "params": params}))
             while True:
@@ -316,6 +350,79 @@ class DevTools:
         except Exception as error:  # any failure: the caller restarts the browser instead
             log.debug("Couldn't navigate through DevTools: %r", error)
             return False
+
+    async def _browser_socket(self) -> str | None:
+        version = await self._get("/json/version")
+        fields = cast(dict[str, Any], version) if isinstance(version, dict) else {}
+        url = fields.get("webSocketDebuggerUrl")
+        return url if isinstance(url, str) else None
+
+    async def close(self) -> bool:
+        """Close the browser the way that writes its cookies first. Whether it was asked: a
+        browser that closes before it answers was."""
+        from websockets.exceptions import ConnectionClosed  # here: only on a real screen
+
+        try:
+            browser = await self._browser_socket()
+            if browser is None:
+                return False
+            await self._send(browser, "Browser.close", {})
+        except ConnectionClosed:
+            return True
+        except Exception as error:
+            log.debug("Couldn't close the browser through DevTools: %r", error)
+            return False
+        return True
+
+    async def write_cookies_now(self, now: float | None = None) -> bool:
+        """Have the browser write its cookies to disk now, not within 30 s: a fresh pairing then
+        survives a shutdown straight after. Chromium writes them at once when more than 512
+        changes are waiting, so this makes 600 (throwaway cookies on ``flush.invalid``, which no
+        page can see or send, that expire after a minute). Whether the browser answered."""
+        expires = (now if now is not None else time.time()) + FLUSH_LIFE_S
+        cookies = [
+            {
+                "name": f"n{index}",
+                "value": "1",
+                "domain": FLUSH_DOMAIN,
+                "path": "/",
+                "expires": expires,
+            }
+            for index in range(FLUSH_COOKIES)
+        ]
+        try:
+            browser = await self._browser_socket()
+            if browser is None:
+                return False
+            answer = await self._send(browser, "Storage.setCookies", {"cookies": cookies})
+        except Exception as error:
+            log.info("Couldn't have the browser save its cookies now: %r", error)
+            return False
+        return answer is not None and "error" not in answer
+
+    async def full_screen(self) -> bool:
+        """Put the page's window back to full screen if it left it (F11, Esc, its exit button, or
+        a minimize), through the browser's own socket. Whether the browser answered."""
+        try:
+            page, browser = await self._page(), await self._browser_socket()
+            if page is None or browser is None:
+                return False
+            window = await self._send(browser, "Browser.getWindowForTarget", {"targetId": page[0]})
+            result = cast(dict[str, Any], (window or {}).get("result") or {})
+            if "windowId" not in result:
+                return False
+            state = cast(dict[str, Any], result.get("bounds") or {}).get("windowState")
+            if state == "fullscreen":
+                return True
+            log.info("The browser had left full screen; putting it back.")
+            # A minimized window goes back to normal first: the two can't be one step.
+            for wanted in ("normal", "fullscreen") if state == "minimized" else ("fullscreen",):
+                bounds = {"windowId": result["windowId"], "bounds": {"windowState": wanted}}
+                await self._send(browser, "Browser.setWindowBounds", bounds)
+        except Exception as error:  # a browser that doesn't answer: the watchdog handles it
+            log.debug("Couldn't check the window through DevTools: %r", error)
+            return False
+        return True
 
 
 class Supervisor:
@@ -377,14 +484,21 @@ class Supervisor:
             await self._wait_or_restart(60)
             return
         self._restart.clear()
-        exited = asyncio.ensure_future(self.process.wait())
-        asked = asyncio.ensure_future(self._restart.wait())
-        await asyncio.wait({exited, asked}, return_when=asyncio.FIRST_COMPLETED)
-        asked.cancel()
-        if not exited.done():
-            await self._stop_process()
-            exited.cancel()
-            return
+        settle = (
+            asyncio.ensure_future(self._full_screen_soon()) if self.browser.kind == "edge" else None
+        )
+        try:
+            exited = asyncio.ensure_future(self.process.wait())
+            asked = asyncio.ensure_future(self._restart.wait())
+            await asyncio.wait({exited, asked}, return_when=asyncio.FIRST_COMPLETED)
+            asked.cancel()
+            if not exited.done():
+                await self._stop_process()
+                exited.cancel()
+                return
+        finally:
+            if settle is not None:
+                settle.cancel()
         if not self._stopping:
             log.info(
                 "%s closed (exit %s); starting it again in 3 seconds.",
@@ -399,15 +513,56 @@ class Supervisor:
         self._restart.clear()
 
     async def _stop_process(self) -> None:
+        """Close the browser through DevTools, which writes its cookies (else the system's way:
+        a browser that doesn't answer DevTools has nothing new to write); force it after 10 s."""
         process = self.process
         if process is None or process.returncode is not None:
             return
-        process.terminate()
-        try:
-            await asyncio.wait_for(process.wait(), STOP_WAIT_S)
-        except TimeoutError:
+        if await self.devtools.close() or await self._ask_to_close(process):
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(process.wait(), STOP_WAIT_S)
+                return
+        log.info("%s didn't close when asked; closing it by force.", self.browser.name)
+        with contextlib.suppress(ProcessLookupError):
             process.kill()
-            await process.wait()
+        await process.wait()
+
+    async def _ask_to_close(self, process: asyncio.subprocess.Process) -> bool:
+        command = close_command(process.pid)
+        if command is None:
+            with contextlib.suppress(ProcessLookupError):
+                process.terminate()
+            return True
+        try:
+            closer = await asyncio.create_subprocess_exec(
+                *command,
+                stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            return await closer.wait() == 0  # not 0: it has no window to ask yet
+        except OSError:
+            return False
+
+    async def _full_screen_soon(self) -> None:
+        """Edge, just started: full screen as soon as it answers (--start-fullscreen should have
+        done it; this is in case it didn't)."""
+        deadline = asyncio.get_running_loop().time() + FULL_SCREEN_WITHIN_S
+        while asyncio.get_running_loop().time() < deadline:
+            await asyncio.sleep(1)
+            if await self.devtools.full_screen():
+                return
+
+    async def keep_full_screen(self) -> None:
+        """The watchdog's look at the window: Edge, which isn't in kiosk mode, back to full
+        screen if someone left it. Chromium and Chrome can't leave it."""
+        if self.browser.kind == "edge" and self.process is not None:
+            await self.devtools.full_screen()
+
+    async def save_cookies(self) -> None:
+        """Right after the wall paired: its cookie on disk now (DevTools.write_cookies_now)."""
+        if self.process is not None and await self.devtools.write_cookies_now():
+            log.info("The browser saved this screen's pairing.")
 
     def restart(self, page: str | None = None) -> None:
         """Close the browser and start it again, on ``page`` if given."""
@@ -454,6 +609,12 @@ class NoBrowser:
 
     async def look(self) -> PageLook:
         return PageLook(answered=True, sunroom=True)
+
+    async def keep_full_screen(self) -> None:
+        return None
+
+    async def save_cookies(self) -> None:
+        self.calls.append("save cookies")
 
     async def stop(self) -> None:
         self.calls.append("stop")

@@ -1,6 +1,7 @@
 """The wall's browser (browser.py): which one, its flags, the clean-exit mark, the nightly
-restart's time, and the supervisor starting it again after it exits. The "browser" here is a
-tiny script; nothing real is started. Synthetic data only."""
+restart's time, the supervisor starting it again after it exits and asking it to close before it
+forces it, and Edge kept full screen. The "browser" here is a tiny script; nothing real is
+started. Synthetic data only."""
 
 from __future__ import annotations
 
@@ -9,6 +10,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -16,7 +18,9 @@ import pytest
 from sunroom_kiosk import browser as browser_module
 from sunroom_kiosk.browser import (
     Browser,
+    DevTools,
     Supervisor,
+    close_command,
     find_browser,
     flags,
     insecure_origin,
@@ -25,6 +29,12 @@ from sunroom_kiosk.browser import (
 )
 
 CHROMIUM = Browser("chromium", "/usr/bin/chromium", "Chromium")
+EDGE = Browser(
+    "edge", r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", "Microsoft Edge"
+)
+CHROME = Browser(
+    "chrome", r"C:\Program Files\Google\Chrome\Application\chrome.exe", "Google Chrome"
+)
 
 
 def test_linux_prefers_chromium_then_chrome_then_edge() -> None:
@@ -132,6 +142,30 @@ def test_x11_and_https_need_neither_wayland_nor_the_secure_flag(tmp_path: Path) 
     assert not any(flag.startswith("--unsafely-treat") for flag in argv)
 
 
+@pytest.mark.parametrize("system", ["win32", "darwin", "linux"])
+def test_edge_runs_full_screen_on_the_screens_profile_never_in_its_kiosk_mode(
+    tmp_path: Path, system: str
+) -> None:
+    """Edge's kiosk mode is InPrivate: the screen forgot its pairing at every restart (ADR 0040)."""
+    argv = flags(EDGE, profile=tmp_path, session="", sunroom_url=None, system=system)
+    assert argv[0] == f"--user-data-dir={tmp_path}"
+    assert "--start-fullscreen" in argv and "--no-first-run" in argv
+    assert "--kiosk" not in argv
+    assert not any(flag.startswith(("--edge-kiosk-type", "--inprivate")) for flag in argv)
+
+
+def test_chrome_on_windows_keeps_its_kiosk_mode(tmp_path: Path) -> None:
+    argv = flags(CHROME, profile=tmp_path, session="", sunroom_url=None, system="win32")
+    assert "--kiosk" in argv and "--start-fullscreen" not in argv
+
+
+def test_closing_asks_the_way_the_system_does() -> None:
+    # terminate() is TerminateProcess on Windows, which writes nothing: WM_CLOSE, through taskkill.
+    assert close_command(4242, "win32") == ["taskkill", "/PID", "4242"]
+    assert close_command(4242, "darwin") is None  # SIGTERM
+    assert close_command(4242, "linux") is None
+
+
 def test_the_last_exit_is_marked_clean(tmp_path: Path) -> None:
     prefs = tmp_path / "Default" / "Preferences"
     prefs.parent.mkdir()
@@ -182,3 +216,149 @@ async def test_the_supervisor_starts_it_again_after_it_exits(
         "--kiosk http://192.168.1.20:8080/display",
     ]
     assert (tmp_path / "profile").is_dir()
+
+
+def pretend_browser(tmp_path: Path, on_term: str) -> Path:
+    """A browser that says it started, and does ``on_term`` when asked to close (SIGTERM)."""
+    script = tmp_path / "browser.sh"
+    log = tmp_path / "log"
+    script.write_text(
+        f"#!/bin/sh\ntrap '{on_term}' TERM\necho started >> \"{log}\"\n"
+        "while true; do sleep 0.05; done\n"
+    )
+    script.chmod(0o755)
+    return script
+
+
+async def started_once(supervisor: Supervisor, log: Path) -> asyncio.Task[None]:
+    running = asyncio.create_task(supervisor.run())
+    for _ in range(300):
+        await asyncio.sleep(0.01)
+        if supervisor.process is not None and await asyncio.to_thread(log.exists):
+            break
+    return running
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the pretend browser is a shell script")
+async def test_stopping_asks_the_browser_to_close_so_it_writes_its_cookies(tmp_path: Path) -> None:
+    log = tmp_path / "log"
+    script = pretend_browser(tmp_path, f'echo asked to close >> "{log}"; exit 0')
+    supervisor = Supervisor(
+        Browser("chromium", str(script), "Pretend"),
+        profile=tmp_path / "profile",
+        argv=lambda: ["--kiosk"],
+        page=lambda: "http://127.0.0.1:7800/",
+    )
+    running = await started_once(supervisor, log)
+    await supervisor.stop()
+    running.cancel()
+    assert log.read_text().splitlines() == ["started", "asked to close"]
+    assert supervisor.process is not None and supervisor.process.returncode == 0
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the pretend browser is a shell script")
+async def test_a_browser_that_wont_close_is_closed_by_force_after_the_wait(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(browser_module, "STOP_WAIT_S", 0.2)
+    log = tmp_path / "log"
+    script = pretend_browser(tmp_path, f'echo not closing >> "{log}"')
+    supervisor = Supervisor(
+        Browser("chromium", str(script), "Pretend"),
+        profile=tmp_path / "profile",
+        argv=lambda: ["--kiosk"],
+        page=lambda: "http://127.0.0.1:7800/",
+    )
+    running = await started_once(supervisor, log)
+    await supervisor.stop()
+    running.cancel()
+    assert "not closing" in log.read_text()
+    assert supervisor.process is not None and supervisor.process.returncode == -9
+
+
+class Window(DevTools):
+    """DevTools with a pretend browser behind it: a window in ``state``, and what was asked."""
+
+    def __init__(self, state: str | None) -> None:
+        super().__init__(Path("unused"))
+        self.state = state
+        self.sent: list[tuple[str, dict[str, object]]] = []
+
+    async def _page(self) -> tuple[str, str] | None:
+        return ("PAGE-1", "ws://127.0.0.1:9222/devtools/page/PAGE-1")
+
+    async def _get(self, path: str) -> object:
+        assert path == "/json/version"
+        return {"webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/browser/B"}
+
+    async def _send(self, url: str, method: str, params: dict[str, object]) -> dict[str, object]:
+        assert url.endswith("/devtools/browser/B")  # Browser.* go to the browser's own socket
+        self.sent.append((method, params))
+        if self.state is None:
+            raise OSError("no browser")
+        if method == "Browser.getWindowForTarget":
+            return {"id": 1, "result": {"windowId": 7, "bounds": {"windowState": self.state}}}
+        return {"id": 1, "result": {}}
+
+
+def window_states(window: Window) -> list[object]:
+    return [
+        params["bounds"]["windowState"]  # type: ignore[index]
+        for method, params in window.sent
+        if method == "Browser.setWindowBounds"
+    ]
+
+
+async def test_a_window_that_left_full_screen_is_put_back() -> None:
+    full = Window("fullscreen")
+    assert await full.full_screen()
+    assert window_states(full) == []
+    assert full.sent == [("Browser.getWindowForTarget", {"targetId": "PAGE-1"})]
+    normal = Window("normal")
+    assert await normal.full_screen()
+    assert window_states(normal) == ["fullscreen"]
+    minimized = Window("minimized")  # back to normal first: the two can't be one step
+    assert await minimized.full_screen()
+    assert window_states(minimized) == ["normal", "fullscreen"]
+    assert not await Window(None).full_screen()  # no browser: the watchdog handles it
+
+
+async def test_closing_and_writing_now_go_to_the_browsers_own_socket() -> None:
+    """Browser.close writes the cookies first; a batch past Chromium's 512 writes them now."""
+    window = Window("fullscreen")
+    assert await window.close()
+    assert await window.write_cookies_now(now=1_000_000.0)
+    assert [method for method, _ in window.sent] == ["Browser.close", "Storage.setCookies"]
+    cookies = cast(list[dict[str, object]], window.sent[1][1]["cookies"])
+    assert len(cookies) > 512
+    assert {cookie["domain"] for cookie in cookies} == {"flush.invalid"}  # no page can see it
+    assert {cookie["expires"] for cookie in cookies} == {1_000_060.0}  # gone a minute later
+    assert not await Window(None).close()  # nothing answered: the system's way, then
+
+
+async def test_a_browser_that_closes_before_it_answers_was_asked() -> None:
+    from websockets.exceptions import ConnectionClosedOK
+
+    class Closing(Window):
+        async def _send(
+            self, url: str, method: str, params: dict[str, object]
+        ) -> dict[str, object]:
+            raise ConnectionClosedOK(None, None)
+
+    assert await Closing("normal").close()
+
+
+async def test_only_edge_is_kept_full_screen_by_the_watchdog(tmp_path: Path) -> None:
+    asked: list[str] = []
+
+    class Counting(DevTools):
+        async def full_screen(self) -> bool:
+            asked.append("full screen")
+            return True
+
+    for browser in (CHROMIUM, EDGE):
+        supervisor = Supervisor(browser, profile=tmp_path, argv=list, page=lambda: "x")
+        supervisor.devtools = Counting(tmp_path)
+        supervisor.process = object()  # type: ignore[assignment]  # as if it were running
+        await supervisor.keep_full_screen()
+    assert asked == ["full screen"]  # Edge's; Chromium's kiosk window can't leave it

@@ -71,6 +71,8 @@ class BrowserLike(Protocol):
     def restart(self, page: str | None = None) -> None: ...
     async def navigate(self, url: str) -> None: ...
     async def look(self) -> PageLook: ...
+    async def keep_full_screen(self) -> None: ...
+    async def save_cookies(self) -> None: ...
     async def stop(self) -> None: ...
 
 
@@ -289,11 +291,13 @@ class Agent:
         for task in self._tasks:
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await task
+        # The browser first, while there's time: closed as asked, it writes the pairing's cookie
+        # (a forced close after the system's own wait would lose a fresh one; ADR 0040).
+        await self.browser.stop()
         if self.screen is not None:
             await asyncio.to_thread(self.screen.stop)
         if self.local is not None:
             await self.local.stop_helpers()
-        await self.browser.stop()
         self.hub.close()
 
     async def before_browser(self) -> None:
@@ -395,7 +399,9 @@ class Agent:
 
     async def watch_tick(self) -> None:
         """The app is in charge while it shows anything (its offline pill, its reload). The
-        agent steps in only when the browser has shown no Sunroom at all for two minutes."""
+        agent steps in only when the browser has shown no Sunroom at all for two minutes, and
+        puts Edge's window back to full screen when someone left it."""
+        await self.browser.keep_full_screen()
         if not self.config.url:
             self._no_sunroom_since = None
             return

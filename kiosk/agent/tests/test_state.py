@@ -126,6 +126,29 @@ async def test_a_browser_that_stopped_answering_is_started_again(
     assert browser.calls == [f"restart {AGENT}/cant-reach"]
 
 
+async def test_every_watchdog_look_keeps_the_window_full_screen(
+    make_agent: Callable[..., Agent], clock: Clock
+) -> None:
+    """Edge runs without its kiosk mode (ADR 0040), so each look puts it back full screen; even
+    before the screen has a Sunroom, on its own pages."""
+
+    class Counting(Looking):
+        def __init__(self) -> None:
+            super().__init__()
+            self.kept = 0
+
+        async def keep_full_screen(self) -> None:
+            self.kept += 1
+
+    browser = Counting()
+    agent = make_agent(browser=browser)
+    await agent.watch_tick()
+    agent.save(Config(url=SUNROOM, found="typed"))
+    await agent.watch_tick()
+    assert browser.kept == 2
+    assert browser.calls == []
+
+
 async def test_reachability_is_published_when_it_changes(
     make_agent: Callable[..., Agent], sunrooms: FakeSunrooms, clock: Clock
 ) -> None:

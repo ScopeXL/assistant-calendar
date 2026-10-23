@@ -143,6 +143,17 @@ async def test_restart_and_shut_down_answer_first_then_act(
     assert platform.calls == ["restart", "shutdown"]
 
 
+async def test_a_fresh_pairing_is_written_to_disk_at_once(
+    client: httpx.AsyncClient, agent: Agent
+) -> None:
+    """The wall's page asks right after it pairs (ADR 0040); it needs the header, as any change."""
+    assert (await client.post("/api/screen/keep-pairing")).status_code == 403
+    assert (await client.post("/api/screen/keep-pairing", headers=CHANGE)).status_code == 202
+    await settle()
+    assert isinstance(agent.browser, NoBrowser)
+    assert agent.browser.calls == ["save cookies"]
+
+
 async def test_what_a_screen_cant_do_is_refused_in_words(
     client: httpx.AsyncClient, platform: FakePlatform
 ) -> None:
@@ -413,5 +424,5 @@ async def test_the_schema_has_every_route(app: FastAPI) -> None:
     from sunroom_kiosk.app import router
 
     paths = get_openapi(title="t", version="0", routes=router.routes)["paths"]
-    assert len(paths) == 18
+    assert len(paths) == 19
     assert not any("_test" in path for path in paths)

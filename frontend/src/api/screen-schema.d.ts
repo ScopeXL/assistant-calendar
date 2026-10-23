@@ -55,6 +55,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/screen/keep-pairing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Keep Pairing
+         * @description The wall's page has just been paired (or set Sunroom up): the browser writes its cookies
+         *     to disk now, so a restart straight after keeps the pairing (ADR 0040).
+         */
+        post: operations["keep_pairing_api_screen_keep_pairing_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/screen/open": {
         parameters: {
             query?: never;
@@ -686,6 +707,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScreenStateOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenErrorOut"];
+                };
+            };
+        };
+    };
+    keep_pairing_api_screen_keep_pairing_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenAcceptedOut"];
                 };
             };
             /** @description Forbidden */

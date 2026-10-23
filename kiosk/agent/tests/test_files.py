@@ -110,6 +110,9 @@ def test_the_unit_starts_the_agent_with_no_arguments(monkeypatch: pytest.MonkeyP
     assert "ExecStart=%h/.local/bin/sunroom-kiosk" in unit
     # Quit exits cleanly (os._exit(0)): a unit that restarted it anyway would undo Quit.
     assert "Restart=on-failure" in unit
+    # A stop goes to the agent alone, which closes the browser so it writes its cookies; the
+    # browser stopped by systemd's own SIGTERM wrote nothing new (ADR 0040).
+    assert "KillMode=mixed" in unit
     ran: list[argparse.Namespace] = []
 
     def pretend_run(args: argparse.Namespace) -> int:

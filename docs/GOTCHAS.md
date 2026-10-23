@@ -159,6 +159,20 @@ size limit.
   information on every file, and a copy keeps it. `ditto --noextattr --norsrc` copies it clean.
 - A test that loaded `install.sh`'s functions with `. <(sed '$d' kiosk/install.sh)` defined
   nothing on macOS: bash 3.2 can't source a process substitution. Write them to a file first.
+- A Windows screen asked to be paired after every restart: Edge's `--kiosk`, with or without
+  `--edge-kiosk-type`, is an InPrivate session. Edge runs `--start-fullscreen` on the screen's
+  profile instead, and the watchdog keeps it full screen (ADR 0040).
+- A pairing made just before a restart was lost on every system: Chromium writes new cookies to
+  disk every 30 s, once 512 changes wait, or when closed through DevTools (`Browser.close`). A
+  SIGTERM writes nothing new (tried with Chrome 155), nor most likely does a system shutting the
+  browser down, and Python's `terminate()` is `TerminateProcess` on Windows. The agent closes with `Browser.close`
+  first, and the page asks it to write the cookies right after pairing (ADR 0040).
+- A Mac lost a fresh pairing at a restart: uvicorn waits for every open connection before the
+  app's shutdown, with no limit by default, and the wall page's event stream never ends, so the
+  agent never closed its browser before launchd killed both. `app.AgentServer` ends the streams
+  when asked to stop.
+- Chromium's headless profile on a Mac asks the login keychain for its cookie key: a test that
+  starts real Chrome passes `--use-mock-keychain`, or a keychain prompt shows on the desktop.
 
 ## The board
 

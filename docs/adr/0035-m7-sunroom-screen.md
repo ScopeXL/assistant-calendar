@@ -2,7 +2,7 @@
 
 - **Status:** Accepted; the installer's default became the kitchen screen alone on every
   computer, with a browser installed when there's none (and never a snap's), in ADR 0037; This
-  Screen moved to the top of Settings in ADR 0039
+  Screen moved to the top of Settings in ADR 0039; Edge left its kiosk mode in ADR 0040
 - **Date:** 2026-10-20
 
 ## Context

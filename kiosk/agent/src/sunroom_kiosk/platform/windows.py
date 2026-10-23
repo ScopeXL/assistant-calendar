@@ -197,17 +197,20 @@ class WindowsPlatform(Platform):
 
     def _clear(self, registry: Registry, kind: policy.BrowserKind) -> None:
         base = policy.WINDOWS_KEYS[kind]
-        for key in sorted(policy.ALLOWED_KEYS):
+        for key in sorted(policy.own_keys(kind)):
             registry.delete_value(base, key)
             registry.delete_key(rf"{base}\{key}")  # a list's own key (1, 2, …)
 
     async def write_policy(self, kind: policy.BrowserKind, document: dict[str, Any]) -> bool:
         """This user's policy for that browser: Sunroom Screen's keys cleared, then written
-        (so an address that changed leaves nothing of the old one); any other key is kept."""
+        (so an address that changed leaves nothing of the old one); any other key is kept.
+        Edge gets its own quiet keys too (policy.EDGE_QUIET)."""
         registry = self.registry()
         try:
             self._clear(registry, kind)
-            for key, name, value_kind, data in policy.windows_values(kind, document):
+            for key, name, value_kind, data in policy.windows_values(
+                kind, policy.for_browser(kind, document)
+            ):
                 registry.set_value(key, name, value_kind, data)
         except OSError as error:
             raise PlatformError("The browser's settings couldn't be saved.") from error

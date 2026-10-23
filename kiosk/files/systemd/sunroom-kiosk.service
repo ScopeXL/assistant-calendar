@@ -19,5 +19,8 @@ ExecStart=%h/.local/bin/sunroom-kiosk
 # stopped or when This Screen's Quit (on a computer) asks: then it stays off until next sign-in.
 Restart=on-failure
 RestartSec=3
-# On stop it switches the screen back on (at full brightness) and closes the browser.
+# On stop it switches the screen back on (at full brightness) and closes the browser. The stop
+# goes to the agent alone (mixed), which closes the browser through DevTools, the one close that
+# writes a fresh pairing to disk; whatever is left is killed after (ADR 0040).
+KillMode=mixed
 TimeoutStopSec=20

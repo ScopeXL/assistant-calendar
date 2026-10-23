@@ -113,16 +113,18 @@ class MacPlatform(Platform):
 
     async def write_policy(self, kind: policy.BrowserKind, document: dict[str, Any]) -> bool:
         """This user's preferences for that browser: Sunroom Screen's keys that aren't in
-        ``document`` taken out (an address that went leaves nothing), then each one written."""
+        ``document`` taken out (an address that went leaves nothing), then each one written.
+        Edge gets its own quiet keys too (policy.EDGE_QUIET)."""
         domain = policy.MAC_DOMAINS[kind]
-        for key in sorted(policy.ALLOWED_KEYS - document.keys()):
+        wanted = policy.for_browser(kind, document)
+        for key in sorted(policy.own_keys(kind) - wanted.keys()):
             await self.run(["defaults", "delete", domain, key])  # not there: nothing to do
-        for argv in policy.mac_commands(kind, document):
+        for argv in policy.mac_commands(kind, wanted):
             await self._must(argv, "Saving the browser's settings")
         return True
 
     async def remove_policy(self, kind: policy.BrowserKind) -> bool:
         domain = policy.MAC_DOMAINS[kind]
-        for key in sorted(policy.ALLOWED_KEYS):
+        for key in sorted(policy.own_keys(kind)):
             await self.run(["defaults", "delete", domain, key])
         return True

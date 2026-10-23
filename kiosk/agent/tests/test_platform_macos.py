@@ -69,3 +69,17 @@ async def test_the_policy_goes_in_the_browsers_preferences() -> None:
     assert await platform.remove_policy("chrome")
     assert len(shell.lines()) == len(policy.ALLOWED_KEYS)
     assert all(line.startswith(f"defaults delete {domain} ") for line in shell.lines())
+
+
+async def test_edge_gets_its_own_quiet_keys_too() -> None:
+    """Edge runs without its kiosk mode (ADR 0040): no welcome page, no full-tab promotions."""
+    shell = Shell()
+    platform = mac(shell)
+    domain = policy.MAC_DOMAINS["edge"]
+    assert await platform.write_policy("edge", policy.document(ORIGIN))
+    lines = shell.lines()
+    assert f"defaults write {domain} HideFirstRunExperience -bool true" in lines
+    assert f"defaults write {domain} PromotionalTabsEnabled -bool false" in lines
+    shell.calls.clear()
+    assert await platform.remove_policy("edge")
+    assert f"defaults delete {domain} PromotionalTabsEnabled" in shell.lines()

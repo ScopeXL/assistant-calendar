@@ -43,6 +43,17 @@ ALLOWED_KEYS = frozenset(
     {*QUIET, "LocalNetworkAccessAllowedForUrls", "LocalNetworkAccessRestrictionsEnabled"}
 )
 
+# Edge's own, for Edge where the agent writes its policy itself (Windows' registry, a Mac's
+# preferences). Edge runs without its kiosk mode (ADR 0040), so its welcome page, a full-tab
+# "what's new" after an update and its recommendations would otherwise cover the wall. Never
+# through Linux's root helper, whose copy of ALLOWED_KEYS a screen keeps from its install.
+EDGE_QUIET: dict[str, Any] = {
+    "HideFirstRunExperience": True,
+    "PromotionalTabsEnabled": False,
+    "ShowRecommendationsEnabled": False,
+}
+
+
 LINUX_DIRS: dict[BrowserKind, Path] = {
     "chromium": Path("/etc/chromium/policies/managed"),
     "chrome": Path("/etc/opt/chrome/policies/managed"),
@@ -69,6 +80,17 @@ def document(origin: str | None) -> dict[str, Any]:
         policy["LocalNetworkAccessAllowedForUrls"] = [origin]
         policy["LocalNetworkAccessRestrictionsEnabled"] = True
     return policy
+
+
+def for_browser(kind: BrowserKind, policy: dict[str, Any]) -> dict[str, Any]:
+    """``policy`` with Edge's own quiet keys for Edge (Windows and macOS only)."""
+    return {**policy, **EDGE_QUIET} if kind == "edge" else policy
+
+
+def own_keys(kind: BrowserKind) -> frozenset[str]:
+    """Every key Sunroom Screen may write for that browser: what it clears again, and what the
+    uninstaller takes out (Windows and macOS)."""
+    return ALLOWED_KEYS.union(EDGE_QUIET) if kind == "edge" else ALLOWED_KEYS
 
 
 def linux_path(kind: BrowserKind) -> Path:

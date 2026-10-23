@@ -19,6 +19,15 @@ Everything that changes in Sunroom, written in plain English. The format follows
   in a box of its own, and says its settings (the network, updates and power) are for that screen
   only, apart from the family's Sunroom below it.
 
+### Fixed
+
+- A kitchen screen on Windows stays paired when the computer restarts. Microsoft Edge's kiosk
+  mode forgot the pairing every time it closed; Edge now runs full screen on the screen's own
+  profile, and goes back to full screen by itself if someone leaves it.
+- A kitchen screen keeps a pairing made just before a restart, on any computer (a Mac forgot one
+  once): the browser now saves the pairing the moment the screen is paired, and Sunroom Screen
+  closes the browser properly when it stops.
+
 ## [0.15.0] - 2026-10-22
 
 ### Added

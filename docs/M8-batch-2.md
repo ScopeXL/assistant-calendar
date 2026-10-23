@@ -77,3 +77,32 @@ the steps out in one column, the list over the form; the rail's Settings opens `
 first page is This Screen where there is one; the pages before pairing gained the wall's toast
 region. Not tried yet: a real Run Sunroom Here followed by Set Up Here in the owner's virtual
 machines (`UTM-TESTING.md`, through `just kiosk-serve`).
+
+### T4 The screen keeps its pairing
+
+- [x] Done (commit: "kiosk: the screen keeps its pairing on Windows and a Mac")
+- The owner's test before the deploy: a Windows screen asked to be paired again after every
+  restart, and a Mac once. Causes and decisions in ADR 0040: Edge's kiosk mode is InPrivate;
+  Chromium writes new cookies every 30 s, and a SIGTERM (or `TerminateProcess`, Python's
+  `terminate()` on Windows) writes nothing new; uvicorn waited for the page's event stream
+  before the agent's shutdown, so the agent never closed its browser before the system killed
+  both.
+- Sunroom Screen: `browser.py` (Edge's flags, `close_command`, `DevTools.close`,
+  `write_cookies_now` and `full_screen`, the Supervisor's stop, `keep_full_screen` and
+  `save_cookies`), `state.py` (the watchdog keeps Edge full screen; the browser first in `stop`),
+  `app.py` (`AgentServer`, `POST /api/screen/keep-pairing`), `cli.py`, `policy.py`
+  (`EDGE_QUIET`, `for_browser`, `own_keys`), the Windows and macOS adapters, and the systemd unit
+  (`KillMode=mixed`); their tests and `tests/test_server.py`.
+- The app: `lib/screenAgent.keepPairing`, called when the wall pairs (`DisplayEntry`) or sets
+  Sunroom up itself (`SetupWizard`); `this-screen.spec`.
+- Docs: PLAN §13.2, KIOSK.md (Windows; "The screen shows a code again"), GOTCHAS.md, CHANGELOG,
+  and the owner's `UTM-TESTING.md`.
+
+**As built.** Tried on this Mac with Google Chrome 155, headless on a throwaway profile: a cookie
+set a second before a kill or a SIGTERM was lost, one set before `Browser.close` or 35 s before a
+kill was kept, and so was one set a second before a kill after 600 throwaway cookies. The agent's
+own `Supervisor.stop()` and `write_cookies_now()` keep it the same way. Sunroom Screen's 219
+tests pass (`tests/test_server.py` stops a real uvicorn with a page listening), and so do
+`this-screen.spec`, `screen-shell.spec` and `first-run.spec` on the 1080p wall. Not tried here:
+Windows and a Mac's own restart, which are the owner's (`UTM-TESTING.md`, "The pairing survives
+a restart").

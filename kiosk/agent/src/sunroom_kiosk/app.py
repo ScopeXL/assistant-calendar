@@ -16,11 +16,13 @@ Who may call it:
 from __future__ import annotations
 
 import secrets
+import socket
 from collections.abc import AsyncGenerator, Awaitable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Any
 
+import uvicorn
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -29,7 +31,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from sunroom_kiosk import logs
 from sunroom_kiosk.discovery import CheckFailedError, found_out
-from sunroom_kiosk.events import frame
+from sunroom_kiosk.events import EventHub, frame
 from sunroom_kiosk.platform.base import PlatformError, WifiNetwork
 from sunroom_kiosk.schemas import (
     ScreenAboutOut,
@@ -212,6 +214,14 @@ async def shutdown(agent: AgentDep) -> ScreenAcceptedOut:
 async def quit_screen(agent: AgentDep) -> ScreenAcceptedOut:
     need(agent, "quit", "Quitting")
     await agent.later(agent.quit)
+    return ScreenAcceptedOut()
+
+
+@router.post("/keep-pairing", status_code=202)
+async def keep_pairing(agent: AgentDep) -> ScreenAcceptedOut:
+    """The wall's page has just been paired (or set Sunroom up): the browser writes its cookies
+    to disk now, so a restart straight after keeps the pairing (ADR 0040)."""
+    agent.spawn(agent.browser.save_cookies())
     return ScreenAcceptedOut()
 
 
@@ -443,3 +453,32 @@ def create_app(
         mount_pages(app, static)
     app.add_middleware(Guard, agent=agent)
     return app
+
+
+# What uvicorn may still wait for once the event streams are ended (another request in flight).
+SHUTDOWN_GRACE_S = 3  # seconds (uvicorn takes whole ones)
+
+
+class AgentServer(uvicorn.Server):
+    """uvicorn on 127.0.0.1, ending the screen pages' event streams the moment it's asked to
+    stop (SIGTERM from launchd or systemd, an update's restart). It waits for every open
+    connection before the app's own shutdown, and a page's stream never ends by itself: the
+    agent never got to close its browser, which the system then killed before it wrote a fresh
+    pairing's cookie (ADR 0040). Whatever is still open after ``SHUTDOWN_GRACE_S`` is cut."""
+
+    def __init__(self, app: FastAPI, *, hub: EventHub, port: int) -> None:
+        super().__init__(
+            uvicorn.Config(
+                app,
+                host="127.0.0.1",
+                port=port,
+                log_level="warning",
+                access_log=False,
+                timeout_graceful_shutdown=SHUTDOWN_GRACE_S,
+            )
+        )
+        self.hub = hub
+
+    async def shutdown(self, sockets: list[socket.socket] | None = None) -> None:
+        self.hub.close()
+        await super().shutdown(sockets)

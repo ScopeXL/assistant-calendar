@@ -924,6 +924,58 @@
         ]
       }
     },
+    "/api/screen/keep-pairing": {
+      "post": {
+        "description": "The wall's page has just been paired (or set Sunroom up): the browser writes its cookies\nto disk now, so a restart straight after keeps the pairing (ADR 0040).",
+        "operationId": "keep_pairing_api_screen_keep_pairing_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Keep Pairing",
+        "tags": [
+          "screen"
+        ]
+      }
+    },
     "/api/screen/open": {
       "post": {
         "operationId": "open_page_api_screen_open_post",

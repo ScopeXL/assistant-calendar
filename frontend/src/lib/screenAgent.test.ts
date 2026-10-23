@@ -5,6 +5,7 @@ import { qk } from "../api/keys";
 import {
   createScreenClient,
   forgetScreenAgent,
+  keepPairing,
   listen,
   noteScreenAgent,
   screenAgentPort,
@@ -44,6 +45,31 @@ describe("the wall's own Sunroom Screen agent (ADR 0035)", () => {
     ["/", "?screen=7800"],
   ])("ignores %s%s: only that one document's policy lets it through", (path, search) => {
     expect(noteScreenAgent(path, search)).toBeNull();
+  });
+
+  it("asks the agent to keep a fresh pairing, and only where there is one (ADR 0040)", async () => {
+    const seen: Request[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((request: Request) => {
+        seen.push(request);
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 202 }));
+      }),
+    );
+    noteScreenAgent("/display", "?dimmer=page");
+    keepPairing(); // a laptop's /display: no agent, nothing sent
+    expect(seen).toEqual([]);
+    forgetScreenAgent();
+    noteScreenAgent("/display", "?dimmer=screen&screen=7800");
+    keepPairing();
+    await vi.waitFor(() => {
+      expect(seen).toHaveLength(1);
+    });
+    expect([seen[0]?.method, seen[0]?.url]).toEqual([
+      "POST",
+      "http://127.0.0.1:7800/api/screen/keep-pairing",
+    ]);
+    expect(seen[0]?.headers.get("X-Sunroom-Screen")).toBe("1");
   });
 
   it("sends X-Sunroom-Screen on a change and nothing extra on a read", async () => {

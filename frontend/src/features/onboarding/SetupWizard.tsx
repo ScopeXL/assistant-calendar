@@ -7,6 +7,7 @@ import { api, errorMessage, unwrap } from "../../api/client";
 import { qk } from "../../api/keys";
 import { isLoopbackAddress } from "../../lib/address";
 import { useMembers } from "../../lib/household";
+import { keepPairing } from "../../lib/screenAgent";
 import { rememberSignedIn } from "../../lib/session";
 import { previewTheme, type ThemeChoice } from "../../lib/theme";
 import { Avatar } from "../../ui/Avatar";
@@ -328,8 +329,10 @@ function HouseholdStep({
         }),
       ),
     onSuccess: async (session) => {
-      // A paired screen is never offered the offline start a phone gets (lib/session).
-      if (!onScreen) rememberSignedIn(true);
+      // A paired screen is never offered the offline start a phone gets (lib/session), and its
+      // browser writes the pairing to disk at once (ADR 0040).
+      if (onScreen) keepPairing();
+      else rememberSignedIn(true);
       queryClient.setQueryData(qk.session(), session);
       await queryClient.invalidateQueries({ queryKey: qk.setupStatus() });
       onDone();

@@ -171,6 +171,10 @@ starts at sign-in with no console window), and starts it: Microsoft Edge full sc
 Chrome when there's no Edge. Sunroom Screen writes the browser's policy for this user itself
 (`HKEY_CURRENT_USER\Software\Policies\…`), so Sunroom reaches it without a prompt.
 
+Edge runs full screen on the screen's own profile, not in Edge's kiosk mode: that mode is an
+InPrivate session, which used to forget the pairing at every restart (ADR 0040). F11 or Esc can
+take it out of full screen; it goes back by itself within half a minute.
+
 Its settings, browser profile (the pairing) and log are in `%LOCALAPPDATA%\sunroom-kiosk`. Windows
 joins Wi-Fi, turns the picture and sets the brightness itself, so This Screen has **Open Network
 Settings** instead of Wi-Fi, no Rotation, and the page dims itself in the evening. **Quit Sunroom
@@ -385,7 +389,10 @@ is found again.
 sunroom-kiosk` says why (for example, no browser found).
 
 **The screen shows a code again.** Its sign-in was ended: a new household password, a new secret
-key, a restore, or **Unpair** in Settings → Devices. Pair it again from a phone.
+key, a restore, or **Unpair** in Settings → Devices. Pair it again from a phone. A restart, an
+update or Quit keeps the pairing, straight after pairing too: the browser saves it the moment the
+screen is paired (ADR 0040). A Linux screen set up before this saves it within half a minute
+until the install command is run again.
 
 **The screen doesn't go dark at night.** Check the times and **While asleep** in Settings →
 Display → Sleep (**Dim clock** keeps the screen on, turned down). Then read its log: "No answer

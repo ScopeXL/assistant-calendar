@@ -143,11 +143,9 @@ def _windowless_log() -> None:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    import uvicorn
-
     _windowless_log()
 
-    from sunroom_kiosk.app import STATIC, create_app
+    from sunroom_kiosk.app import STATIC, AgentServer, create_app
     from sunroom_kiosk.browser import NoBrowser, Supervisor, find_browser, flags
     from sunroom_kiosk.discovery import Discovery, FakeDiscovery
     from sunroom_kiosk.events import EventHub
@@ -211,9 +209,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     )
     holder["agent"] = agent
     app = create_app(agent, static=None if args.dev else STATIC, test_routes=bool(fake))
-    server = uvicorn.Server(
-        uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", access_log=False)
-    )
+    server = AgentServer(app, hub=hub, port=port)
     try:
         asyncio.run(server.serve())
     except OSError as error:
