@@ -310,7 +310,7 @@ function HouseholdStep({
   // The choice shows on this page at once, as the Display page's does on the wall.
   const pickTheme = (choice: ThemeChoice) => {
     setTheme(choice);
-    previewTheme(choice);
+    previewTheme(choice, { display: onScreen });
   };
   const setup = useMutation({
     mutationFn: async () =>

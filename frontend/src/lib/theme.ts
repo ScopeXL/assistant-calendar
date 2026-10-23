@@ -202,14 +202,18 @@ export function rememberedAppearance(): RememberedAppearance | null {
 
 /**
  * The setup wizard's Theme row (ADR 0034): the choice on this page at once, before there is a
- * household to read it from, and remembered for the next page's first paint. The wizard runs in
- * the phone's shell, so Auto follows the device, as it will after setup; Light and Dark are
- * themselves. `now`: the device's own clock, the only one known yet.
+ * household to read it from, and remembered for the next page's first paint. On a phone Auto
+ * follows the device, as it will after setup; on the wall setting Sunroom up itself (`display`,
+ * ADR 0039) it goes by the time of day, as the wall's does. Light and Dark are themselves.
+ * `now`: the device's own clock, the only one known yet.
  */
 export function previewTheme(
   choice: ThemeChoice,
-  now = new Date(),
-  root = document.documentElement,
+  {
+    now = new Date(),
+    root = document.documentElement,
+    display = false,
+  }: { now?: Date; root?: HTMLElement; display?: boolean } = {},
 ): void {
   const shown = applyAppearance(
     {
@@ -217,7 +221,7 @@ export function previewTheme(
       daylightTint: true,
       textSize: "standard",
       reduceMotion: false,
-      display: false,
+      display,
     },
     now.getHours() * 60 + now.getMinutes(),
     root,

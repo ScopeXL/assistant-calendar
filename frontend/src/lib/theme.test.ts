@@ -126,13 +126,22 @@ describe("the appearance a browser remembers (ADR 0032)", () => {
 
   it("previews the setup wizard's choice at once, and keeps it for the next page (ADR 0034)", () => {
     const root = document.createElement("html");
-    previewTheme("dark", new Date(2026, 9, 7, 15), root);
+    previewTheme("dark", { now: new Date(2026, 9, 7, 15), root });
     expect(root.dataset.theme).toBe("dark");
     expect(rememberedAppearance()).toMatchObject({ theme: "dark", choice: "dark", sun: null });
     // Auto in the phone's shell is the device's own: no data-theme at all.
-    previewTheme("auto", new Date(2026, 9, 7, 15), root);
+    previewTheme("auto", { now: new Date(2026, 9, 7, 15), root });
     expect(root.dataset.theme).toBeUndefined();
     expect(rememberedAppearance()).toMatchObject({ theme: null, choice: "auto" });
+  });
+
+  it("previews Auto by the time of day on the wall setting Sunroom up itself (ADR 0039)", () => {
+    const root = document.createElement("html");
+    previewTheme("auto", { now: new Date(2026, 9, 7, 21, 30), root, display: true });
+    expect(root.dataset.theme).toBe("dark");
+    previewTheme("auto", { now: new Date(2026, 9, 7, 9, 40), root, display: true });
+    expect(root.dataset.theme).toBe("light");
+    expect(rememberedAppearance()).toMatchObject({ theme: "light", choice: "auto" });
   });
 
   it("ignores a memory it can't read", () => {
