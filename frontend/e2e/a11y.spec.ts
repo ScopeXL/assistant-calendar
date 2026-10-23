@@ -216,10 +216,19 @@ for (const scheme of ["light", "dark"] as const) {
       await request.post("/api/_test/clock", { headers: CSRF, data: { set: WEDNESDAY_10AM } });
       await page.goto("/display");
       await expect(
-        page.getByRole("heading", { name: "Set up Sunroom on your phone" }),
+        page.getByRole("heading", { name: "Set Up Sunroom", exact: true }),
       ).toBeVisible();
       await onServerTime(page);
       await check(page, "display: before setup");
+      // Setting up on the wall itself (ADR 0039): its first step, on the wall's keyboard.
+      await page.getByRole("button", { name: "Set Up Here" }).click();
+      await page.getByLabel("Household password").click();
+      await expect(page.getByRole("group", { name: "On-screen keyboard" })).toBeVisible();
+      await check(page, "display: set up here");
+      await page.getByRole("button", { name: "Back" }).click();
+      await expect(
+        page.getByRole("heading", { name: "Set Up Sunroom", exact: true }),
+      ).toBeVisible();
       await seed(request, { pin: PIN });
       await page.reload();
       await expect(page.getByTestId("pair-code")).toBeVisible();

@@ -60,6 +60,20 @@ ADR 0039 keeps the decisions. Work through the tasks in order; each ends with th
 
 ### T3 Wrap up
 
-- [ ] Done (commit: "docs: M8 batch 2 wrapped up")
+- [x] Done (commit: "docs: M8 batch 2 wrapped up")
 - The full gate; the screenshots of Set Up Sunroom, the wall's steps and Settings with This
   Screen, both display sizes, light and dark.
+
+**As built.** T1 `bf0fac1`, T2 `1a760fd`, and `e3d391b`: the household step's theme preview on
+the wall goes by the time of day (it followed the device's light or dark setting, as on a phone).
+The full gate is green: `just check` (1,242 backend, 769 frontend and 203 Sunroom Screen tests;
+its one warning, a plugin manager test's blocked `getaddrinfo`, was there before), the whole
+`just e2e` (158 passed, after two specs still looking for the old heading were fixed: the wall's
+a11y walk, which now also checks Set Up Here on the wall's keyboard, and Erase everything on a
+laptop), `just screenshots` (the wall's `display-setup` and `wall-setup-*`, and
+`settings-this-screen-*`, both display sizes, light and dark, reviewed against UX §10; the phone's
+and the laptop's setup unchanged), and `just scan`. Beyond the plan: the wall in portrait lays
+the steps out in one column, the list over the form; the rail's Settings opens `/settings`, whose
+first page is This Screen where there is one; the pages before pairing gained the wall's toast
+region. Not tried yet: a real Run Sunroom Here followed by Set Up Here in the owner's virtual
+machines (`UTM-TESTING.md`, through `just kiosk-serve`).

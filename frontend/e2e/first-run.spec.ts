@@ -394,7 +394,7 @@ test("Erase everything starts Sunroom over: from a computer, never from the wall
   // This computer lands on a first run, and so does the wall, by itself.
   await expect(page.getByRole("heading", { name: "Welcome to Sunroom" })).toBeVisible();
   await expect(page).toHaveURL(/\/setup/);
-  await expect(screen.getByRole("heading", { name: "Set Up Sunroom on Your Phone" })).toBeVisible();
+  await expect(screen.getByRole("heading", { name: "Set Up Sunroom", exact: true })).toBeVisible();
   const status = (await (await request.get("/api/setup/status")).json()) as {
     setup_complete: boolean;
   };

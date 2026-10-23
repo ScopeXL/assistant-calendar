@@ -25,7 +25,8 @@ M7 (docs/M7.md, ADR 0035) is Sunroom Screen: batch 0 (two wall fixes) released a
 batch 1 (the agent, This Screen, discovery, the installer, GitHub Releases) and batch 2 (Windows,
 macOS, Run It on This Screen, the Sunroom OS image, docs/SUNROOM-OS.md) released as 0.13.0.
 M8 (docs/M8.md, ADR 0038), Sunroom on this computer, released as 0.15.0; M8 batch 2
-(docs/M8-batch-2.md, ADR 0039: setting up on the screen, This Screen first) is being built.
+(docs/M8-batch-2.md, ADR 0039: setting up on the screen, This Screen first) is built for the
+next release.
 
 **Read first:**
 - [`docs/PLAN.md`](docs/PLAN.md): what we're building and how, plus milestones. It's long, so
