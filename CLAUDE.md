@@ -178,7 +178,8 @@ Two tiers (PLAN §14.7). Read test output only when it fails.
 2. The unit tests it touched pass (`just test-fe …`, `just test-py …`).
 3. Its end-to-end spec passes on one project (`just e2e e2e/<spec> --project=<name>`): the one
    spec the task names, never the suite.
-4. Docs are updated: PLAN or UX, plus a new ADR if a decision changed.
+4. Docs are updated: PLAN or UX, plus a new ADR if a decision changed. A change to installing
+   or a screen's first setup also updates README's Install and docs/KIOSK.md.
 5. `CHANGELOG.md` has a plain-English line under `[Unreleased]`.
 6. `just scan` is clean (the hook runs it), and the work is committed.
 
@@ -217,5 +218,3 @@ part your task touches, and move lines there when this file nears its limit.
   routers, not their routes. Walk `app.openapi()["paths"]` instead, and assert a count.
 - The first migration after a release failed its migration test: the release had no fixture
   database. A release's `tests/fixtures/db/<revision>.sql` must exist before the next migration.
-- An in-app restart can't `exec` under `uvicorn --reload`: the worker is a spawned child with
-  multiprocessing's argv. The dev server writes a watched file instead (`devserver.reload`).

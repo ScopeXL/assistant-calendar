@@ -71,6 +71,8 @@ size limit.
 
 ## Backend and its tests
 
+- An in-app restart can't `exec` under `uvicorn --reload`: the worker is a spawned child with
+  multiprocessing's argv. The dev server writes a watched file instead (`devserver.reload`).
 - ruff's ASYNC240 flags a `Path` method in any async function, tests included: `await
   asyncio.to_thread(path.unlink, missing_ok=True)`.
 - Patching `module.shutil.disk_usage` patches `shutil` itself for the whole test: patch
